@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.stackdump
+*.zip
+.antigravity*
+.idea/
+.vscode/
