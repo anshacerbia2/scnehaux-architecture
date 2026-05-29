@@ -92,61 +92,59 @@ To prevent abstraction leakage in logical documents, the physical parameters and
 
 To guarantee build-time optimization and allow seamless dynamic runtime opacity modifiers, all colors are mapped inside `_core-token.scss` as **space-separated HSL values** or **OKLCH coordinates** rather than static hex values.
 
-The physical values of the primitive scales are defined as nested Sass maps in `$color`:
+The physical values of the primitive scales are defined as nested Sass maps in `$color`, housing the seeds for Hue ($H$) and Chroma ($C$) for our schemes:
 
-*   **Nested HSL Primitive Map Structure**:
+*   **OKLCH/HSL Primitive Seed Map Structure**:
     ```scss
     $color: (
-      white: 0 0% 100%,
-      black: 0 0% 0%,
-      neutral: (
+      white: 0.98 0.01 240, // pure white in oklch
+      black: 0.02 0.01 240, // near black in oklch
+      neutral-seed: (
         light: (
-          0: 0 0% 100%,   // Pure White
-          100: 215 6% 98%, // bg-surface default
-          200: 215 6% 95%, // bg-surface raised
-          300: 215 6% 92%, // bg-surface sunken
-          400: 215 6% 85%,
-          500: 215 6% 74%,
-          600: 215 6% 68%,
-          700: 215 6% 56%,
-          800: 212 7% 52%, // calibrated secondary text
-          900: 213 7% 36%, // primary body text
-          1000: 216 8% 13%, // deep heading
-          1100: 210 8% 5%  // near black for inverse
+          canvas: 0.98 0.005 240,
+          surface: 0.96 0.01 240,
+          border: 0.85 0.02 240,
+          text: 0.28 0.02 240
         ),
         dark: (
-          0: 210 8% 5%,  // deepest dark
-          100: 216 8% 13%, // bg-canvas dark
-          200: 218 8% 16%, // bg-surface dark
-          300: 216 8% 13%,
-          400: 221 11% 39%, // bg-surface-sunken dark
-          500: 220 10% 49%,
-          600: 221 11% 39%,
-          700: 219 12% 32%,
-          800: 220 15% 73%,
-          900: 210 20% 98%,
-          1000: 210 50% 99%,
-          1100: 0 0% 100% // near white for inverse on dark
+          canvas: 0.05 0.01 240,
+          surface: 0.12 0.02 240,
+          border: 0.22 0.04 240,
+          text: 0.88 0.02 240
         )
       ),
-      // Chromatic Hue Scales (9 families, e.g., blue)
-      blue: (
+      danger-seed: (
         light: (
-          100: 214 95% 97%,
-          600: 221 83% 53%,
-          700: 224 76% 48%,
-          800: 222 71% 40%
+          surface: 0.96 0.02 25,
+          border: 0.85 0.05 25,
+          solid: 0.55 0.24 25,
+          text: 0.30 0.12 25
         ),
         dark: (
-          100: 222 64% 33%,
-          500: 221 90% 59%,
-          600: 221 83% 53%,
-          800: 222 71% 40%
+          surface: 0.12 0.04 25,
+          border: 0.22 0.08 25,
+          solid: 0.62 0.22 25,
+          text: 0.88 0.08 25
+        )
+      ),
+      warning-seed: (
+        light: (
+          surface: 0.96 0.08 75, // Higher Chroma for Yellow saturation
+          border: 0.82 0.12 75,
+          solid: 0.78 0.16 75, // Lightness tuned high for yellow readability
+          text: 0.25 0.14 75
+        ),
+        dark: (
+          surface: 0.14 0.08 75,
+          border: 0.28 0.12 75,
+          solid: 0.72 0.15 75,
+          text: 0.92 0.06 75
         )
       )
+      // (Similar seeds are hand-tuned for primary, secondary, accent, success, and info schemes)
     );
     ```
-*   **Translucent Alpha-Equivalent Primitives**: In addition to solid HSL/OKLCH scales, the program compiles alpha-blended transparent coordinates (`100A` to `1000A`) using reverse blending against the light card base and dark card base, outputting format like `214 6% 92% / 0.35` or `0.92 0.02 240 / 0.35` for flawless dynamic layers.
+*   **Translucent Alpha-Equivalent Primitives**: Reverse-blended transparent coordinates (`100A` to `1000A`) are compiled against the respective light/dark theme surface anchors, outputting static values like `0.92 0.02 240 / 0.35` for dynamic overlay layers.
 *   **Layout Spacing**: 13 increments (`0` to `20`) mapped using:
     ```scss
     $spacing: (0: 0, 0_5: 0.125rem, 1: 0.25rem, 2: 0.5rem, 3: 0.75rem, 4: 1rem, 5: 1.25rem, 6: 1.5rem, 8: 2rem, 10: 2.5rem, 12: 3rem, 16: 4rem, 20: 5rem);
@@ -157,16 +155,16 @@ The physical values of the primitive scales are defined as nested Sass maps in `
 
 ### 3.2 Tier-2: Global Semantic Themes
 
-Theme maps translate raw nested HSL/OKLCH primitives into semantic variables under light/dark modes using the `get-color-tokens` mapping engine in `_default-token.scss` (rendered as CSS Custom Properties in `@scnx/system`):
+The SCSS build-time compiler maps the 32 Base Anchors + OKLCH recipe engine transformations into static, compile-time resolved CSS Custom Properties. Downstream applications consume tokens under a clean, flat `{scheme}-{role}-{emphasis}-{state}` format:
 
-| CSS Custom Property | Light Mode Mapping | Dark Mode Mapping |
-| :--- | :--- | :--- |
-| `--ds-bg-canvas` | `neutral-0` (`0 0% 100%`) | `neutral-0` (`210 8% 5%`) |
-| `--ds-bg-surface` | `neutral-100` (`215 6% 98%`) | `neutral-100` (`216 8% 13%`) |
-| `--ds-text-primary` | `neutral-900` (`213 7% 36%`) | `neutral-900` (`210 20% 98%`) |
-| `--ds-border-default` | `neutral-1100 / 0.15` (Alpha blended) | `neutral-1100 / 0.15` (Alpha blended) |
-| `--ds-primary-base` | `blue-800` (`222 71% 40%`) | `blue-800` (`222 71% 40%`) |
-| `--ds-primary-hover` | `blue-700` (`224 76% 48%`) | `blue-700` (Hover offset) |
+| CSS Custom Property | Light Mode Resolved Color | Dark Mode Resolved Color | Architectural Purpose |
+| :--- | :--- | :--- | :--- |
+| `--ds-color-neutral-canvas-default` | `oklch(0.98 0.005 240)` | `oklch(0.05 0.01 240)` | Root application viewport background plane (default) |
+| `--ds-color-neutral-surface-subtle-default` | `oklch(0.96 0.01 240)` | `oklch(0.12 0.02 240)` | Soft tinted neutral container background (default state) |
+| `--ds-color-primary-solid-default-default` | `oklch(0.55 0.22 260)` | `oklch(0.62 0.22 260)` | High-contrast solid primary CTA button background (default state) |
+| `--ds-color-primary-solid-default-hover` | `oklch(0.52 0.22 260)` | `oklch(0.66 0.22 260)` | Compile-time lightness-shifted hover solid background |
+| `--ds-color-danger-border-subtle-default` | `oklch(0.85 0.05 25)` | `oklch(0.22 0.08 25)` | Soft semantic border outline for warning components (default state) |
+| `--ds-color-danger-text-default-default` | `oklch(0.30 0.12 25)` | `oklch(0.88 0.08 25)` | Highly readable default foreground text on warning alert elements |
 
 ---
 

@@ -62,7 +62,7 @@ Every ADR must utilize the standard Markdown template and include the following 
 #### 2.2.1 Metadata Frontmatter
 ```yaml
 doc_meta:
-  id: ADR-E[Sequence]                 # For enterprise-wide ADRs (e.g. ADR-E001)
+  id: ADR-GLB-[Seq] | ADR-[DOM]-[CAP]-[Seq]  # e.g. ADR-GLB-001 or ADR-UIP-TKN-001
   title: Short Descriptive Title
   status: proposed | accepted | rejected | superseded | deprecated
   created: YYYY-MM-DD
@@ -80,8 +80,8 @@ doc_meta:
 
 ### 2.3 Repository Management & Indexing Invariants
 
-- **Location**: Global enterprise ADRs must reside in the `/05-adr` directory of the architecture-description repository. Local project ADRs must reside in the `packages/docs/04-decisions` directory of the local workspace.
-- **Naming Conventions**: Files must be named sequentially: `ADR-E[Sequence]-[slug].md` for global decisions (e.g. `ADR-E001-modular-monolith.md`) and `ADR-[SYSTEM]-[DOMAIN]-[NUMBER]-[slug].md` for local project decisions.
+- **Location**: Enterprise ADRs must reside in the `/05-adr` directory of the architecture-description repository, grouped by Bounded Context (e.g., `/05-adr/_global/` or `/05-adr/ui-platform/`). Local project ADRs remain in `packages/docs/04-decisions` of local workspaces.
+- **Naming Conventions**: Files must be named sequentially within their context: `ADR-GLB-[Sequence]-[slug].md` for global decisions and `ADR-[DOMAIN]-[CAPABILITY]-[Sequence]-[slug].md` for domain-level enterprise decisions. Local project decisions use `ADR-[SYSTEM]-[DOMAIN]-[NUMBER]-[slug].md`.
 - **Unified Index**: Every repository must maintain a root-level index catalog linking to every ADR with its current status. The index must be updated prior to merging any new ADR.
 
 ---

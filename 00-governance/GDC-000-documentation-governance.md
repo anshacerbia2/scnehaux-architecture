@@ -110,17 +110,83 @@ graph TD
    style ProjGo fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#fff
 ```
 
-1. **Enterprise/Global Level (Root Repo)**:
-   - **Authority**: Global Mandatory Guardrails and Multi-System Contexts (C1/C2 macro-level).
-   - **Focus**: Strategic cross-cutting standards, platform contracts, and application container architectures.
-   - **Agnosticity Rules**: Global Standards (`STD-E*`) and PADs must be technology-agnostic. They define strategic guardrails, network protocols, browser runtime expectations, and core business integration contracts.
-   - **Naming Conventions**: `ADR-E[N]-[slug].md`, `STD-E[N]-[slug].md`, `[domain]-platform.pad.md`, and `[system-name].sad.md`.
+1. **Enterprise Level (Root Repo)**:
+   - **Authority**: Macro-level architectural guardrails, split into Global (cross-cutting) and Domain-Bounded contexts (C1/C2 macro-level).
+   - **Focus**: Strategic standards, platform contracts, and application container architectures.
+   - **Agnosticity Rules**: Global Standards (`STD-GLB*`) and PADs must be technology-agnostic. Domain Standards (e.g., `STD-UIP*`) may specify domain-scoped technical constraints.
+   - **Naming Conventions**:
+     - **Global**: `ADR-GLB-[N]-[slug].md`, `STD-GLB-[N]-[slug].md`
+     - **Domain**: `ADR-[DOMAIN]-[CAPABILITY]-[N]-[slug].md`, `STD-[DOMAIN]-[CAPABILITY]-[N]-[slug].md`
+     - **Systems**: `[domain]-platform.pad.md`, `[system-name].sad.md`
+   - **Directory Structure Variations (C4 Abstraction Law)**: The directory taxonomy changes depending on the C4 level and the nature of the document.
+     - **EAD (01)**: Must remain flat or layered by TOGAF (Business, Data, Application, Tech). DDD subfolders are prohibited to preserve the holistic enterprise view.
+     - **STD (02) & ADR (05)**: Must utilize **Domain-Driven Taxonomy** (`/[domain]/[capability]/`) to prevent granular rules and decisions from causing cognitive overload.
+       - **Rule 1 (Max Depth)**: Directory nesting is strictly capped at Level 3 (`Root -> Domain -> Capability`). Creating further subdirectories inside a capability folder (Level 4+) is prohibited to prevent the "Russian Doll" anti-pattern and maintain flat discoverability.
+       - **Rule 2 (Lexicographical Suffixing)**: To group related or multi-part documents without violating the Max Depth rule, use alphanumeric suffixing on the sequence ID (e.g., `STD-UIP-TKN-001A-core.md`, `STD-UIP-TKN-001B-semantic.md`). This keeps related files sequentially grouped in the file explorer.
+     - **PAD (03) & SAD (04)**: Must utilize **Asset Container Folders** (`/[system-name]/`). The folder acts as an isolation boundary for the `.md` file and its supporting assets (diagrams, images), inherently grouping by logical domain or physical unit.
+
+     **Example Enterprise Directory Structure:**
+     ```text
+     scnehaux-architecture/
+     ├── 01-enterprise-architecture/      # (Flat / Holistic View)
+     │   └── EAD-001-value-stream.md
+     │
+     ├── 02-standards/                    # (Domain-Driven Taxonomy)
+     │   ├── _global/
+     │   │   └── STD-GLB-001-api-design.md
+     │   └── ui-platform/
+     │       └── design-tokens/
+     │           └── STD-UIP-TKN-001-tier1-core.md
+     │
+     ├── 03-pad/                          # (Asset Container Folders)
+     │   └── scnehaux-ui-platform/
+     │       ├── scnehaux-ui-platform.pad.md
+     │       └── architecture-diagram.png
+     │
+     ├── 04-sad/                          # (Asset Container Folders)
+     │   └── scnehaux-iam/
+     │       ├── scnehaux-iam.sad.md
+     │       └── deployment-topology.png
+     │
+     └── 05-adr/                          # (Domain-Driven Taxonomy)
+         ├── _global/
+         │   └── ADR-GLB-001-modular-monolith.md
+         └── ui-platform/
+             └── design-tokens/
+                 └── ADR-UIP-TKN-001-domain-based-taxonomy.md
+     ```
 
 2. **Project/Local Level (Project Repo)**:
    - **Authority**: Local Contextualization and Code execution (C3/C4 micro-level).
    - **Focus**: Detailed execution decisions, runtime optimization, framework choices, and code-level packaging layout.
    - **Specificity Rules**: Local Standards (`STD-SCNX-*`) and TDDs must be technology-specific and framework-opinionated, mapping global standard requirements directly to concrete APIs.
    - **Naming Conventions**: `ADR-[REPO]-[COMPONENT]-[N]-[slug].md`, `STD-[REPO]-[COMPONENT]-[N]-[slug].md`, and `TDD-[REPO]-[COMPONENT]-[N]-[slug].md`.
+   - **Directory Structure Variations (Module-Driven Taxonomy)**: Because a Project Repo inherently represents a single Domain or System, *Domain-Driven Taxonomy* is redundant. Local documentation must utilize **Module/Feature-Driven Taxonomy** to closely mirror the source code structure. Local linting execution files must reside parallel to the documentation folders.
+
+     **Example Local Project Directory Structure:**
+     ```text
+     scnehaux-ui-platform/              # (Project Repository)
+     ├── docs/                          
+     │   ├── 01-standards/              # (Module-Driven Taxonomy)
+     │   │   └── core-components/
+     │   │       └── STD-UIP-CORE-001-button-api.md
+     │   │
+     │   ├── 02-designs/                # (Asset Container Folders for TDDs)
+     │   │   └── auth-module/           
+     │   │       ├── TDD-UIP-AUTH-001-jwt-rotation.md
+     │   │       └── flow-diagram.png
+     │   │
+     │   ├── 03-decisions/              # (Module-Driven Taxonomy for Local ADRs)
+     │   │   └── build-system/
+     │   │       └── ADR-UIP-BLD-001-use-vite.md
+     │   │
+     │   ├── linting-rules.yaml         # (Local Linting Rules overlay)
+     │   └── linter.py                  # (Local CI execution script)
+     │
+     └── src/                           # (Source Code matching the Taxonomy)
+         ├── core-components/
+         └── auth/
+     ```
 
 ---
 
