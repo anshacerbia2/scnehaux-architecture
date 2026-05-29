@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise UI Platform Styled Components & Compilation Standard
   owner: Principal Frontend Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-21
@@ -22,7 +22,14 @@ It guarantees that styles are resolved at compile-time with zero runtime overhea
 
 ---
 
-## 2. Zero-Runtime Compilation
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Zero-Runtime Compilation
 
 All styling engines deployed within the UI platform (such as static CSS-in-JS engines or Sass/SCSS compilers) must compile styles statically during the application build phase.
 - **Prohibition of Runtime CSS-in-JS**: Using styling libraries that perform runtime style injection or dynamic evaluation in the React render path (such as legacy runtime CSS-in-JS libraries) is prohibited on performance-sensitive paths.
@@ -30,7 +37,7 @@ All styling engines deployed within the UI platform (such as static CSS-in-JS en
 
 ---
 
-## 3. Style Encapsulation in Federated Environments
+### Style Encapsulation in Federated Environments
 
 To prevent visual layout conflicts when multiple micro-frontends share the same browser DOM environment:
 - **Global Selector Prohibition**: Micro-frontends and shared component libraries are prohibited from using global CSS selectors. Style boundaries must use local CSS Modules or unique class prefixes.
@@ -41,14 +48,19 @@ To prevent visual layout conflicts when multiple micro-frontends share the same 
 
 ---
 
-## 4. Build Pipeline Visual Testing
+### Build Pipeline Visual Testing
 
 - **Visual Regression Suite**: Modifying core styled components requires passing visual regression tests (such as Playwright visual comparison check) in the CI pipeline before merging.
 - **Bundle Size Checks**: Build processes must track styling output bundles to prevent layout CSS bloat.
 
 ---
 
-## 5. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 - **Static Analysis**: CI/CD pipelines must check Rspack/Webpack configurations to block non-static styling libraries.
 - **Waiver Protocol**: Deviations from the zero-runtime mandate or style prefix boundaries require a documented project ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.

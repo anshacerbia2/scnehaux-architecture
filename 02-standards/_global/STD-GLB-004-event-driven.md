@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Event-Driven Architecture & Messaging Standard
   owner: Enterprise Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: public
   review_cycle_days: 180
   last_reviewed: 2026-05-22
@@ -22,7 +22,14 @@ It applies to all publish-subscribe configurations, message queue integrations, 
 
 ---
 
-## 2. Event Payload Schema Specification
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Event Payload Schema Specification
 
 To ensure interoperability across heterogeneous services, all asynchronous events must conform strictly to the **CloudEvents 1.0** specification in JSON format.
 
@@ -53,7 +60,7 @@ To ensure interoperability across heterogeneous services, all asynchronous event
 
 ---
 
-## 3. Transactional Outbox Pattern
+### Transactional Outbox Pattern
 
 To prevent dual-write inconsistencies, services must never write to a database and directly publish to an external message broker within the same execution path.
 
@@ -68,7 +75,7 @@ To prevent dual-write inconsistencies, services must never write to a database a
 
 ---
 
-## 4. Delivery Semantics & Idempotency
+### Delivery Semantics & Idempotency
 
 Messaging must guarantee delivery while protecting consumers from duplicate message processing.
 
@@ -78,7 +85,7 @@ Messaging must guarantee delivery while protecting consumers from duplicate mess
 
 ---
 
-## 5. Consumer Retries & Dead Letter Queues (DLQ)
+### Consumer Retries & Dead Letter Queues (DLQ)
 
 Transient processing errors must not block event stream consumption or cause message loss.
 
@@ -88,7 +95,7 @@ Transient processing errors must not block event stream consumption or cause mes
 
 ---
 
-## 6. Event Versioning & Schema Evolution Rules
+### Event Versioning & Schema Evolution Rules
 
 To prevent downstream consumer failures during schema changes, services must adhere to strict compatibility contracts:
 
@@ -113,7 +120,12 @@ To prevent downstream consumer failures during schema changes, services must adh
 
 ---
 
-## 7. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 1. **Schema Registry Validation**: Build validation pipelines must check event models against the centralized schema registry. Schema modifications that break backward compatibility rules must block the build.
 2. **Consumer Group Audit**: All services running consumer groups must register their offsets and lagging metrics under the enterprise observability stack.

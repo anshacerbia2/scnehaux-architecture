@@ -4,7 +4,7 @@ doc_meta:
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
   version: 2.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-25
@@ -37,7 +37,14 @@ document for governance details and must not replicate these rules.
 
 ---
 
-## 2. Design Token Taxonomy
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Design Token Taxonomy
 
 Visual tokens must be structured according to a strict **3-Tier Token
 Architecture**:
@@ -47,7 +54,7 @@ Architecture**:
 (Raw OKLCH coordinates)     (Symmetrical Semantic Tokens)         (Component-bound aliases)
 ```
 
-### 2.1 Tier 1 — Core Primitives
+#### Tier 1 — Core Primitives
 
 Raw value tokens mapping directly to OKLCH lightness, chroma, and hue
 coordinates. These tokens carry **no semantic meaning** and are strictly
@@ -58,7 +65,7 @@ encapsulated inside the build compiler.
 - **Access Path**: Tier-1 values are exposed exclusively through the SASS
   compile-time `generate-scheme-matrix` mixin and the `get-color()` accessor.
 
-### 2.2 Tier 2 — Global Semantic Contract
+#### Tier 2 — Global Semantic Contract
 
 Context-dependent tokens mapping Tier-1 values to functional, role-specific
 definitions via a **Symmetrical Orthogonal Semantic Matrix**:
@@ -86,16 +93,16 @@ non-symmetric by design — not all roles support all states:
 - `Shadow` carries no semantic meaning for `selected` or `focus` states —
   shadow communicates elevation, not interaction intent.
 
-### 2.3 Tier 3 — Component Tokens
+#### Tier 3 — Component Tokens
 
 Immutable tokens bound to specific component boundaries. Governed by strict
 alias budgeting rules (see Section 6.1).
 
 ---
 
-## 3. Token Compilation & Delivery Pipeline
+### Token Compilation & Delivery Pipeline
 
-### 3.1 Centralized OKLCH Recipe Engine
+#### Centralized OKLCH Recipe Engine
 
 Token values must be generated via a **compile-time OKLCH Recipe Engine**
 (SASS mixin: `generate-scheme-matrix`) residing in `_default-token.scss`.
@@ -111,7 +118,7 @@ visual harmony without manual hand-tuning per-token.
   `@scnx/system` stylesheet bundle prior to DOM parsing.
 - **Dual-Axis Calibration**: The compilation pipeline enforces a dual-axis scaling scheme. The **Lightness Axis** maps theme curves in perceptually uniform OKLCH space, and the **Transparency/Alpha Axis** resolves translucent overlays via browser-level `color-mix()` in OKLCH space. The compile-time solver validates the precise overlay ratio ($X\%$) to prevent CSS code bloat and avoid generating static transparent tokens.
 
-### 3.2 Cascading Multi-Theme & Partial Contracts Invariant
+#### Cascading Multi-Theme & Partial Contracts Invariant
 
 The platform supports multi-theme and multi-brand white-label capabilities
 under a strict cascading model:
@@ -127,7 +134,7 @@ under a strict cascading model:
    introduce any undocumented keys** absent from the core `$system` contract,
    ensuring zero visual leakage and strict compile-time safety.
 
-### 3.3 Build-Time Contract Validation
+#### Build-Time Contract Validation
 
 The `_contract-token.scss` validator enforces role-specific state legality
 at compile time:
@@ -142,9 +149,9 @@ at compile time:
 
 ---
 
-## 4. Consumption Contracts
+### Consumption Contracts
 
-### 4.1 Token Consumption Laws (Zero-Bypass Rule)
+#### Token Consumption Laws (Zero-Bypass Rule)
 
 To maintain the visual root of trust, the platform enforces an absolute
 zero-bypass styling rule across all consumer layers:
@@ -157,7 +164,7 @@ zero-bypass styling rule across all consumer layers:
 - **Utility Styling Compliance**: Utility-class configurations must resolve
   styling through token-bound utility maps, not arbitrary values.
 
-### 4.2 Semantic Usage Doctrine (Preventing Semantic Drift)
+#### Semantic Usage Doctrine (Preventing Semantic Drift)
 
 To ensure consistent design decisions across product teams, the `Emphasis`
 layers must obey explicit behavioral guidelines. Misusing layers (e.g.,
@@ -170,7 +177,7 @@ rendering body copy with `contrast` emphasis) is a semantic violation:
 | **`strong`**   | Elevated prominence representing active visual priority or highlighted emphasis. | Active indicators, bold headings, high-visibility warning borders |
 | **`contrast`** | Maximum readability contrast designed strictly for placement on top of filled surfaces. | Text/icons inside filled brand buttons, indicators on dark badges |
 
-### 4.3 Domain Semantic Layer (Logical Intent Mapping)
+#### Domain Semantic Layer (Logical Intent Mapping)
 
 To prevent global color roles from colliding with domain-specific logic in
 complex systems (HRIS, ERP, Finance), portals must implement a thin logical
@@ -192,9 +199,9 @@ corrupting the core global matrix:
 
 ---
 
-## 5. Typography & Motion Semantic Families
+### Typography & Motion Semantic Families
 
-### 5.1 Semantic Reading Density (Typography)
+#### Semantic Reading Density (Typography)
 
 Typography tokens must be grouped by **semantic reading layout**, not by
 simple sequential text scaling. This prevents teams from scaling fonts
@@ -206,7 +213,7 @@ arbitrarily across dense dashboards and article-style portals:
 | **Article** | `typography.article.readable` | Sustained reading of text-heavy prose, articles, documentation |
 | **Metric** | `typography.metric.display` | Standalone numeric KPIs, scores, and display indicators |
 
-### 5.2 Semantic Motion Language
+#### Semantic Motion Language
 
 Timing durations and mathematical easing curves must map to high-level
 communicative actions, not arbitrary numeric values:
@@ -225,9 +232,9 @@ rule (see PAD-002, Section 5).
 
 ---
 
-## 6. Tier-3 Alias Governance
+### Tier-3 Alias Governance
 
-### 6.1 Component Alias Budget
+#### Component Alias Budget
 
 To prevent custom styling bloat where federated teams spawn endless Tier-3
 aliases for minor adjustments, the platform enforces strict alias budgeting:
@@ -241,7 +248,7 @@ aliases for minor adjustments, the platform enforces strict alias budgeting:
   Architectural Decision Record (ADR) approved by the Visual Platform Board,
   preventing styling sprawl.
 
-### 6.2 Alias Naming Convention
+#### Alias Naming Convention
 
 All Tier-3 component aliases must follow the convention:
 ```
@@ -254,9 +261,14 @@ Examples:
 
 ---
 
-## 7. Compliance & Enforcement
 
-### 7.1 Static AST Verification (Zero-Bypass Enforcement)
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
+
+### 5.7.1 Static AST Verification (Zero-Bypass Enforcement)
 
 Build-time scanners and ESLint/Stylelint AST plugins must actively parse
 component source code:
@@ -269,7 +281,7 @@ component source code:
   reference system z-index tokens (e.g., `var(--ds-z-index-modal)`).
   Hardcoded z-index integers are prohibited.
 
-### 7.2 Build Contract Validation
+### 5.7.2 Build Contract Validation
 
 The SASS compile pipeline (`pnpm --filter "@scnx/system" build`) is the
 primary mechanical enforcement gate:
@@ -279,7 +291,7 @@ primary mechanical enforcement gate:
 - Any build failure from this gate is treated as a `CRITICAL` schema
   violation requiring an immediate fix before the PR can merge.
 
-### 7.3 Waiver Protocol
+### 5.7.3 Waiver Protocol
 
 Deviations from any rule in this standard (new Tier-3 aliases, partial
 schema exceptions, alternative motion properties) require:

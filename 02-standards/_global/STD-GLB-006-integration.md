@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Integration Architecture Standard
   owner: Principal Software Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-22
@@ -22,7 +22,14 @@ It applies to all synchronous service-to-service REST/gRPC APIs, asynchronous ev
 
 ---
 
-## 2. Integration Communication Patterns
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Integration Communication Patterns
 
 To prevent cascading service failures and tightly coupled dependencies:
 
@@ -35,7 +42,7 @@ To prevent cascading service failures and tightly coupled dependencies:
 
 ---
 
-## 3. API Gateway Ingress Routing & Invariants
+### API Gateway Ingress Routing & Invariants
 
 All external traffic must traverse the enterprise API Gateway (e.g., Kong, Envoy). Direct client routing to internal microservice instances is prohibited.
 
@@ -49,7 +56,7 @@ All external traffic must traverse the enterprise API Gateway (e.g., Kong, Envoy
 
 ---
 
-## 4. Third-Party Webhook & Web Service Security
+### Third-Party Webhook & Web Service Security
 
 Integrating with external vendors (e.g. Stripe, external HR software, email providers):
 
@@ -60,14 +67,19 @@ Integrating with external vendors (e.g. Stripe, external HR software, email prov
 
 ---
 
-## 5. Event Ingestion Boundaries
+### Event Ingestion Boundaries
 
 - **Gateway-Level Schema Validation**: Inbound events arriving from external webhooks must undergo schema validation at the API Gateway or edge validation middleware before being published to the internal message broker.
 - **Ingestion Queue Sizing**: Ingestion endpoints must throttle input traffic using buffering queues to prevent publisher spikes from degrading downstream consumer databases.
 
 ---
 
-## 6. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 1. **Gateway configuration Audits**: CI pipelines must audit API Gateway routing specifications (`gateway.yaml` or equivalent declarations) to verify that no internal service endpoints bypass rate-limiting policies or authentication checks.
 2. **Egress Firewall Rules**: Automated infrastructure scanners must verify that private subnet egress firewall rules permit outbound network access only to white-listed domains.

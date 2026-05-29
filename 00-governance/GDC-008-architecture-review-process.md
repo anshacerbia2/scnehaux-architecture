@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-007
+  id: GDC-008
   title: Architecture Review Process
   owner: Principal Architect
   version: 1.0.0

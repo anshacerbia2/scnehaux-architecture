@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Frontend Technology Stack & Layered Architecture Standard
   owner: Principal Frontend Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-21
@@ -24,7 +24,14 @@ The scope of this standard applies to all frontend applications, including stand
 
 ---
 
-## 2. Technology Stack Definition
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Technology Stack Definition
 
 To prevent technology fragmentation and ensure consistent platform optimization, all web applications must compile under the following core technologies. Deviations are prohibited unless backed by an approved Architecture Decision Record (ADR).
 
@@ -37,7 +44,7 @@ To prevent technology fragmentation and ensure consistent platform optimization,
 
 ---
 
-## 3. Core Architecture Layers
+### Core Architecture Layers
 
 To prevent abstraction leakage, eliminate rendering bottlenecks, and enforce structural boundaries, all frontend applications must organize their codebases and runtime operations into the following four distinct layers.
 
@@ -53,27 +60,27 @@ To prevent abstraction leakage, eliminate rendering bottlenecks, and enforce str
 +-----------------------------------------------------------------+
 ```
 
-### 3.1 Layer 1: Application Domain Layer
+#### Layer 1: Application Domain Layer
 - **Responsibility**: Bounded business logic, entity models, input validation schemas, policy evaluations, and user workflows.
 - **Architectural Rules**:
   - The Domain Layer must be decoupled from UI frameworks. Importing React packages, JSX templates, or styling engine APIs is prohibited.
   - All domain rules and validations must be written as pure, side-effect-free TypeScript functions, enabling isolated unit testing.
 
-### 3.2 Layer 2: Presentation & Composition Layer
+#### Layer 2: Presentation & Composition Layer
 - **Responsibility**: UI markup template assembly, component composition, style containment, and static transition declarations.
 - **Architectural Rules**:
   - Components must derive styling from platform-wide design tokens. Declaring hardcoded values is prohibited.
   - Declaring global CSS selectors inside individual component styles is prohibited. Style boundaries must utilize CSS Modules or unique class name prefixes.
   - Interactive elements must be keyboard navigable and support semantic ARIA attributes to satisfy WCAG 2.2 AA standards.
 
-### 3.3 Layer 3: State & Synchronization Layer
+#### Layer 3: State & Synchronization Layer
 - **Responsibility**: Cache synchronization, client-global memory state management, and mutation transaction control.
 - **Architectural Rules**:
   - **Server State**: Managed exclusively by cache-aware engines (such as TanStack Query). Local mirroring of server state is prohibited.
   - **Global State**: Restricted to application-wide client concerns (such as UI layout states). High-frequency mutations must use optimized stores (such as Zustand).
   - **Optimistic Updates**: Must include programmatic transactional rollbacks to revert the UI state if the server operation fails.
 
-### 3.4 Layer 4: Infrastructure & Platform Layer
+#### Layer 4: Infrastructure & Platform Layer
 - **Responsibility**: Low-level browser adapters, HTTP client configurations, route authorization guards, event listeners, and hardware-synchronized rendering.
 - **Architectural Rules**:
   - **HTTP Interceptors**: All outgoing requests must route through a centralized wrapper injecting authorization tokens, tenant headers, and correlation trace IDs (e.g. `X-Trace-Id`).
@@ -82,7 +89,7 @@ To prevent abstraction leakage, eliminate rendering bottlenecks, and enforce str
 
 ---
 
-## 4. State Taxonomy
+### State Taxonomy
 
 All data elements inside a frontend application must be categorized into one of five distinct state classifications. Combining these classifications or managing them through incorrect storage models is prohibited.
 
@@ -98,60 +105,60 @@ All data elements inside a frontend application must be categorized into one of 
 +----------------|-----------------------------------------------------------+
 ```
 
-### 4.1 Server State & Cache Topology
+#### Server State & Cache Topology
 - **Cache Ownership**: The server state cache (QueryClient instance) represents a read-only local replica of remote databases. 
 - **Stale Time Configuration**: Queries must establish a default `staleTime` of at least 5000ms. Defaulting `staleTime: 0` is prohibited, as it triggers redundant server-bound requests on every component re-render or layout change.
 - **Cache Invalidation**: Post-mutation invalidations must target specific queries (`queryClient.invalidateQueries`) rather than executing global cache flushes.
 - **Mutation Orchestration**: Asynchronous mutations must handle success, failure, and execution states explicitly. Optimistic updates must define a rollback mutation (using `onMutate` to store previous values and `onError` to restore the state) to prevent visual state drift during network failure.
 
-### 4.2 Client-Global State
+#### Client-Global State
 - **Zustand Selector-Bound Stores**: Client-global state must use selector-based state managers (such as Zustand). Importing global state objects directly without utilizing selector functions (e.g. `useAuthStore(state => state.user)`) is prohibited, as it forces the consuming component to re-render on any unrelated store mutation.
 
-### 4.3 URL State
+#### URL State
 - **Single Source of Truth**: Sorting parameters, active tab IDs, search filter keywords, and pagination page numbers must be stored in URL parameters (path or query params) rather than local React state. Using URL state ensures that page states are deep-linkable, bookmarkable, and persist across navigation cycles.
 
-### 4.4 Form State
+#### Form State
 - **Uncontrolled Isolation**: Large-scale or data-heavy inputs must keep form values isolated within DOM elements using Refs or specialized form state engines. Running key-by-key component re-renders for multi-field forms is prohibited.
 
-### 4.5 Ephemeral State
+#### Ephemeral State
 - **Component-Local Scope**: Ephemeral UI states (such as dropdown expanded toggles, modal open states, or local list filter selections) must be stored inside component-local state (`useState`).
 
 ---
 
-## 5. Rendering Systems Architecture
+### Rendering Systems Architecture
 
 Applications must align their component hierarchy with modern rendering strategies to optimize Core Web Vitals, minimize Time to Interactive (TTI), and reduce Cumulative Layout Shift (CLS).
 
-### 5.1 Rendering Strategy Selection
+#### Rendering Strategy Selection
 - **Client-Side Rendering (CSR)**: Mandated for restricted administrative portals, authenticated dashboards, and applications operating behind firewalls.
 - **Server-Side Rendering (SSR) & Streaming Hydration**: Required for public landing pages, content-heavy marketing directories, and search-engine-indexed routes to ensure fast First Contentful Paint (FCP).
 
-### 5.2 Async Boundaries & Suspense Placement
+#### Async Boundaries & Suspense Placement
 - Components performing asynchronous data fetching or dynamic module resolution must be wrapped in a `<Suspense>` boundary containing a lightweight fallback skeleton.
 - **Layout Stabilization**: Suspense fallbacks must have fixed dimensions matching the expected height and width of the resolved components to prevent Cumulative Layout Shift (CLS) when components hydrate.
 - **Isolated Streaming**: Heavy components must be placed within separate `<Suspense>` boundaries to allow progressive streaming of HTML, preventing slower server queries from blocking the load cycle of static layout components.
 
 ---
 
-## 6. Routing Architecture
+### Routing Architecture
 
 Routing must enforce page isolation, secure authorization boundaries, and streamlined user navigation.
 
-### 6.1 Nested Layout Boundaries
+#### Nested Layout Boundaries
 - Router hierarchies must implement nested layouts, sharing static scaffolding (such as sidebars, headers, and footer components) while rendering dynamic child routes within isolated Outlet slots.
 - Layout boundaries must not contain business logic. They serve as structural scaffolds and error containment boundaries.
 
-### 6.2 Authentication & Authorization Boundaries
+#### Authentication & Authorization Boundaries
 - **Route Authorization Guards**: Routes requiring active sessions must be wrapped in route-level guards. These guards evaluate user authorization within the infrastructure layer before rendering target page templates.
 - **Unauthorized Redirection**: Guard failures must trigger immediate redirection to authentication endpoints, injecting the original request path as a query parameter (e.g., `?redirect=/dashboard`) to enable automatic return mapping post-login.
 
-### 6.3 Prefetching Policies
+#### Prefetching Policies
 - Standard page links (`<Link>`) must implement viewport-aware prefetching to download destination route assets before user interaction, maximizing transition responsiveness.
 - High-volume routes containing expensive computations must disable automatic prefetching (`prefetch={false}`) to conserve client-side bandwidth.
 
 ---
 
-## 7. Directory Layout & Dependency Mapping
+### Directory Layout & Dependency Mapping
 
 Application repositories must map their directory structures directly to the defined architectural layers:
 
@@ -162,13 +169,18 @@ src/
 └── features/     # Map to Layer 2 (Presentation) and local routing routes
 ```
 
-### 7.1 Strict Dependency Boundaries
+#### Strict Dependency Boundaries
 - **No Inward UI Dependencies**: Code within `src/core/` and `src/domain/` must have zero dependencies on code within `src/features/` or any UI-framework packages (e.g. React).
 - **Feature Isolation**: Features residing in `src/features/[feature-name]/` must be self-contained. Direct cross-imports between separate feature folders are prohibited. Shared utilities and components must reside in a centralized `src/components/` or `src/utils/` directory.
 
 ---
 
-## 8. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 - **Boundary Linting (ESLint & Dependency Cruiser)**: Build pipelines must run static analysis tools (e.g. Dependency Cruiser) and ESLint plugins (`eslint-plugin-import`) configured with strict boundary rules to block imports that violate the directory layering layout (such as UI elements importing domain logic or cross-feature imports).
 - **Automated Visual Token Scanner**: A custom pre-commit and CI scanner script must parse all CSS/SCSS/TSX files, flagging any hardcoded HEX, RGB, or HSL color values and blocking the commit if styling rules do not resolve through centralized design tokens.

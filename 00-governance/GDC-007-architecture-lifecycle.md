@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-006
+  id: GDC-007
   title: Technology Lifecycle & Standards Governance
   owner: Principal Software Architect
   version: 1.0.0

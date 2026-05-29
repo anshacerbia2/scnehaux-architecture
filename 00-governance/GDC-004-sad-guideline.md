@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-003
+  id: GDC-004
   title: Software Architecture Document (SAD) Guideline
   owner: Principal Architect
   version: 1.0.0

@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-008
+  id: GDC-009
   title: Documentation Quality Framework
   owner: Principal Architect
   version: 1.0.0

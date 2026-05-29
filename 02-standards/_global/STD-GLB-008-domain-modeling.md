@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Domain Modeling Standard
   owner: Principal Software Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-22
@@ -22,7 +22,14 @@ It defines Bounded Context boundaries, Aggregate invariants, entity separation, 
 
 ---
 
-## 2. Bounded Context & Domain Isolation Rules
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Bounded Context & Domain Isolation Rules
 
 To prevent logical domain leakage and facilitate clean service boundaries:
 
@@ -34,7 +41,7 @@ To prevent logical domain leakage and facilitate clean service boundaries:
 
 ---
 
-## 3. Aggregate Boundaries & Rules
+### Aggregate Boundaries & Rules
 
 Aggregates represent transactional boundaries containing clusters of associated entities and value objects.
 
@@ -44,7 +51,7 @@ Aggregates represent transactional boundaries containing clusters of associated 
 - **Resource Constraints**: Aggregates must be designed to remain memory-bounded:
   - An aggregate must not contain more than `1000 child records` (such as historical line items). High-volume child records must be modeled as independent aggregates referenced by identifier.
 
-### 3.1 Aggregate Consistency Boundaries & Write Isolation Rules
+#### Aggregate Consistency Boundaries & Write Isolation Rules
 
 To enforce domain integrity and prevent transaction deadlocks under load, services must map write boundaries explicitly:
 
@@ -58,7 +65,7 @@ To enforce domain integrity and prevent transaction deadlocks under load, servic
 
 ---
 
-## 4. Invariant Protection & Entity Validation
+### Invariant Protection & Entity Validation
 
 Domain models must protect business rules (invariants) actively at memory boundaries.
 
@@ -68,7 +75,7 @@ Domain models must protect business rules (invariants) actively at memory bounda
 
 ---
 
-## 5. Domain Events & Domain Services
+### Domain Events & Domain Services
 
 - **Domain Event Emission**: State mutations that trigger downstream reactions must publish a local Domain Event (e.g., `EmploymentTerminatedEvent`).
 - **Transactional Outbox Integration**: Domain events must be appended to the local transaction outbox table inside the same transaction block that updates the aggregate state.
@@ -76,7 +83,12 @@ Domain models must protect business rules (invariants) actively at memory bounda
 
 ---
 
-## 6. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 1. **Static Analysis AST Inspections**: Build verification checks must run AST parsers to flag public field setter methods inside Aggregate files.
 2. **Architecture Review Audits**: Pull requests introducing cross-aggregate database mutations in a single transaction block must trigger security and architectural reviews.

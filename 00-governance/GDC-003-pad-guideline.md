@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-002
+  id: GDC-003
   title: Platform Architecture Document (PAD) Guideline
   owner: Principal Architect
   version: 1.0.0

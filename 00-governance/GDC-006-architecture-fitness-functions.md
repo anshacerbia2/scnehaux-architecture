@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-005
+  id: GDC-006
   title: Architecture Fitness Functions Guideline
   owner: Principal Software Architect
   version: 1.0.0

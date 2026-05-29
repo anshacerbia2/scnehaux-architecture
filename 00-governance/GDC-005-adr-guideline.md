@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-004
+  id: GDC-005
   title: Architecture Decision Record (ADR) Guideline
   owner: Principal Software Architect
   version: 1.0.0

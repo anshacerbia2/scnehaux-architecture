@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Database & Persistence Strategy
   owner: Enterprise Architect
   version: 1.1.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-22
@@ -22,7 +22,14 @@ It applies to all persistent relational stores, document stores, caches, and key
 
 ---
 
-## 2. Certified Persistence Standards
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Certified Persistence Standards
 
 To prevent technology fragmentation, development teams must strictly select from the following certified patterns based on their technology stacks:
 
@@ -33,7 +40,7 @@ To prevent technology fragmentation, development teams must strictly select from
 | **Cache & Rotation** | Go, Node.js | N/A | **Redis (v7+)** | Session cache, sliding-window rate limiters, token rotation families. |
 | **NoSQL / Document** | Go, Node.js | N/A | **MongoDB / DynamoDB** | Unstructured document catalogs, high-throughput key-value logs (under designated decision matrix). |
 
-### 2.1 NoSQL vs. Relational Decision Matrix
+#### NoSQL vs. Relational Decision Matrix
 
 Database selection must comply with the following taxonomy. Utilizing an engine outside these parameters requires a formal architectural waiver.
 
@@ -57,28 +64,28 @@ Database selection must comply with the following taxonomy. Utilizing an engine 
                                     [MongoDB v7+]                  [Redis v7+]
 ```
 
-#### 2.1.1 Relational Database: PostgreSQL (v16+)
+##### Relational Database: PostgreSQL (v16+)
 - **Consistency Model**: Immediate consistency with strict ACID compliance.
 - **Query Latency SLA**: Read operations $\le 20ms$, Write operations $\le 50ms$ at 95th percentile.
 - **Constraints**: Relational schemas must be normalized to Third Normal Form (3NF) unless denormalization is verified to resolve a rendering bottleneck.
 
-#### 2.1.2 Document Database: MongoDB (v7+)
+##### Document Database: MongoDB (v7+)
 - **Consistency Model**: Eventual consistency permitted for read replicas; strong consistency on primary writes.
 - **Query Latency SLA**: Read operations $\le 15ms$, Write operations $\le 30ms$ at 95th percentile.
 - **Constraints**: Joins (`$lookup`) are prohibited in high-frequency queries. Documents must be self-contained and limited to a maximum size of `16MB`.
 
-#### 2.1.3 High-Throughput Key-Value: DynamoDB
+##### High-Throughput Key-Value: DynamoDB
 - **Consistency Model**: Single-digit millisecond eventual consistency by default; strongly consistent reads are optional.
 - **Query Latency SLA**: Read and write operations $\le 10ms$ at 99th percentile.
 - **Constraints**: All tables must employ a single-table design pattern. Scan operations are prohibited in production runtimes; queries must fetch records strictly using partition keys.
 
 ---
 
-## 3. Database Partitioning & Tenant Isolation
+### Database Partitioning & Tenant Isolation
 
 To support large-scale multi-tenant enterprise data without performance degradation:
 
-### 3.1 Tenant-Level Partitioning
+#### Tenant-Level Partitioning
 - **Partition Key Requirement**: Relational databases containing tenant-scoped data must partition tables using a composite partition key consisting of `(tenant_id, id)`.
 - **Row-Level Security (RLS)**: PostgreSQL tables containing `tenant_id` must enable RLS:
   ```sql
@@ -91,7 +98,7 @@ To support large-scale multi-tenant enterprise data without performance degradat
   tx.Exec(ctx, "SET LOCAL app.current_tenant = $1", tenantID)
   ```
 
-### 3.2 Time-Series Partitioning
+#### Time-Series Partitioning
 - **Hypertable Allocation**: Telemetry, events, and audit logs must utilize time-series partitioning (e.g. TimescaleDB hypertables or native PostgreSQL declarative partitioning).
 - **Partition Range Intervals**:
   - *High-Velocity Logs*: Partition intervals must be set to `24 hours` (1 day).
@@ -100,7 +107,7 @@ To support large-scale multi-tenant enterprise data without performance degradat
 
 ---
 
-## 4. Data Archival & Storage Tiering
+### Data Archival & Storage Tiering
 
 All persistent data must transition through defined storage lifecycle tiers to optimize database host resources:
 
@@ -108,24 +115,24 @@ All persistent data must transition through defined storage lifecycle tiers to o
 [Hot Tier] (SSD) ──(After 90 Days)──► [Warm Tier] (HDD/Replicas) ──(After 365 Days)──► [Cold Tier] (S3/Parquet)
 ```
 
-### 4.1 Hot Storage (Active Operational Tier)
+#### Hot Storage (Active Operational Tier)
 - **Engine**: SSD-backed high-IOPS PostgreSQL or MongoDB primary nodes.
 - **Lifespan**: Data accessed within the last 90 days.
 - **Access SLA**: Sub-50ms query execution.
 
-### 4.2 Warm Storage (Read-Only Archive Tier)
+#### Warm Storage (Read-Only Archive Tier)
 - **Engine**: Local historical tables or compressed partition tables on read-replicas.
 - **Lifespan**: Data older than 90 days but under 365 days.
 - **Access SLA**: Sub-2s query execution. Altering or writing to warm storage is prohibited.
 
-### 4.3 Cold Storage (Frozen Analytical Tier)
+#### Cold Storage (Frozen Analytical Tier)
 - **Engine**: Compressed Apache Parquet files exported to object storage (Amazon S3 / Google Cloud Storage).
 - **Lifespan**: Data older than 365 days.
 - **Access SLA**: Under 5 minutes via serverless query engines (Athena/Presto). Cold storage files must be read-only and encrypted using envelope keys managed by AWS KMS or GCP KMS.
 
 ---
 
-## 5. Change Data Capture (CDC) & Outbox Integration
+### Change Data Capture (CDC) & Outbox Integration
 
 To guarantee transactional integrity and prevent data drift during asynchronous event propagation:
 
@@ -139,26 +146,26 @@ To guarantee transactional integrity and prevent data drift during asynchronous 
                            [Kafka Event Bus]
 ```
 
-### 5.1 Transactional Outbox Pattern
+#### Transactional Outbox Pattern
 - **Atomic Operations**: Services updating state must record outgoing event envelopes within the same database transaction. The events must be appended to an `outbox` table in the local schema boundary.
 - **Schema Separation**: Direct external service access to internal domain tables is prohibited. Data sync must rely strictly on event messages.
 
-### 5.2 CDC Engine (Debezium & Kafka)
+#### CDC Engine (Debezium & Kafka)
 - **WAL Extraction**: A dedicated Debezium connector must monitor the PostgreSQL Write-Ahead Log (WAL). Debezium must extract updates to the `outbox` table and stream them to Kafka/NATS.
 - **Deduplication Strategy**: Incoming outbox streams must use a composite unique identifier (`event_id` or `message_id`) to enforce idempotent processing at the consumer boundary.
 
 ---
 
-## 6. Read Scaling, Replication & Routing Rules
+### Read Scaling, Replication & Routing Rules
 
 To avoid premature complexity while ensuring a clear path to scale read capacity under heavy load:
 
-### 6.1 Single Primary Database Pool Default (Baseline)
+#### Single Primary Database Pool Default (Baseline)
 
 1.  **Default Mode**: All newly deployed microservices must connect to a single database primary node instance for both read and write queries. The use of read-replicas by default is prohibited to prevent eventual consistency anomalies and replication lag.
 2.  **Benefits**: Guarantees read-after-write consistency and eliminates transactional out-of-sync states during active user sessions.
 
-### 6.2 Conditional Read Replica Scaling Gate (Future-State)
+#### Conditional Read Replica Scaling Gate (Future-State)
 
 Read/Write connection segregation and dedicated read replicas are authorized for activation if and only if one of the following production criteria is met:
 
@@ -166,7 +173,7 @@ Read/Write connection segregation and dedicated read replicas are authorized for
 - **Query Volume Threshold**: Read query volume exceeds `5000 read QPS`.
 - **Latency SLA Breach**: Relational read SLA latency exceeds `20ms` (at p95) due to thread starvation or CPU limits on the primary database node.
 
-### 6.3 Read/Write Connection Segregation Invariants
+#### Read/Write Connection Segregation Invariants
 
 When the Conditional Scaling Gate is activated, the service must implement the following segregation rules:
 
@@ -179,7 +186,7 @@ When the Conditional Scaling Gate is activated, the service must implement the f
     ```
 2.  **Routing Separation**: Write operations (`INSERT`, `UPDATE`, `DELETE`) and read operations executing inside a writing transaction block must run on the `Writer` pool. Regular read queries must route to the `Reader` pool.
 
-### 6.4 Replication Lag & Actor-Pinning Mitigations
+#### Replication Lag & Actor-Pinning Mitigations
 
 To prevent user session inconsistencies resulting from replication lag:
 
@@ -188,7 +195,7 @@ To prevent user session inconsistencies resulting from replication lag:
 
 ---
 
-## 7. Schema Evolution & Migration Rules
+### Schema Evolution & Migration Rules
 
 - **Declarative Source of Truth**: All relational table definitions must be written in HCL (`schema.hcl`) and committed to source control.
 - **Versioned Migrations**: Direct manual SQL executions (DDL) in staging or production environments are strictly prohibited. Migrations must be generated as versioned SQL scripts using:
@@ -202,7 +209,12 @@ To prevent user session inconsistencies resulting from replication lag:
 
 ---
 
-## 8. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 - **Schema Lint Checks**: CI gates must execute `atlas migrate lint` on every Pull Request. Any destructive change (e.g. dropping columns) or locking operation blocks the build pipeline.
 - **Replication Lag Monitoring**: Infrastructure alerts must trigger pages if database replication lag exceeds `1000ms` for more than 5 consecutive minutes.

@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise System Resilience & Fault Tolerance Standard
   owner: Enterprise Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: public
   review_cycle_days: 180
   last_reviewed: 2026-05-22
@@ -22,7 +22,14 @@ It covers circuit breaking, service timeouts, bulkhead isolation, and retry exec
 
 ---
 
-## 2. Circuit Breaker Specification
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Circuit Breaker Specification
 
 To prevent resource exhaustion under distributed failures, all service-to-service communication paths must operate under a stateful circuit breaker.
 
@@ -34,7 +41,7 @@ To prevent resource exhaustion under distributed failures, all service-to-servic
 
 ---
 
-## 3. Timeout Hierarchy & Deadlines
+### Timeout Hierarchy & Deadlines
 
 To prevent connection pools and thread stacks from starving, all request lifecycles must enforce a strict, cascaded timeout hierarchy.
 
@@ -46,7 +53,7 @@ To prevent connection pools and thread stacks from starving, all request lifecyc
 
 ---
 
-## 4. Bulkhead & Concurrency Isolation
+### Bulkhead & Concurrency Isolation
 
 Services must segment resources to isolate failures to a single downstream dependencies context.
 
@@ -56,7 +63,7 @@ Services must segment resources to isolate failures to a single downstream depen
 
 ---
 
-## 5. Retry and Exponential Backoff Policy
+### Retry and Exponential Backoff Policy
 
 Retrying failed operations must implement random delays to prevent retry storms (thundering herd problem).
 
@@ -70,7 +77,7 @@ Retrying failed operations must implement random delays to prevent retry storms 
 
 ---
 
-## 6. Load Shedding & Ingress Mitigation
+### Load Shedding & Ingress Mitigation
 
 To prevent service collapse under load spike conditions, services must implement active load shedding by rejecting low-priority requests when host resource limits are breached:
 
@@ -90,7 +97,12 @@ To prevent service collapse under load spike conditions, services must implement
 
 ---
 
-## 7. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 1. **Chaos Testing Audits**: Build verification pipelines must execute automated network failure injections (e.g. using Chaos Mesh or equivalent tools) to verify that circuit breakers and load shedding trigger under the designated thresholds.
 2. **CI Validation**: Architecture compliance validation requires all backend services to declare their timeout configurations, circuit breaker registrations, and priority headers in their deployment schemas, audited during build compilation.

@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Frontend Styling Standard
   owner: Principal Frontend Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-22
@@ -22,11 +22,18 @@ It guarantees that user interfaces are visually cohesive, highly responsive, per
 
 ---
 
-## 2. Styling Architecture & Recommended Frameworks
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Styling Architecture & Recommended Frameworks
 
 The recommended styling stack for all applications and component libraries comprises **Sass (SCSS)** and **Tailwind CSS**. All interfaces must be built using these engines under strict architectural constraints.
 
-### 2.1 CSS Architecture Decision Matrix
+#### CSS Architecture Decision Matrix
 To guide developers in selecting the appropriate styling approach, all frontend applications must adhere to the following styling decision matrix:
 
 | Styling Approach | Authorizations & Restrictions | Target Use Case |
@@ -37,7 +44,7 @@ To guide developers in selecting the appropriate styling approach, all frontend 
 | **`!important` Rule** | **FORBIDDEN** on component-level declarations. Allowed ONLY on system utility helpers (e.g. screen reader utilities or visibility states). | Screen readers, absolute visibility overrides. |
 
 
-### 2.2 Sass (SCSS) & CSS Modules Standard
+#### Sass (SCSS) & CSS Modules Standard
 - **SCSS Modules (Preferred)**: File names must end with `.module.scss` (e.g., `Card.module.scss`). Classes inside modules are auto-scoped by default to prevent naming collisions.
 - **Global (Non-Module) SCSS**: Global stylesheets (with `.scss` extension) are permitted for base layout foundations, generic normalizations, and global resets.
 - **App-Namespaced Naming Convention**: To prevent style collisions in federated applications, all classes declared in global (non-module) SCSS must be namespaced using the following naming structure:
@@ -47,16 +54,16 @@ To guide developers in selecting the appropriate styling approach, all frontend 
   *Examples*: `.scnx-hris-card`, `.scnx-iam-modal`, `.scnx-sales-button`. Using generic, un-namespaced classes (such as `.card` or `.modal`) in global SCSS is strictly prohibited.
 - **Global Selector Encapsulation**: Declaring `:global` rules inside an SCSS Module is restricted to third-party styles that cannot be styled using props.
 
-### 2.3 Tailwind CSS Standard
+#### Tailwind CSS Standard
 - **Utility-First Assembly**: Tailwind CSS is approved for rapid layout assembly and application-level composition layers.
 - **Token Consistency**: All Tailwind classes must map to configured design tokens. Arbitrary values (e.g., `bg-[#3f51b5]`, `w-[320px]`) are prohibited.
 - **Class Merging**: Long class strings must be formatted cleanly, utilizing helpers like `clsx` or `tailwind-merge` for conditional class joining.
 
-### 2.4 Responsive Layout Strategy
+#### Responsive Layout Strategy
 - **Mobile-First Breakpoints**: Layout styles must use mobile-first styling. Mobile viewports represent the base styles, and desktop configurations must be applied progressively using media queries or Tailwind prefix utilities (e.g., `md:flex-row`).
 - **Fluid Grid Systems**: Grids and flex structures must use fluid percentages or CSS Grid layouts with relative units (`fr`, `em`, `rem`) instead of hardcoded pixel widths (`px`).
 
-### 2.5 CSS Scoping & Naming Convention
+#### CSS Scoping & Naming Convention
 - **Core Library Class Prefixing**: Reusable components in the core design system library must use the namespace prefix `scnx-` (e.g., `.scnx-btn`, `.scnx-card`) to separate system-level styles from application-level styles.
 - **BEM Methodology**: Components styled using global SCSS must follow BEM (Block, Element, Modifier) rules:
   - **Block**: The parent component class (e.g., `.scnx-hris-card`).
@@ -69,7 +76,7 @@ To guide developers in selecting the appropriate styling approach, all frontend 
   | **Global BEM SCSS** | Explicit names, easily debuggable in DevTools | Verbose classes, manual discipline | Reusable core design system libraries |
   | **Shadow DOM** | Native runtime styling encapsulation | Complex to integrate, high overhead | Independent Web Components |
 
-### 2.6 Inverted Triangle CSS (ITCSS) Principles
+#### Inverted Triangle CSS (ITCSS) Principles
 Global SCSS stylesheets are encouraged to adopt the core principles of the **ITCSS (Inverted Triangle CSS)** methodology to organize styles logically by specificity. This helps prevent specificity wars and maintains predictability.
 
 While the exact directory structure below is **not strictly enforced** (projects may adapt it to fit framework-specific setups or domain-driven designs), developers should conceptually group and import stylesheets in order of increasing specificity:
@@ -107,7 +114,7 @@ styles/
     └── _overrides.scss       <-- absolute visual overrides
 ```
 
-### 2.7 CSS Specificity & Cascade Layers (`@layer`)
+#### CSS Specificity & Cascade Layers (`@layer`)
 - **Cascade Layer Order**: Custom styles must be declared within CSS Cascade Layers (`@layer`) to manage specificity deterministically and prevent specificity conflicts. The layer order must be declared at the application entry point exactly as:
   ```css
   @layer reset, tokens, base, components, utilities, overrides;
@@ -120,7 +127,7 @@ styles/
   - `utilities`: Single-purpose helper classes (e.g., `.truncate`, `.sr-only`).
   - `overrides`: Downstream application overrides.
 
-### 2.8 Specificity Enforcement & `!important` Policy
+#### Specificity Enforcement & `!important` Policy
 - **Usage Restrictions**: The `!important` flag is strictly restricted to prevent cascading bugs. It is governed by the following rules:
   | Style Context | Permission | Rationale |
   |---|---|---|
@@ -129,16 +136,16 @@ styles/
   | **Component-Specific Styles** | ❌ Prohibited | Encourages brittle styles and breaks composition patterns. |
   | **Theme / Design Tokens** | ❌ Prohibited | Tokens must be configurable and overrideable by themes. |
 
-### 2.9 Style Centralization vs. Colocation Strategy
+#### Style Centralization vs. Colocation Strategy
 To maintain a clean and structured codebase, styles must follow a hybrid model of centralization and colocation:
 - **Centralized Core Foundations**: Global configurations, design tokens, utility classes, animations, global resets, and general mixins (ITCSS Layers 1 to 4, and helper objects/utilities) must be centralized in a single shared directory or a dedicated npm package (e.g., a shared theme package `@scnx/theme` in a monorepo, or `src/styles/` at the root of a standalone project). This serves as the single source of truth for the styling variables and configs.
 - **Colocated Component Styles**: Component-specific styles (e.g., SCSS Modules) must be decentralized and colocated in the exact same directory as the component code file (e.g., `/components/Card/Card.tsx` and `/components/Card/Card.module.scss`). Colocation ensures that components are highly encapsulated, self-contained, and easily distributable under Module Federation. Storing component-specific styles in a centralized global directory is strictly prohibited.
 
 ---
 
-## 3. Global Styling Quality Guidelines
+### Global Styling Quality Guidelines
 
-### 3.1 Z-Index Scale
+#### Z-Index Scale
 - Stack contexts must use the centralized, semantic z-index scale to prevent layout overlap issues:
   ```css
   --ds-z-index-deep: -1;
@@ -150,13 +157,18 @@ To maintain a clean and structured codebase, styles must follow a hybrid model o
   ```
 - Declaring arbitrary z-index values (such as `z-index: 9999`) is prohibited. All layers must map to the semantic tokens.
 
-### 3.2 Motion & Animation Performance
+#### Motion & Animation Performance
 - High-performance visual transitions must run on GPU-accelerated properties (`transform` and `opacity` only). Transitions animating layout dimensions (such as `height`, `width`, `margin`) are prohibited on high-frequency rendering paths to prevent layout thrashing.
 - Transition timings and easing curves must use the design tokens (e.g., `var(--ds-motion-easing-standard)`).
 
 ---
 
-## 4. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 - **Linting Rules**: CI/CD pipelines must enforce style rules using stylelint configuration suites.
 - **Visual Regression Checks**: Design system modifications must pass visual regression checks inside the build pipeline before release to prevent visual bugs.

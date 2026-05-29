@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Micro Frontend Federation Standard
   owner: Principal Frontend Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-21
@@ -37,42 +37,49 @@ Module Federation must **NOT** be adopted as a tooling standard for small teams 
 
 ---
 
-## 2. Micro Frontend Integration Contracts
 
-### 2.1 Host-Remote Boundary
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Micro Frontend Integration Contracts
+
+#### Host-Remote Boundary
 - **Dynamic Imports**: Host applications must load remote micro-frontend entrypoints dynamically to prevent bundle blocking during initialization.
 - **Fail-Safe Loading**: Any runtime failure to download a remote entrypoint must be caught at the route boundary using isolated React Error Boundaries, allowing the host application shell to remain interactive.
 - **Routing Integration**: Remotes must export their sub-routing tables as declarative route configuration arrays rather than exposing self-managed routers, ensuring the host router owns the primary location state.
 
 ---
 
-## 3. Shared Dependency Governance
+### Shared Dependency Governance
 
-### 3.1 Strict Version Alignments
+#### Strict Version Alignments
 - To prevent loading multiple instances of core runtime libraries in the browser context:
   - **Singleton Dependencies**: `react`, `react-dom`, and `@tanstack/react-query` must be declared as singleton dependencies inside the Module Federation configuration.
   - **Version Mismatches**: Remote containers must not run on a major React version different from the host shell container.
 
-### 3.2 Dynamic Container Isolation
+#### Dynamic Container Isolation
 - Remotes must not alter or pollute global prototypes (`Object`, `Array`, `Window`) or overwrite shared global window context properties.
 
 ---
 
-## 4. Cross-Application Communication & Data Sharing
+### Cross-Application Communication & Data Sharing
 
-### 4.1 Typed Event Routing
+#### Typed Event Routing
 - Cross-micro-frontend communication must be restricted to the centralized, type-safe event bus mechanism. Direct function references or global state access across boundary contexts is prohibited.
 - **Payload Schema Contracts**: All events routed through the EventBus must use strongly typed payloads defined in shared package contracts.
 
-### 4.2 Micro-Frontend Authentication Handoff
+#### Micro-Frontend Authentication Handoff
 - **Cookie-Based Token Sharing**: The host application and remote containers must access JWT access and refresh tokens via secure, `HttpOnly`, `SameSite=Lax` cookies bound to the enterprise parent domain.
 - **BroadcastChannel Handoff**: For sub-domains operating on separate origins, token updates or logout actions must propagate across active client tabs and remotes using a typed browser `BroadcastChannel` (e.g. `scnehaux_auth_sync`).
 
-### 4.3 Contract Versioning & SemVer Check Invariants
+#### Contract Versioning & SemVer Check Invariants
 - **Remote Version Export**: Every remote micro-frontend entrypoint must expose its build-anchored Semantic Versioning (SemVer) metadata (e.g., in a `remoteEntry.json` manifest).
 - **SemVer Compliance Verification**: The host shell must verify that the loaded remote's major version matches the designated dependency range in the host deployment config. If a major mismatch is detected, the host must block loading the remote and fall back to the last known stable cached build.
 
-### 4.4 Remote Bundle Budgets
+#### Remote Bundle Budgets
 - **Bundle Budgets**: To prevent micro-frontends from degrading host page load speeds:
   - *Remote Entrypoint Size*: The primary remote entrypoint bundle (`remoteEntry.js`) must not exceed `20KB` gzipped.
   - *Initial Loaded Assets*: The initial shared bundle chunk of a remote must not exceed `150KB` gzipped.
@@ -81,7 +88,12 @@ Module Federation must **NOT** be adopted as a tooling standard for small teams 
 
 ---
 
-## 5. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 - **Configuration Audits**: CI/CD pipelines must audit bundler configuration files to ensure singleton dependency configurations are correctly established.
 - **Runtime Dependency Monitoring**: Browser logging must flag any occurrences of duplicate library initialization (e.g. multiple React instances loaded).

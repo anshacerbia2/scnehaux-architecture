@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Data Classification, Governance & Retention Standard
   owner: Enterprise Security Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-22
@@ -22,7 +22,14 @@ It applies to all persistent datastores, caching layers, log targets, analytical
 
 ---
 
-## 2. Data Classification Tiers
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Data Classification Tiers
 
 To safeguard sensitive information, all application data fields must map to one of four classification tiers:
 
@@ -37,7 +44,7 @@ To safeguard sensitive information, all application data fields must map to one 
 
 ---
 
-## 3. Data Retention Lifecycle
+### Data Retention Lifecycle
 
 Data must only reside in active storage for as long as is necessary to fulfill its business purposes.
 
@@ -48,7 +55,7 @@ Data must only reside in active storage for as long as is necessary to fulfill i
 
 ---
 
-## 4. GDPR Right-to-Erasure (Deletion Mechanics)
+### GDPR Right-to-Erasure (Deletion Mechanics)
 
 Applications must support the legal right of users to be forgotten.
 
@@ -57,7 +64,7 @@ Applications must support the legal right of users to be forgotten.
 
 ---
 
-## 5. Backup RPO and RTO Targets
+### Backup RPO and RTO Targets
 
 Disaster recovery plans must commit to defined data recovery limits.
 
@@ -70,18 +77,18 @@ Disaster recovery plans must commit to defined data recovery limits.
 
 ---
 
-## 6. Data Domain Ownership
+### Data Domain Ownership
 
 To prevent data quality degradation and logical domain leakage in large-scale multi-domain environments, all corporate and tenant data elements must map to a designated Domain Data Owner:
 
-### 6.1 Owner Responsibilities
+#### Owner Responsibilities
 Domain Data Owners are accountable for the lifecycle of their domain data, specifically:
 - **Access Control Approval**: Approving all access permission grants and API consumer integrations targeting the domain.
 - **Schema Modification Sign-off**: Reviewing and approving all database schema updates or event contract modifications.
 - **Retention & Purge Verification**: Conducting quarterly verification checks that data retention and GDPR purge operations conform to standard rules.
 - **Data Sharing Contracts**: Defining explicit interfaces (public API models or Outbox event schemas) for cross-domain data access. Direct database-level sharing is prohibited.
 
-### 6.2 HRIS Core Domain Ownership Mapping
+#### HRIS Core Domain Ownership Mapping
 
 All data schemas, tables, and attributes must align to this domain ownership matrix:
 
@@ -94,7 +101,12 @@ All data schemas, tables, and attributes must align to this domain ownership mat
 
 ---
 
-## 7. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 1. **Vulnerability Scans**: Automated build security checkers must parse database schemas for un-encrypted fields holding sensitive data keys.
 2. **Access Control Audits**: Access to Tier 1 and Tier 2 production datastores must follow the Principle of Least Privilege, requiring formal, time-bound approvals.

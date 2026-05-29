@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Frontend Performance and Rendering Standard
   owner: Principal Frontend Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-20
@@ -24,7 +24,14 @@ The scope of this standard applies to all production builds, design systems, and
 
 ---
 
-## 2. Zero Layout Thrashing (60FPS Render Guarantee)
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Zero Layout Thrashing (60FPS Render Guarantee)
 
 To prevent dropped frames and visual stutter during user interactions:
 - **Synchronous Geometry Reads Prohibited**: Do not query layout geometry properties (such as `getComputedStyle`, `offsetHeight`, `offsetWidth`, `clientHeight`, `scrollHeight`, or `getBoundingClientRect`) synchronously during high-frequency events (e.g. `onScroll`, `onMouseMove`, `onResize`).
@@ -34,7 +41,7 @@ To prevent dropped frames and visual stutter during user interactions:
 
 ---
 
-## 3. Heap Memory Allocation and Reference Stability
+### Heap Memory Allocation and Reference Stability
 
 To reduce Garbage Collection (GC) pauses and prevent memory leaks in long-running browser sessions:
 - **Zero Inner Scope Allocations**: Prohibit declaring new function expressions, object literals, or array literals directly inside the component render cycle (such as inline event handlers or properties in templates), unless they are stabilized using reference stabilization mechanisms (e.g., React `useCallback` or `useMemo`).
@@ -46,7 +53,7 @@ To reduce Garbage Collection (GC) pauses and prevent memory leaks in long-runnin
 
 ---
 
-## 4. Polymorphic Rendering Safety
+### Polymorphic Rendering Safety
 
 To preserve rendering efficiency in reusable component trees and layout containers:
 - **Enforce Dynamic Tag Polymorphism**: Elements requiring polymorphic representation must use the dynamic tag pattern (e.g. `const Component = as || 'div'`) as the primary composition standard in performance-sensitive cycles.
@@ -55,7 +62,7 @@ To preserve rendering efficiency in reusable component trees and layout containe
 
 ---
 
-## 5. Style & Token Contract Compliance
+### Style & Token Contract Compliance
 
 To protect the host application environment from styling collision and guarantee brand consistency:
 - **Strict Token Binding**: Components must only use color, dimension, and motion values mapped to Tier-1 or Tier-2 custom properties (`--ds-*`). Hardcoding hexadecimal colors or ad-hoc style values is prohibited.
@@ -63,7 +70,12 @@ To protect the host application environment from styling collision and guarantee
 
 ---
 
-## 6. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 - **Lighthouse CI Budget Gates**: Build pipelines must execute Lighthouse CI (`lhci`) checks against static assets on every pull request. Budgets must be defined in `lighthouserc.json` and enforce a minimum score of `95` on the Performance category and block builds if Cumulative Layout Shift (CLS) exceeds `0.1` or Largest Contentful Paint (LCP) exceeds `2500ms`.
 - **Web-Vitals CLI Integration**: Pull requests deploying changes to core user paths must execute automated headless browser tests using the Web-Vitals CLI. The build must fail if Interaction to Next Paint (INP) under simulated interactions exceeds `200ms`.

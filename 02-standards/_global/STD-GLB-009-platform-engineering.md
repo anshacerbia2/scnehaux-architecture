@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Platform Engineering Standard
   owner: Principal Platform Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-22
@@ -22,7 +22,14 @@ It covers Developer Portals, resource provisioning mechanisms, service catalogs,
 
 ---
 
-## 2. Developer Self-Service Interface (Backstage Portal)
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Developer Self-Service Interface (Backstage Portal)
 
 To coordinate software discovery and developer onboarding:
 
@@ -35,7 +42,7 @@ To coordinate software discovery and developer onboarding:
 
 ---
 
-## 3. Golden Path Provisioning Templates
+### Golden Path Provisioning Templates
 
 Platform engineering must provide standardized software templates ("Golden Paths") to automate project initialization:
 
@@ -47,7 +54,7 @@ Platform engineering must provide standardized software templates ("Golden Paths
 
 ---
 
-## 4. Internal Developer Platform (IDP) Interfaces
+### Internal Developer Platform (IDP) Interfaces
 
 To decouple infrastructure requests from manual operations support tickets:
 
@@ -59,7 +66,7 @@ To decouple infrastructure requests from manual operations support tickets:
 
 ---
 
-## 5. Security & Access Governance
+### Security & Access Governance
 
 - **Least Privilege Access**: Developer access to infrastructure environments must use temporary credentials (e.g. via AWS IAM Identity Center or HashiCorp Vault). Permanent credentials (IAM user access keys) are prohibited in developer environments.
 - **Environment Isolation**: Production environments must operate under distinct network partitions and credentials. Local developer tools are prohibited from binding to production datastores or queues.
@@ -67,7 +74,12 @@ To decouple infrastructure requests from manual operations support tickets:
 
 ---
 
-## 6. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 1. **Catalog Verification checks**: CI pipelines must run validation checks against the service's `catalog-info.yaml` file on every branch merge. Builds without valid ownership or lifecycle indicators must be blocked.
 2. **Infrastructure Audits**: Automated monitors must continuously verify active cloud resources against the GitOps declaration repository. Undeclared resources must be flagged, quarantined, and terminated within `48 hours`.

@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Frontend Security Standard
   owner: Enterprise Security Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: restricted
   review_cycle_days: 180
   last_reviewed: 2026-05-18
@@ -22,7 +22,14 @@ The scope of this standard applies to all client-side storage, outbound API comm
 
 ---
 
-## 2. Multi-Tenant Isolation
+
+## 2. Design Principles
+
+*(TBD - Architectural philosophy guiding these rules)*
+
+## 3. Normative Rules
+
+### Multi-Tenant Isolation
 
 Cross-tenant data leakage on the client side is a critical security vulnerability. All frontends must enforce structural boundaries to prevent contamination.
 
@@ -33,7 +40,7 @@ Cross-tenant data leakage on the client side is a critical security vulnerabilit
 
 ---
 
-## 3. Token & Session Security
+### Token & Session Security
 
 - **Token Refresh Mutex Queue**: To prevent Refresh Token Rotation (RTR) theft-detection false positives, HTTP interceptors must implement a single-flight mutex lock. Concurrent 401 Unauthorized responses must be queued behind a single refresh network request, and replayed once the new token is acquired.
 - **Epoch Validation**: Frontends must parse the `epc` (epoch) claim in JWTs and gracefully terminate the session if the backend signals a global epoch revocation.
@@ -41,7 +48,7 @@ Cross-tenant data leakage on the client side is a critical security vulnerabilit
 
 ---
 
-## 4. Authorization & Policy Execution
+### Authorization & Policy Execution
 
 - **Policy Evaluator Bounds**: Client-side authorization logic must utilize a bounded cache (e.g., LRU Cache) for permission decisions to prevent memory leaks in long-running administrative sessions.
 - **Explicit DENY-First**: The policy engine must evaluate explicit `DENY` rules before checking `ALLOW` grants or roles.
@@ -49,7 +56,7 @@ Cross-tenant data leakage on the client side is a critical security vulnerabilit
 
 ---
 
-## 5. Network & Resource Management
+### Network & Resource Management
 
 - **Lifecycle Binding**: All outbound HTTP requests must be bound to the lifecycle of the initiating UI component using `AbortController` signals. If a component unmounts, its associated pending network requests must be immediately aborted.
 - **No Hardcoded Timeouts**: Repositories must not use hardcoded `AbortSignal.timeout()`. They must accept and propagate the signal provided by the calling hook or orchestration layer.
@@ -57,7 +64,7 @@ Cross-tenant data leakage on the client side is a critical security vulnerabilit
 
 ---
 
-## 6. Browser Defenses
+### Browser Defenses
 
 All SPAs must be served with the following hardened HTTP security headers:
 
@@ -68,7 +75,12 @@ All SPAs must be served with the following hardened HTTP security headers:
 
 ---
 
-## 7. Compliance & Enforcement
+
+## 4. Exceptions & Alternatives
+
+Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
+## 5. Enforcement Mechanism
 
 - **Linting Rules**: ESLint configurations must prohibit direct, unscoped access to `window.sessionStorage` and `window.localStorage`.
 - **Integration Testing**: E2E testing pipelines (e.g., Playwright) must include explicit "Tenant Isolation" suites that simulate logging into Tenant A, switching to Tenant B, and verifying that no data from Tenant A renders on the screen.
