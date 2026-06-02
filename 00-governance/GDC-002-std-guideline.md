@@ -14,13 +14,7 @@ doc_meta:
 
 ## 1. Context & Scope
 
-The `02-standards` directory is the authoritative collection of mandatory rules, constraints, patterns, and methodologies governing software development and architecture across the Scnehaux enterprise. 
-
-- **Scope**: Lower-level technical instructions:
-  - API Design guidelines
-  - Coding styles
-  - Database schemas
-- **Enforcement**: Deviation without an approved ADR and ARB waiver is a Critical Governance Violation.
+The `02-standards` directory is the authoritative collection of mandatory rules, constraints, patterns, and methodologies governing software development and architecture across the Scnehaux enterprise. Its scope encompasses lower-level technical instructions such as API Design guidelines, coding styles, and database schemas.
 
 This document defines the structural, taxonomic, and maturity requirements for writing and managing Enterprise Standards (STD).
 
@@ -118,5 +112,5 @@ While the metadata schema is strictly enforced, the document body must follow th
 ## 4. Severity & Exceptions
 
 ### 4.1 Exception Waiver Protocol
-- Deviations from STD structures or principles require an approved project Exception ADR and ARB waiver sign-off.
+- **Critical Governance Violation**: Any deviation from an established STD without an approved ADR and ARB waiver is considered a Critical Governance Violation.
 - Approved waivers have a maximum validity of 365 days.
