@@ -50,7 +50,7 @@ We strictly enforce the **C4 Model** to define the boundaries of this repository
 
 ## Document Types (Glossary of Truth)
 
-To ensure absolute consistency and prevent documentation bloat, we explicitly reject monolithic templates (like arc42's "Standard-16"). All technical documents MUST follow our **Context-Aware Templates** enforced by the CI/CD Linter:
+The Scnehaux architecture ecosystem categorizes technical knowledge into specific, purpose-built document types to prevent overlap and ensure clear ownership. The following is the authoritative glossary of all recognized documents:
 
 | Code | Full Name | Audience & Purpose |
 | :--- | :--- | :--- |
@@ -58,7 +58,7 @@ To ensure absolute consistency and prevent documentation bloat, we explicitly re
 | **GDC (Vision)** | Global Design Concept | **[DEPRECATED]** High-Level Vision (C1). Integrated into the **System Context & Business Drivers** of **PAD/SAD** documents. |
 | **GDC (Gov)** | Governance Document Contract | **ARB & Principal Engineers.** Automated policy definitions, quality gates, and compliance enforcement (`00-governance`). |
 | **EAD** | Enterprise Architecture Document | **C-Level & Enterprise Architects.** Strategic "North Star" (C1), cross-domain rules, and enterprise capability models (`01-enterprise`). |
-| **PAD** | Platform Architecture Document | **Tech Leads & Managers.** Domain Capability (C2). Defines shared foundations, integration contracts, and system positioning. |
+| **PAD** | Platform Architecture Document | **Tech Leads & Managers.** Domain Capability (C2). Defines application capabilities, integration contracts, and system positioning. |
 | **SAD** | Software Architecture Document | **DevOps, SREs, SWEs.** System Solution (C2). Defines internal structure, deployment topology, observability, and resilience mechanics. |
 | **ADR** | Architecture Decision Record | **Meta.** Rationale for significant technical pivots and trade-offs (`05-decisions`). |
 | **STD** | Standard Document | **Meta.** Mandatory engineering policies and guardrails (`02-standards`). |
