@@ -74,8 +74,8 @@ No system may:
 - Introduce breaking architectural changes without review.
 
 All architectural changes must undergo a formal peer review via Pull Request. For the complete evaluation criteria and review process, see:
-- [GDC-010 — Architecture Review Process](./00-governance/GDC-010-architecture-review-process.md)
 - [GDC-009 — Documentation Quality Framework](./00-governance/GDC-009-documentation-quality-framework.md)
+- [GDC-010 — Architecture Review Process](./00-governance/GDC-010-architecture-review-process.md)
 
 ### The 6-Stage Review Pipeline
 1.  **Draft Creation**: Author drafts the document using the Context-Aware Template defined by the file prefix (PAD/SAD/TDD).
