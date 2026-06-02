@@ -16,6 +16,8 @@ doc_meta:
 
 This guideline establishes the mandatory lifecycles, metadata structures, repository locations, index requirements, and exception waiver workflows for all Architectural Decision Records (ADRs) within the Scnehaux enterprise.
 
+**Mandate**: All major architectural shifts or paved road deviations must be traceable to an ADR.
+
 It applies to all engineers, product leads, and architects documenting system decisions across global and local repository contexts.
 
 ---
