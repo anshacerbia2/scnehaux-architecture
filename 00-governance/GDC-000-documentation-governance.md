@@ -61,10 +61,47 @@ To prevent architectural drift and maintain a single source of truth across the 
 
 ---
 
+### 2.3.1 Traceability Model
+
+Every technical decision must be traceable back to its root cause in the architecture:
+- **EAD** defines strategic constraints.
+- **STD** defines mandatory engineering policy.
+- **PAD** defines logical domain capabilities and integration boundaries.
+- **SAD** defines system-specific architecture.
+- **ADR** documents decision rationale.
+
+All layers must remain consistent. A break in this chain (e.g., SAD violating EAD without an ADR) is a governance violation.
+
+---
+
 ### 2.4 Structural Taxonomy & Naming Conventions
 
-#### 2.4.1 Logical vs. Physical Boundary Mapping
-We separate logical business capabilities from physical deployment units to prevent organizational changes from corrupting the architecture description:
+#### 2.4.0 Document Types (Glossary of Truth)
+
+The Scnehaux architecture ecosystem categorizes technical knowledge into specific, purpose-built document types to prevent overlap and ensure clear ownership. 
+
+| Code | Full Name | Audience & Purpose |
+| :--- | :--- | :--- |
+| **PRD** | Product Requirements Document | Business "What" and "Why" (Non-technical). Not part of Scnehaux Architecture. |
+| **GDC (Vision)** | Global Design Concept | **[DEPRECATED]** High-Level Vision (C1). Integrated into the **Application Capability** section of **PAD** and **Context** of **SAD** documents. |
+| **GDC (Gov)** | Governance Document Contract | **ARB & Principal Engineers.** Automated policy definitions, quality gates, and compliance enforcement (`00-governance`). |
+| **EAD** | Enterprise Architecture Document | **C-Level & Enterprise Architects.** Strategic "North Star" (C1), cross-domain rules, and enterprise capability models (`01-enterprise`). |
+| **PAD** | Platform Architecture Document | **Tech Leads & Managers.** Domain Capability (C2). Defines application capabilities, integration contracts, and system positioning. |
+| **SAD** | Software Architecture Document | **DevOps, SREs, SWEs.** System Solution (C2). Defines internal structure, deployment topology, observability, and resilience mechanics. |
+| **ADR** | Architecture Decision Record | **Meta.** Rationale for significant technical pivots and trade-offs (`05-decisions`). |
+| **STD** | Standard Document | **Meta.** Mandatory engineering policies and guardrails (`02-standards`). |
+| **TRD** | Technical Requirements Document | **[NOT USED]** Scnehaux strictly rejects TRDs. Functional/Technical translations of the PRD must be integrated directly into the **PAD** and **SAD** to prevent documentation fragmentation and stale requirements. |
+| **TDD (Design)** | Technical Design Document | **Implementers & QA.** Component blueprints (C3), API contracts, ERDs, Security, and Failure Handling. |
+| **TDD (Testing)**| Test Driven Development | **Engineering Methodology**. The discipline used to implement the Test Strategy. |
+| **ERD** | Entity Relationship Diagram | **Data Schema**. The structural foundation of the TDD (Design). |
+
+**The Tale of Two GDCs**: Historically, GDC meant both *General Design Concept* (Vision) and *Governance Document Contract* (Quality). We now enforce that GDC strictly means Governance. Vision is no longer a standalone document, but rather integrated across EAD, PAD, and SAD to prevent "Vision Drift".
+
+#### 2.4.1 Logical vs. Physical Boundary Mapping (PAD vs SAD)
+We strictly separate logical business capabilities from physical deployment units to prevent organizational changes from corrupting the architecture description. **Every system MUST have both a PAD and a SAD; they are not mutually exclusive.**
+
+1.  **PAD (Logical Application Capability)**: Defines the "Position & Connectivity". It explains **what** the application does from a business capability perspective, **why** it exists within the ecosystem, its logical domain boundaries, and its integration contracts.
+2.  **SAD (Physical System Architecture)**: Defines the "Internal Reality". It explains **how** the application is built, its internal components, deployment topology, and operational behavior.
 
 | Attribute | PAD (Platform Architecture Document) | SAD (Software Architecture Document) |
 | :--- | :--- | :--- |
@@ -223,7 +260,11 @@ The architecture ecosystem operates under three absolute mandates. No system may
 2. Deviate from standards without an ADR.
 3. Introduce breaking architectural changes without a formal peer review and ARB approval.
 
-### 3.2 The Three-Gate CI Rule
+### 3.2 Non-Functional Discipline
+All systems must define measurable targets for Availability, Performance, Scalability, Security, Observability, and Resilience. Vague or non-measurable requirements (e.g., "fast" or "highly scalable") are considered governance violations and will be rejected.
+
+
+### 3.3 The Three-Gate CI Rule
 To maintain high developer velocity, automated validation only triggers a **HARD BLOCK (Exit 1)** if a violation threatens:
 1. **Security & Data Isolation** (e.g., bypassing PostgreSQL RLS or token signing boundaries).
 2. **Structural Integrity** (e.g., CQRS Level 1 domain-isolation breach where application queries bypass application layers and load domain aggregates).
@@ -231,7 +272,7 @@ To maintain high developer velocity, automated validation only triggers a **HARD
 
 Stylistic, naming conventions, or formatting preferences are treated as **WARNINGS**; they flag in PR reviews but do not block the merge.
 
-### 3.3 Documentation Density Law
+### 3.4 Documentation Density Law
 *A document's thickness and maintenance cost must be inversely proportional to its speed of change and directly proportional to its blast radius.*
 
 * **The Ephemeral TDD Lifecycle (TDD Fate Matrix)**:
