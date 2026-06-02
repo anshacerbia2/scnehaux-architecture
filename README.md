@@ -55,7 +55,7 @@ The Scnehaux architecture ecosystem categorizes technical knowledge into specifi
 | Code | Full Name | Audience & Purpose |
 | :--- | :--- | :--- |
 | **PRD** | Product Requirements Document | Business "What" and "Why" (Non-technical). Not part of Scnehaux Architecture. |
-| **GDC (Vision)** | Global Design Concept | **[DEPRECATED]** High-Level Vision (C1). Integrated into the **System Context & Business Drivers** of **PAD/SAD** documents. |
+| **GDC (Vision)** | General Design Concept | **[DEPRECATED]** High-Level Vision (C1). Integrated into the initial Context/Capability sections of **EAD, PAD, and SAD** documents. |
 | **GDC (Gov)** | Governance Document Contract | **ARB & Principal Engineers.** Automated policy definitions, quality gates, and compliance enforcement (`00-governance`). |
 | **EAD** | Enterprise Architecture Document | **C-Level & Enterprise Architects.** Strategic "North Star" (C1), cross-domain rules, and enterprise capability models (`01-enterprise`). |
 | **PAD** | Platform Architecture Document | **Tech Leads & Managers.** Domain Capability (C2). Defines application capabilities, integration contracts, and system positioning. |
@@ -81,7 +81,7 @@ In the Scnehaux ecosystem, the acronym **GDC** historically served two different
 *   **Mandate**: No PAD or SAD is considered "Approved" without passing the GDC Governance audit.
 
 > **[NOTE]**
-> The integration of the *General Design Concept* applies **STRICTLY to PAD and SAD** documents. It ensures that any developer reading the Architecture (C2) immediately understands the High-Level Vision (C1) that drives it. 
+> The integration of the *General Design Concept* applies to **EAD, PAD, and SAD** documents. It ensures that any developer reading the Enterprise Strategy (C1) or System Architecture (C2) immediately understands the High-Level Vision that drives it. 
 > 
 > *ADR, STD, and TDD documents remain focused on their specific meta-roles and do not carry the full Product Vision context.*
 
