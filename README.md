@@ -206,10 +206,10 @@ The linter will verify that:
 ### Traceability Model
 
 - EAD defines strategic constraints.
-- PAD defines shared foundational capabilities.
+- STD defines mandatory engineering policy.
+- PAD defines logical domain capabilities and integration boundaries.
 - SAD defines system-specific architecture.
 - ADR documents decision rationale.
-- Standards define mandatory engineering policy.
 
 All layers must remain consistent.
 
