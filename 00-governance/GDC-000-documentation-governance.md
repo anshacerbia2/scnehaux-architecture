@@ -103,13 +103,35 @@ The Scnehaux architecture ecosystem categorizes technical knowledge into specifi
 | **TDD (Testing)**| Test Driven Development | **Engineering Methodology**. The discipline used to implement the Test Strategy. |
 | **ERD** | Entity Relationship Diagram | **Data Schema**. The structural foundation of the TDD (Design). |
 
-**The Tale of Two GDCs**: Historically, GDC meant both *General Design Concept* (Vision) and *Governance Document Contract* (Quality). We now enforce that GDC strictly means Governance. Vision is no longer a standalone document, but rather integrated across EAD, PAD, and SAD to prevent "Vision Drift".
+### 2.4.0.1 The Tale of Two GDCs: Resolving the Acronym Overload
+In the Scnehaux ecosystem, the acronym **GDC** historically served two different purposes. To avoid confusion, we explicitly separate them into two distinct concepts:
+
+#### 1. GDC (General Design Concept) — *The Product Vision*
+*   **Role**: Contains the overarching business vision and high-level design concept (C1 Product/System).
+*   **The Scnehaux Way (Integrated)**: We no longer write standalone GDC Vision documents. To prevent "Vision Drift", the General Design Concept is now directly integrated into the **Application Capability** section of PADs, and the **Context** section of SADs.
+
+#### 2. GDC (Governance Document Contract) — *The Quality Safeguard*
+*   **Role**: Defines the absolute "Guardrails" for the entire ecosystem, ensuring all architectural artifacts meet the 10/10 FAANG-Grade maturity. These are the `GDC-XXX` files.
+*   **Implementation**: Housed exclusively within the `00-governance` folder, providing the Automated Linters (`linter.py`), Review Score Sheets, and Audit Toolkits.
+*   **Mandate**: No PAD or SAD is considered "Approved" without passing the GDC Governance audit.
+
+> **[NOTE]**
+> The integration of the *General Design Concept* applies to **EAD, PAD, and SAD** documents. It ensures that any developer reading the Enterprise Strategy (C1) or System Architecture (C2) immediately understands the High-Level Vision that drives it. 
+
+### 2.4.0.2 The Redundancy of TRD (Technical Requirements Document)
+At Scnehaux, we **do not use** a standalone TRD. We believe that technical requirements are inseparable from the architecture that addresses them.
+
+*   **Reasoning**: Separate TRDs often lead to documentation fragmentation and "stale requirements" that do not reflect the actual architectural solution.
+*   **The Integrated Approach**: All functional and technical translations of the PRD are integrated directly into the **PAD** and **SAD** (specifically within the **Application Capability** and **Solution Architecture** sections). Enterprise Architecture (EAD) is driven by C-Level strategy rather than product-level PRDs.
+*   **Benefit**: This ensures that every technical requirement is mapped directly to an architectural decision or container structure, maintaining a single source of truth for the entire system lifecycle.
 
 #### 2.4.1 Logical vs. Physical Boundary Mapping (PAD vs SAD)
-We strictly separate logical business capabilities from physical deployment units to prevent organizational changes from corrupting the architecture description. **Every system MUST have both a PAD and a SAD; they are not mutually exclusive.**
+We strictly separate logical business capabilities from physical deployment units to prevent organizational changes from corrupting the architecture description. 
 
-1.  **PAD (Logical Application Capability)**: Defines the "Position & Connectivity". It explains **what** the application does from a business capability perspective, **why** it exists within the ecosystem, its logical domain boundaries, and its integration contracts.
-2.  **SAD (Physical System Architecture)**: Defines the "Internal Reality". It explains **how** the application is built, its internal components, deployment topology, and operational behavior.
+In a high-maturity ecosystem, **PAD and SAD are not mutually exclusive; in fact, EVERY system in the Scnehaux ecosystem MUST have both.** We do not use PAD exclusively for "shared platforms".
+
+1.  **PAD (Logical Application Capability & Domain Architecture)**: Defines the "Position & Connectivity". It explains **what** the application does from a business capability perspective, **why** it exists within the ecosystem, its logical domain boundaries, and its integration contracts with other systems. (It answers: *"What is the capability of this application, and Why is it needed?"*).
+2.  **SAD (Physical System Architecture)**: Defines the "Internal Reality". It explains **how** the specific application is built, its internal components, deployment topology, and operational behavior. (It answers: *"How is this capability technically executed?"*).
 
 | Attribute | PAD (Platform Architecture Document) | SAD (Software Architecture Document) |
 | :--- | :--- | :--- |
