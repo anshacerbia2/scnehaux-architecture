@@ -75,7 +75,7 @@ In the Scnehaux ecosystem, the acronym **GDC** historically served two different
 *   **Role**: Contains the overarching business vision and high-level design concept (C1 Product/System).
 *   **The Scnehaux Way (Integrated)**: We no longer write standalone GDC Vision documents. To prevent "Vision Drift", the General Design Concept is now directly integrated into the **Application Capability** section of PADs, and the **Context** section of SADs.
 
-#### 2. GDC (Governance Directives & Control) — *The Quality Safeguard*
+#### 2. GDC (Governance Document Contract) — *The Quality Safeguard*
 *   **Role**: Defines the absolute "Guardrails" for the entire ecosystem, ensuring all architectural artifacts meet the 10/10 FAANG-Grade maturity. These are the `GDC-XXX` files.
 *   **Implementation**: Housed exclusively within the `00-governance` folder, providing the Automated Linters (`linter.py`), Review Score Sheets, and Audit Toolkits.
 *   **Mandate**: No PAD or SAD is considered "Approved" without passing the GDC Governance audit.
