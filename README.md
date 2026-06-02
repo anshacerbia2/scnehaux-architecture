@@ -32,9 +32,12 @@ python linter.py
 ```
 
 The linter will verify that:
-- The structure matches the exact Context-Aware Template defined by the file ID (e.g., SAD sections vs TDD sections).
-- Prohibited vague or ambiguous words ("highly scalable", "fast") are not used.
-- Mandatory `doc_meta` YAML headers exist and are valid.
+- **Structural Integrity**: The document matches the exact Context-Aware Template defined by the file ID (e.g., enforcing different required sections for a SAD file compared to a TDD file).
+- **Metadata Compliance**: Mandatory `doc_meta` YAML headers exist, follow semantic versioning, and use valid taxonomies.
+- **Naming Conventions**: File names comply with strict alphanumeric namespace patterns.
+- **Semantic Quality**: Prohibited vague words ("TBD", "simple") or ambiguous claims ("highly scalable", "fast") are flagged.
+- **Quantification**: Non-Functional Requirements (NFRs) contain hard metrics (e.g., `200ms`, `99.9%`).
+- **Governance Lifecycles**: Exception waivers are not expired and cross-references are valid.
 
 ---
 
