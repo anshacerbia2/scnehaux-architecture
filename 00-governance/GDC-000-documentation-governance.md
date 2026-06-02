@@ -34,8 +34,15 @@ All meta-level governance documents (GDC, files starting with `GDC-`) must stric
 
 ### 2.2 The Hybrid Metamodel Philosophy
 To balance strategic business alignment with engineering execution, Scnehaux rejects rigid compliance with any single architectural framework. We adopt a multi-model synthesis:
-* **C4 Model**: Dictates folder navigation and system zoom levels (Meta = `00-governance/`, `02-standards/`, & `05-decisions/` ; Context/C1 = `01-enterprise/` ; Container/C2 = `03-platform/` & `04-application/`).
-  * *Meta & Cross-Cutting Layers*: **GDC**, **ADR**, and **STD** are considered "Meta". They cut across all architectures because they define the rules and rationale that bind the C1-C4 levels together.
+* **C4 Model**: Dictates folder navigation and system zoom levels.
+  
+  | Level | C4 Name | Scnehaux Scope | Location |
+  | :--- | :--- | :--- | :--- |
+  | **Meta** | **Cross-Cutting** | **GDC**, **ADR**, **STD** (Governance & Rules) | Root Repo (`00`, `02`, `05`) |
+  | **C1** | **Context** | **EAD** (Enterprise Strategy) | Root Repo (`01-enterprise`) |
+  | **C2** | **Container** | **PAD** (Domain) & **SAD** (System) | Root Repo (`03-platform`, `04-application`) |
+  | **C3** | **Component** | **TDD** (Detailed Design) | **Specific Project Repository** |
+  | **C4** | **Code** | Implementation & Source | **Specific Project Repository** |
 * **TOGAF**: Structures strategic direction within the `01-enterprise` layer (Business, Data, Application, and Technology domains).
 * **arc42 (Adapted)**: Supplies qualitative structural integrity concepts for file contents. We reject arc42's single monolithic template in favor of distributed, context-aware templates (EAD, PAD, SAD, TDD).
 * **AWS Well-Architected Framework**: Enforces operational focus. Failure mode analysis, blast radius containment, and quantified Non-Functional Requirements (NFRs) are mandatory.
