@@ -16,7 +16,7 @@ doc_meta:
 
 This guideline defines the mandatory structure, metadata schema, and section requirements for **Software Architecture Documents (SAD)** within the Scnehaux architecture registry. 
 
-SADs represent the C2 System/Software Architecture layer of the C4 metamodel. They are **single, cohesive documents** (`*.sad.md`) defining the physical deployment topology, container boundaries, runtime flows, failure modes, observability, and concrete systems fulfilling the domain (e.g., backend service monoliths, frontend/client applications like web SPAs, mobile apps, or desktop clients).
+SADs represent the C2 System/Software Architecture layer of the C4 metamodel and the physical execution containment. They are **single, cohesive documents** (`*.sad.md`) defining the physical deployment topology, container boundaries, runtime flows, failure modes, observability, and concrete systems fulfilling the domain (e.g., backend service monoliths, frontend/client applications like web SPAs, mobile apps, or desktop clients).
 
 *   **Purpose**: Establishes the "How". A single logical domain capability (PAD) is physically fulfilled by one or more software containers (SADs) in a 1-to-N mapping.
 
