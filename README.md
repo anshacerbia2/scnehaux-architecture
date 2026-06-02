@@ -52,8 +52,8 @@ Provides the automated instruments and quality standards required to maintain a 
 ### 01-enterprise / EAD (The Strategic Layer - C1 Context)
 Defines the global "City Map" and the enterprise-wide directives (Business, Data, Application, Technology).
 
-### 02-standards / STD (The Guardrail Layer)
-Mandatory granular policies that supplement EAD paved roads (API Design guidelines, coding styles, database schemas).
+### 02-standards / STD (The Guardrail & Baseline Layer)
+Mandatory granular policies that establish the architecture baseline and supplement EAD paved roads. This layer sets the minimum technical bar for quality, security, and operational excellence (e.g., API Design guidelines, coding styles, database schemas).
 
 ### 03-platform / PAD (Logical Domain - C2 Context)
 Defines the logical capabilities, bounded contexts, trust boundaries, and strategic positioning of a business domain (e.g., `identity`, `finance`).
