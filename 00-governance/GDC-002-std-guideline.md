@@ -16,6 +16,9 @@ doc_meta:
 
 The `02-standards` directory is the authoritative collection of mandatory rules, constraints, patterns, and methodologies governing software development and architecture across the Scnehaux enterprise. 
 
+- **Scope**: Lower-level technical instructions (API Design guidelines, coding styles, database schemas).
+- **Enforcement**: Deviation without an approved ADR and ARB waiver is a Critical Governance Violation.
+
 This document defines the structural, taxonomic, and maturity requirements for writing and managing Enterprise Standards (STD).
 
 ### 1.1 STD vs ADR (Living Law vs Historical Log)
