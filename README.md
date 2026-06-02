@@ -12,11 +12,12 @@ All systems, without exception, MUST align with the policies and constraints def
 
 The purpose of this repository is to:
 
-- Establish architectural consistency across systems
-- Enforce production-grade engineering discipline
-- Provide traceability for architectural decisions
-- Define measurable non-functional expectations
-- Govern architectural evolution
+- **Establish Architectural Consistency**: Enforce uniform, deterministic design patterns and standardize the technology paved roads across all systems.
+- **Enforce Engineering Discipline & Automated Compliance**: Act as a machine-readable governance hub that enforces production-grade engineering standards and architectural policies automatically via CI/CD pipelines.
+- **Define Application Capabilities & Boundaries**: Establish strict domain boundaries and business capability mapping (PAD) to prevent architectural contamination.
+- **Provide an Integration SSOT**: Serve as the authoritative, design-time Single Source of Truth for system integration contracts and UI/Backend topologies.
+- **Preserve Decision Traceability**: Maintain an immutable, contextual history of all major architectural shifts (ADR).
+- **Govern Architectural Evolution**: Define measurable non-functional fitness functions to safely scale and evolve systems over time.
 
 This repository contains architecture artifacts only.
 It does not contain implementation code.
