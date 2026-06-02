@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: STD-GLB-FE-003
+  id: STD-GLB-FE-005
   title: Enterprise Frontend Security Standard
   owner: Enterprise Security Architect
   version: 1.0.0
@@ -10,7 +10,7 @@ doc_meta:
   last_reviewed: 2026-05-18
 ---
 
-# Enterprise Frontend Security Standard (STD-GLB-FE-003)
+# Enterprise Frontend Security Standard (STD-GLB-FE-005)
 
 ---
 
@@ -25,7 +25,7 @@ The scope of this standard applies to all client-side storage, outbound API comm
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+
 
 ## 3. Normative Rules
 
@@ -76,9 +76,9 @@ All SPAs must be served with the following hardened HTTP security headers:
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

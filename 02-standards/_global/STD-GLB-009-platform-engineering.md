@@ -25,7 +25,7 @@ It covers Developer Portals, resource provisioning mechanisms, service catalogs,
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+
 
 ## 3. Normative Rules
 
@@ -75,9 +75,9 @@ To decouple infrastructure requests from manual operations support tickets:
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

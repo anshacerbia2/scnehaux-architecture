@@ -38,19 +38,32 @@ All standards must strictly adhere to the Domain-Driven Taxonomy and directory c
    - Example: `STD-UIP-TKN-001B-tier1-core-tokens.md`
 
 ### 2.2 Standard Maturity Model
-To prevent rigid compliance grids from stifling innovation, every enterprise standard must declare one of four maturity phases in its `status` field:
-- **assessed**: The standard is experimental or undergoing evaluation. Teams are encouraged to run pilots, but adoption is optional. No waivers are required to deviate.
-- **trial**: The standard is verified in pilot programs. It is recommended for new services, but existing services are exempt.
-- **adopted**: The standard is the default mandatory baseline. Deviations require an approved exception waiver from the Architecture Review Board (ARB).
-- **hold**: The standard is deprecated. New implementations are prohibited from adopting it. Existing implementations must schedule a migration path to replacement systems.
+To prevent rigid compliance grids from stifling innovation, every enterprise standard must declare a maturity phase in its `status` field.
+
+> **Authoritative Source**: The canonical definitions of the four maturity phases (Assessed, Trial, Adopted, Hold), including their adoption requirements, deviation policies, and sunset procedures, are defined and maintained in **[GDC-008 — Technology Lifecycle & Standards Governance](./GDC-008-architecture-lifecycle.md)**.
+
+All STD documents must declare one of the four phases defined in GDC-008 in their `status` metadata field.
 
 ---
 
-## 3. Mandatory STD Schema
+### 2.3 The Living Specification Principle (Mutability & Versioning)
+Unlike ADRs (which are immutable historical logs of a specific point-in-time decision), **STDs are living specifications** that represent the *currently active* engineering mandates.
 
+1. **Direct Mutability**: When technologies, standards, or rules evolve, the existing STD file is edited directly. Creating new standard files for minor/major updates to the same domain is prohibited.
+2. **Versioning Doctrine (SemVer)**: Every update to an STD must increment the `version` metadata field following Semantic Versioning (X.Y.Z):
+   - **Major (X.0.0)**: Introducing new mandatory restrictions, breaking changes, or deprecating existing active paths.
+   - **Minor (1.X.0)**: Adding optional recommendations, non-breaking rules, or clarifying examples.
+   - **Patch (1.0.X)**: Fixing typos, broken links, or minor metadata updates.
+3. **ADR Authorization Invariant**: Any change resulting in a **Major (X.0.0)** version bump of an enterprise standard MUST be authorized by an approved ADR. The `governed_by` metadata field of the STD must be updated to point to the new ADR.
+
+---
+
+### 2.4 Mandatory STD Schema
 Every Standard must utilize the standard Markdown template and include the following metadata and sections:
 
-### 3.1 Metadata Frontmatter
+### 2.5 Metadata Frontmatter
+
+#### 2.5.1 Enterprise Level (Root Repo)
 ```yaml
 doc_meta:
   id: STD-GLB-[Seq][Suffix] | STD-[DOM]-[CAP]-[Seq][Suffix]  # e.g., STD-GLB-001 or STD-UIP-TKN-001A
@@ -59,15 +72,45 @@ doc_meta:
   version: Y.Y.Y
   status: adopted | trial | assessed | hold
   classification: public | internal | restricted
+  governed_by: [Authorizing ADR ID]        # Optional: Mapped authorizing ADR ID (e.g., ADR-GLB-001)
 ```
 
-### 3.2 Standard Document Structure
-While the metadata schema is strictly enforced, the document body should follow these logical groupings to maintain enterprise consistency:
+#### 2.5.2 Project/Local Level (Project Repo)
+```yaml
+doc_meta:
+  id: STD-[REPO]-[COMPONENT]-[Seq][Suffix]  # e.g., STD-SCNX-IAM-GO-001 or STD-UIP-CORE-001A
+  title: Short Descriptive Title
+  owner: Lead System Engineer / Team Name
+  version: Y.Y.Y
+  status: adopted | trial | assessed | hold
+  classification: public | internal | restricted
+  parent_std: [Parent Enterprise Standard ID] # e.g., STD-GLB-001 or STD-E006 (Traceability link)
+  governed_by: [Authorizing ADR ID]        # Optional: Mapped authorizing ADR ID (e.g., ADR-SCNX-IAM-GO-001)
+```
+
+### 2.6 Standard Document Structure
+While the metadata schema is strictly enforced, the document body must follow these logical groupings to maintain enterprise consistency:
 
 1. **Objective & Scope**: Defines what the standard covers and who it applies to.
 2. **Design Principles**: The architectural philosophy behind the standard (the "why").
 3. **Normative Rules**: The core constraints and DOs/DONTs.
    - *Optional*: Include **Examples** (code snippets, JSON payloads) directly under the relevant rules to provide clarity.
-4. **Exceptions & Alternatives**: The fallback or waiver procedure if a team is blocked.
+4. **Exceptions**: A direct mapping of normative rules to the specific technical conditions under which they may be bypassed. Governance procedures (e.g., ADR or ARB approvals) must NOT be documented here. If no valid exceptions exist, this section must explicitly state `None.`.
 5. **Enforcement Mechanism**: How compliance is measured (e.g., CI/CD Linter, ARB Review).
    - *Optional*: Specify the **Severity** of the violation (e.g., Warning vs. Hard Pipeline Blocker).
+
+---
+
+## 3. Enforcement Mechanism
+
+### 3.1 Compliance & Enforcement
+1. **Structural Audit**: The automated pipeline verifies that all STD files contain the metadata header and the mandatory sections. Missing sections or incorrect YAML format will fail the build.
+2. **Quality Checklist**:
+   - Technical statements must be quantified.
+   - Ambiguous marketing terms (e.g., highly-scalable or blazing-fast) are prohibited.
+
+## 4. Severity & Exceptions
+
+### 4.1 Exception Waiver Protocol
+- Deviations from STD structures or principles require an approved project Exception ADR and ARB waiver sign-off.
+- Approved waivers have a maximum validity of 365 days.

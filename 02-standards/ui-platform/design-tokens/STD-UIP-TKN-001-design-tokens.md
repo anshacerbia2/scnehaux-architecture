@@ -35,47 +35,30 @@ with hundreds of components and federated micro-frontends.
 token standards. The Platform Architecture Document (PAD-002) references this
 document for governance details and must not replicate these rules.
 
----
-
-
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+The design token architecture is governed by four core principles to ensure cross-platform consistency, visual harmony, and operational scaling:
+
+1. **Semantic Isolation**: UI components consume abstract semantic tokens (Tier 2) rather than raw value primitives (Tier 1), shielding component layouts from changes in core visual definitions.
+2. **Perceptual Color Uniformity**: Color specifications utilize the photometric OKLCH color space to guarantee consistent contrast ratios and predictable color mixing across light and dark interfaces.
+3. **Platform Agnosticity**: Token structures are defined as technology-agnostic keys and values, decoupled from execution environments (such as CSS, Swift, or Android XML) to enable unified enterprise-wide delivery.
+4. **Symmetrical Theme Alignment**: Light and dark themes utilize identical semantic token paths, enabling runtime theme switching through stylesheet replacement without modifying application logic.
 
 ## 3. Normative Rules
 
 ### Design Token Taxonomy
 
-Visual tokens must be structured according to a strict **3-Tier Token
-Architecture**:
+> **Authoritative Taxonomy Source**: The explicit rationale, 3-Tier architecture design, Symmetrical Orthogonal Semantic Matrix (`[Scheme] × [Role] × [Emphasis] × [State]`), and OKLCH color generation math are defined in the Enterprise Architecture Decision **[ADR-UIP-TKN-003](../../../05-decisions/ui-platform/design-tokens/ADR-UIP-TKN-003-token-taxonomy-and-naming-convention.md)**. This Standard enforces the execution of that taxonomy.
 
-```
-[Tier 1: Core Primitives] → [Tier 2: Global Semantic Contract] → [Tier 3: Component Token]
-(Raw OKLCH coordinates)     (Symmetrical Semantic Tokens)         (Component-bound aliases)
-```
+The platform enforces a strict **3-Tier Token Architecture**:
 
-#### Tier 1 — Core Primitives
+1. **Tier 1 (Core Primitives)**: Raw OKLCH coordinates. **Prohibited** from being consumed directly by components or application layers. Must only be accessed via the build-time SASS compiler (`get-color()`).
+2. **Tier 2 (Global Semantic Contract)**: Symmetrical, orthogonal semantic tokens (`--ds-{scheme}-{role}-{emphasis}-{state}`). This is the **mandatory** consumption layer for all downstream components.
+3. **Tier 3 (Component Tokens)**: Component-bound aliases. Strongly restricted by the Component Alias Budget.
 
-Raw value tokens mapping directly to OKLCH lightness, chroma, and hue
-coordinates. These tokens carry **no semantic meaning** and are strictly
-encapsulated inside the build compiler.
+#### The State Compatibility Invariant
 
-- **Prohibition**: Components, portals, and application layers are absolutely
-  prohibited from importing or consuming Tier-1 primitives directly.
-- **Access Path**: Tier-1 values are exposed exclusively through the SASS
-  compile-time `generate-scheme-matrix` mixin and the `get-color()` accessor.
-
-#### Tier 2 — Global Semantic Contract
-
-Context-dependent tokens mapping Tier-1 values to functional, role-specific
-definitions via a **Symmetrical Orthogonal Semantic Matrix**:
-
-```
-[Scheme] × [Role] × [Emphasis] × [State]
-```
-
-The matrix is governed by a formal **State Compatibility Table** that is
-non-symmetric by design — not all roles support all states:
+The Semantic Matrix is governed by a strict, non-symmetric State Compatibility Table. Not all roles support all states. The SASS compile-time validator (`_contract-token.scss`) enforces this table mechanically.
 
 | Element | Hover | Pressed | Selected | Focus | Disabled |
 | :------ | :---: | :-----: | :------: | :---: | :------: |
@@ -85,18 +68,7 @@ non-symmetric by design — not all roles support all states:
 | Icon    | ✅    | ❌      | ❌       | ❌    | ✅       |
 | Shadow  | ✅    | ✅      | ❌       | ❌    | ❌       |
 
-**Rationale for Asymmetry**:
-- `Focus` on surfaces is superseded by a `border.focus` high-translucency
-  override, eliminating a redundant visual layer.
-- `Selected` on text/icon provides no readable contrast delta — selection
-  semantics are communicated solely by the `surface.selected` layer.
-- `Shadow` carries no semantic meaning for `selected` or `focus` states —
-  shadow communicates elevation, not interaction intent.
-
-#### Tier 3 — Component Tokens
-
-Immutable tokens bound to specific component boundaries. Governed by strict
-alias budgeting rules (see Section 6.1).
+*Any attempt to generate or consume an illegal state (e.g., `text.selected` or `surface.focus`) must fail the CI build with a CRITICAL error.*
 
 ---
 
@@ -204,7 +176,7 @@ corrupting the core global matrix:
 #### Semantic Reading Density (Typography)
 
 Typography tokens must be grouped by **semantic reading layout**, not by
-simple sequential text scaling. This prevents teams from scaling fonts
+linear sequential text scaling. This prevents teams from scaling fonts
 arbitrarily across dense dashboards and article-style portals:
 
 | Group | Token | Intended Reading Context |
@@ -262,9 +234,9 @@ Examples:
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

@@ -22,10 +22,14 @@ It guarantees that core UI primitives are highly accessible, performant, structu
 
 ---
 
-
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+The primitive component library is built on four core principles to ensure accessibility, behavioral predictability, and performance:
+
+1. **Semantic and Native Structure First**: Components utilize standard semantic HTML elements rather than generic tags, ensuring native compatibility with screen readers and browsers.
+2. **Complete Behavioral Encapsulation**: Interactive behaviors and keyboard interactions are governed by internal, deterministic state machines, decoupling logic from style and DOM markup.
+3. **Ref & Composition Transparency**: Polymorphic components forward references and merge HTML attributes transparently to preserve runtime node access.
+4. **Property Contract Boundaries**: Primitive components strictly receive leaf value properties rather than complex domain objects to avoid parent ref dependency and rendering thrashing.
 
 ## 3. Normative Rules
 
@@ -110,9 +114,9 @@ To guarantee component boundary isolation and maintain clean API design:
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

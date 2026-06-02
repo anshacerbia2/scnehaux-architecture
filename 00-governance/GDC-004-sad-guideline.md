@@ -37,7 +37,7 @@ doc_meta:
   version: 1.0.0                      # Semantic versioning format
   status: approved                    # proposed | approved | deprecated
   classification: internal            # public | internal | restricted
-  parent_pad: DOC-P-XXX               # Referencing the Parent Platform Capability PAD ID
+  parent_pad: DOC-P-XXX               # Referencing the Parent Application Capability PAD ID
   review_cycle_days: 180              # Review cycle period
   last_reviewed: YYYY-MM-DD           # Last audit date
 ---
@@ -45,7 +45,7 @@ doc_meta:
 
 #### 2.1.2 Section 1: Context
 - **Objective**: Define the immediate upstream and downstream dependencies of this application, and its specific system boundary.
-- **Requirement**: Must explicitly link to the governing platform capability PAD.
+- **Requirement**: Must explicitly link to the governing application capability PAD.
 
 #### 2.1.3 Section 2: Solution Architecture
 - **Objective**: Concrete C2 container diagrams detailing the physical technology stack (e.g., Go, Postgres, Redis, React, Webpack).
@@ -63,7 +63,7 @@ doc_meta:
 - **Objective**: Identify Single Points of Failure (SPOFs), cascading failure mitigations, fallback strategies, and the exact **Blast Radius**.
 - **Requirement**: Must document circuit breaker configurations, fallback states, and queue isolation limits.
 
-#### 2.1.7 Section 6: Observability
+#### 2.1.7 Section 6: Observability & Quality Benchmarks
 - **Objective**: Mandate the specific Service Level Indicators (SLIs), Service Level Objectives (SLOs), alert thresholds, and distributed tracing spans.
 - **Requirement**: Must align with global observability trace propagation and log output standards.
 

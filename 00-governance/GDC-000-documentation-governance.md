@@ -18,7 +18,12 @@ Scnehaux adopts a **Hybrid Federated & Automated Compliance** model for architec
 
 This document defines the structural, taxonomic, and qualitative rules governing all architecture description artifacts in the Scnehaux ecosystem. Code-level comments, inline documentation, and temporary design boards are out of scope.
 
-### 1.1 Governance Document Structure (GDC)
+
+---
+
+## 2. Policy Framework
+
+### 2.1 Governance Document Structure (GDC)
 All meta-level governance documents (GDC, files starting with `GDC-`) must strictly adhere to the following 4-section structure:
 - **Context & Scope**: Defines the boundaries, objectives, and scope of the governance policy.
 - **Policy Framework**: Documents the core guidelines, philosophies, schemas, or models being established.
@@ -27,19 +32,15 @@ All meta-level governance documents (GDC, files starting with `GDC-`) must stric
 
 ---
 
-## 2. Policy Framework
-
-### 2.1 Governance Framework
-
-### 2.1 The Hybrid Metamodel Philosophy
+### 2.2 The Hybrid Metamodel Philosophy
 To balance strategic business alignment with engineering execution, Scnehaux rejects rigid compliance with any single architectural framework. We adopt a multi-model synthesis:
-* **C4 Model**: Dictates folder navigation and system zoom levels (Meta = `00-governance/` & `05-adr/`, Context/C1 = `01-enterprise-architecture/`, Container/C2 = `03-pad/` & `04-sad/`).
-* **TOGAF**: Structures strategic direction within the `01-enterprise-architecture` layer (Business, Data, Application, and Technology domains).
+* **C4 Model**: Dictates folder navigation and system zoom levels (Meta = `00-governance/` & `05-decisions/`, Context/C1 = `01-enterprise/`, Container/C2 = `03-platform/` & `04-application/`).
+* **TOGAF**: Structures strategic direction within the `01-enterprise` layer (Business, Data, Application, and Technology domains).
 * **arc42 (Adapted)**: Supplies qualitative structural integrity concepts for file contents. We reject arc42's single monolithic template in favor of distributed, context-aware templates (EAD, PAD, SAD, TDD).
 * **AWS Well-Architected Framework**: Enforces operational focus. Failure mode analysis, blast radius containment, and quantified Non-Functional Requirements (NFRs) are mandatory.
 
-### 2.2 Abstraction Integrity & Document Authority Rules
-To prevent architectural drift and maintain a single source of truth across the C4 metamodel, all artifacts must comply with two absolute containment principles:
+### 2.3 Abstraction Integrity & Document Authority Rules
+To prevent architectural drift and maintain a single source of truth across the C4 metamodel, all artifacts must comply with three absolute containment principles:
 
 1. **Document Authority Rule (Single Source of Truth)**:
    - If multiple documents cover overlapping architectural concepts, exactly one document must be designated as the authoritative source of truth.
@@ -51,11 +52,15 @@ To prevent architectural drift and maintain a single source of truth across the 
      - **C3 Component documents (TDD)** must not override platform-wide integration contracts, trust boundaries, or global protocols established in C2 documents.
      - **TDD Traceability**: All TDDs must declare a direct relationship to their parent SAD using the `parent_sad` metadata and specify the section of the solution architecture they fulfill.
 
+3. **Design-Time vs. Consumption-Time Separation Rule**:
+   - **Design-Time (Architecture Git)**: The `scnehaux-architecture` repository serves as the authoritative *Single Source of Truth* for the ARB and CI/CD linter. It defines the logical domain blueprints (PAD/SAD) and governance constraints before implementation.
+   - **Consumption-Time (Web Developer Portal)**: Concrete integration manuals, API endpoints, JSON payloads, and SDKs must be published and consumed via Web Developer Portals (e.g., Swagger, ReDoc, Backstage) generated from code annotations, rather than polluting the Git architecture registry.
+
 ---
 
-### 2.2 Structural Taxonomy & Naming Conventions
+### 2.4 Structural Taxonomy & Naming Conventions
 
-### 3.1 Logical vs. Physical Boundary Mapping
+#### 2.4.1 Logical vs. Physical Boundary Mapping
 We separate logical business capabilities from physical deployment units to prevent organizational changes from corrupting the architecture description:
 
 | Attribute | PAD (Platform Architecture Document) | SAD (Software Architecture Document) |
@@ -66,8 +71,8 @@ We separate logical business capabilities from physical deployment units to prev
 | **Nature** | Technology-agnostic & Business-centric | Operational, Runtime, & Infrastructure-centric |
 | **Key Question** | *"What is the value of this platform and how does it integrate?"* | *"How is the application deployed, scaled, and secured?"* |
 
-### 3.2 The 1-to-N Mapping Rule
-A single Platform Capability (PAD) is fulfilled by multiple physical software systems (SADs):
+#### 2.4.2 The 1-to-N Mapping Rule
+A single Application Capability (PAD) is fulfilled by multiple physical software systems (SADs):
 
 ```mermaid
 graph TD
@@ -85,14 +90,14 @@ graph TD
 * **Resilience to Refactoring**: Splitting a backend monolith (e.g., `scnehaux-iam` into separate microservices) requires zero changes to the PAD since the logical integration contracts, trust boundaries, and business capabilities remain identical.
 * **Leakage Prevention**: Separating these layers prevents strategic capability documents from being polluted with operational details.
 
-### 3.3 Frontend vs. Backend Separation in SADs
+#### 2.4.3 Frontend vs. Backend Separation in SADs
 To prevent logical boundaries from being contaminated by client-side browser specifics or server-side data persistence mechanics, frontend and backend architectures must be documented using separate physical containers:
-* **Shared Platform Capability (PAD)**: Acts as the authoritative, technology-agnostic integration contract for both frontend and backend. It specifies standard headers, JWT payload schemas, token rotators, and gateway-level handshake mechanisms.
+* **Application Capability (PAD)**: Acts as the authoritative, technology-agnostic integration contract for both frontend and backend. It specifies standard headers, JWT payload schemas, token rotators, and gateway-level handshake mechanisms.
 * **Isolated Physical Containers (SADs)**: Because backend applications and frontend/client applications (such as web SPAs, mobile apps, or desktop clients) represent distinct physical deployable units, they must maintain separate SAD files (e.g., `[system-name].sad.md` for backend services and `[system-name]-[client-type].sad.md`, such as `-web`, `-mobile`, or `-desktop`, for frontend/client-facing units).
 
 ---
 
-### 2.3 Federated Architecture Governance Model
+### 2.5 Federated Architecture Governance Model
 
 To balance strategic consistency with engineering velocity, Scnehaux splits governance into two domains:
 
@@ -113,7 +118,12 @@ graph TD
 1. **Enterprise Level (Root Repo)**:
    - **Authority**: Macro-level architectural guardrails, split into Global (cross-cutting) and Domain-Bounded contexts (C1/C2 macro-level).
    - **Focus**: Strategic standards, platform contracts, and application container architectures.
-   - **Agnosticity Rules**: Global Standards (`STD-GLB*`) and PADs must be technology-agnostic. Domain Standards (e.g., `STD-UIP*`) may specify domain-scoped technical constraints.
+   - **Agnosticity Rules**:
+     - **EAD (Enterprise Architecture)**: Must remain conceptually agnostic (e.g., Business, Data, Application layers), except for the Technology Architecture domain (EAD-004) which must explicitly define the enterprise technology portfolio.
+     - **STD (Standards)**: Global Standards (`STD-GLB*`) should be technology-agnostic until an `ADR-GLB` of type `foundational` exists. Once a platform becomes an approved enterprise baseline, technology-specific standards within the global scope are expected and encouraged. Domain Standards (e.g., `STD-UIP*`) naturally specify domain-scoped technical constraints.
+     - **PAD (Platform Architecture)**: May specify technologies but must focus purely on integration boundaries and external contracts rather than internal implementation details.
+     - **SAD (Software Architecture)**: Must explicitly detail the actual technologies, frameworks, and deployment topologies used for the specific software container.
+     - **ADR (Architecture Decision Records)**: Inherently technology-specific. ADRs are the binding legal documents that select and authorize specific technologies, platforms, or patterns for use within their respective scopes (Global or Domain).
    - **Naming Conventions**:
      - **Global**: `ADR-GLB-[N]-[slug].md`, `STD-GLB-[N]-[slug].md`
      - **Domain**: `ADR-[DOMAIN]-[CAPABILITY]-[N]-[slug].md`, `STD-[DOMAIN]-[CAPABILITY]-[N]-[slug].md`
@@ -121,14 +131,14 @@ graph TD
    - **Directory Structure Variations (C4 Abstraction Law)**: The directory taxonomy changes depending on the C4 level and the nature of the document.
      - **EAD (01)**: Must remain flat or layered by TOGAF (Business, Data, Application, Tech). DDD subfolders are prohibited to preserve the holistic enterprise view.
      - **STD (02) & ADR (05)**: Must utilize **Domain-Driven Taxonomy** (`/[domain]/[capability]/`) to prevent granular rules and decisions from causing cognitive overload.
-       - **Rule 1 (Max Depth)**: Directory nesting is strictly capped at Level 3 (`Root -> Domain -> Capability`). Creating further subdirectories inside a capability folder (Level 4+) is prohibited to prevent the "Russian Doll" anti-pattern and maintain flat discoverability.
+       - **Rule 1 (Max Depth)**: Directory nesting is strictly capped at Level 3 (`Root -> Domain -> Capability`). Creating further subdirectories inside a capability folder (Level 4+) is prohibited to prevent the "Russian Doll" anti-pattern and maintain flat discoverability. *Exception/Clarification*: Underscore-prefixed directories (e.g., `_global`) are treated as scoping containers and do not consume a domain-depth level. For example, `_global/frontend/` is evaluated as Level 2 (`frontend` is the capability), so files inside it are Level 3.
        - **Rule 2 (Lexicographical Suffixing)**: To group related or multi-part documents without violating the Max Depth rule, use alphanumeric suffixing on the sequence ID (e.g., `STD-UIP-TKN-001A-core.md`, `STD-UIP-TKN-001B-semantic.md`). This keeps related files sequentially grouped in the file explorer.
      - **PAD (03) & SAD (04)**: Must utilize **Asset Container Folders** (`/[system-name]/`). The folder acts as an isolation boundary for the `.md` file and its supporting assets (diagrams, images), inherently grouping by logical domain or physical unit.
 
      **Example Enterprise Directory Structure:**
      ```text
      scnehaux-architecture/
-     ├── 01-enterprise-architecture/      # (Flat / Holistic View)
+     ├── 01-enterprise/                   # (Flat / Holistic View)
      │   └── EAD-001-value-stream.md
      │
      ├── 02-standards/                    # (Domain-Driven Taxonomy)
@@ -138,17 +148,17 @@ graph TD
      │       └── design-tokens/
      │           └── STD-UIP-TKN-001-tier1-core.md
      │
-     ├── 03-pad/                          # (Asset Container Folders)
+     ├── 03-platform/                     # (Asset Container Folders)
      │   └── scnehaux-ui-platform/
      │       ├── scnehaux-ui-platform.pad.md
      │       └── architecture-diagram.png
      │
-     ├── 04-sad/                          # (Asset Container Folders)
+     ├── 04-application/                  # (Asset Container Folders)
      │   └── scnehaux-iam/
      │       ├── scnehaux-iam.sad.md
      │       └── deployment-topology.png
      │
-     └── 05-adr/                          # (Domain-Driven Taxonomy)
+     └── 05-decisions/                          # (Domain-Driven Taxonomy)
          ├── _global/
          │   └── ADR-GLB-001-modular-monolith.md
          └── ui-platform/
@@ -188,13 +198,23 @@ graph TD
          └── auth/
      ```
 
+### 2.6 Document Mutability & Lifecycle Policy
+To prevent documentation rot while preserving decision traceability, all documents must adhere to this Mutability Matrix:
+
+| Doc Type | C4 Level | Mutability | Mutability Rule |
+| :--- | :--- | :--- | :--- |
+| **ADR** | Meta | **Immutable** | Represents a point-in-time decision. Once accepted, it must never be modified (except for status updates). Changes require a new replacing ADR. |
+| **STD** | Meta | **Mutable (Living)** | Represents current active rules. Modified directly and versioned via SemVer when rules evolve. Major changes require an authorizing ADR. |
+| **EAD** | C1 (Context) | **Mutable (Living)** | Represents the active enterprise architecture blueprint. Updated directly when strategic TOGAF domains or capabilities evolve. |
+| **PAD** | C2 (Platform) | **Mutable (Living)** | Represents active domain capability boundaries and trust contracts. Updated directly when capabilities are added or when the `fulfilled_by` SAD list changes. |
+| **SAD** | C2 (System) | **Mutable (Living)** | Represents active physical system topologies. Updated directly when microservices, containers, or deployment infrastructures are modified. |
+| **TDD** | C3 (Component) | **Hybrid** | Component designs. Class A (strategic transition) is immutable and archived. Class B (feature details) is mutable until merged/verified, then folded into the SAD and deleted. |
+
 ---
 
 ## 3. Enforcement Mechanism
 
-### 3.1 Compliance & Enforcement
-
-### 5.1 The Three-Gate CI Rule
+### 3.1 The Three-Gate CI Rule
 To maintain high developer velocity, automated validation only triggers a **HARD BLOCK (Exit 1)** if a violation threatens:
 1. **Security & Data Isolation** (e.g., bypassing PostgreSQL RLS or token signing boundaries).
 2. **Structural Integrity** (e.g., CQRS Level 1 domain-isolation breach where application queries bypass application layers and load domain aggregates).
@@ -202,7 +222,7 @@ To maintain high developer velocity, automated validation only triggers a **HARD
 
 Stylistic, naming conventions, or formatting preferences are treated as **WARNINGS**; they flag in PR reviews but do not block the merge.
 
-### 5.2 Documentation Density Law
+### 3.2 Documentation Density Law
 *A document's thickness and maintenance cost must be inversely proportional to its speed of change and directly proportional to its blast radius.*
 
 * **The Ephemeral TDD Lifecycle (TDD Fate Matrix)**:

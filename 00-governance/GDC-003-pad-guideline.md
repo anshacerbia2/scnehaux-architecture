@@ -16,7 +16,7 @@ doc_meta:
 
 This guideline defines the mandatory structure, metadata schema, and section requirements for **Platform Architecture Documents (PAD)** within the Scnehaux architecture registry. 
 
-PADs represent the logical capability definitions, domain boundaries, and integration contracts for platform services. They serve as the single source of truth for platform contracts before physical container systems (SADs) are built.
+PADs represent the logical capability definitions, domain boundaries, and conceptual integration rules for all business domains and applications. They serve as the design-time single source of truth (SSOT) for domain-level contracts before physical container systems (SADs) are built, while concrete API integration documents are generated and consumed downstream via Web Developer Portals.
 
 ---
 
@@ -31,26 +31,26 @@ Every PAD must begin with a YAML frontmatter block containing these fields:
 ```yaml
 ---
 doc_meta:
-  id: DOC-P-XXX                       # Platform capability ID
-  title: [Platform Title]             # Descriptive title of the Platform
+  id: DOC-P-XXX                       # Application capability ID
+  title: [Application Title]          # Descriptive title of the Application
   owner: [Domain Team/Role]           # Authoritative team owner
   version: 1.0.0                      # Semantic versioning format
   status: approved                    # proposed | approved | deprecated
   classification: public              # public | internal | restricted
-  fulfilled_by:                       # List of physical SAD IDs fulfilling this platform
+  fulfilled_by:                       # List of physical SAD IDs fulfilling this application capability
     - DOC-S-XXX
   review_cycle_days: 180              # Review cycle period
   last_reviewed: YYYY-MM-DD           # Last audit date
 ---
 ```
 
-#### 2.1.2 Section 1: Platform Capability
-- **Objective**: Define the business value, bounded context, and macro-level features owned by the platform capability.
+#### 2.1.2 Section 1: Application Capability
+- **Objective**: Define the business value, bounded context, and macro-level features that define this application capability.
 - **Requirement**: Must remain technology-agnostic. Focus on logical boundaries rather than libraries or infrastructure.
 
 #### 2.1.3 Section 2: Trust Boundary & Security
 - **Objective**: Map the isolation levels, identity propagation (e.g., Zero Trust), data encryption, and tenant separation models.
-- **Requirement**: Detail how user contexts and platform credentials traverse system boundaries.
+- **Requirement**: Detail how user contexts and application credentials traverse system boundaries.
 
 #### 2.1.4 Section 3: Integration Contract
 - **Objective**: Specify strict API contracts, required proprietary headers (e.g., `Scnehaux-Account`), and authentication handshakes.

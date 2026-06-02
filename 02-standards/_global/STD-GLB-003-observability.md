@@ -21,7 +21,7 @@ This standard establishes the non-negotiable rules for structured logging, distr
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+
 
 ## 3. Normative Rules
 
@@ -112,9 +112,9 @@ To manage storage bills and network bandwidth overhead under high-volume operati
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

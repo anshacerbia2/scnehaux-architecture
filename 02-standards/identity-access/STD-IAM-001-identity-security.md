@@ -21,7 +21,10 @@ This standard defines the mandatory cryptographic algorithms, token lifecycles, 
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+1. **Zero-Trust Token Validation**: Authentication tokens must be validated self-sufficiently without relying on persistent database hits on the hot-path.
+2. **Defensive Cryptography**: Always employ the strongest, modern cryptographic hashing and signing mechanisms (such as Argon2id and ES256/RS256) to secure credentials and tokens.
+3. **Decoupled Key Management**: Separation of key storage from the application context to enforce security boundaries and protect root signing keys.
+4. **Deterministic Fail-Secure Design**: Systems must degrade gracefully during outages (such as caching fallbacks) while maintaining an absolute secure state.
 
 ## 3. Normative Rules
 
@@ -87,9 +90,9 @@ All external HTTP interface layers must enforce the following secure headers:
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

@@ -25,7 +25,7 @@ It applies to all persistent datastores, caching layers, log targets, analytical
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+
 
 ## 3. Normative Rules
 
@@ -38,7 +38,7 @@ To safeguard sensitive information, all application data fields must map to one 
 | **Tier 1** | **Restricted PII** | Passwords, private keys, national IDs, payroll details. | Column-level envelope encryption at rest. |
 | **Tier 2** | **Identifiable PII** | Full name, email address, physical address, phone number. | Standard database encryption at rest. |
 | **Tier 3** | **Internal Data** | Tenant internal configs, system logs, business workflows. | Standard database encryption at rest. |
-| **Tier 4** | **Public Data** | Marketing assets, public documentation, open API specs. | None. |
+| **Tier 4** | **Public Data** | Marketing assets, public documentation, open API specs. |  |
 
 - **Log Sanitization**: Under no circumstances can Tier 1 or Tier 2 data be written to logging streams or application stdout. Middleware must scrub all logs.
 
@@ -102,9 +102,9 @@ All data schemas, tables, and attributes must align to this domain ownership mat
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

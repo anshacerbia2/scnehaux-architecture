@@ -22,12 +22,47 @@ It applies to all engineers, product leads, and architects documenting system de
 
 ## 2. Policy Framework
 
-### 2.1 ADR & Standard Lifecycles (Maturity Model)
+### 2.1 ADR Taxonomy & Types
 
-Every architectural decision and standard must progress through a managed, auditable lifecycle.
+Every ADR must declare its `adr_type` to clarify the intent of the decision. The allowed types are:
 
-#### 2.1.1 ADR Lifecycle
-An ADR must exist in one of five explicit states:
+| ADR Type | Purpose |
+|---|---|
+| **Foundational** | Makes a core architectural decision for the first time when no prior decision exists. |
+| **Implementation** | Selects an implementation or option that is mandated/permitted by an STD. |
+| **Exception** | Approves a deviation (waiver) against an active STD. |
+| **Conflict Resolution** | Resolves conflicting constraints between an STD, ADR, or business requirement. |
+| **Replacement** | Replaces a pre-existing architectural decision. |
+
+### 2.2 STD vs ADR Implementation Scenarios
+
+To resolve confusion on when to write an ADR vs an STD, teams must follow this matrix:
+
+| Scenario | Global STD | Global ADR | Project ADR | Notes |
+|---|---|---|---|---|
+| Organization establishes a new enterprise-wide rule | ✅ Create | ⚠️ Optional | ❌ | Board can create an STD without an ADR |
+| Organization selects an enterprise strategic platform/tech | ✅ Update/Create | ✅ Create | ❌ | E.g., React, PostgreSQL, Kubernetes |
+| Organization adopts an external regulation | ✅ Create | ❌ Usually No | ❌ | PCI-DSS, ISO27001, GDPR |
+| Organization resolves a conflict between enterprise standards | ✅ Update | ✅ Create | ❌ | Enterprise-level conflict resolution |
+| Organization shifts enterprise architectural direction | ✅ Update | ✅ Create | ❌ | E.g., monolith → microservices |
+| STD dictates a single, exclusive solution | ✅ Existing | ❌ | ❌ | Project simply complies |
+| STD provides multiple approved options | ✅ Existing | ❌ | ✅ Create | Project selects an option |
+| STD mandates a capability but does not specify a product | ✅ Existing | ❌ | ✅ Create | Project selects the implementation |
+| Project adopts technology not covered by an STD | ❌ | ❌ | ✅ Create | Local architecture decision |
+| Project makes a local, isolated decision | ❌ | ❌ | ✅ Create | E.g., adopting an internal library |
+| Project deviates from an STD (waiver) | ✅ Existing | ❌ | ✅ Create | Exception decision |
+| Multiple projects request the exact same waiver | ✅ Update | ✅ Create | Existing | Indicates the STD needs revision |
+| Project faces a conflict between two STDs | ✅ Existing | ❌ | ✅ Create | Local conflict resolution |
+| Conflict applies across the entire enterprise | ✅ Update | ✅ Create | ❌ | Global conflict resolution |
+| Internal refactoring without architectural changes | ❌ | ❌ | ❌ | ADR not required |
+| Minor version upgrades that don't alter architecture | ❌ | ❌ | ❌ | ADR not required |
+| Replacing a strategic library in a single project | ❌ | ❌ | ✅ Create | E.g., Redux → Zustand |
+| Replacing a strategic library enterprise-wide | ✅ Update | ✅ Create | ❌ | Enterprise migration |
+| Project follows the STD fully without needing a choice | ✅ Existing | ❌ | ❌ | No decision necessary |
+
+### 2.3 ADR Lifecycle
+
+Every architectural decision must progress through a managed, auditable lifecycle. An ADR must exist in one of five explicit states:
 
 ```
     [Proposed] ──► [Accepted] ──► [Superseded]
@@ -42,45 +77,60 @@ An ADR must exist in one of five explicit states:
 - **Superseded**: The decision has been replaced by a newer ADR. The newer ADR must explicitly reference the superseded record by ID.
 - **Deprecated**: The decision is no longer recommended or valid, but has not been directly replaced.
 
-#### 2.1.2 Standard Maturity Model
-To prevent rigid compliance grids, every enterprise standard must declare one of four maturity phases:
-- **Assessed (Evaluation)**: The standard is experimental or undergoing evaluation. Teams are encouraged to run pilots, but adoption is optional. No waivers are required to deviate.
-- **Trial (Limited Adoption)**: The standard is verified in pilot programs. It is recommended for new services, but existing services are exempt.
-- **Adopted (Default Mandate)**: The standard is the default mandatory baseline. Deviations require an approved exception waiver.
-- **Hold (Retirement)**: The standard is deprecated. New implementations are prohibited from adopting it. Existing implementations must schedule a migration path to replacement systems within `180 days`.
+### 2.3.1 The Immutability Principle
+An ADR is a strict historical record. Once an ADR reaches the **Accepted** or **Rejected** state, its core substantive content (Context, Decision Drivers, Decision, Consequences) **MUST NEVER BE MODIFIED**. 
+- If a decision needs to be reversed or fundamentally changed, you must create a **new ADR** (using the `replacement` type) and update the old ADR's status to `Superseded`. 
+- **Administrative Exemption (Decoupled Execution)**: Strategic decisions (ADRs) are decoupled from tactical execution (STDs). An ADR may be approved before its corresponding Standard document is finalized. Appending hyperlinks to newly drafted Standards (STDs) or cross-referencing newer ADRs in the "Related Standards" section is classified as a metadata update and is explicitly permitted.
+- Other permissible edits to an existing Accepted ADR include: updating the Status table to reflect a lifecycle transition, or fixing minor typographical errors that do not alter the technical context.
 
-#### 2.1.3 Standard Sunset & Deprecation Strategy
-When a standard technology or library decays (e.g. library obsolescence or deprecation by vendors):
-1. **Sunset Recommendation**: The Architecture Review Board (ARB) initiates a review and transitions the standard state to `Hold`.
-2. **Migration Path Mapping**: The ARB must publish a companion Migration Guide or a successor standard (`Adopted` or `Trial`) within `30 days` of the transition.
-3. **Grace Window**: Active projects have a maximum of `180 days` to sunset the legacy standard, after which compliance check warnings escalate to CI blocks.
-
-### 2.2 Mandatory ADR Schema
+### 2.4 Mandatory ADR Schema
 
 Every ADR must utilize the standard Markdown template and include the following metadata and sections:
 
-#### 2.2.1 Metadata Frontmatter
+#### 2.4.1 Metadata Frontmatter
+
+##### 2.4.1.1 Enterprise Level (Root Repo)
 ```yaml
 doc_meta:
   id: ADR-GLB-[Seq] | ADR-[DOM]-[CAP]-[Seq]  # e.g. ADR-GLB-001 or ADR-UIP-TKN-001
   title: Short Descriptive Title
+  adr_type: foundational | implementation | exception | conflict_resolution | replacement
   status: proposed | accepted | rejected | superseded | deprecated
   created: YYYY-MM-DD
-  approved_by: Lead Architect Name
-  deciders: [Name1, Name2]
+  created_by: Creator Name | [Name1, Name2]
 ```
 
-#### 2.2.2 Required Document Sections
+##### 2.4.1.2 Project/Local Level (Project Repo)
+```yaml
+doc_meta:
+  id: ADR-[REPO]-[COMPONENT]-[Seq]  # e.g. ADR-SCNX-IAM-GO-001 or ADR-UIP-AUTH-001
+  title: Short Descriptive Title
+  adr_type: foundational | implementation | exception | conflict_resolution | replacement
+  status: proposed | accepted | rejected | superseded | deprecated
+  created: YYYY-MM-DD
+  created_by: Creator Name | [Name1, Name2]
+  parent_sad: [Parent SAD ID]       # Optional: Mapped parent Software Architecture Document
+
+  # Required ONLY if adr_type is "exception" (Waiver Approval)
+  approved_by: [Sponsor/Approver Name or ARB]
+  expiry_date: YYYY-MM-DD           # Waiver validity cap (max 365 days)
+  risk_classification: low | medium | high
+  exception_reason: Brief rationale explaining standard deviation
+```
+
+#### 2.4.2 Required Document Sections
 1. **Title**: The ADR ID and a descriptive title header.
-2. **Status Table**: Chronological table tracking state transitions, deciders, and approval timestamps.
-3. **Context & Problem Statement**: The technical problem, constraints, and business requirements driving the decision.
-4. **Decision**: The chosen course of action with concrete, binding statements.
-5. **Consequences**: The positive, negative, and operational tradeoffs resulting from the decision.
-6. **Alternatives Considered**: A brief analysis of alternate paths rejected during review.
+2. **Status**: Chronological table tracking state transitions (`Date`, `Status`), the `ADR Type`, the `Reviewers` (or SMEs) consulted, and the final `Approver`.
+3. **Context**: The technical problem, constraints, and business requirements driving the decision.
+4. **Decision Drivers**: The core technical and business factors forcing the decision.
+5. **Decision**: The chosen course of action with concrete, binding statements.
+6. **Consequences**: The results (Positive, Negative, Operational) of the decision.
+7. **Compliance Impact**: Defines related standards, compliance status, and required waivers.
+8. **Alternatives Considered**: Analysis of alternate paths rejected during review.
 
-### 2.3 Repository Management & Indexing Invariants
+### 2.5 Repository Management & Indexing Invariants
 
-- **Location**: Enterprise ADRs must reside in the `/05-adr` directory of the architecture-description repository, grouped by Bounded Context (e.g., `/05-adr/_global/` or `/05-adr/ui-platform/`). Local project ADRs remain in `packages/docs/04-decisions` of local workspaces.
+- **Location**: Enterprise ADRs must reside in the `/05-decisions` directory of the architecture-description repository, grouped by Bounded Context (e.g., `/05-decisions/_global/` or `/05-decisions/ui-platform/`). Local project ADRs remain in `packages/docs/04-decisions` of local workspaces.
 - **Naming Conventions**: Files must be named sequentially within their context: `ADR-GLB-[Sequence]-[slug].md` for global decisions and `ADR-[DOMAIN]-[CAPABILITY]-[Sequence]-[slug].md` for domain-level enterprise decisions. Local project decisions use `ADR-[SYSTEM]-[DOMAIN]-[NUMBER]-[slug].md`.
 - **Unified Index**: Every repository must maintain a root-level index catalog linking to every ADR with its current status. The index must be updated prior to merging any new ADR.
 
@@ -96,15 +146,7 @@ doc_meta:
 
 ### 3.2 Rule Conflict Resolution Matrix
 
-When multiple mandatory standards collide during implementation, the following priority tree governs the outcome (highest priority wins):
-
-1. **Security & Data Compliance** (e.g., Encryption-at-rest, PII isolation, RLS rules).
-2. **System Resilience & Stability** (e.g., Circuit breakers, load shedding limits).
-3. **Observability & Auditability** (e.g., Audit trail logs, telemetry trace injection).
-4. **Operational Performance** (e.g., Frame rate rendering target, latency budgets).
-5. **Developer Experience & Scaffolding** (e.g., Directory styles, compiler version selection).
-
-*Exception Rule*: Performance must not override Security on public network boundaries. Performance is permitted to override Audit tracing only for isolated, local high-frequency loop executions (e.g., local state evaluation).
+When multiple mandatory standards collide during implementation, the resolution priority tree defined in **[GDC-008 §3.1 — Rule Conflict Resolution Matrix](./GDC-008-architecture-lifecycle.md)** governs the outcome.
 
 ---
 

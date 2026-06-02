@@ -8,16 +8,34 @@ rules:
     required_fields:
       - id
       - title
-      - owner
       - version
       - status
       - classification
+    adr_required_fields:
+      - id
+      - title
+      - adr_type
+      - status
+      - created
+      - created_by
     version_format: semver
     allowed_classifications:
       - public
       - internal
       - restricted
       - confidential
+    allowed_adr_statuses:
+      - proposed
+      - accepted
+      - rejected
+      - superseded
+      - deprecated
+    allowed_adr_types:
+      - foundational
+      - implementation
+      - exception
+      - conflict_resolution
+      - replacement
 
   # Structural Validation
   structure:
@@ -33,7 +51,7 @@ rules:
       - Cross-Cutting Standards
       - Decision Log
     pad_sections:
-      - Platform Capability
+      - Application Capability
       - Trust Boundary & Security
       - Integration Contract
       - Strategic Architecture
@@ -71,16 +89,17 @@ rules:
       - Title
       - Status
       - Context
+      - Decision Drivers
       - Decision
-      - Rationale
-      - Alternatives Considered
       - Consequences
-      - Risks
-      - Implementation Notes
-      - Related Documents
+      - Compliance Impact
+      - Alternatives Considered
     std_sections:
       - Objective & Scope
-      - Compliance & Enforcement
+      - Design Principles
+      - Normative Rules
+      - Exceptions
+      - Enforcement Mechanism
     min_content_length_chars: 50 # Prevent empty sections
 
   # Content Quality (Semantic Linting)
@@ -99,8 +118,17 @@ rules:
       - good
       - better
     ambiguity_check:
-      pattern: "\\b(highly|very) (scalable|fast|secure)\\b"
+      pattern: "\b(highly|very) (scalable|fast|secure)\b"
       message: "Vague claim detected. Must be quantified with metrics."
+    required_section_keywords:
+      "Resilience":
+        - "Blast Radius"
+    prohibited_section_keywords:
+      "Exceptions":
+        - "waiver"
+        - "ADR"
+        - "ARB"
+        - "Approval Requirements"
 
   # Quantification Rules
   quantification:
@@ -123,10 +151,10 @@ rules:
       - risk_classification
       - exception_reason
     naming_conventions:
-      global_adr_pattern: "^ADR-E\\d{3}-[a-z0-9-]+\\.md$"
-      project_adr_pattern: "^ADR-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+-\\d{3}-[a-z0-9-]+\\.md$"
-      global_std_pattern: "^STD-E\\d{3}-[a-z0-9-]+\\.md$"
-      project_std_pattern: "^STD-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+-\\d{3}-[a-z0-9-]+\\.md$"
+      global_adr_pattern: "^ADR-GLB-(?:[A-Z]{2,4}-)?\\d{3}-[a-z0-9-]+\\.md$"
+      domain_adr_pattern: "^ADR-[A-Z]{2,4}(?:-[A-Z]{2,4})?-\\d{3}-[a-z0-9-]+\\.md$"
+      global_std_pattern: "^STD-GLB-(?:[A-Z]{2,4}-)?\\d{3}-[a-z0-9-]+\\.md$"
+      domain_std_pattern: "^STD-[A-Z]{2,4}(?:-[A-Z]{2,4})?-\\d{3}[A-Za-z]?-[a-z0-9-]+\\.md$"
 
 # Three-Gate CI Rule Categorization (Hard Block Exit 1 vs Non-Blocking Warning)
 severity_levels:
@@ -140,8 +168,11 @@ severity_levels:
   operational_stability_violation: ERROR
   missing_metadata: ERROR
   missing_section: ERROR
+  missing_section_keyword: ERROR
+  unrecognized_section: WARNING
   exception_expired: ERROR
   missing_exception_reason: ERROR
+  cross_reference_missing: WARNING
 
   # Non-Blocking Warnings (Soft Gate - PR Warning only)
   prohibited_word: WARNING

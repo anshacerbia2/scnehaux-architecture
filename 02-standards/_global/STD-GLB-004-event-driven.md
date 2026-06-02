@@ -25,7 +25,7 @@ It applies to all publish-subscribe configurations, message queue integrations, 
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+
 
 ## 3. Normative Rules
 
@@ -121,9 +121,9 @@ To prevent downstream consumer failures during schema changes, services must adh
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

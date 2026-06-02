@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: STD-GLB-FE-006
+  id: STD-GLB-FE-002
   title: Enterprise React Development Standard
   owner: Principal Frontend Architect
   version: 1.0.0
@@ -10,7 +10,7 @@ doc_meta:
   last_reviewed: 2026-05-21
 ---
 
-# Enterprise React Development Standard (STD-GLB-FE-006)
+# Enterprise React Development Standard (STD-GLB-FE-002)
 
 ---
 
@@ -33,7 +33,13 @@ It establishes a uniform engineering contract to guarantee that all React compon
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+The Scnehaux Enterprise React Standard is governed by the **Supreme Frontend Governance**. This architectural philosophy enforces Deterministic Systems, Clean Architecture, and Zero Waste Execution. All React implementations must adhere to these five non-negotiable principles:
+
+1. **Determinism Over Cleverness**: Output must be perfectly predictable from input. No hidden side-effects.
+2. **Explicit State Only**: No implicit, duplicated, or shadow state. Single source of truth. Derived state MUST be computed inline.
+3. **Strict Separation of Concerns**: UI $\neq$ State $\neq$ Side Effects $\neq$ Domain Logic. Enforcing the strict layer: `UI (Pure) -> Hooks (State Orchestration) -> Services (IO) -> External Systems`. Business logic inside JSX is strictly prohibited.
+4. **Zero Waste System**: No unnecessary re-renders, no meaningless DOM wrappers, and no unnecessary memory allocations.
+5. **Observability First**: Zero silent failures. Every failure, mutation, and async flow must be traceable and surfaced to the UI boundary.
 
 ## 3. Normative Rules
 
@@ -52,7 +58,7 @@ It establishes a uniform engineering contract to guarantee that all React compon
 - **Layout Composition (Children & Element Props)**: Layout flexibility must be achieved through `children`, render props, or props accepting React elements/nodes (e.g., `header={<Header />}`). Prop drilling through more than 2 intermediate components (calculated as wrapper/layout components that receive props solely to pass them down without using or mutating them) is prohibited.
   - *Compliant (drill depth <= 2)*: `Parent (State Owner) -> LayoutWrapper -> LeafComponent (Consumer)` (1 intermediate layer).
   - *Prohibited (drill depth > 2)*: `Parent (State Owner) -> PageLayout -> CardWrapper -> TabContainer -> LeafComponent` (3 intermediate layers). Use layout composition or React Context instead.
-- **Compound Components**: Multi-part widgets (such as `<Tabs>`, `<Accordion>`, `<Select>`) must share implicit state via scoped React Context, exposing a declarative parent-child API rather than flat configuration props.
+- **Compound Components & Slot Architecture (Inversion of Control)**: Multi-part widgets must use composition rather than flat configuration props. Passing monolithic configuration props (e.g., `<Dropdown items={data} isOpen={true} theme="dark" showIcon={false} />`) is strictly prohibited. Instead, components must expose a declarative parent-child API (e.g., `<Dropdown><Dropdown.Trigger>...</Dropdown.Trigger><Dropdown.Menu>...</Dropdown.Menu></Dropdown>`) sharing state via scoped context. This adheres to the Open-Closed Principle (OCP), making the system highly flexible, easily testable, and eliminating the need to modify core components for minor layout changes.
 
 #### Ref Forwarding
 - **Mandatory `forwardRef`**: All primitive and reusable components that render a single DOM element must forward refs using `React.forwardRef` (or the React 19+ ref-as-prop pattern) to allow parent consumers direct DOM access for measurement, focus management, and animation binding.
@@ -86,6 +92,16 @@ It establishes a uniform engineering contract to guarantee that all React compon
 
 #### State Lifting & Colocation
 - State must be colocated to the lowest common ancestor component that requires access to the data. Lifting state prematurely to global contexts or top-level layout components is prohibited.
+
+#### Normalized Data Graphs
+- **Flat Relational State (Normalized Data Graph)**: Collections of complex entities must be stored in a normalized, flat relational graph (using ID-based dictionaries) rather than deeply nested JSON trees. Storing duplicated data entities across different state slices is strictly prohibited. Components must reference the single source of truth via ID lookups (similar to a relational database in the browser). This guarantees that modifying an entity (e.g., updating a user's name in a comment) instantly updates all other references across the UI without requiring re-renders or redundant network fetches (e.g., utilizing Apollo Cache or Redux Toolkit normalized state).
+
+#### Finite State Machines (FSM)
+- **Critical Flow Orchestration**: Complex, multi-step interactive flows (such as Authentication, Payment Checkouts, or multi-step Wizards) must be modeled using deterministic Finite State Machines (FSM). Relying on disparate boolean flags (e.g., `isLoading`, `isError`) to represent mutually exclusive states is an anti-pattern and strictly prohibited.
+
+#### Orthogonal Finite State Machines (OFSM) for UI Transitions
+- **Parallel Transition Constraints**: Structural UI transition components (such as Modals or Overlays) that orchestrate animations alongside DOM mutations must utilize Orthogonal Finite State Machines (OFSM). This ensures that parallel state dimensions (such as the current visual phase, layout readiness, and momentum interruption) are synchronized deterministically against the browser's paint cycle.
+- **Standardized Phase Contract**: To prevent visual layout flickering, transition components must adhere to a strict, bounded multi-phase contract. The phase progression must deterministically map to the component's physical mounting and unmounting lifecycle. Hardcoding arbitrary or ad-hoc transition states in product-level code is prohibited.
 
 ---
 
@@ -268,6 +284,8 @@ Aside from stabilizing data or callbacks passed to children, manual memoization 
 
 ### Server Components & Streaming (Future Readiness)
 - **Server Components Boundary**: Components importing APIs that access server-exclusive resources (such as filesystem access, secure server credentials, or direct database connections) must reside in a file prefixed with the `'use server'` directive. Client-side elements (such as DOM event listeners, browser hooks, or state variables) are prohibited within Server Components and must be extracted to separate files starting with the `'use client'` directive.
+- **Render-as-You-Fetch (Suspense & Error Boundaries)**: The legacy "Fetch-on-Render" pattern (waiting for a component to render before triggering its API fetch, causing request waterfalls) is prohibited. Applications must trigger API requests at the Route/Router level in parallel with code downloading. Combined with `<Suspense>`, this drastically reduces Time To Interactive (TTI) and automatically displays UI skeletons without writing repetitive `if (isLoading)` blocks.
+- **Partial Hydration / Islands Architecture (Edge Rendering)**: To enforce a Zero Waste System, applications adopting SSR/RSC should prioritize sending JavaScript only for interactive "islands" (e.g., carousels, buttons) while keeping static content (e.g., articles) as pure HTML. Sending megabytes of JavaScript to hydrate static DOM elements wastes CPU cycles and degrades mobile performance.
 - **Streaming & Progressive Rendering**: Applications adopting streaming SSR must structure their component trees to maximize early HTML flushing — placing heavy data-dependent subtrees inside dedicated `<Suspense>` shells that stream independently.
 - **Adoption Policy**: Server Components and streaming SSR are not currently mandated for Scnehaux enterprise SPAs (which default to CSR). Adoption requires an approved Architecture Decision Record (ADR) justifying the operational complexity trade-off.
 - **SSR Hydration Determinism**: Non-deterministic rendering during server-side rendering (SSR) that triggers client-side hydration mismatches is prohibited. Developers must enforce the following rules:
@@ -278,9 +296,9 @@ Aside from stabilizing data or callbacks passed to children, manual memoization 
 ---
 
 ### Accessibility Integration
-- **Semantic Elements First**: Components must use native semantic HTML elements (`<button>`, `<a>`, `<nav>`, `<dialog>`, `<input>`) before resorting to generic `<div>` or `<span>` with ARIA role overrides.
-- **Focus Management**: Modal and dialog components must implement focus trapping (restrict Tab cycle within the overlay) and focus restoration (return focus to the trigger element on close). Components that programmatically move focus (such as autocomplete or combobox widgets) must follow WAI-ARIA Authoring Practices Guide (APG) patterns.
-- **Keyboard Interaction**: All interactive components must be fully operable via keyboard. Custom widgets must implement the complete keyboard interaction model defined in WAI-ARIA APG (such as arrow-key navigation for listboxes, Escape to close for dialogs).
+> **Document Authority Notice**: Comprehensive accessibility mandates (including Semantic HTML prioritization, Focus Management, Keyboard Interaction, and WAI-ARIA APG compliance) have been consolidated into **[STD-GLB-FE-009 (Accessibility & Internationalization)](./STD-GLB-FE-009-accessibility-i18n.md)**.
+> 
+> React components must strictly comply with the universal access principles defined in that authoritative standard.
 
 ---
 
@@ -292,23 +310,34 @@ Aside from stabilizing data or callbacks passed to children, manual memoization 
 ---
 
 ### Async Data Consistency & Race-Condition Governance
-- **Query Engines & Caching**: Manual management of global fetch requests inside raw lifecycle effects is prohibited. Applications must utilize standardized query engines (such as TanStack Query) to manage state revalidation, caching, and automatic request deduplication.
-- **Race Condition Prevention**: Asynchronous operations must guarantee request sequencing. If multiple asynchronous operations target the same state slot, outdated responses must be discarded. Developers must use `AbortController` cancellation or local sequence trackers to invalidate stale network responses.
-- **Optimistic UI Rollbacks**: Components executing optimistic state updates must implement transactional rollbacks. If a server mutation fails, the cache state must automatically revert to the pre-optimistic state snapshot and emit a surfaced error notification.
+> **Document Authority Notice**: Comprehensive network and data access mandates (including HTTP client architecture, AbortController cancellation, Optimistic UI Updates, and Cache Engine usage) have been consolidated into **[STD-GLB-FE-010 (Data Access & Network)](./STD-GLB-FE-010-data-access.md)**.
+> 
+> React components must strictly delegate all network IO and caching logic to the patterns defined in that authoritative standard.
 
 ---
 
 ### Performance Profiling & Monitoring
 - **React DevTools Profiler**: Components exhibiting more than 3 unnecessary re-renders per user interaction (renders where no inputs, state, or context values have changed) must be investigated and optimized using the React DevTools Profiler flame graph.
 - **React Strict Mode**: Development builds must run with `<React.StrictMode>` enabled to surface impure renders, missing cleanup functions, and deprecated API usage through intentional double-invocation.
-- **Production Monitoring**: Real User Monitoring (RUM) must track component-level rendering latency for critical user flows. Components consistently exceeding 16ms render time must be flagged for architectural review.
+- **Production Monitoring**: Real User Monitoring (RUM) must track component-level rendering latency for critical user flows. Components consistently exceeding 16ms render time must be flagged for architectural review. This monitoring must comply with the trace propagation and telemetry rules defined in [STD-GLB-FE-006 (Frontend Observability & Telemetry)](./STD-GLB-FE-006-observability.md#35-frontend-observability--telemetry) and respect the execution boundaries in [STD-GLB-FE-004 (Zero Layout Thrashing)](./STD-GLB-FE-004-performance.md#zero-layout-thrashing-60fps-render-guarantee).
 
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
+Exceptions are granted exclusively when strict compliance with a normative rule introduces disproportionate technical, accessibility, or business risk. 
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+### Exception to "External Sync (useEffect Constraints)" (Rule 3.3)
+- **Condition for Deviation**: You are initializing or synchronizing a heavy, imperative non-React canvas engine or library (e.g., D3.js, Chart.js, Google Maps) that requires direct DOM manipulation outside of React's render cycle.
+- **Mandatory Alternative**: `useEffect` is strictly permitted for this synchronization, provided the hook is isolated within a dedicated wrapper component that *only* manages the initialization, reference binding, and teardown lifecycle of that specific instance.
+
+### Exception to "Rendering Optimization (Memoization)" (Rule 3.1 & 3.4)
+- **Condition for Deviation**: The memory allocation and garbage collection cost of instantiating the `useMemo` hook demonstrably outweighs the CPU cost of the child component re-rendering.
+- **Mandatory Alternative**: Omission of `useMemo` is permitted exclusively for trivial, primitive calculations (e.g., fundamental string concatenation, boolean flips) where the output is passed to a leaf node that does not trigger cascading renders.
+
+### Exception to "Form Management (Controlled Components)" (Rule 3.6)
+- **Condition for Deviation**: You are integrating a highly complex data-grid engine that manages its own internal virtual DOM and fundamentally requires uncontrolled `ref` assignments to maintain 60FPS scroll performance.
+- **Mandatory Alternative**: Uncontrolled forms via `refs` are permitted exclusively for these specific high-density engines, provided they are encapsulated behind a controlled interface boundary exposed to the rest of the React application.
 
 ## 5. Enforcement Mechanism
 - **Linting Rules**: CI/CD pipelines must enforce strict ESLint suites (including `eslint-plugin-react`, `eslint-plugin-react-hooks`, and `eslint-plugin-jsx-a11y`) with error severity configured for hook dependency validation, accessibility violations, and key stability checks.

@@ -25,7 +25,7 @@ It applies to all persistent relational stores, document stores, caches, and key
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+
 
 ## 3. Normative Rules
 
@@ -210,9 +210,9 @@ To prevent user session inconsistencies resulting from replication lag:
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

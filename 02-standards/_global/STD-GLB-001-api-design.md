@@ -21,7 +21,7 @@ This standard establishes the non-negotiable rules for designing, versioning, an
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+
 
 ## 3. Normative Rules
 
@@ -122,9 +122,9 @@ All internal inter-service communication must run over gRPC using **Protocol Buf
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

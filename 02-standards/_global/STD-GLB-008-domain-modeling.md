@@ -25,7 +25,7 @@ It defines Bounded Context boundaries, Aggregate invariants, entity separation, 
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+
 
 ## 3. Normative Rules
 
@@ -84,9 +84,9 @@ Domain models must protect business rules (invariants) actively at memory bounda
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 

@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: STD-GLB-FE-004
+  id: STD-GLB-FE-006
   title: Enterprise Frontend Runtime, Security & Observability Standard
   owner: Principal Frontend Architect
   version: 1.0.0
@@ -10,7 +10,7 @@ doc_meta:
   last_reviewed: 2026-05-21
 ---
 
-# Enterprise Frontend Runtime, Security & Observability Standard (STD-GLB-FE-004)
+# Enterprise Frontend Runtime, Security & Observability Standard (STD-GLB-FE-006)
 
 ---
 
@@ -27,11 +27,14 @@ The scope of this standard applies to all production build configurations, CI/CD
 
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+All frontend runtime, security, and observability architectures must strictly adhere to the Supreme Frontend Governance principles:
+- **Zero-Trust Client Environment**: The browser is inherently insecure. The frontend must never be trusted to enforce data integrity or compute sensitive logic.
+- **Deterministic Execution**: The runtime environment must behave predictably regardless of the host OS or infrastructure. Configuration must be strictly controlled.
+- **Proactive Telemetry**: Failures, latencies, and user friction must be visible in real-time. Unobservable systems are considered broken.
 
 ## 3. Normative Rules
 
-### Bundling & Performance Budgets
+### 3.1 Bundling & Performance Budgets
 
 To protect client-side execution from loading lag and layout blocks, applications must adhere to strict build budgets categorized by application type.
 
@@ -46,7 +49,7 @@ To protect client-side execution from loading lag and layout blocks, application
 
 ---
 
-### Environment & Configuration Security
+### 3.2 Environment & Configuration Security
 
 Frontend configurations must separate build-time variables from runtime configurations to prevent sensitive credential exposure.
 
@@ -64,7 +67,7 @@ Frontend configurations must separate build-time variables from runtime configur
 
 ---
 
-### Risk-Based Dependency Security
+### 3.3 Risk-Based Dependency Security
 
 Supply chain security must verify package credibility while avoiding unnecessary CI pipeline blocks.
 
@@ -77,7 +80,7 @@ Supply chain security must verify package credibility while avoiding unnecessary
 
 ---
 
-### Typed Micro-Frontend (MFE) Communication
+### 3.4 Typed Micro-Frontend (MFE) Communication
 
 Micro-frontend architectures must communicate using typed interfaces to prevent runtime crashes and simplify message tracing.
 
@@ -91,7 +94,7 @@ Micro-frontend architectures must communicate using typed interfaces to prevent 
 
 ---
 
-### Frontend Observability & Telemetry
+### 3.5 Frontend Observability & Telemetry
 
 Production runtimes must emit telemetry data to track performance metrics and diagnose runtime failures.
 
@@ -108,10 +111,16 @@ Production runtimes must emit telemetry data to track performance metrics and di
 
 ---
 
+## 4. Exceptions
+Exceptions are granted exclusively when strict compliance with a normative rule introduces disproportionate technical, accessibility, or business risk. 
 
-## 4. Exceptions & Alternatives
+### Exception to "End-to-End Metric Propagation" (Rule 3.5)
+- **Condition for Deviation**: The frontend is integrating directly with a strict third-party SaaS API (e.g., Stripe) that rejects unrecognized custom HTTP headers (like `X-Trace-Id`) via CORS policies.
+- **Mandatory Alternative**: The client must suppress the trace headers for those specific domains. Telemetry correlation must be reconstructed asynchronously via server-to-server webhook callbacks.
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+### Exception to "RUM Budgets" (Rule 3.3)
+- **Condition for Deviation**: The application is deployed in a high-security, air-gapped environment or a strict HIPAA compliance zone where all 3rd-party egress traffic is prohibited.
+- **Mandatory Alternative**: RUM tracking must be completely disabled on the client. Observability must rely exclusively on server-side request logging and localized application logs.
 
 ## 5. Enforcement Mechanism
 

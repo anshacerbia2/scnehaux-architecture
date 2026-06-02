@@ -22,10 +22,14 @@ It guarantees that styles are resolved at compile-time with zero runtime overhea
 
 ---
 
-
 ## 2. Design Principles
 
-*(TBD - Architectural philosophy guiding these rules)*
+The styling and compilation engine adheres to four core principles to ensure rendering performance, theme stability, and visual encapsulation:
+
+1. **Zero-Runtime Overhead**: Styles must compile statically to atomic class strings during the build phase to eliminate style injection rendering cycles.
+2. **Strict Visual Encapsulation**: CSS selectors are isolated via unique prefixes and modules to prevent style leakage in micro-frontend environments.
+3. **Photometric Color Precision**: Color implementations utilize the OKLCH color space to ensure perceptually uniform contrast across application themes.
+4. **Deterministic Theme Transitions**: Theme switching is achieved strictly by mutating a single global DOM attribute, preventing React layout re-renders.
 
 ## 3. Normative Rules
 
@@ -56,9 +60,9 @@ To prevent visual layout conflicts when multiple micro-frontends share the same 
 ---
 
 
-## 4. Exceptions & Alternatives
+## 4. Exceptions
 
-Deviations from these normative rules require an approved exception waiver from the Architecture Review Board (ARB).
+
 
 ## 5. Enforcement Mechanism
 
