@@ -51,18 +51,23 @@ Provides the automated instruments and quality standards required to maintain a 
 
 ### 01-enterprise / EAD (The Strategic Layer - C1 Context)
 Defines the global "City Map" and the enterprise-wide directives (Business, Data, Application, Technology).
+- **Guideline**: [GDC-001 — Enterprise Architecture Description (EAD) Guideline](./00-governance/GDC-001-ead-guideline.md)
 
 ### 02-standards / STD (The Guardrail & Baseline Layer)
 Mandatory granular policies that establish the architecture baseline and supplement EAD paved roads. This layer sets the minimum technical bar for quality, security, and operational excellence (e.g., API Design guidelines, coding styles, database schemas).
+- **Guideline**: [GDC-002 — Enterprise Standard (STD) Guideline](./00-governance/GDC-002-std-guideline.md)
 
 ### 03-platform / PAD (Logical Domain - C2 Context)
 Defines the logical capabilities, bounded contexts, trust boundaries, and strategic positioning of a business domain (e.g., `identity`, `finance`).
+- **Guideline**: [GDC-003 — Platform Architecture Document (PAD) Guideline](./00-governance/GDC-003-pad-guideline.md)
 
 ### 04-application / SAD (Physical System - C2 Context)
 Defines the physical deployment topology, container boundaries, runtime flows, failure modes, observability, and concrete systems fulfilling the domain.
+- **Guideline**: [GDC-004 — Software Architecture Document (SAD) Guideline](./00-governance/GDC-004-sad-guideline.md)
 
 ### 05-decisions / ADR (The Rationale Layer)
 The immutable history of "Why". This layer captures foundational architectural decisions, tracks implementation rationale, resolves conflicts, and serves as the formal escape hatch for paved road exceptions.
+- **Guideline**: [GDC-005 — Architecture Decision Record (ADR) Guideline](./00-governance/GDC-005-adr-guideline.md)
 
 ---
 
