@@ -76,11 +76,6 @@ The immutable history of "Why". This layer captures foundational architectural d
 
 ## Governance Model & Approvals
 
-No system may:
-- Enter production without an approved SAD.
-- Deviate from standards without an ADR.
-- Introduce breaking architectural changes without review.
-
 All architectural changes must undergo a formal peer review via Pull Request. For the complete evaluation criteria and review process, see:
 - [GDC-009 — Documentation Quality Framework](./00-governance/GDC-009-documentation-quality-framework.md)
 - [GDC-010 — Architecture Review Process](./00-governance/GDC-010-architecture-review-process.md)
