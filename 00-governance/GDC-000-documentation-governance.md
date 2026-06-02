@@ -40,7 +40,7 @@ To balance strategic business alignment with engineering execution, Scnehaux rej
 * **AWS Well-Architected Framework**: Enforces operational focus. Failure mode analysis, blast radius containment, and quantified Non-Functional Requirements (NFRs) are mandatory.
 
 ### 2.3 Abstraction Integrity & Document Authority Rules
-To prevent architectural drift and maintain a single source of truth across the C4 metamodel, all artifacts must comply with three absolute containment principles:
+To prevent architectural drift and maintain a single source of truth across the C4 metamodel, all artifacts must comply with four absolute containment principles:
 
 1. **Document Authority Rule (Single Source of Truth)**:
    - If multiple documents cover overlapping architectural concepts, exactly one document must be designated as the authoritative source of truth.
