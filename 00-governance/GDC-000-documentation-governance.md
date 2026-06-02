@@ -290,11 +290,27 @@ The architecture ecosystem operates under three absolute mandates. No system may
 2. Deviate from standards without an ADR.
 3. Introduce breaking architectural changes without a formal peer review and ARB approval.
 
-### 3.2 Non-Functional Discipline
-All systems must define measurable targets for Availability, Performance, Scalability, Security, Observability, and Resilience. Vague or non-measurable requirements (e.g., "fast" or "highly scalable") are considered governance violations and will be rejected.
+### 3.2 Versioning & Change Management
+The architecture baseline is strictly version-controlled. Architectural evolution must be **explicit, traceable, reviewed, and documented**. 
+
+Major architectural shifts must:
+- Update EAD (if it impacts enterprise strategy).
+- Include a corresponding ADR.
+- Be explicitly reviewed and approved by the ARB.
+
+### 3.3 Non-Functional Discipline
+All systems must define measurable targets for:
+- Availability
+- Performance
+- Scalability
+- Security
+- Observability
+- Resilience
+
+Vague or non-measurable requirements (e.g., "fast" or "highly scalable") are considered governance violations and are not acceptable.
 
 
-### 3.3 The Three-Gate CI Rule
+### 3.4 The Three-Gate CI Rule
 To maintain high developer velocity, automated validation only triggers a **HARD BLOCK (Exit 1)** if a violation threatens:
 1. **Security & Data Isolation** (e.g., bypassing PostgreSQL RLS or token signing boundaries).
 2. **Structural Integrity** (e.g., CQRS Level 1 domain-isolation breach where application queries bypass application layers and load domain aggregates).
@@ -302,7 +318,7 @@ To maintain high developer velocity, automated validation only triggers a **HARD
 
 Stylistic, naming conventions, or formatting preferences are treated as **WARNINGS**; they flag in PR reviews but do not block the merge.
 
-### 3.4 Documentation Density Law
+### 3.5 Documentation Density Law
 *A document's thickness and maintenance cost must be inversely proportional to its speed of change and directly proportional to its blast radius.*
 
 * **The Ephemeral TDD Lifecycle (TDD Fate Matrix)**:
