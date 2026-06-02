@@ -56,6 +56,9 @@ To prevent architectural drift and maintain a single source of truth across the 
    - **Design-Time (Architecture Git)**: The `scnehaux-architecture` repository serves as the authoritative *Single Source of Truth* for the ARB and CI/CD linter. It defines the logical domain blueprints (PAD/SAD) and governance constraints before implementation.
    - **Consumption-Time (Web Developer Portal)**: Concrete integration manuals, API endpoints, JSON payloads, and SDKs must be published and consumed via Web Developer Portals (e.g., Swagger, ReDoc, Backstage) generated from code annotations, rather than polluting the Git architecture registry.
 
+4. **The Cohesion Rule**:
+   - Splitting PAD/SAD into separate micro-files (like `security.md` or `operations.md`) is prohibited to prevent architectural drift and maintenance waste. All aspects (including Security and Operations) are fully encapsulated within the single canonical document's mandated sections.
+
 ---
 
 ### 2.4 Structural Taxonomy & Naming Conventions

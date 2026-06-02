@@ -105,7 +105,7 @@ At Scnehaux, we **do not use** a standalone TRD. We believe that technical requi
 
 The architecture is structured into the following layers to prevent "Domain Contamination" and ensure strict, automated policy enforcement:
 
-### 00-governance / GDC Gov (The Enforcement Layer)
+### 00-governance / GDC (Governance Document Contract) - The Enforcement Layer
 
 Provides the **automated instruments** and quality standards required to maintain a **Grade 10/10** architecture.
 - **Standard**: Follows the GDC template (`GDC-*`).
@@ -122,7 +122,7 @@ Defines the global "City Map" and the enterprise-wide directives.
   2. **`EAD-002` (Data)**: Database engines, persistence guidelines, and data sovereignty.
   3. **`EAD-003` (Application)**: mTLS mandates, gateway policies, integration, and security boundaries.
   4. **`EAD-004` (Technology)**: Go and Node.js dual core paved roads, exception paths, and evolutionary strategies.
-- **Rule**: Must remain at a high level of abstraction. Strict SLA metrics (e.g., `P95 <= 200ms` or `>= 99.95%` availability) are mandated, but implementation-specific details are prohibited.
+- **Rule**: Must remain at a high level of abstraction. Strict SLA (Service Level Agreement) metrics (e.g., `P95 <= 200ms` or `>= 99.95%` availability) are mandated, but implementation-specific details are prohibited.
 
 ---
 
