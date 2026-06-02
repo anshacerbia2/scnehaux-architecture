@@ -81,7 +81,7 @@ In the Scnehaux ecosystem, the acronym **GDC** historically served two different
 *   **Mandate**: No PAD or SAD is considered "Approved" without passing the GDC Governance audit.
 
 > **[NOTE]**
-> The integration of the *General Design Concept* applies **STRICTLY to PAD and SAD** documents. It ensures that any developer reading the Architecture (C2) immediately understands the High-Level Vision (C1) that drives it. 
+> The integration of the *General Design Concept* applies to **EAD, PAD, and SAD** documents. It ensures that any developer reading the Enterprise Strategy (C1) or System Architecture (C2) immediately understands the High-Level Vision that drives it. 
 
 
 ### PAD vs SAD: The Functional Distinction
@@ -96,7 +96,7 @@ In a high-maturity ecosystem, **PAD and SAD are not mutually exclusive; in fact,
 At Scnehaux, we **do not use** a standalone TRD. We believe that technical requirements are inseparable from the architecture that addresses them.
 
 *   **Reasoning**: Separate TRDs often lead to documentation fragmentation and "stale requirements" that do not reflect the actual architectural solution.
-*   **The Integrated Approach**: All functional and technical translations of the PRD are integrated directly into the **SAD** or **PAD** (specifically within the **Scope & Context** and **Solution Strategy** sections).
+*   **The Integrated Approach**: All functional and technical translations of the PRD are integrated directly into the **PAD** and **SAD** (specifically within the **Application Capability** and **Solution Architecture** sections). Enterprise Architecture (EAD) is driven by C-Level strategy rather than product-level PRDs.
 *   **Benefit**: This ensures that every technical requirement is mapped directly to an architectural decision or container structure, maintaining a single source of truth for the entire system lifecycle.
 
 ---
