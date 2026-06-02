@@ -16,7 +16,9 @@ doc_meta:
 
 This guideline defines the mandatory structure, metadata schema, and section requirements for **Platform Architecture Documents (PAD)** within the Scnehaux architecture registry. 
 
-PADs represent the logical capability definitions, domain boundaries, and conceptual integration rules for all business domains and applications. They serve as the design-time single source of truth (SSOT) for domain-level contracts before physical container systems (SADs) are built, while concrete API integration documents are generated and consumed downstream via Web Developer Portals.
+PADs represent the C2 Domain Architecture layer of the C4 metamodel. They are **single, cohesive documents** (`*.pad.md`) defining the logical capabilities, bounded contexts, trust boundaries, and strategic positioning of a business domain (e.g., `identity`, `ui-platform`, `hris`, `finance`). 
+
+*   **Purpose**: Establishes the logical capabilities and domain boundaries. It defines conceptual integration rules (such as trust boundaries and SLA targets) while concrete API specifications are published via Web Developer Portals. Designed to be highly stable, ensuring that future decomposition (e.g., splitting HRIS into Payroll and Employee domains) requires zero modification to the core domain contracts.
 
 ---
 
