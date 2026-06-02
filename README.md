@@ -40,7 +40,7 @@ The linter will verify that:
 
 ## Repository Map (The C4 Ecosystem)
 
-This repository uses a specific combination of frameworks (C4 Model, TOGAF, AWS Well-Architected) to ensure scalability and clarity.
+This repository uses a specific combination of frameworks (C4 Model, TOGAF, arc42 (Adapted), AWS Well-Architected) to ensure scalability and clarity.
 
 > **[!IMPORTANT]**
 > This repository is a **C1/C2 Architecture & Governance Hub**. We do not document internal components (C3) or source code (C4) here. Level C3 design documents (TDD) and C4 source code must reside in their specific project repositories to ensure "Docs-as-Code" synchronization.
