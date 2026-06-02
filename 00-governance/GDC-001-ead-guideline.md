@@ -16,11 +16,14 @@ doc_meta:
 
 This guideline defines the mandatory structure, metadata schema, and section requirements for **Enterprise Architecture Documents (EAD)** within the Scnehaux architecture registry. 
 
-EADs represent the C1 global context layer of the C4 metamodel. They establish the "North Star" directives, cross-domain standardization principles, and strategic alignment boundaries that govern all downstream Platform Architecture Documents (PADs) and System Architecture Documents (SADs). EADs are structured strictly around the four core TOGAF architecture domains:
-- **Business Architecture (EAD-001)**: Establishes capability-centric blueprints, mapping domain boundaries strictly to business capabilities.
-- **Data Architecture (EAD-002)**: Governs system-of-record boundaries, data sovereignty, sharing constraints, and storage paths.
-- **Application Architecture (EAD-003)**: Establishes integration patterns, security boundaries, and the UI platform composition patterns.
-- **Technology Architecture (EAD-004)**: Defines the paved road for languages, bundlers, compilers, and cloud-native execution runtimes.
+EADs represent the C1 global context layer of the C4 metamodel. They define the global "City Map" and enterprise-wide directives, establishing the "North Star" cross-domain standardization principles that govern all downstream Platform Architecture Documents (PADs) and System Architecture Documents (SADs). 
+
+- **Rule**: EADs must remain at a high level of abstraction. Strict SLA (Service Level Agreement) metrics (e.g., `P95 <= 200ms` or `>= 99.95%` availability) are mandated, but implementation-specific details are prohibited.
+- **Standard**: Follows the 5-section EAD template mapping strictly to the **4 Core TOGAF Domains**:
+  1. **Business Architecture (`EAD-001`)**: Establishes capability-centric blueprints, mapping domain boundaries strictly to business capabilities and enterprise principles.
+  2. **Data Architecture (`EAD-002`)**: Governs system-of-record boundaries, database engines, persistence guidelines, data sovereignty, and sharing constraints.
+  3. **Application Architecture (`EAD-003`)**: Establishes mTLS mandates, gateway policies, integration patterns, security boundaries, and UI platform composition patterns.
+  4. **Technology Architecture (`EAD-004`)**: Defines the paved road for languages (e.g., Go and Node.js dual core), bundlers, cloud-native execution runtimes, exception paths, and evolutionary strategies.
 
 ---
 
