@@ -62,7 +62,7 @@ Defines the logical capabilities, bounded contexts, trust boundaries, and strate
 Defines the physical deployment topology, container boundaries, runtime flows, failure modes, observability, and concrete systems fulfilling the domain.
 
 ### 05-decisions / ADR (The Rationale Layer)
-The immutable history of "Why" and the formal escape hatch for paved road exceptions.
+The immutable history of "Why". This layer captures foundational architectural decisions, tracks implementation rationale, resolves conflicts, and serves as the formal escape hatch for paved road exceptions.
 
 ---
 
