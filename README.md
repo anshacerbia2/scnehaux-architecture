@@ -169,13 +169,13 @@ No system may:
 
 ---
 
-### Review Workflow (The 5-Layer Governance Model)
+### Review Workflow (The 5-Stage Review Pipeline)
 
 All architectural changes must undergo a formal peer review via Pull Request.
 
 For the complete evaluation criteria and review process, see:
-- [GDC-010 — Architecture Review Process](./00-governance/GDC-010-architecture-review-process.md)
 - [GDC-009 — Documentation Quality Framework](./00-governance/GDC-009-documentation-quality-framework.md)
+- [GDC-010 — Architecture Review Process](./00-governance/GDC-010-architecture-review-process.md)
 
 In a mature architecture ecosystem, we rely on **Policy-as-Code** for absolute consistency, reserving human intellect for strategic judgment:
 

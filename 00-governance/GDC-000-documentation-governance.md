@@ -217,7 +217,13 @@ To prevent documentation rot while preserving decision traceability, all documen
 
 ## 3. Enforcement Mechanism
 
-### 3.1 The Three-Gate CI Rule
+### 3.1 The Absolute Mandates
+The architecture ecosystem operates under three absolute mandates. No system may:
+1. Enter production without an approved SAD.
+2. Deviate from standards without an ADR.
+3. Introduce breaking architectural changes without a formal peer review and ARB approval.
+
+### 3.2 The Three-Gate CI Rule
 To maintain high developer velocity, automated validation only triggers a **HARD BLOCK (Exit 1)** if a violation threatens:
 1. **Security & Data Isolation** (e.g., bypassing PostgreSQL RLS or token signing boundaries).
 2. **Structural Integrity** (e.g., CQRS Level 1 domain-isolation breach where application queries bypass application layers and load domain aggregates).
@@ -225,7 +231,7 @@ To maintain high developer velocity, automated validation only triggers a **HARD
 
 Stylistic, naming conventions, or formatting preferences are treated as **WARNINGS**; they flag in PR reviews but do not block the merge.
 
-### 3.2 Documentation Density Law
+### 3.3 Documentation Density Law
 *A document's thickness and maintenance cost must be inversely proportional to its speed of change and directly proportional to its blast radius.*
 
 * **The Ephemeral TDD Lifecycle (TDD Fate Matrix)**:
