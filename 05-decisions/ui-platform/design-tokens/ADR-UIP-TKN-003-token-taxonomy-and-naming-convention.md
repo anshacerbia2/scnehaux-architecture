@@ -113,7 +113,7 @@ Format: `[component].[element].[property].[state]` (Note: `[element]` and `[stat
 ### Related Standards
 - [Documentation Governance Standard (GDC-000)](../../../00-governance/documentation-governance-standard.md)
 - [Scnehaux UI Platform Logical PAD (DOC-P002)](../../../03-platform/scnehaux-ui-platform/scnehaux-ui-platform.pad.md)
-- [Scnehaux UI Platform Physical SAD (DOC-S003)](../../../04-application/scnehaux-ui-platform/scnehaux-ui-platform.sad.md)
+- [Scnehaux UI Platform Physical SAD (SAD-003)](../../../04-application/scnehaux-ui-platform/scnehaux-ui-platform.sad.md)
 - SCNX Master Semantic Taxonomy (located in `packages/design-system/src/styles/docs/scnx-master-semantic-taxonomy.md` of the UI Platform Repo)
 - SCNX Downstream Integration Standard (located in `packages/docs/05-standards/STD-SCNX-UI-JS-002-developer-integration-standard.md` of the UI Platform Repo)
 

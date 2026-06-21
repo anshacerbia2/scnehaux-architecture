@@ -25,7 +25,7 @@ It covers Developer Portals, resource provisioning mechanisms, service catalogs,
 
 ## 2. Design Principles
 
-
+Platform engineering enforces self-service infrastructure with guardrails. Developer platforms must provide golden paths that reduce cognitive overhead while maintaining security, compliance, and operational baseline requirements.
 
 ## 3. Normative Rules
 
@@ -77,7 +77,7 @@ To decouple infrastructure requests from manual operations support tickets:
 
 ## 4. Exceptions
 
-
+None. All platform engineering standards apply universally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

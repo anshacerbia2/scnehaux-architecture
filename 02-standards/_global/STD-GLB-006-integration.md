@@ -25,7 +25,7 @@ It applies to all synchronous service-to-service REST/gRPC APIs, asynchronous ev
 
 ## 2. Design Principles
 
-
+Inter-service integration must enforce strict contract boundaries. Services communicate through well-defined interfaces with explicit versioning, timeout propagation, and failure isolation at every boundary.
 
 ## 3. Normative Rules
 
@@ -77,7 +77,7 @@ Integrating with external vendors (e.g. Stripe, external HR software, email prov
 
 ## 4. Exceptions
 
-
+None. All integration pattern rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

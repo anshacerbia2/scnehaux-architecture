@@ -1,15 +1,19 @@
 import re
+import os
 import datetime
-from .base import BaseValidator, parse_date, clean_content_for_length, extract_section_contents, normalize_section
+from .base import BaseValidator
+from .utils import parse_date, clean_content_for_length, extract_section_contents, normalize_section, extract_links, get_section_order
+from .schema import DocMeta
+from pydantic import ValidationError
 
 def run_common_validations(validator: BaseValidator):
     _validate_naming(validator)
-    _validate_metadata(validator)
-    _validate_exceptions(validator)
+    _validate_metadata_schema(validator)
     _validate_review_age(validator)
     _validate_content_quality(validator)
     _validate_structure(validator)
     _validate_cross_references(validator)
+    _validate_internal_links(validator)
     _validate_quantification(validator)
 
 def _validate_naming(v: BaseValidator):
@@ -33,69 +37,40 @@ def _validate_naming(v: BaseValidator):
             pattern_to_check = naming_conventions.get('domain_std_pattern')
             expected_format_desc = "Domain Standard (STD-[DOM]-[CAP]-###[letter]-slug.md)"
     elif v.rel_path.startswith('03-platform/'):
-        pattern_to_check = r'^[a-z0-9-]+\.pad\.md$'
+        pattern_to_check = naming_conventions.get('pad_pattern')
         expected_format_desc = "PAD ([domain]-platform.pad.md)"
     elif v.rel_path.startswith('04-application/'):
-        pattern_to_check = r'^[a-z0-9-]+\.sad\.md$'
+        pattern_to_check = naming_conventions.get('sad_pattern')
         expected_format_desc = "SAD ([system-name].sad.md)"
     elif v.rel_path.startswith('00-governance/'):
-        pattern_to_check = r'^GDC-\d{3}-[a-z0-9-]+\.md$'
+        pattern_to_check = naming_conventions.get('gdc_pattern')
         expected_format_desc = "Governance (GDC-###-slug.md)"
     elif v.rel_path.startswith('01-enterprise/'):
-        pattern_to_check = r'^EAD-\d{3}-[a-z0-9-]+\.md$'
+        pattern_to_check = naming_conventions.get('ead_pattern')
         expected_format_desc = "Enterprise Architecture (EAD-###-slug.md)"
 
     if pattern_to_check:
         if not re.match(pattern_to_check, v.filename):
             v.add_error('naming_style_deviation', f"Filename '{v.filename}' does not match expected format for {expected_format_desc}.")
 
-def _validate_metadata(v: BaseValidator):
+def _validate_metadata_schema(v: BaseValidator):
     if not v.doc_meta:
         return
-    rules_metadata = v.rules['rules'].get('metadata', {})
-    
-    # Required metadata fields are checked via the property
+        
+    # 1. Pydantic structural and type validation
+    try:
+        parsed_meta = DocMeta(**v.doc_meta)
+    except ValidationError as e:
+        for err in e.errors():
+            loc = ".".join(map(str, err["loc"]))
+            v.add_error('missing_metadata', f"Schema validation failed on '{loc}': {err['msg']}")
+        return
+        
+    # 2. Check for required fields defined in governance rules dynamically
     for field in v.required_metadata_fields:
         if field not in v.doc_meta:
             v.add_error('missing_metadata', f"Missing required metadata field: '{field}' under doc_meta.")
             
-    # Version Semver Check
-    version = v.doc_meta.get('version')
-    if version and rules_metadata.get('version_format') == 'semver':
-        if not re.match(r'^\d+\.\d+\.\d+$', str(version)):
-            v.add_error('missing_metadata', f"Version '{version}' is not in valid semver format (X.Y.Z).")
-
-    # Allowed Classifications Check
-    classification = v.doc_meta.get('classification')
-    allowed_classifications = rules_metadata.get('allowed_classifications', [])
-    if classification and allowed_classifications:
-        if classification not in allowed_classifications:
-            v.add_error('missing_metadata', f"Classification '{classification}' is not in allowed list: {allowed_classifications}.")
-
-def _validate_exceptions(v: BaseValidator):
-    if not v.doc_meta:
-        return
-    status = str(v.doc_meta.get('status', '')).lower()
-    exception_reason = v.doc_meta.get('exception_reason')
-    is_exception_doc = status in ('exception', 'waiver') or exception_reason is not None
-
-    if is_exception_doc:
-        rules_fed = v.rules['rules'].get('federated_governance', {})
-        exception_meta_fields = rules_fed.get('exception_meta_fields', [])
-        for field in exception_meta_fields:
-            if field not in v.doc_meta:
-                v.add_error('missing_exception_reason', f"Exception document is missing required field: '{field}' under doc_meta.")
-        
-        # Expired Exception Check
-        expiry_date_raw = v.doc_meta.get('expiry_date')
-        if expiry_date_raw:
-            expiry_date = parse_date(expiry_date_raw)
-            if expiry_date:
-                if expiry_date < datetime.date.today():
-                    v.add_error('exception_expired', f"Exception waiver has expired on {expiry_date}.")
-            else:
-                v.add_error('missing_exception_reason', f"Invalid date format for expiry_date: '{expiry_date_raw}'. Use YYYY-MM-DD.")
-
 def _validate_review_age(v: BaseValidator):
     if not v.doc_meta:
         return
@@ -109,20 +84,35 @@ def _validate_review_age(v: BaseValidator):
             limit = int(cycle_days) if cycle_days is not None else int(rules_gov.get('max_review_age_days', 365))
             if age_days > limit:
                 v.add_error('old_review', f"Document review age of {age_days} days exceeds limit of {limit} days (last reviewed {last_reviewed}).")
-        else:
-            v.add_error('missing_metadata', f"Invalid date format for last_reviewed: '{last_reviewed_raw}'. Use YYYY-MM-DD.")
+
+def _validate_internal_links(v: BaseValidator):
+    links = extract_links(v.content)
+    base_dir = os.path.dirname(v.file_path)
+    
+    for link in links:
+        # Ignore external links or empty links
+        if not link or link.startswith('http') or link.startswith('mailto:') or link.startswith('#'):
+            continue
+            
+        # Strip anchor if present
+        file_part = link.split('#')[0]
+        if not file_part:
+            continue
+            
+        # Check if local file exists
+        target_path = os.path.normpath(os.path.join(base_dir, file_part))
+        if not os.path.exists(target_path):
+            v.add_error('cross_reference_missing', f"Link rot detected: Internal link '{link}' points to a non-existent file.")
 
 def _validate_content_quality(v: BaseValidator):
     text_content = clean_content_for_length(v.content)
     rules_content = v.rules['rules'].get('content', {})
     
-    # Prohibited Words
     prohibited_words = rules_content.get('prohibited_words', [])
     for word in prohibited_words:
         if re.search(r'\b' + re.escape(word) + r'\b', text_content, re.IGNORECASE):
             v.add_error('prohibited_word', f"Found prohibited word: '{word}'")
 
-    # Ambiguity Check
     ambiguity = rules_content.get('ambiguity_check', {})
     if ambiguity:
         pattern = ambiguity.get('pattern')
@@ -133,10 +123,8 @@ def _validate_content_quality(v: BaseValidator):
 
 def _validate_structure(v: BaseValidator):
     sections_map = extract_section_contents(v.content)
-    
     found_sections = []
     
-    # Check if mandatory sections are present (using normalized substring match)
     for section_name in v.mandatory_sections:
         normalized_mandatory = normalize_section(section_name)
         found = False
@@ -149,16 +137,18 @@ def _validate_structure(v: BaseValidator):
             v.add_error('missing_section', f"Missing mandatory section: '{section_name}'")
 
     # Order check
+    ordered_sections_ast = get_section_order(v.content)
+    
     section_order_indices = []
-    lines = v.content.split('\n')
     for name in found_sections:
-        line_no = -1
-        for l_num, line in enumerate(lines):
-            if re.search(r'^##\s+(?:\d+(?:\.\d+)*\.?\s+)?' + re.escape(name), line, re.IGNORECASE):
-                line_no = l_num
+        idx = -1
+        normalized_target = normalize_section(name)
+        for i, ast_name in enumerate(ordered_sections_ast):
+            if normalized_target in normalize_section(ast_name):
+                idx = i
                 break
-        if line_no != -1:
-            section_order_indices.append((line_no, name))
+        if idx != -1:
+            section_order_indices.append((idx, name))
 
     section_order_indices.sort(key=lambda x: x[0])
     ordered_found = [name for _, name in section_order_indices]
@@ -180,7 +170,6 @@ def _validate_structure(v: BaseValidator):
     for section_name, section_text in sections_map.items():
         clean_text = clean_content_for_length(section_text)
         is_recognized = False
-        
         normalized_found = normalize_section(section_name)
         orig_name = section_name
         
@@ -197,11 +186,10 @@ def _validate_structure(v: BaseValidator):
             v.add_error('stylistic_deviation', f"Section '{orig_name}' content length ({len(clean_text)} chars) is below minimum of {min_length} chars.")
 
 def _validate_cross_references(v: BaseValidator):
-    """Validate referential integrity against other docs in the repo."""
     if not v.doc_meta:
         return
         
-    cross_ref_fields = ['parent_pad', 'parent_sad', 'governed_by']
+    cross_ref_fields = ['parent_pad', 'parent_sad', 'governed_by', 'fulfilled_by']
     for field in cross_ref_fields:
         ref_ids = v.doc_meta.get(field)
         if not ref_ids:
@@ -233,7 +221,7 @@ def _validate_quantification(v: BaseValidator):
                 is_quant_req = True
                 break
         if is_quant_req and metric_pattern:
-            if not re.search(metric_pattern, clean_text):
+            if not re.search(metric_pattern, clean_text, re.IGNORECASE):
                 v.add_error('vague_claim', f"Section '{section_name}' requires quantified metrics but none found matching pattern '{metric_pattern}'.")
 
         for req_sec, keywords in req_sec_keywords.items():
@@ -246,4 +234,4 @@ def _validate_quantification(v: BaseValidator):
             if banned_sec.lower() == section_name.lower():
                 for kw in keywords:
                     if re.search(r'\b' + re.escape(kw) + r'\b', clean_text, re.IGNORECASE):
-                        v.errors.append(('WARNING', f"Section '{section_name}' contains prohibited governance boilerplate word: '{kw}'"))
+                        v.add_error('prohibited_word', f"Section '{section_name}' contains prohibited governance boilerplate word: '{kw}'")

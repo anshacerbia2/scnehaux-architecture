@@ -42,7 +42,7 @@ We will standardize **Rsbuild** and **Vite** as the official, next-generation bu
 
 ### Positive
 - **Extreme Performance**: Build times and local HMR speeds will improve by 5x-10x by leveraging Rust (Rspack) and Go (esbuild) compilers.
-- **Tailored Tooling**: Teams have the flexibility to choose Vite for maximum DX in simple apps, and Rsbuild for robust MFE architecture.
+- **Tailored Tooling**: Teams have the flexibility to choose Vite for maximum DX in straightforward apps, and Rsbuild for robust MFE architecture.
 - **Ecosystem Liquidity**: Both Rsbuild and Vite share a large portion of modern plugins, making it easier to share architectural standards across the enterprise.
 
 ### Negative & Risks

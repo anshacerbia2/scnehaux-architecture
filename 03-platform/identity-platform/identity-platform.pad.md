@@ -1,23 +1,24 @@
 ---
 doc_meta:
-  id: DOC-P001
+  id: PAD-001
   title: Enterprise Identity & Access Platform Architecture
   owner: Enterprise Security Architect
   version: 1.0.0
   status: approved
   classification: restricted
+  governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-05-18
   fulfilled_by:
-    - DOC-S001
-    - DOC-S002
+    - SAD-001
+    - SAD-002
 ---
 
 # Enterprise Identity & Access Platform Architecture (PAD-001)
 
 ---
 
-## 1. Application Capability
+## 1. Business Capability
 
 The Identity and Access Management (IAM) platform is the **Root of Trust** for the entire Scnehaux ecosystem. It provides the following centralized business capabilities:
 

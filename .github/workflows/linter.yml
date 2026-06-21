@@ -1,0 +1,41 @@
+name: "Scnehaux Architecture Linter (Reusable)"
+
+on:
+  workflow_call:
+    inputs:
+      target_dir:
+        description: "The directory to scan for architecture documents in the downstream repository."
+        required: false
+        default: "docs"
+        type: string
+
+jobs:
+  lint-architecture:
+    name: "Enforce GDC Compliance"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Downstream Repository
+        uses: actions/checkout@v4
+
+      - name: Checkout Architecture Governance Repository
+        uses: actions/checkout@v4
+        with:
+          repository: scnehaux/scnehaux-architecture
+          ref: main
+          path: .scnehaux-governance
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Linter Dependencies
+        run: |
+          cd .scnehaux-governance
+          pip install -r requirements.txt
+
+      - name: Execute Governance Engine
+        run: |
+          # Run the centralized linter against the downstream target directory
+          python .scnehaux-governance/linter.py --target ${{ inputs.target_dir }}

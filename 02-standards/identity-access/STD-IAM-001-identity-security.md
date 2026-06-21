@@ -92,7 +92,7 @@ All external HTTP interface layers must enforce the following secure headers:
 
 ## 4. Exceptions
 
-
+None. All identity and access security rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

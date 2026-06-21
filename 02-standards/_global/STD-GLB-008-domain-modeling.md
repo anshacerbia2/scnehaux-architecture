@@ -25,7 +25,7 @@ It defines Bounded Context boundaries, Aggregate invariants, entity separation, 
 
 ## 2. Design Principles
 
-
+Domain models must align with bounded contexts derived from business capabilities. Aggregate boundaries enforce transactional consistency, and domain events decouple cross-context communication to prevent monolithic coupling.
 
 ## 3. Normative Rules
 
@@ -86,7 +86,7 @@ Domain models must protect business rules (invariants) actively at memory bounda
 
 ## 4. Exceptions
 
-
+None. All domain modeling constraints apply universally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

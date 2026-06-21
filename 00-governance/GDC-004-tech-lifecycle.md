@@ -1,11 +1,12 @@
 ---
 doc_meta:
-  id: GDC-008
+  id: GDC-004
   title: Technology Lifecycle & Standards Governance
-  owner: Principal Software Architect
+  owner: Architecture Review Board (ARB)
   version: 1.0.0
   status: approved
   classification: public
+  governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-05-22
 ---
@@ -50,7 +51,16 @@ When a standard technology, framework, or library decays (due to security concer
 
 ## 3. Enforcement Mechanism
 
-### 3.1 Rule Conflict Resolution Matrix
+### 3.1 Automated Enforcement (`linter.py`)
+The CI/CD compliance engine deterministically enforces the technology sunset pipeline:
+1. **Stage 3 Hard Blocks**: The linter will automatically reject any Pull Requests containing references to libraries, frameworks, or patterns that have reached the `Hold` (Retirement) phase and exceeded their grace window.
+
+### 3.2 Qualitative Enforcement (ARB Audit)
+The Architecture Review Board (ARB) is responsible for human-driven governance:
+1. **Maturity Transitions**: The ARB manually evaluates and votes to transition technologies between `Assessed`, `Trial`, `Adopted`, and `Hold` phases.
+2. **Conflict & Applicability**: The ARB evaluates if a team's implementation correctly justifies the `Applicability Criteria` (e.g., Team Size Metric) when adopting specific tooling.
+
+### 3.3 Rule Conflict Resolution Matrix
 
 When multiple mandatory standards collide during implementation, the following priority tree governs the outcome (highest priority wins):
 
@@ -72,5 +82,21 @@ To prevent excessive exception waivers, standards must not apply absolute mandat
 - **Team Size Metric**: Tooling frameworks (e.g., Module Federation) are `Adopted` only if the team count is greater than `3` and independent deployments are required. Otherwise, standalone monolithic deployments are `Recommended`.
 - **System Scale Metric**: Advanced scaling patterns (e.g., read replicas, microservices partition keys) are `Trial` or `Hold` by default and become `Adopted` only when query throughput exceeds defined performance metrics (e.g., >5000 read QPS).
 
-### 4.2 Exceptions and Waivers
-- Deviations from standard lifecycle phases or sunset matrices require an approved exception waiver ADR.
+### 4.2 Exception Waiver Procedure
+
+When a team must deviate from a mandatory engineering standard or architectural constraint (e.g. using an uncertified database engine or violating a frontend layer limit):
+- **Waiver Request Initiation**: The requesting team must draft a dedicated local project Exception ADR detailing the deviation, the specific standard rule being bypassed, and the mitigation strategies implemented.
+- **Approval Authority Matrix**:
+  - *Tier 1 Deviation (High Impact - Database, Core Security)*: Requires unanimous sign-off from the Architecture Review Board (ARB).
+  - *Tier 2 Deviation (Medium Impact - Frontend Stack, Observability)*: Requires approval from the Domain Lead.
+  - *Tier 3 Deviation (Low Impact - Custom Helpers, Internal Tooling)*: Requires approval from the Lead System Engineer.
+- **Time-Bound Review Commitments**: The reviewing authority must issue an official decision (Approved, Rejected, or Request Info) within `5 business days` of the waiver ADR submission.
+- **Auditing and Expiration**: Approved waivers must carry an expiration date not exceeding `365 days` from approval. The team must re-submit the waiver for review annually or execute the migration path back to standard compliance.
+
+## 5. Appendix: Architectural Trade-Offs
+
+In accordance with the Quality Rubric (Trade-Offs parameter), the ARB explicitly documents the compromises within this Tech Lifecycle policy:
+
+1. **180-Day Sunset Grace Period vs. Immediate Deprecation**
+   - *Why rejected*: Immediate deprecation halts all product delivery, forcing teams into unplanned emergency migrations and jeopardizing business roadmaps.
+   - *The Trade-Off*: We consciously accept the security and maintenance risk of running obsolete technology for up to 180 days. In exchange, we provide engineering teams a predictable, humane runway to schedule their technical debt payoff without halting feature velocity.

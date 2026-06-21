@@ -8,12 +8,12 @@ doc_meta:
   created_by: Principal Frontend Architect
 ---
 
-# ADR-GLB-FE-001: Standardization on React and Framework Paved Road
+# ADR-GLB-FE-001: Standardization on React and the Framework Paved Road
 
 ---
 
 ## 1. Title
-Standardization on React and Framework Paved Road
+Standardization on React and the Framework Paved Road
 
 ## 2. Status
 | Date | Status | ADR Type | Reviewers | Approver |

@@ -62,7 +62,7 @@ To prevent visual layout conflicts when multiple micro-frontends share the same 
 
 ## 4. Exceptions
 
-
+None. All styled component architecture rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

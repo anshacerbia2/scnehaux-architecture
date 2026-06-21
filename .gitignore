@@ -1,7 +1,7 @@
 __pycache__/
-*.pyc
 *.stackdump
+.vscode/
 *.zip
+*.pyc
 .antigravity*
 .idea/
-.vscode/

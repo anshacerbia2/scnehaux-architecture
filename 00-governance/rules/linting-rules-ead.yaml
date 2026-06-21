@@ -1,0 +1,40 @@
+
+# ==============================================================================
+# ⚠️ WARNING: AUTOMATED DOCUMENTATION LINKAGE ⚠️
+# ==============================================================================
+# This YAML file is the Single Source of Truth (SSOT). If you modify any rules
+# below, you MUST regenerate the Markdown table in the respective GDC document.
+# 
+# Run this command from the scnehaux-architecture root directory:
+# > python scripts/generate_rules_doc.py
+# ==============================================================================
+config:
+  target_doc: GDC-007-ead-guideline.md
+
+rules:
+  metadata:
+    required_fields:
+    - id
+    - title
+    - governed_by
+    - owner
+    - version
+    - status
+    - classification
+    - review_cycle_days
+    - last_reviewed
+    allowed_statuses:
+    - proposed
+    - approved
+    - deprecated
+    allowed_classifications:
+    - public
+    - internal
+    - restricted
+  structure:
+    required_sections:
+    - Context & Business Drivers
+    - Enterprise Principles
+    - Strategic Architecture
+    - Cross-Cutting Standards
+    - Decision Log

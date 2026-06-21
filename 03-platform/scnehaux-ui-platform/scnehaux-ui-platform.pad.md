@@ -1,25 +1,26 @@
 ---
 doc_meta:
-  id: DOC-P-002
+  id: PAD-002
   title: Scnehaux UI Platform Architecture
   owner: Principal UI/UX Architect
   version: 1.0.0
   status: approved
   classification: public
+  governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-05-18
   fulfilled_by:
-    - DOC-S-003
+    - SAD-003
 ---
 
 # Scnehaux UI Platform Architecture (PAD-002)
 
 ---
 
-## 1. Application Capability
+## 1. Business Capability
 
 **System Context & Business Drivers**: 
-To eliminate brand fragmentation, reduce duplicated frontend engineering efforts, and ensure an accessible user experience across all digital touchpoints, the enterprise requires a centralized styling authority. 
+To eliminate brand fragmentation, eradicate architectural redundancy, and ensure an accessible user experience across all digital touchpoints, the enterprise requires a centralized styling authority. Furthermore, a unified platform enables centralized component performance optimization—ensuring that a single rendering or bundle-size improvement at the primitive layer instantly propagates across the entire enterprise ecosystem.
 
 The **Scnehaux UI Platform** serves as this authoritative **Visual Root of Trust**. It is a logical shared presentation foundation that enforces absolute visual consistency, strict styling isolation, and robust accessible interaction semantics across both standalone applications and federated micro-frontends.
 
@@ -34,7 +35,7 @@ The platform capability is defined by a unified **3-Layer Visual Engine**:
 ### 1.1 Fulfilling Systems
 
 This platform capability is physically fulfilled by the following systems:
--   **Scnehaux UI Platform Software Architecture**: Managed under the physical package registry defined in [scnehaux-ui-platform.sad.md](../../04-application/scnehaux-ui-platform/scnehaux-ui-platform.sad.md) (DOC-S003).
+-   **Scnehaux UI Platform Software Architecture**: Managed under the physical package registry defined in [scnehaux-ui-platform.sad.md](../../04-application/scnehaux-ui-platform/scnehaux-ui-platform.sad.md) (SAD-003).
 -   **IAM Dashboard (Standalone SPA)**: Housed under `scnehaux-iam-dashboard` which directly integrates and consumes the semantic token suite as a standalone portal ([scnehaux-iam-dashboard.sad.md](../../04-application/scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md)).
 -   **ERP Portal (Federated Host)**: The host shell orchestrating HRIS and Finance micro-frontends sharing `@scnx/system` styles.
 

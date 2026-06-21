@@ -25,7 +25,7 @@ It applies to all persistent relational stores, document stores, caches, and key
 
 ## 2. Design Principles
 
-
+Persistence design prioritizes data isolation, schema-first governance, and deterministic migration safety. Every schema change must be declarative, reversible, and validated by automated drift detection before deployment.
 
 ## 3. Normative Rules
 
@@ -212,7 +212,7 @@ To prevent user session inconsistencies resulting from replication lag:
 
 ## 4. Exceptions
 
-
+None. All database provisioning and schema management rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

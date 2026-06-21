@@ -116,7 +116,7 @@ To guarantee component boundary isolation and maintain clean API design:
 
 ## 4. Exceptions
 
-
+None. All primitive component architecture rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

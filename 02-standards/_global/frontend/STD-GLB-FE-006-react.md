@@ -47,9 +47,9 @@ The Scnehaux Enterprise React Standard is governed by the **Supreme Frontend Gov
 
 #### Cohesive Component Locality
 - **Locality of Behavior (LoB)**: Components should group related concerns (such as local visual structures, interactive handlers, accessibility labels, and local state management) to preserve context and readability. Over-fragmenting a component into artificial sub-modules solely to enforce a dogmatic separation of concerns is prohibited.
-- **Complexity Boundaries**: Component composition is governed by responsibility boundaries, cyclomatic complexity (target limit of 10), and single-responsibility cohesion.
-  - **Presentational/Leaf Components**: Maintain strict cohesion around a single visual element. While lines of code (LOC) is an empirical heuristic rather than a strict quality indicator, leaf components exceeding 200-300 LOC must be evaluated for decomposition based on cyclomatic complexity and render branch counts.
-  - **Orchestration Components**: Complex layout orchestrators, dynamic form builders, and data tables are exempt from empirical line count limits, provided they maintain clean internal helper segregation and delegate side-effects to custom hooks.
+- **Complexity Boundaries**: Component composition is governed by responsibility boundaries, cyclomatic complexity (target limit of 10), and single-responsibility cohesion. Components must be evaluated for decomposition based on render branch counts and state orchestration complexity.
+  - **Presentational/Leaf Components**: Maintain strict cohesion around a single visual element.
+  - **Orchestration Components**: Complex layout orchestrators, dynamic form builders, and data tables must maintain clean internal helper segregation and delegate side-effects to custom hooks.
 - **Pure & Idempotent Renders**: Given the same props and state, a component must always produce the same output. Side-effects inside the render path are prohibited.
 - **Shared Utilities Extraction**: Any pure helper function, formatting utility, data transformer, or validation check that is consumed by more than one component must be extracted from the component scope and placed in a dedicated, unit-tested utility module. Duplicating helper functions within multiple component files is prohibited.
 - **Custom Hook Promotion**: Shared logic that encapsulates React state, refs, or lifecycle effects (such as DOM event observers, timers, or window dimensions) must be promoted to a custom hook (`hooks/`) rather than static utility files.

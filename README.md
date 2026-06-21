@@ -1,92 +1,129 @@
 # Scnehaux Architecture
 
-This repository is the authoritative Enterprise Architecture (EA) baseline and governance hub for **ALL** systems within the **Scnehaux Ecosystem**. 
+This repository is the **Single Source of Truth (SSOT)** for the **Scnehaux Enterprise Architecture**. It houses the definitive business capabilities, system topologies, technology standards, and architectural decisions for the entire ecosystem.
 
-It defines the enterprise architectural principles, governance rules, application capabilities & domain boundaries, system-level architecture requirements, architectural decisions, and engineering standards.
+To ensure this architecture never becomes outdated or drifts from reality, this repository is governed by a strict **Circular Governance Framework**.
 
-All systems, without exception, MUST align with the policies and constraints defined in this repository.
+Unlike a traditional static wiki, this repository operates as an **Executable Architecture** via a *Docs-as-Code* methodology. Every artifact's structural integrity and compliance is automatically validated through CI/CD linters and *Policy-as-Code* before it can be merged.
+
+**In summary:** This repository contains the **Enterprise Architecture**, and the **Circular Governance Framework** ensures that architecture remains pristine, verifiable, and strictly enforced across all engineering teams.
 
 ---
 
 ## Purpose
 
-The purpose of this repository is to:
+This repository has a **bipartite purpose**, serving both as the architecture of our systems and the governance engine that protects it:
 
-- **Establish Architectural Consistency**: Enforce uniform, deterministic design patterns and standardize the technology paved roads across all systems.
-- **Enforce Engineering Discipline & Automated Compliance**: Act as a machine-readable governance hub that enforces production-grade engineering standards and architectural policies automatically via CI/CD pipelines.
-- **Define Application Capabilities & Boundaries**: Establish strict domain boundaries and business capability mapping (PAD) to prevent architectural contamination.
-- **Provide an Integration SSOT**: Serve as the authoritative, design-time Single Source of Truth for system integration contracts and UI/Backend topologies.
-- **Preserve Decision Traceability**: Maintain an immutable, contextual history of all major architectural shifts (ADR).
-- **Govern Architectural Evolution**: Define measurable non-functional fitness functions to safely scale and evolve systems over time.
+### 1. Purpose of the Architecture (The Artifacts)
+- **Establish Architectural Consistency**: Enforce uniform, deterministic design patterns and standardize the technology paved roads across all systems (STD).
+- **Define Business Capabilities & Boundaries**: Establish strict logical domain boundaries (PAD) to prevent capability leakage and architectural contamination.
+- **Provide an Integration SSOT**: Serve as the authoritative, design-time Single Source of Truth for system integration contracts, trust boundaries, and physical topologies (SAD).
+- **Preserve Decision Traceability**: Maintain an immutable, contextual history of all major architectural shifts and explicitly track technical debt via Architecture Decision Records (ADR).
+
+### 2. Purpose of the Governance (The Engine)
+- **Execute a Circular Governance Model**: Establish a deterministically self-validating ecosystem where policies, linters, and rubrics mutually regulate each other without absolute immunity (_Eat Our Own Dog Food_).
+- **Enforce Engineering Discipline (Shift-Left)**: Act as a machine-readable hub that enforces strict quality standards across two distinct artifact types: **Governance Quality** (the architecture and integrity of the governance framework itself) and **Architecture Quality** (the architecture and integrity of the actual software systems).
+- **Govern Architectural Evolution**: Define measurable non-functional fitness functions, failure modes, and NFRs to safely scale and evolve systems over time.
 
 This repository contains architecture artifacts only. It does not contain implementation code.
 
 ---
 
-## Quick Start: Running the Linter
+## Repository Map (The Hybrid Metamodel)
 
-To ensure all documentation complies with the Governance Standard, you must run the local linter before submitting any changes:
+This repository synthesizes the core concepts and mental models of industry-standard frameworks (C4 Model, TOGAF, arc42, AWS Well-Architected) into a custom, context-aware execution model to ensure scalability and clarity.
+
+> [!IMPORTANT]
+> **Architecture Scope Limit:** This repository strictly houses **High-Level System Design (C1 Context & C2 Container levels)**. We do not document internal application components (C3) or source code (C4) here. Low-level Technical Design Documents (TDD) must reside locally in their specific code repositories to maintain strict *Docs-as-Code* proximity and prevent documentation rot.
+
+### 00-governance / GDC (The Constitutional Hub)
+
+The central nervous system of the architecture. It contains the fundamental laws, the automated CI/CD engine (`linter.py`), and the qualitative human rubrics that govern all other documents in the ecosystem.
+
+- **The Constitution**: [GDC-000 — Documentation Governance Policy](./00-governance/GDC-000-governance-policy.md)
+- **The Automated Engine**: [GDC-001 — Compliance Engine](./00-governance/GDC-001-compliance-engine.md)
+- **The Human Rubric**: [GDC-002 — Quality Rubric](./00-governance/GDC-002-quality-rubric.md)
+- **The Review Process**: [GDC-003 — Review Process](./00-governance/GDC-003-review-process.md)
+- **Guideline**: [GDC-006 — Governance Document Contract (GDC) Guideline](./00-governance/GDC-006-gdc-guideline.md)
+
+### 01-enterprise / EAD (The Strategic Layer - C1 Context)
+
+Defines the global "City Map" and the enterprise-wide macro directives (Business, Data, Application, Technology).
+
+- **Guideline**: [GDC-007 — Enterprise Architecture Description (EAD) Guideline](./00-governance/GDC-007-ead-guideline.md)
+
+### 02-standards / STD (The Guardrail & Baseline Layer)
+
+Mandatory granular policies that establish the architecture baseline and supplement EAD paved roads. This layer sets the minimum technical bar for quality, security, and operational excellence (e.g., API Design guidelines, database isolation rules).
+
+- **Guideline**: [GDC-008 — Enterprise Standard (STD) Guideline](./00-governance/GDC-008-std-guideline.md)
+
+### 03-platform / PAD (Logical Domain - C2 Context)
+
+Defines the logical business capabilities, bounded contexts, system trust contracts, and strategic positioning of a business domain (e.g., `identity`, `finance`).
+
+- **Guideline**: [GDC-009 — Platform Architecture Document (PAD) Guideline](./00-governance/GDC-009-pad-guideline.md)
+
+### 04-application / SAD (Physical System - C2 Context)
+
+Defines the physical deployment topology, container boundaries, runtime execution flows, failure modes, observability, and concrete systems fulfilling the PAD.
+
+- **Guideline**: [GDC-010 — Software Architecture Document (SAD) Guideline](./00-governance/GDC-010-sad-guideline.md)
+
+### 05-decisions / ADR (The Rationale Layer)
+
+The immutable history of "Why". This layer captures foundational architectural decisions, tracks implementation rationale, resolves conflicts, and serves as the formal escape hatch for paved road exceptions.
+
+- **Guideline**: [GDC-011 — Architecture Decision Record (ADR) Guideline](./00-governance/GDC-011-adr-guideline.md)
+
+### Local Implementation (C3 Context)
+
+Defines the component-level blueprints built downstream.
+
+- **Guideline**: [GDC-012 — Technical Design Document (TDD) Guideline](./00-governance/GDC-012-tdd-guideline.md)
+
+---
+
+## Quick Start: The Governance Engine
+
+To ensure seamless "Shift-Left" validation, install the pre-commit hook. This will automatically scan your files before allowing a `git commit`:
 
 ```bash
+# Install the native git hook (Run this once)
+python scripts/install-hooks.py
+```
+
+You can also execute the automated compliance engine locally to scan the repository manually:
+
+```bash
+# Run locally for human-readable output
 python linter.py
 ```
 
-The linter will verify that:
-- **Structural Integrity**: The document matches the exact Context-Aware Template defined by the file ID (e.g., enforcing different required sections for a SAD file compared to a TDD file).
-- **Metadata Compliance**: Mandatory `doc_meta` YAML headers exist, follow semantic versioning, and use valid taxonomies.
-- **Naming Conventions**: File names comply with strict alphanumeric namespace patterns.
-- **Semantic Quality**: Prohibited vague words ("TBD", "simple") or ambiguous claims ("highly scalable", "fast") are flagged.
-- **Quantification**: Non-Functional Requirements (NFRs) contain hard metrics (e.g., `200ms`, `99.9%`).
-- **Governance Lifecycles**: Exception waivers are not expired and cross-references are valid.
+For CI/CD pipeline integration, the engine supports a structured machine-readable format:
+
+```bash
+python linter.py --format json
+```
+
+### What the Linter Enforces
+
+Our automated compliance engine (`linter.py`) aggressively verifies **Governance Quality** and **Architecture Quality**, including:
+
+- **Taxonomy & Metadata**: Naming conventions, YAML schema validity, and cross-reference traceability.
+- **Structural Compliance**: Mandatory design sections, minimum content length, and link rot prevention.
+- **Content Quality**: Prohibition of vague vocabulary, mandatory quantifiable metrics, and temporal waiver expiration.
+
+For the exhaustive list of automated rules, see **[GDC-001 — Compliance Engine](./00-governance/GDC-001-compliance-engine.md)**.
 
 ---
 
-## Repository Map (The C4 Ecosystem)
+## How to Contribute & Modify Rules
 
-This repository uses a specific combination of frameworks (C4 Model, TOGAF, arc42 (Adapted), AWS Well-Architected) to ensure scalability and clarity.
+Please read **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the definitive workflows on how to:
 
-> **[!IMPORTANT]**
-> This repository is a **C1/C2 Architecture & Governance Hub**. We do not document internal components (C3) or source code (C4) here. Level C3 design documents (TDD) and C4 source code must reside in their specific project repositories to ensure "Docs-as-Code" synchronization.
-
-### 00-governance / GDC (Governance Document Contract) - The Enforcement Layer
-Provides the automated instruments and quality standards required to maintain a Grade 10/10 architecture.
-- **Must Read**: [GDC-000 — Documentation Governance Policy](./00-governance/GDC-000-documentation-governance.md)
-
-### 01-enterprise / EAD (The Strategic Layer - C1 Context)
-Defines the global "City Map" and the enterprise-wide directives (Business, Data, Application, Technology).
-- **Guideline**: [GDC-001 — Enterprise Architecture Description (EAD) Guideline](./00-governance/GDC-001-ead-guideline.md)
-
-### 02-standards / STD (The Guardrail & Baseline Layer)
-Mandatory granular policies that establish the architecture baseline and supplement EAD paved roads. This layer sets the minimum technical bar for quality, security, and operational excellence (e.g., API Design guidelines, coding styles, database schemas).
-- **Guideline**: [GDC-002 — Enterprise Standard (STD) Guideline](./00-governance/GDC-002-std-guideline.md)
-
-### 03-platform / PAD (Logical Domain - C2 Context)
-Defines the logical capabilities, bounded contexts, trust boundaries, and strategic positioning of a business domain (e.g., `identity`, `finance`).
-- **Guideline**: [GDC-003 — Platform Architecture Document (PAD) Guideline](./00-governance/GDC-003-pad-guideline.md)
-
-### 04-application / SAD (Physical System - C2 Context)
-Defines the physical deployment topology, container boundaries, runtime flows, failure modes, observability, and concrete systems fulfilling the domain.
-- **Guideline**: [GDC-004 — Software Architecture Document (SAD) Guideline](./00-governance/GDC-004-sad-guideline.md)
-
-### 05-decisions / ADR (The Rationale Layer)
-The immutable history of "Why". This layer captures foundational architectural decisions, tracks implementation rationale, resolves conflicts, and serves as the formal escape hatch for paved road exceptions.
-- **Guideline**: [GDC-005 — Architecture Decision Record (ADR) Guideline](./00-governance/GDC-005-adr-guideline.md)
-
----
-
-## Governance Model & Approvals
-
-All architectural changes must undergo a formal peer review via Pull Request. For the complete evaluation criteria and review process, see:
-- [GDC-009 — Documentation Quality Framework](./00-governance/GDC-009-documentation-quality-framework.md)
-- [GDC-010 — Architecture Review Process](./00-governance/GDC-010-architecture-review-process.md)
-
-### The 6-Stage Review Pipeline
-1.  **Draft Creation**: Author drafts the document using the Context-Aware Template defined by the file prefix (PAD/SAD/TDD).
-2.  **Linter / Policy Engine (Primary Enforcement)**: Run `python linter.py`. The linter blocks vague wording and enforces mandatory structures.
-3.  **CI/CD Gates**: Document must pass the linter pipeline (100% pass) to be eligible for merge.
-4.  **Manual Score Sheet (Human Fallback)**: Used by Reviewers only for high-risk approvals or evaluating exceptions (`lint_disable`).
-5.  **ARB Review (Strategic Oversight)**: Formal Architecture Review Board approval for strategic EAD/PAD pivots.
-6.  **Approval**: Document status is updated to `approved` in YAML metadata.
+1. **Author Architecture Documents** (PAD, SAD, ADR, etc.)
+2. **Modify Governance Rules** (The 4-step Docs-as-Code reconciliation flow)
 
 ---
 

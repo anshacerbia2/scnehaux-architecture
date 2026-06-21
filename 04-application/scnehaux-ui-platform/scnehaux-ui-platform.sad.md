@@ -1,14 +1,15 @@
 ---
 doc_meta:
-  id: DOC-S003
+  id: SAD-003
   title: Scnehaux UI Platform Software Architecture (SAD)
   owner: Principal UI/UX Architect
   version: 1.0.0
   status: approved
   classification: public
+  governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-05-19
-parent_pad: DOC-P002
+  parent_pad: PAD-002
 ---
 
 # Scnehaux UI Platform Software Architecture (SAD-003)

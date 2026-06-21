@@ -25,7 +25,7 @@ It applies to all publish-subscribe configurations, message queue integrations, 
 
 ## 2. Design Principles
 
-
+Asynchronous event pipelines must guarantee at-least-once delivery with idempotent consumers. Event schemas are immutable contracts governed by strict versioning to prevent downstream consumer breakage.
 
 ## 3. Normative Rules
 
@@ -123,7 +123,7 @@ To prevent downstream consumer failures during schema changes, services must adh
 
 ## 4. Exceptions
 
-
+None. All event-driven architecture rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

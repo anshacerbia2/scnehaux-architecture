@@ -1,0 +1,53 @@
+
+# ==============================================================================
+# ⚠️ WARNING: AUTOMATED DOCUMENTATION LINKAGE ⚠️
+# ==============================================================================
+# This YAML file is the Single Source of Truth (SSOT). If you modify any rules
+# below, you MUST regenerate the Markdown table in the respective GDC document.
+# 
+# Run this command from the scnehaux-architecture root directory:
+# > python scripts/generate_rules_doc.py
+# ==============================================================================
+config:
+  target_doc: GDC-010-sad-guideline.md
+
+rules:
+  metadata:
+    required_fields:
+    - id
+    - title
+    - governed_by
+    - owner
+    - version
+    - status
+    - classification
+    - parent_pad
+    - review_cycle_days
+    - last_reviewed
+    allowed_statuses:
+    - proposed
+    - approved
+    - deprecated
+    allowed_classifications:
+    - public
+    - internal
+    - restricted
+  structure:
+    required_sections:
+    - Context
+    - Solution Architecture
+    - Deployment & Topology
+    - Runtime Flows
+    - Resilience & Failure Modes
+    - Observability
+    - Security Considerations
+    optional_sections:
+    - Assumptions
+    - Alternatives Considered
+    - Compatibility Strategy
+    - Data Classification
+    - Document Lifecycle & Statuses
+  content:
+    required_section_keywords:
+      Resilience:
+      - Blast Radius

@@ -39,7 +39,7 @@ To prevent the unrestricted explosion of component-level overrides (Tier-3 alias
 *   **Mandate**: Each core component is limited to a maximum of **5 custom Tier-3 aliases**.
 
 ## 4. Exceptions
-Any request to exceed the Tier-3 alias budget implies a structural flaw in the component's design and requires a formal architectural waiver from the Architecture Review Board (ARB). Teams needing more than 5 aliases must submit a refactor proposal or an ARB exemption request.
+Any request to exceed the Tier-3 alias budget implies a structural flaw in the component's design and requires a formal architectural exception approved through the enterprise governance review process. Teams needing more than 5 aliases must submit a refactor proposal or an exemption request documenting the structural justification.
 
 ## 5. Enforcement Mechanism
 Each platform repository must implement automated static analysis to block raw literal styling and enforce alias limits at the CI/CD pipeline.

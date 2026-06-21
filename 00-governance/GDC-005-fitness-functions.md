@@ -1,8 +1,8 @@
 ---
 doc_meta:
-  id: GDC-007
+  id: GDC-005
   title: Architecture Fitness Functions Guideline
-  owner: Principal Software Architect
+  owner: Architecture Review Board (ARB)
   version: 1.0.0
   status: approved
   classification: public
@@ -109,3 +109,11 @@ To maintain styling system isolation and enforce the use of design tokens:
 ### 4.1 Exception Waiver Rules
 - Temporary bypasses of fitness functions require an approved, time-bound ADR signed by the Architecture Review Board (ARB).
 - Approved waivers have a maximum validity of 365 days.
+
+## 5. Appendix: Architectural Trade-Offs
+
+In accordance with the Quality Rubric (Trade-Offs parameter), the ARB explicitly documents the compromises of this Fitness Functions policy:
+
+1. **Semgrep + Dependency Cruiser vs. SonarQube Enterprise**
+   - *Why rejected*: SonarQube provides great out-of-the-box code smells but is notoriously heavy, difficult to customize for highly specific architectural boundaries (e.g., stopping Hexagonal Architecture layer bypasses), and slow to run in ephemeral PR pipelines.
+   - *The Trade-Off*: We lose the centralized SonarQube dashboard and historical trend graphs. In exchange, we gain lightning-fast (< 300s) PR blocking via Semgrep and `Dependency Cruiser`, allowing us to write highly specific, custom architectural constraints that run locally and deterministically.

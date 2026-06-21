@@ -21,7 +21,7 @@ This standard establishes the non-negotiable rules for designing, versioning, an
 
 ## 2. Design Principles
 
-
+All APIs must be deterministic, contract-first, and version-safe. Interface design prioritizes consumer ergonomics, backward compatibility, and machine-parseable error semantics over internal implementation convenience.
 
 ## 3. Normative Rules
 
@@ -124,7 +124,7 @@ All internal inter-service communication must run over gRPC using **Protocol Buf
 
 ## 4. Exceptions
 
-
+None. All rules in this standard apply universally to every public and internal API endpoint. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

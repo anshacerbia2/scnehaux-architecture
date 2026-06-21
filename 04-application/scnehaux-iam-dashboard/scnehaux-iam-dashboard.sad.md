@@ -1,14 +1,15 @@
 ---
 doc_meta:
-  id: DOC-S002
+  id: SAD-002
   title: Scnehaux IAM Dashboard Software Architecture (SAD)
   owner: Principal Frontend Architect
   version: 1.0.0
   status: approved
   classification: restricted
+  governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-05-18
-parent_pad: DOC-P001
+  parent_pad: PAD-001
 ---
 
 # Scnehaux IAM Dashboard Software Architecture (SAD-002)

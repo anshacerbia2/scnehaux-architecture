@@ -16,7 +16,7 @@ doc_meta:
 
 ---
 
-## 1. Application Capability
+## 1. Business Capability
 
 The **Scnehaux UI Platform** (`@scnx/system` & `@scnx/core-ui`) is the authoritative **Visual Root of Trust** and shared presentation foundation for all Scnehaux applications. It enforces absolute visual consistency, strict structural styling isolation, and robust accessible interaction semantics across both standalone applications and federated micro-frontends.
 

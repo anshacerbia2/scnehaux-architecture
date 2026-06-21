@@ -1,45 +1,45 @@
 <!-- lint_disable: missing_metadata, missing_section -->
 # Architecture Review Score Sheet
 
-This score sheet is used by the Architecture Review Board (ARB) and Principal Engineers during the manual review phase of PAD, SAD, and strategic ADR documents.
+This score sheet is used by Reviewers and the Architecture Review Board (ARB) during the manual review phase of PAD, SAD, TDD, and ADR documents.
 
-It supplements the automated `linter.py` checks. While the linter ensures structural and policy-as-code compliance, this score sheet evaluates the qualitative engineering aspects.
+It supplements the automated `linter.py` checks. While the linter ensures structural and policy-as-code compliance, this score sheet evaluates the qualitative engineering aspects based on the **10 Parameters of the Quality Rubric (GDC-002)**.
 
 ## Document Meta
 - **Document ID**: 
 - **Reviewer**: 
 - **Date**: 
-- **Final Verdict**: [ ] APPROVED / [ ] REJECTED / [ ] REVISIONS REQUIRED
+- **Final Verdict**: APPROVED / REJECTED / REVISIONS REQUIRED
 
 ---
 
-## 1. Zero Waste Execution & Determinism (Score: 0-5)
-| Criteria | Description | Score | Notes |
-| :--- | :--- | :--- | :--- |
-| **No Implicit State** | The design avoids shadow state, hidden side-effects, or undocumented background processing. | | |
-| **Clear Separation** | Boundaries between Domain Logic, I/O, and UI (if applicable) are clearly delineated with hard boundaries. | | |
-| **Resource Efficiency** | Evidence of minimal waste (compute, memory, network calls). Avoids over-engineering. | | |
+## Evaluation Rubric
 
-## 2. Observability & Error Handling (Score: 0-5)
-| Criteria | Description | Score | Notes |
-| :--- | :--- | :--- | :--- |
-| **Traceability** | Distributed tracing and log correlation strategies are defined. | | |
-| **Zero Silent Failure** | Error boundary handling is explicit. Failures are surfaced and routed correctly, never swallowed. | | |
-| **Metrics** | Defines quantifiable SLIs (Service Level Indicators) aligned with the business capability. | | |
+| # | Criterion | Result | Reviewer Notes |
+|---|:---|:---|:---|
+| 1 | **Clarity & Precision** | Pass / Fail / N/A | |
+| 2 | **Living Scope Boundaries** | Pass / Fail / N/A | |
+| 3 | **Traceability & Inheritance** | Pass / Fail / N/A | |
+| 4 | **Architectural Drivers (COE)** | Pass / Fail / N/A | |
+| 5 | **Measurable NFRs** | Pass / Fail / N/A | |
+| 6 | **Cross-Cutting (Zero-Trust)** | Pass / Fail / N/A | |
+| 7 | **Trade-Offs** | Pass / Fail / N/A | |
+| 8 | **Risk & Graceful Degradation** | Pass / Fail / N/A | |
+| 9 | **TDD Lifecycle & Fates** | Pass / Fail / N/A | |
+| 10| **Governance Hygiene** | Pass / Fail / N/A | |
 
-## 3. Resilience & Security Boundary (Score: 0-5)
-| Criteria | Description | Score | Notes |
-| :--- | :--- | :--- | :--- |
-| **Load Shedding** | Mechanisms to shed excess load and fail gracefully are documented. | | |
-| **Trust Boundaries** | Explicit network policies, mTLS usage, and Zero Trust validation at the component edge. | | |
-| **Blast Radius** | Failure in one component does not cascade synchronously to other domains. | | |
+---
 
-## 4. Referential Integrity & Open-Closed Principle (Score: 0-5)
-| Criteria | Description | Score | Notes |
-| :--- | :--- | :--- | :--- |
-| **Extensibility** | New features can be added via composition without modifying the core domain engine. | | |
-| **Dependency Rule** | Direction of dependencies points inward toward the domain. Interfaces belong to the caller. | | |
-| **Governance Alignment** | Explicitly adheres to existing standards or provides an approved ADR for deviations. | | |
+## ARB Strategic Dimensions (For High-Risk PRs Only)
+*(Leave blank if this is a standard Peer Review)*
+
+- **Enterprise Alignment**: 
+- **Blast Radius & Coupling**: 
+- **TCO & Tech Lifecycle**: 
+- **Enterprise Risk Posture**: 
+- **Reversibility (1-Way vs 2-Way)**: 
+- **Build vs Buy (Opportunity Cost)**: 
+- **Scalability Ceiling (10x Horizon)**: 
 
 ---
 

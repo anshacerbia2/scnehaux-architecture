@@ -27,7 +27,7 @@ The scope of this standard applies to all frontend applications, including stand
 
 ## 2. Design Principles
 
-
+The frontend technology stack prioritizes long-term maintainability, ecosystem maturity, and deterministic build reproducibility. Framework selections are governed by the Technology Lifecycle phases defined in GDC-004.
 
 ## 3. Normative Rules
 
@@ -178,7 +178,7 @@ src/
 
 ## 4. Exceptions
 
-
+None. All frontend technology stack mandates apply universally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

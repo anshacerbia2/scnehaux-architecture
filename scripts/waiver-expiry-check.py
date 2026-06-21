@@ -45,7 +45,8 @@ def check_waiver_expiry():
                     status = doc_meta.get('status')
                     
                     if adr_type == 'exception' and status == 'accepted':
-                        expiry_date_raw = doc_meta.get('expiry_date')
+                        exception_info = doc_meta.get('exception_info', {})
+                        expiry_date_raw = exception_info.get('expiry_date')
                         if expiry_date_raw:
                             expiry_date = parse_date(expiry_date_raw)
                             if expiry_date:

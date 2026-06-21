@@ -39,7 +39,7 @@ We standardize the real-time communication stack into three distinct protocols, 
 ## 6. Consequences
 
 ### Positive
-- **Architectural Precision**: Teams stop defaulting to heavy WebSockets for simple one-way data feeds, utilizing lightweight SSE instead.
+- **Architectural Precision**: Teams stop defaulting to heavy WebSockets for straightforward one-way data feeds, utilizing lightweight SSE instead.
 - **Backend Relief**: Eliminating HTTP polling drastically reduces the compute load and database queries on the backend API Gateway.
 - **User Engagement**: Native WebPush integration ensures critical alerts reach users reliably, mirroring native mobile app experiences.
 
@@ -63,4 +63,4 @@ None.
 
 ## 8. Alternatives Considered
 - **HTTP Long-Polling**: Rejected. While easier to scale on legacy load balancers than WebSockets, it still incurs massive HTTP header overhead and connection churn compared to SSE or true WebSockets.
-- **WebRTC**: Rejected for general data transfer. While perfect for peer-to-peer audio/video streaming, it is vastly over-engineered and difficult to traverse via NAT/TURN servers for simple JSON data synchronization.
+- **WebRTC**: Rejected for general data transfer. While perfect for peer-to-peer audio/video streaming, it is vastly over-engineered and difficult to traverse via NAT/TURN servers for straightforward JSON data synchronization.

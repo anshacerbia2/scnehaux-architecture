@@ -25,7 +25,7 @@ It applies to all persistent datastores, caching layers, log targets, analytical
 
 ## 2. Design Principles
 
-
+Data ownership must be explicit and domain-bounded. Each domain retains exclusive write authority over its data. Cross-domain data access must pass through published integration contracts, never direct database queries.
 
 ## 3. Normative Rules
 
@@ -104,7 +104,7 @@ All data schemas, tables, and attributes must align to this domain ownership mat
 
 ## 4. Exceptions
 
-
+None. All data governance and ownership rules apply universally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

@@ -64,8 +64,8 @@ We mandate a strict **Three-Tier Design Token Isolation Architecture** across al
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Documentation Governance Standard (GDC-000)](../../../00-governance/GDC-000-documentation-governance.md)
-- [Enterprise Standards Guideline (GDC-002)](../../../00-governance/GDC-002-std-guideline.md)
+- [Documentation Governance Standard (GDC-000)](../../../00-governance/GDC-000-governance-policy.md)
+- [Enterprise Standards Guideline (GDC-007)](../../../00-governance/GDC-007-std-guideline.md)
 - [Design Token Standard (STD-UIP-TKN-001)](../../../02-standards/ui-platform/design-tokens/STD-UIP-TKN-001-design-tokens.md)
 
 ### Compliance Status

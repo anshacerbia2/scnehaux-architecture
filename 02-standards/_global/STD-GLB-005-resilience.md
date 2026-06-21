@@ -25,7 +25,7 @@ It covers circuit breaking, service timeouts, bulkhead isolation, and retry exec
 
 ## 2. Design Principles
 
-
+Systems must be designed to fail gracefully under partial outages. Resilience patterns (circuit breakers, bulkheads, load shedding) are mandatory infrastructure concerns, not optional application-level add-ons.
 
 ## 3. Normative Rules
 
@@ -100,7 +100,7 @@ To prevent service collapse under load spike conditions, services must implement
 
 ## 4. Exceptions
 
-
+None. All resilience and fault tolerance rules apply universally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

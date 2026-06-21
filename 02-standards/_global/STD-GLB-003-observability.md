@@ -21,7 +21,7 @@ This standard establishes the non-negotiable rules for structured logging, distr
 
 ## 2. Design Principles
 
-
+Observability is a first-class architectural concern, not an afterthought. Every production system must emit structured telemetry (metrics, traces, logs) that enables root-cause analysis without requiring code-level debugging access.
 
 ## 3. Normative Rules
 
@@ -114,7 +114,7 @@ To manage storage bills and network bandwidth overhead under high-volume operati
 
 ## 4. Exceptions
 
-
+None. All observability instrumentation rules apply universally. Deviations require formal architectural exception approval through the enterprise governance review process.
 
 ## 5. Enforcement Mechanism
 

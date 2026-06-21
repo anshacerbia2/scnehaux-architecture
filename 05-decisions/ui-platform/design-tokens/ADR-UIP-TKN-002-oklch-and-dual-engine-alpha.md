@@ -62,7 +62,7 @@ To solve the issue of Alpha compositing, the UI Platform will employ a strict Du
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Documentation Governance Standard (GDC-000)](../../../00-governance/GDC-000-documentation-governance.md)
+- [Documentation Governance Standard (GDC-000)](../../../00-governance/GDC-000-governance-policy.md)
 - [Design Token Standard (STD-UIP-TKN-001)](../../../02-standards/ui-platform/design-tokens/STD-UIP-TKN-001-design-tokens.md)
 - [Enterprise Design Token Governance (STD-UIP-TKN-002)](../../../02-standards/ui-platform/design-tokens/STD-UIP-TKN-002-consumption-governance.md)
 

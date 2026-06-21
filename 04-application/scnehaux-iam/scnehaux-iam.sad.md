@@ -1,14 +1,15 @@
 ---
 doc_meta:
-  id: DOC-S001
+  id: SAD-001
   title: Scnehaux IAM Software Architecture (SAD)
   owner: Principal IAM Architect
   version: 1.0.0
   status: approved
   classification: restricted
+  governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-05-18
-parent_pad: DOC-P001
+  parent_pad: PAD-001
 ---
 
 # Scnehaux IAM Software Architecture (SAD-001)
