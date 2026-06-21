@@ -113,7 +113,7 @@ def lint_file(file_path, global_rules, all_doc_ids, output_format="text"):
 
     # Step 5: Build the final rule context by merging Global Rules with Specific Rules
     merged_rules = copy.deepcopy(global_rules)
-    specific_rules_path = os.path.join(SCRIPT_DIR, f"00-governance/rules/linting-rules-{doc_type}.yaml")
+    specific_rules_path = os.path.join(SCRIPT_DIR, f"00-governance/rules/linting-rules-{doc_type.lower()}.yaml")
     
     if not os.path.exists(specific_rules_path):
         errs, p, b = print_errors(file_path, [
