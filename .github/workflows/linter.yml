@@ -27,15 +27,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           cache: "pip"
 
-      - name: Install Linter Dependencies
-        run: |
-          cd .scnehaux-governance
-          pip install -r requirements.txt
+      - name: Install Linter Dependencies (pinned)
+        run: pip install -r .scnehaux-governance/requirements.txt
 
       - name: Execute Governance Engine
-        run: |
-          # Run the centralized linter against the downstream target directory
-          python .scnehaux-governance/linter.py --target ${{ inputs.target_dir }}
+        run: python .scnehaux-governance/linter.py --target ${{ inputs.target_dir }}

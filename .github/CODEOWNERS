@@ -1,0 +1,64 @@
+# ============================================================================
+# ⚠️ SCNEHAUX ARCHITECTURE CODEOWNERS ⚠️
+# ============================================================================
+# This file automatically enforces the review policies defined in GDC-003.
+#
+# FAANG-Grade Rules applied here:
+# 1. ORDER MATTERS: The LAST matching rule takes precedence.
+# 2. DEFAULT FALLBACK: The entire repo is protected by default.
+# 3. GRANULARITY: Tooling/Scripts are separated from architectural content.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 1. GLOBAL FALLBACK & ROOT FILES
+# ----------------------------------------------------------------------------
+# Any file not explicitly matched below requires ARB approval by default.
+*                                  @scnehaux/arb-team
+
+# Explicit Root Documentation & Meta-Governance
+/README.md                         @scnehaux/arb-team @scnehaux/tech-writers
+/CONTRIBUTING.md                   @scnehaux/arb-team @scnehaux/tooling-team
+/.github/CODEOWNERS                @scnehaux/arb-team
+
+# ----------------------------------------------------------------------------
+# 2. GOVERNANCE ENFORCEMENT ENGINE (Tooling)
+# ----------------------------------------------------------------------------
+/.github/workflows/                @scnehaux/tooling-team @scnehaux/arb-team
+/scripts/                          @scnehaux/tooling-team
+/validators/                       @scnehaux/tooling-team
+/linter.py                         @scnehaux/tooling-team
+/requirements.txt                  @scnehaux/tooling-team
+
+# ----------------------------------------------------------------------------
+# 3. ENTERPRISE ARCHITECTURE (The Constitution)
+# ----------------------------------------------------------------------------
+/00-governance/                    @scnehaux/arb-team
+/01-enterprise/                    @scnehaux/arb-team
+/00-governance/rules/              @scnehaux/arb-team @scnehaux/tooling-team
+
+# ----------------------------------------------------------------------------
+# 4. STANDARDS BASELINE (STD)
+# ----------------------------------------------------------------------------
+/02-standards/                     @scnehaux/arb-team
+/02-standards/_global/             @scnehaux/arb-team
+/02-standards/identity-access/     @scnehaux/iam-core-team
+/02-standards/ui-platform/         @scnehaux/ui-platform-team
+
+# ----------------------------------------------------------------------------
+# 5. ARCHITECTURAL DECISION RECORDS (ADRs)
+# ----------------------------------------------------------------------------
+/05-decisions/                     @scnehaux/arb-team
+/05-decisions/_global/             @scnehaux/arb-team
+/05-decisions/identity-access/     @scnehaux/iam-core-team
+/05-decisions/ui-platform/         @scnehaux/ui-platform-team
+
+# ----------------------------------------------------------------------------
+# 6. DOMAIN & APPLICATION DECENTRALIZATION (PAD & SAD)
+# ----------------------------------------------------------------------------
+# Explicit Domain Overrides (Identity)
+/03-platform/identity-platform/    @scnehaux/iam-core-team
+/04-application/identity-platform/ @scnehaux/iam-core-team
+
+# Explicit Domain Overrides (UI Platform)
+/03-platform/scnehaux-ui-platform/    @scnehaux/ui-platform-team
+/04-application/scnehaux-ui-platform/ @scnehaux/ui-platform-team

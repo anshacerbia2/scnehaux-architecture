@@ -16,7 +16,18 @@ def install_hook():
 # Pre-commit hook to enforce Scnehaux Architecture Governance
 echo "Running Scnehaux Governance Linter..."
 
-python linter.py --format text
+# Extract only changed markdown files
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\\.md$')
+
+if [ -z "$CHANGED_FILES" ]; then
+    echo "No markdown files changed. Skipping linter."
+    exit 0
+fi
+
+# Convert newlines to spaces for the target argument
+TARGETS=$(echo "$CHANGED_FILES" | tr '\\n' ' ')
+
+python linter.py --format text --target $TARGETS
 
 if [ $? -ne 0 ]; then
   echo ""
@@ -29,7 +40,7 @@ echo "✅ Governance check passed. Proceeding with commit."
 exit 0
 """
     
-    with open(hook_path, 'w', newline='\n') as f:
+    with open(hook_path, 'w', encoding='utf-8') as f:
         f.write(hook_content)
         
     # Make the script executable

@@ -15,73 +15,59 @@ doc_meta:
 
 ---
 
-## 1. Context & Business Drivers
+## 1. Vision
 
 The Scnehaux Foundation Business Architecture defines the capability-centric blueprint of the organization. It establishes the "North Star" for all domain models, ensuring that software boundaries map strictly to business capabilities rather than organizational charts.
 
-This document directs the structural decomposition of the enterprise into strictly encapsulated, cohesive domains that enable independent scaling and autonomous product evolution.
+## 2. Mission
 
-## 2. Enterprise Principles
+To direct the structural decomposition of the enterprise into strictly encapsulated, cohesive domains that enable independent scaling, autonomous product evolution, and aligned strategic delivery.
 
-### 2.1 Zero Trust by Default
-* **Statement**: Every transaction must be cryptographically verified and authorized, regardless of network origin.
-* **Rationale**: The traditional network perimeter is hostile, and IP-based authentication is insufficient.
-* **Implication**: Downstream systems must validate user contexts and platform credentials on every call. IP whitelisting is prohibited as a primary security perimeter.
+## 3. Strategic Objectives
 
-### 2.2 API-First Contracts
-* **Statement**: Every platform capability must expose its functionalities via strict, versioned API contracts.
-* **Rationale**: Integration complexity is minimized by decoupling consumer integration details from internal system evolution.
-* **Implication**: Directly querying databases or using unexposed/proprietary protocols between domains is prohibited. APIs must be documented using OpenAPI/gRPC schemas.
+The business architecture is driven by the following strategic objectives and principles:
 
-### 2.3 Domain-Driven Decoupling
-* **Statement**: Service boundaries must map strictly to business capabilities rather than organizational charts.
-* **Rationale**: Encapsulated domains enable independent scaling and autonomous product evolution.
-* **Implication**: Cross-domain data dependencies must be asynchronous (e.g., event-driven message backbones) wherever feasible to prevent runtime coupling.
+### 3.1 Zero Trust by Default
+Every transaction must be cryptographically verified and authorized, regardless of network origin. Downstream systems must validate user contexts and platform credentials on every call.
 
-### 2.4 Production-Ready Baseline
-* **Statement**: Every deployed container must instantly expose health checks, trace context, and baseline telemetry.
-* **Rationale**: Observability and operational predictability are non-negotiable for enterprise stability.
-* **Implication**: Deployable units must emit structured logs to STDOUT and propagate standard trace headers (`X-Trace-Id`) upon initialization.
+### 3.2 API-First Contracts
+Every platform capability must expose its functionalities via strict, versioned API contracts. Integration complexity is minimized by decoupling consumer integration details from internal system evolution.
 
-## 3. Strategic Architecture
+### 3.3 Domain-Driven Decoupling
+Service boundaries must map strictly to business capabilities. Cross-domain data dependencies must be asynchronous (e.g., event-driven message backbones) wherever feasible to prevent runtime coupling.
 
-The Scnehaux Super Platform is partitioned into the following primary Capability Domains. These domains dictate the bounded contexts for all downstream software architecture (PADs and SADs).
+### 3.4 Production-Ready Baseline
+Observability and operational predictability are non-negotiable for enterprise stability. Deployable units must emit structured logs to STDOUT and propagate standard trace headers.
 
-### 3.1 Identity Management (Platform Foundation)
+## 4. Business Capability Map
+
+The Scnehaux Super Platform is partitioned into the following primary Capability Domains:
+
+### 4.1 Identity Management (Platform Foundation)
 - **Authentication & Federation**: Single Sign-On (SSO), MFA enforcement, and external IdP brokering.
 - **Tenant Governance**: Multi-tenant isolation enforcement and lifecycle management.
 - **Session Operations**: Token issuance and global revocation capabilities.
 
-### 3.2 Workforce Management (Core Domain)
+### 4.2 Workforce Management (Core Domain)
 - **Employee Lifecycle**: Onboarding, offboarding, and profile state transitions.
 - **Organizational Structure**: Position management and hierarchy definitions.
 
-### 3.3 Compensation Processing (Financial Domain)
+### 4.3 Compensation Processing (Financial Domain)
 - **Compensation Modeling**: Salary structuring and benefits calculation.
 - **Tax & Compliance Engine**: Regulatory deduction modeling.
 - **Disbursement Orchestration**: Financial gateway integration.
 
-### 3.4 Operational Velocity (Work Management)
+### 4.4 Operational Velocity (Work Management)
 - **Time & Attendance**: Real-time tracking and leave processing.
 - **Capacity Allocation**: Project resourcing and rostering.
 
-### 3.5 Talent & Growth Management
+### 4.5 Talent & Growth Management
 - **Recruitment**: Sourcing and hiring pipelines.
 - **Performance Evaluation**: Goal tracking and feedback loops.
 
-### 3.6 Domain Aggregate Matrix
-To maintain absolute logical isolation and clear ownership of business concepts, each domain aggregate is mapped to exactly one authoritative logical bounded context:
+## 5. Value Stream
 
-| Domain | Strategic Aggregate | Authoritative Bounded Context | Storage Pattern |
-| :--- | :--- | :--- | :--- |
-| **Identity Management** | User Credentials, Active Sessions, Tenant Metadata | Identity & Access Context | Relational |
-| **Workforce Management** | Employee Profile, Org Hierarchy Node, Position | Workforce Registry Context | Relational |
-| **Compensation Processing**| Salary Structure, Tax Configurations, Ledger Accounts | Payroll & Compensation Context | Relational |
-| **Operational Velocity** | Time Sheets, Rostering Schedules, Leave Records | Work Tracking Context | Relational |
-| **Talent & Growth** | Candidate Profile, Evaluation Sheets, Career Plans | Talent & Sourcing Context | Relational |
-
-### 3.7 End-to-End Value Stream Choreography
-The primary enterprise value streams must execute as asynchronous event-driven choreographies. Below is the sequence layout for the **Hire-to-Retire** value stream, ensuring decoupled service states:
+The primary enterprise value streams must execute as asynchronous event-driven choreographies. Below is the sequence layout for the **Hire-to-Retire** value stream:
 
 ```mermaid
 sequenceDiagram
@@ -105,24 +91,27 @@ sequenceDiagram
     deactivate OV
 ```
 
-## 4. Cross-Cutting Standards
+## 6. Operating Model
 
-### Exception Governance
-Any deviation from the mandated capability boundaries (e.g., merging two distinct capabilities into a single database for performance reasons) requires formal approval.
-- **Requirement**: Must submit an Architecture Decision Record (ADR).
-- **Approval Gate**: Requires explicit sign-off from the Architecture Review Board (ARB).
+To maintain absolute logical isolation and clear ownership of business concepts, the operating model enforces that each domain aggregate is mapped to exactly one authoritative logical bounded context. Any deviation from the mandated capability boundaries requires formal approval via an Architecture Decision Record (ADR).
 
-### Evolution Strategy
-- **Current State**: Monolithic capability grouping.
-- **Target State**: Event-Driven Capability choreography. As capabilities mature, synchronous REST calls across domains will transition to asynchronous event streams to maximize decoupling and resilience.
-
-### Metric Baselines
-The business architecture mandates the following macro-level service level agreements across all capability domains:
-- **Availability**: All tier-0 capability endpoints must achieve >=99.95% availability measured over a rolling 30-day window.
-- **Fault Isolation**: Failure in one capability domain must result in zero degraded availability for unrelated capability domains.
-
-## 5. Decision Log
-
-| ID | Decision | Status | Rationale |
+| Domain | Strategic Aggregate | Authoritative Bounded Context | Storage Pattern |
 | :--- | :--- | :--- | :--- |
-| **TOG-01** | TOGAF Alignment | Approved | Aligns with TOGAF Phase B (Business Architecture) requirements. |
+| **Identity Management** | User Credentials, Active Sessions, Tenant Metadata | Identity & Access Context | Relational |
+| **Workforce Management** | Employee Profile, Org Hierarchy Node, Position | Workforce Registry Context | Relational |
+| **Compensation Processing**| Salary Structure, Tax Configurations, Ledger Accounts | Payroll & Compensation Context | Relational |
+| **Operational Velocity** | Time Sheets, Rostering Schedules, Leave Records | Work Tracking Context | Relational |
+| **Talent & Growth** | Candidate Profile, Evaluation Sheets, Career Plans | Talent & Sourcing Context | Relational |
+
+## 7. Team Topology Principles
+
+Teams are organized around autonomous business capabilities (stream-aligned teams), not horizontal technical layers — maximizing decoupling, ownership, and resilience. As capabilities mature, the enterprise shifts from monolithic capability grouping toward event-driven choreography between these domains. High-leverage shared capabilities (e.g. identity, observability, the developer platform) are owned by platform teams that expose them as internal products.
+
+This is a durable *topology principle*, not an org chart: specific team names and reporting lines are intentionally out of scope, because they change far faster than the enterprise architecture itself.
+
+## 8. Stakeholder
+
+The primary stakeholders for the Enterprise Business Architecture include:
+- **Chief Enterprise Architect**: Ultimate owner of the capability map.
+- **Architecture Review Board (ARB)**: Responsible for gatekeeping exceptions and ensuring cross-domain alignment.
+- **Domain Leads / Product Managers**: Responsible for aligning their specific system roadmaps (SADs) with the overarching capability model.

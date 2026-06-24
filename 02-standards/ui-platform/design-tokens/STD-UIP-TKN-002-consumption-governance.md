@@ -6,6 +6,8 @@ doc_meta:
   version: 1.0.0
   status: adopted
   classification: public
+  review_cycle_days: 180
+  last_reviewed: 2026-05-22
 ---
 
 # STD-UIP-TKN-002: Enterprise Design Token Governance
@@ -27,7 +29,7 @@ The token matrix relies on four core Emphasis layers (`subtle`, `default`, `stro
 *   **Mandate**: Tokens must be used for their intended architectural purpose. Misusing a high-prominence token (e.g., `contrast`) for a low-prominence background container is a direct violation.
 
 ### 3.3 Domain Semantic Layering
-When a domain team encounters a unique business state (e.g., `fraud_detected`), they must not introduce new global token schemas.
+When a [domain]-team encounters a unique business state (e.g., `fraud_detected`), they must not introduce new global token schemas.
 *   **Mandate**: Portals must map their local business states to existing global semantic schemes.
 
 ### 3.4 Typography Density Families

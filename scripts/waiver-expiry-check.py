@@ -3,20 +3,8 @@ import yaml
 import re
 from datetime import datetime, date, timedelta
 import sys
-
-def parse_date(date_val):
-    if isinstance(date_val, date):
-        return date_val
-    if isinstance(date_val, datetime):
-        return date_val.date()
-    if isinstance(date_val, str):
-        s = date_val.strip()
-        for fmt in ('%Y-%m-%d', '%Y/%m/%d'):
-            try:
-                return datetime.strptime(s, fmt).date()
-            except ValueError:
-                continue
-    return None
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from validators.utils import parse_date
 
 def check_waiver_expiry():
     adr_dir = os.path.join(os.path.dirname(__file__), '..', '05-decisions')

@@ -5,3 +5,13 @@ __pycache__/
 *.pyc
 .antigravity*
 .idea/
+
+# Pytest & Coverage
+.coverage
+.pytest_cache/
+
+# Linter artifacts (do not commit run output)
+*.sarif
+lint_out.txt
+lint_output.txt
+linter_output.txt

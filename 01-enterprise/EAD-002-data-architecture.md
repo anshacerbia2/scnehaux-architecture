@@ -11,70 +11,61 @@ doc_meta:
   last_reviewed: 2026-05-17
 ---
 
-# Enterprise Data Architecture
+# Enterprise Data Architecture (EAD-002)
 
-## 1. Context & Business Drivers
+---
 
-Data is the most critical asset of the Scnehaux Foundation. The Enterprise Data Architecture ensures that information remains accurate, secure, compliant, and highly available. The primary business drivers for data architecture are:
+## 1. Enterprise Data Principles
 
-1.  **Data Sovereignty & Compliance**: HR and Financial data must be protected against unauthorized access and adhere strictly to regional data sovereignty laws.
-2.  **Absolute Integrity**: Financial ledgers and compensation systems cannot tolerate "eventual consistency" anomalies within their core transaction boundaries.
-3.  **Observability & Lineage**: The origin, transformation, and flow of data must be fully transparent to support forensic auditing.
+Data is the most critical asset of the Scnehaux Foundation. The Enterprise Data Architecture ensures that information remains accurate, secure, compliant, and highly available.
 
-## 2. Enterprise Principles
+### 1.1 Single Source of Truth
+Every data entity must have one, and only one, authoritative system of record. Distributing write authority across systems introduces transaction race conditions and split-brain inconsistency. Data duplication is forbidden unless explicitly designed as a read-only projection (e.g., CQRS read models).
 
-### 2.1 Single Source of Truth
-*   **Statement**: Every data entity must have one, and only one, authoritative system of record.
-*   **Rationale**: Distributing write authority across systems introduces transaction race conditions and split-brain inconsistency.
-*   **Implication**: Data duplication is forbidden unless explicitly designed as a read-only projection (e.g., CQRS read models).
+### 1.2 Data as a Contract
+Data schemas exposed to other domains are immutable contracts. Downstream consumer applications rely on schema stability to function reliably without constant redeployments. Breaking schema changes without a rigorous versioning and migration strategy are prohibited.
 
-### 2.2 Data as a Contract
-*   **Statement**: Data schemas exposed to other domains are immutable contracts.
-*   **Rationale**: Downstream consumer applications rely on schema stability to function reliably without constant redeployments.
-*   **Implication**: Breaking schema changes without a rigorous versioning and migration strategy are prohibited.
+### 1.3 Strict Domain Encapsulation
+A database belongs entirely to a single microservice/domain. Direct database sharing couples teams, bypasses validation rules, and compromises security isolation boundaries. No two domains may connect to the same database. All cross-domain data sharing must occur via APIs or Event Busses.
 
-### 2.3 Strict Domain Encapsulation
-*   **Statement**: A database belongs entirely to a single microservice/domain.
-*   **Rationale**: Direct database sharing couples teams, bypasses validation rules, and compromises security isolation boundaries.
-*   **Implication**: No two domains may connect to the same database. All cross-domain data sharing must occur via APIs or Event Busses.
+## 2. Master Data
 
-## 3. Strategic Architecture
+The Scnehaux master data entities include core HR profiles, compensation parameters, tenant configurations, and organizational structures. These entities are centrally managed within their authoritative boundaries but propagated across the enterprise using event-driven architectures to prevent synchronous query coupling.
 
-The strategic "Paved Road" for data persistence within the enterprise is defined as follows:
+## 3. Data Ownership
 
-### 3.1 Relational Storage (The Source of Truth)
-*   **Technology Class**: **ACID-Compliant Relational Database Management System (RDBMS)**.
-*   **Usage**: The default and mandatory storage for high-value, structured data requiring strong ACID compliance (e.g., HRIS, Finance, IAM).
+To preserve domain integrity, data ownership is strictly mapped to the owning bounded contexts:
+- **Identity Data (Credentials, Tenants)**: Owned by the Identity & Access Context.
+- **Employee & Org Data**: Owned by the Workforce Registry Context.
+- **Financial & Tax Data**: Owned by the Payroll & Compensation Context.
 
-### 3.2 Transient & Caching Storage
-*   **Technology Class**: **Distributed In-Memory Key-Value Store**.
-*   **Usage**: Session management, rate limiting, and high-speed read caching. Transient stores must never be used as the primary system of record.
+## 4. Data Classification
 
-### 3.3 Asynchronous Event Backbone
-*   **Technology Class**: **Log-Based Event Streaming Backbone**.
-*   **Usage**: Distributing Domain Events across bounded contexts to achieve decoupled, eventually consistent workflows.
+All enterprise data must be strictly classified into the following tiers to dictate storage and transit encryption constraints:
+- **Public**: Available to anyone (e.g., public job descriptions).
+- **Internal**: Restricted to company employees (e.g., internal memos).
+- **Confidential**: Sensitive business data (e.g., strategic roadmap).
+- **Restricted**: Highly sensitive data (e.g., PII, Passwords, Financials). Restricted data must be encrypted at rest and in transit.
 
-### 3.4 Horizontal Scale & Partitioning Strategy
-At FAANG-scale (petabyte levels or millions of multi-tenant shards), the storage system must prevent database sizing bottlenecks:
-*   **Sharding Threshold**: Relational transactional databases must be horizontally partitioned or sharded using distributed sharding engines or native engine partitioning once an individual database instance or table size exceeds **1TB** or when write IOPS exceed **10,000 IOPS**.
-*   **Sharding Key**: The default sharding strategy is tenant-centric (using `tenant_id` as the primary distribution key) to guarantee complete data isolation and co-location of customer tables.
-*   **Connection Pooling**: Every relational deployment must sit behind a dedicated connection pooler proxy configured to use transaction pooling mode to prevent container connection exhaustion.
-*   **Replication Lag Boundary**: Multi-region database topologies must utilize asynchronous replication for disaster recovery with a maximum allowed cross-region replication lag target of `< 100ms`.
+## 5. Data Governance
 
-### 3.5 Analytical Offloading Pipeline
-To preserve transaction transaction throughput and prevent analytical workloads from degrading OLTP performance:
-*   **CDC Capture (Change Data Capture)**: Querying production databases directly for reports, ETL, or analytics is strictly prohibited. All transactional updates must be captured at the engine log level using Change Data Capture (CDC via log-based capture agents) and published as event streams.
-*   **Decoupled Ingestion**: Event streams are written to the event streaming backbone, where downstream analytical platforms (e.g., cloud data warehouses or object-storage-based data lakes) ingest them asynchronously.
+Data sovereignty and integrity are maintained through rigorous compliance constraints:
+- **Schema Migrations**: All database schema changes must be version-controlled, automated, and executed via a CI/CD pipeline migration utility. Manual database modifications in production are a critical violation.
+- **Sovereignty**: HR and Financial data must be protected against unauthorized access and adhere strictly to regional data sovereignty laws.
+- **Auditability**: The origin, transformation, and flow of data must be fully transparent to support forensic auditing.
 
-## 4. Cross-Cutting Standards
+## 6. Data Lifecycle
 
-1.  **Schema Migrations**: All database schema changes must be version-controlled, automated, and executed via a CI/CD pipeline migration utility. Manual database modifications in production are a critical violation.
-2.  **Data Classification**: All data must be classified (e.g., Public, Internal, Confidential, Restricted). Restricted data (PII, Passwords, Financials) must be encrypted at rest and in transit.
-3.  **Backup & Disaster Recovery**: All Tier-0 databases must support Point-In-Time Recovery (PITR) with RPO (Recovery Point Objective) < 5 minutes and RTO (Recovery Time Objective) < 1 hour.
+The lifecycle of data encompasses its creation, utilization, archival, and deletion:
+- **Transactional Phase**: High-value, structured data resides in ACID-Compliant RDBMS.
+- **Analytical Offloading (CDC)**: Querying production databases directly for reports, ETL, or analytics is strictly prohibited. All transactional updates must be captured at the engine log level using Change Data Capture (CDC) and published as event streams.
+- **Backup & DR**: All Tier-0 databases must support Point-In-Time Recovery (PITR) with RPO < 5 minutes and RTO < 1 hour.
+- **Data Purging**: Deprecated or expired data must be permanently purged or anonymized in compliance with GDPR and localized data retention laws.
 
-## 5. Decision Log
+## 7. Data Flow Landscape
 
-| ID | Decision | Status | Rationale |
-| :--- | :--- | :--- | :--- |
-| **DAT-01** | RDBMS as Default | Approved | Relational integrity is non-negotiable for HRIS and Financial domains. NoSQL is explicitly rejected for core transactional systems. |
-| **DAT-02** | Prohibit Shared DBs | Approved | Shared databases cause tight coupling and break domain autonomy. Enforcing API/Event-driven data exchange. |
+Data flows across the enterprise must adhere to the defined Paved Road technologies:
+- **Relational Storage**: The primary system of record for structured data.
+- **Transient & Caching Storage**: Used strictly for session management, rate limiting, and high-speed read caching. Must never be the primary system of record.
+- **Asynchronous Event Backbone**: The enterprise neural network for distributing Domain Events across bounded contexts.
+- **Scale Strategy**: Relational transactional databases must be horizontally partitioned using distributed sharding engines once an individual database instance size exceeds 1TB or write IOPS exceed 10,000 IOPS.

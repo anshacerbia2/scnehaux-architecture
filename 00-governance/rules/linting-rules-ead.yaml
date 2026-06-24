@@ -1,13 +1,21 @@
 
 # ==============================================================================
-# ⚠️ WARNING: AUTOMATED DOCUMENTATION LINKAGE ⚠️
+# WARNING: AUTOMATED DOCUMENTATION LINKAGE
 # ==============================================================================
 # This YAML file is the Single Source of Truth (SSOT). If you modify any rules
-# below, you MUST regenerate the Markdown table in the respective GDC document.
-# 
-# Run this command from the scnehaux-architecture root directory:
-# > python scripts/generate_rules_doc.py
+# below, you MUST regenerate the Markdown table in the respective GDC document:
+#   > python scripts/generate_rules_doc.py   (CI verifies via --check)
 # ==============================================================================
+#
+# EAD = C1 Enterprise (the "Bappenas" layer): principles & strategy, enterprise-wide
+# and implementation-agnostic. Sections are PER BDAT FILE (Business/Data/Application/
+# Technology), because each EAD file is already a specific TOGAF domain.
+#
+# Altitude rule: if a section names a specific system / API / topology, it has leaked
+# down to PAD/SAD. Keep `Data Flow Landscape` and `Application Interaction` MACRO.
+# Note (going-forward intent, see GDC-007): `Technology Standards` should reference
+# the STD layer (no duplicate SSOT); `Organization Model` should express team-topology
+# principles, not a volatile org chart.
 config:
   target_doc: GDC-007-ead-guideline.md
 
@@ -32,9 +40,35 @@ rules:
     - internal
     - restricted
   structure:
+    # Per-id required sections: EADValidator resolves the set whose key matches the filename.
     required_sections:
-    - Context & Business Drivers
-    - Enterprise Principles
-    - Strategic Architecture
-    - Cross-Cutting Standards
-    - Decision Log
+      EAD-001:
+      - Vision
+      - Mission
+      - Strategic Objectives
+      - Business Capability Map
+      - Value Stream
+      - Operating Model
+      - Team Topology Principles
+      - Stakeholder
+      EAD-002:
+      - Enterprise Data Principles
+      - Master Data
+      - Data Ownership
+      - Data Classification
+      - Data Governance
+      - Data Lifecycle
+      - Data Flow Landscape
+      EAD-003:
+      - Application Portfolio
+      - Application Interaction
+      - Application Classification
+      - Build vs Buy
+      - Enterprise Integration Strategy
+      EAD-004:
+      - Cloud Strategy
+      - Security Principles
+      - Observability Principles
+      - Platform Strategy
+      - Technology Principles
+      - Technology Radar

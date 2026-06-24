@@ -4,7 +4,7 @@ This repository is the **Single Source of Truth (SSOT)** for the **Scnehaux Ente
 
 To ensure this architecture never becomes outdated or drifts from reality, this repository is governed by a strict **Circular Governance Framework**.
 
-Unlike a traditional static wiki, this repository operates as an **Executable Architecture** via a *Docs-as-Code* methodology. Every artifact's structural integrity and compliance is automatically validated through CI/CD linters and *Policy-as-Code* before it can be merged.
+Unlike a traditional static wiki, this repository operates as an **Executable Architecture** via a _Docs-as-Code_ methodology. Every artifact's structural integrity and compliance is automatically validated through CI/CD linters and _Policy-as-Code_ before it can be merged.
 
 **In summary:** This repository contains the **Enterprise Architecture**, and the **Circular Governance Framework** ensures that architecture remains pristine, verifiable, and strictly enforced across all engineering teams.
 
@@ -15,12 +15,14 @@ Unlike a traditional static wiki, this repository operates as an **Executable Ar
 This repository has a **bipartite purpose**, serving both as the architecture of our systems and the governance engine that protects it:
 
 ### 1. Purpose of the Architecture (The Artifacts)
+
 - **Establish Architectural Consistency**: Enforce uniform, deterministic design patterns and standardize the technology paved roads across all systems (STD).
 - **Define Business Capabilities & Boundaries**: Establish strict logical domain boundaries (PAD) to prevent capability leakage and architectural contamination.
 - **Provide an Integration SSOT**: Serve as the authoritative, design-time Single Source of Truth for system integration contracts, trust boundaries, and physical topologies (SAD).
 - **Preserve Decision Traceability**: Maintain an immutable, contextual history of all major architectural shifts and explicitly track technical debt via Architecture Decision Records (ADR).
 
 ### 2. Purpose of the Governance (The Engine)
+
 - **Execute a Circular Governance Model**: Establish a deterministically self-validating ecosystem where policies, linters, and rubrics mutually regulate each other without absolute immunity (_Eat Our Own Dog Food_).
 - **Enforce Engineering Discipline (Shift-Left)**: Act as a machine-readable hub that enforces strict quality standards across two distinct artifact types: **Governance Quality** (the architecture and integrity of the governance framework itself) and **Architecture Quality** (the architecture and integrity of the actual software systems).
 - **Govern Architectural Evolution**: Define measurable non-functional fitness functions, failure modes, and NFRs to safely scale and evolve systems over time.
@@ -34,7 +36,7 @@ This repository contains architecture artifacts only. It does not contain implem
 This repository synthesizes the core concepts and mental models of industry-standard frameworks (C4 Model, TOGAF, arc42, AWS Well-Architected) into a custom, context-aware execution model to ensure scalability and clarity.
 
 > [!IMPORTANT]
-> **Architecture Scope Limit:** This repository strictly houses **High-Level System Design (C1 Context & C2 Container levels)**. We do not document internal application components (C3) or source code (C4) here. Low-level Technical Design Documents (TDD) must reside locally in their specific code repositories to maintain strict *Docs-as-Code* proximity and prevent documentation rot.
+> **Architecture Scope Limit:** This repository strictly houses **High-Level System Design (C1 Context & C2 Container levels)**. We do not document internal application components (C3) or source code (C4) here. Low-level Technical Design Documents (TDD) must reside locally in their specific code repositories to maintain strict _Docs-as-Code_ proximity and prevent documentation rot.
 
 ### 00-governance / GDC (The Constitutional Hub)
 
@@ -89,6 +91,9 @@ Defines the component-level blueprints built downstream.
 To ensure seamless "Shift-Left" validation, install the pre-commit hook. This will automatically scan your files before allowing a `git commit`:
 
 ```bash
+# Install dependencies
+pip install -r requirements.txt
+
 # Install the native git hook (Run this once)
 python scripts/install-hooks.py
 ```
@@ -98,6 +103,13 @@ You can also execute the automated compliance engine locally to scan the reposit
 ```bash
 # Run locally for human-readable output
 python linter.py
+```
+
+To ensure the linter engine itself remains robust, execute the high-coverage test suite:
+
+```bash
+# Run the Linter Engine Test Suite (FAANG Standard: >=95% coverage)
+pytest --cov=validators validators/tests/
 ```
 
 For CI/CD pipeline integration, the engine supports a structured machine-readable format:

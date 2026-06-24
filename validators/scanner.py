@@ -2,29 +2,24 @@ import os
 import re
 import yaml
 
-def resolve_all_doc_ids(target_dir):
+def resolve_registry_with_duplicates(target_dir):
     """
-    Scan the target directory to build a unique registry (set) of all document IDs.
-    
-    Algorithm:
-    1. Initialize an empty Python `set` to store unique document IDs.
-    2. Traverse the directory tree recursively using `os.walk`.
-    3. Exclude irrelevant directories ('.git', '__pycache__', 'node_modules', '.vscode', 'validators') to optimize scanning speed.
-    4. Filter files to strictly process only those with a '.md' (Markdown) extension.
-    5. Open and read the entire raw content of each valid '.md' file into memory.
-    6. Extract only the YAML frontmatter block at the top of the file using a regular expression.
-    7. Parse the extracted YAML frontmatter string into a Python dictionary.
-    8. Read the `id` value located specifically inside the `doc_meta` block.
-    9. Append the extracted ID to the `ids` set.
-    10. Silently ignore any parsing errors or malformed files (the main linter loop handles these later).
-    11. Return the populated `ids` set.
+    Scan the target directory to build a registry of document IDs, their metadata,
+    AND a map of any duplicate IDs (which violate the SSOT uniqueness invariant).
+    Returns:
+        tuple: (set of doc_ids, dict mapping doc_id -> doc_meta, dict mapping
+                duplicated doc_id -> list of conflicting file paths)
     """
     ids = set()
+    metadata_registry = {}
+    first_seen_path = {}
+    duplicates = {}
     for root, dirs, files in os.walk(target_dir):
         dirs[:] = [d for d in dirs if d not in ('.git', '__pycache__', 'node_modules', '.vscode', 'validators')]
         for file in files:
             if not file.endswith('.md'): continue
             path = os.path.join(root, file)
+            norm_path = path.replace('\\', '/')
             try:
                 with open(path, 'r', encoding='utf-8') as f:
                     content = f.read()
@@ -33,8 +28,30 @@ def resolve_all_doc_ids(target_dir):
                     data = yaml.safe_load(fm.group(1))
                     if data and 'doc_meta' in data:
                         doc_id = data['doc_meta'].get('id')
-                        if doc_id: ids.add(doc_id)
+                        if doc_id:
+                            if doc_id in ids:
+                                # Collision: a doc ID must be globally unique (SSOT).
+                                duplicates.setdefault(doc_id, [first_seen_path[doc_id]]).append(norm_path)
+                            else:
+                                ids.add(doc_id)
+                                metadata_registry[doc_id] = data['doc_meta']
+                                first_seen_path[doc_id] = norm_path
             except Exception:
                 # Intentionally silent: malformed files are handled by the main linter loop.
                 continue
+    return ids, metadata_registry, duplicates
+
+def resolve_all_doc_registry(target_dir):
+    """
+    Backward-compatible wrapper returning (set of doc_ids, dict id -> doc_meta).
+    Use resolve_registry_with_duplicates() when duplicate detection is required.
+    """
+    ids, metadata_registry, _ = resolve_registry_with_duplicates(target_dir)
+    return ids, metadata_registry
+
+def resolve_all_doc_ids(target_dir):
+    """
+    Wrapper for backward compatibility. Returns only the set of IDs.
+    """
+    ids, _ = resolve_all_doc_registry(target_dir)
     return ids

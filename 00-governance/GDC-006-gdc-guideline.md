@@ -38,12 +38,15 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 <!-- AUTO-GENERATED-RULES:START -->
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
+| **Metadata** | Filename Pattern | `^GDC-\d{3}-[a-z0-9-]+\.md$` |
 | **Metadata** | Required Fields | <ul><li>`id`</li><li>`title`</li><li>`governed_by`</li><li>`owner`</li><li>`version`</li><li>`status`</li><li>`classification`</li><li>`review_cycle_days`</li><li>`last_reviewed`</li></ul> |
+| **Metadata** | Optional Fields | <ul><li>`tags`</li><li>`aliases`</li><li>`contributors`</li></ul> |
 | **Metadata** | Version Format | `semver` |
 | **Metadata** | Allowed Classifications | <ul><li>`public`</li><li>`internal`</li><li>`restricted`</li><li>`confidential`</li></ul> |
 | **Metadata** | Allowed Statuses | <ul><li>`approved`</li><li>`draft`</li></ul> |
 | **Structure** | Required Sections | <ul><li>`Context & Scope`</li><li>`Policy Framework`</li></ul> |
 | **Structure** | Optional Sections | <ul><li>`Enforcement Mechanism`</li><li>`Enforcement Mechanism & Rule Reconciliation`</li><li>`Severity & Exceptions`</li><li>`Document Types (Glossary of Truth)`</li><li>`Document Lifecycle & State Management`</li><li>`Linter Execution Flow (CI/CD Automated Gate)`</li><li>`Compliance & Enforcement`</li><li>`The Git Workflow & Access Control`</li><li>`The Reconciliation Flow (Adding or Modifying Rules)`</li><li>`Directory Structure & Taxonomy`</li><li>`Directory Structure & Naming Conventions`</li><li>`Document Template Schema (Metadata Frontmatter)`</li><li>`Document Section Semantics`</li><li>`Metadata Schema Properties`</li><li>`Semantic Definitions`</li><li>`Allowed Lifecycle Statuses`</li><li>`Allowed Classifications`</li><li>`Semantic Versioning Classification`</li><li>`Appendix: Architectural Clarifications & Trade-Offs`</li><li>`Appendix: Architectural Trade-Offs`</li></ul> |
+| **Structure** | Required Downstream Guideline Subsections | **Semantic Definitions**: <ul><li>`Naming Conventions`</li><li>`Taxonomy`</li><li>`Directory Structure`</li><li>`Metadata Schema Properties`</li><li>`Document Section`</li></ul><br>**Metadata Schema Properties**: <ul><li>`Allowed Lifecycle Statuses`</li><li>`Allowed Classifications`</li><li>`Semantic Versioning Classification`</li></ul> |
 <!-- AUTO-GENERATED-RULES:END -->
 
 | Linter Component | File | Enforcement Logic |
@@ -51,33 +54,30 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 | **Domain Ruleset** | `rules/linting-rules-gdc.yaml` | Specific `review_cycle_days`, strict metadata, and policy structure. |
 | **Python Engine** | `validators/gdc.py` | **Taxonomy**: Validates `allowed_statuses` and `allowed_classifications` ensuring proper baseline governance. |
 
-### 2.2 Semantic Definitions (Human Guidelines)
+### 2.3 Semantic Definitions
 
 The Linter Ruleset above strictly enforces the syntax and allowed values. This section defines the human-readable semantics and guidelines for those constraints.
 
-#### 2.2.1 Taxonomy, Directory Structure & Naming Conventions
+#### 2.3.1 Naming Conventions
 
-All GDC documents must be placed strictly in the `00-governance/` directory. Subdirectories are allowed for supplementary rules (e.g., `00-governance/rules/`).
 The filename must strictly adhere to the `gdc_pattern` regex: `^GDC-\d{3}-[a-z0-9-]+\.md$`.
 If a GDC is acting as a downstream guideline, its name must end with `-guideline.md`.
 
-#### 2.2.2 Metadata Frontmatter Schema
+#### 2.3.2 Taxonomy
 
-Every GDC document must include the following YAML frontmatter metadata format:
+All GDC documents must be placed strictly in the `00-governance/` directory. Subdirectories are allowed for supplementary rules (e.g., `00-governance/rules/`).
 
-```yaml
-doc_meta:
-  id: GDC-[Seq]                        # e.g., GDC-000
-  title: Short Descriptive Title
-  owner: Architecture Review Board (ARB)
-  version: X.Y.Z                       # Semantic Versioning
-  status: approved | draft
-  classification: public | internal | restricted | confidential
-  review_cycle_days: [Integer]         # e.g., 180
-  last_reviewed: YYYY-MM-DD
+#### 2.3.3 Directory Structure
+
+```text
+scnehaux-architecture/
+└── 00-governance/
+    ├── rules/
+    │   └── linting-rules-gdc.yaml
+    └── GDC-001-compliance-engine.md
 ```
 
-#### 2.2.2 Metadata Schema Properties
+#### 2.3.4 Metadata Schema Properties
 
 | Metadata Field | Type | Description / Purpose |
 |---|---|---|
@@ -90,7 +90,14 @@ doc_meta:
 | `review_cycle_days` | Integer | The frequency in days for required review. |
 | `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
 
-#### 2.2.3 Classification Semantics
+##### Allowed Lifecycle Statuses
+
+| Status | Meaning / Lifecycle Stage |
+|---|---|
+| `draft` | The document is currently being written or reviewed and is not yet enforceable. Exempt from linter scoring. |
+| `approved` | The document has been formally reviewed and approved by the ARB. Its policies are now active and enforceable. |
+
+##### Allowed Classifications
 
 While the exact string values are enforced by the CI Linter, their semantic meanings are:
 
@@ -101,7 +108,15 @@ While the exact string values are enforced by the CI Linter, their semantic mean
 | `restricted` | Restricted to specific teams or roles. |
 | `confidential` | Highly sensitive information restricted to a strict need-to-know basis. |
 
-#### 2.2.4 Document Section Semantics
+##### Semantic Versioning Classification
+
+| Version | Trigger / Architectural Change |
+|---|---|
+| **Major (2.0.0)** | Breaking rule changes, introducing new strict policies. |
+| **Minor (1.1.0)** | Adding new optional guidelines or non-breaking constraints. |
+| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
+
+#### 2.3.5 Document Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
@@ -114,22 +129,13 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | **Document Types (Glossary of Truth)** | (Optional) Defines the glossary of truth. |
 | **Document Lifecycle & Statuses** | (Optional) Defines the lifecycle statuses. |
 
-### 2.3 Document Lifecycle & Statuses
+### 2.4 Document Lifecycle & Statuses
 
-As the Single Source of Truth (SSOT) for Governance Document Contracts (GDC), the valid lifecycle states are defined below.
-
-#### 2.3.1 Allowed Lifecycle Statuses
-
-| Status | Meaning / Lifecycle Stage |
-|---|---|
-| `draft` | The document is currently being written or reviewed and is not yet enforceable. Exempt from linter scoring. |
-| `approved` | The document has been formally reviewed and approved by the ARB. Its policies are now active and enforceable. |
-
-#### 2.3.2 Git-Centric Audit Trail (No Backdoor Approvals)
+#### 2.4.1 Git-Centric Audit Trail (No Backdoor Approvals)
 
 A governance document (whether GDC, EAD, SAD, PAD, STD, TDD, or ADR) is only considered 'Approved' or 'Accepted' when it is formally reviewed and merged via a Git Pull Request. You must not manually change the document's status without a PR, nor use external tools (like Jira or Confluence) as proof of approval. The Git commit history is the only recognized proof.
 
-### 2.4 The Downstream Guideline Interface
+### 2.5 The Downstream Guideline Interface
 
 If a Governance Document Contract (GDC) is specifically authored to serve as a **Guideline** governing a downstream architectural document type (e.g., EAD, PAD, SAD, STD, ADR, TDD), it is legally bound to the "Downstream Guideline Interface".
 

@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: STD-GLB-FE-005
+  id: STD-GLB-FE-003
   title: Enterprise Frontend Security Standard
   owner: Enterprise Security Architect
   version: 1.0.0

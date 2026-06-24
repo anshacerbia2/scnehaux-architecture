@@ -68,14 +68,19 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 ### 2.3 Semantic Definitions
 
-#### 2.3.1 Taxonomy, Directory Structure & Naming Conventions
+#### 2.3.1 Naming Conventions
+
+The filename must strictly adhere to the `tdd_pattern` regex: `^TDD-[a-z0-9-]+-[a-z0-9-]+-\d{3}[A-Z]*-[a-z0-9-]+\.md$`.
+
+#### 2.3.2 Taxonomy
 
 TDDs are **single, cohesive documents** (`TDD-[REPO]-[COMPONENT].md`). **The Cohesion Rule:** Splitting a TDD into separate micro-files (e.g., separating it into `schema.md` and `tests.md`) is strictly prohibited. All component design aspects must be fully encapsulated within the single canonical document's mandated sections to prevent drift.
 
-**Naming Convention:**
-The filename must strictly adhere to the `tdd_pattern` regex: `^TDD-[a-z0-9-]+-[a-z0-9-]+-\d{3}[A-Z]*-[a-z0-9-]+\.md$`.
+#### 2.3.3 Directory Structure
 
-#### 2.3.2 Document Template Schema (Metadata Frontmatter)
+Must reside in a `docs/02-designs/` directory adjacent to the source code.
+
+#### 2.3.4 Metadata Schema Properties
 
 Every TDD must begin with a YAML frontmatter block containing these fields:
 ```yaml
@@ -91,7 +96,43 @@ doc_meta:
   last_reviewed: YYYY-MM-DD           # Last audit date
 ```
 
-#### 2.3.3 Document Section Semantics
+| Metadata Field | Type | Description / Purpose |
+|---|---|---|
+| `id` | String | Unique identifier (e.g., `TDD-001`). |
+| `title` | String | Descriptive title of the document. |
+| `owner` | String | Lead Owner (e.g., Software Engineer). |
+| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
+| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
+| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
+| `parent_sad` | String | The parent SAD ID this design implements (e.g., `SAD-001`). |
+| `review_cycle_days` | Integer | The frequency in days for required review. |
+| `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
+
+##### Allowed Lifecycle Statuses
+
+| Status | Meaning / Lifecycle Stage |
+|---|---|
+| `proposed` | The design is under review. |
+| `approved` | The design is approved for implementation. |
+| `deprecated` | The implementation is being phased out or has been replaced. |
+
+##### Allowed Classifications
+
+| Classification | Meaning / Data Sensitivity |
+|---|---|
+| `public` | Available to anyone. |
+| `internal` | Restricted to company employees. |
+| `restricted` | Restricted to specific teams or roles. |
+
+##### Semantic Versioning Classification
+
+| Version | Trigger / Architectural Change |
+|---|---|
+| **Major (2.0.0)** | Breaking API contract changes (e.g., removing a required field, changing an endpoint path, fundamentally altering a database schema). |
+| **Minor (1.1.0)** | Adding an optional field to an API response, adding a new non-breaking endpoint. |
+| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
+
+#### 2.3.5 Document Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
@@ -107,44 +148,6 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | **Rollout Strategy** | Document feature flags, rollout phases, schema migration steps, and backward compatibility. | Must detail rollback procedures. |
 | **Alternatives Considered *(Optional)*** | Analysis of alternate paths rejected during review. | Must list rejected technologies/designs and the rationale for rejection. |
 | **Compatibility Strategy *(Optional)*** | Detailed backward compatibility plans for API changes. | Must outline API versioning or schema migration paths to avoid breaking changes. |
-
-#### 2.3.4 Metadata Schema Properties
-
-| Metadata Field | Type | Description / Purpose |
-|---|---|---|
-| `id` | String | Unique identifier (e.g., `TDD-001`). |
-| `title` | String | Descriptive title of the document. |
-| `owner` | String | Lead Owner (e.g., Software Engineer). |
-| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
-| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
-| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
-| `parent_sad` | String | The parent SAD ID this design implements (e.g., `SAD-001`). |
-| `review_cycle_days` | Integer | The frequency in days for required review. |
-| `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
-
-#### 2.3.5 Allowed Lifecycle Statuses
-
-| Status | Meaning / Lifecycle Stage |
-|---|---|
-| `proposed` | The design is under review. |
-| `approved` | The design is approved for implementation. |
-| `deprecated` | The implementation is being phased out or has been replaced. |
-
-#### 2.3.6 Allowed Classifications
-
-| Classification | Meaning / Data Sensitivity |
-|---|---|
-| `public` | Available to anyone. |
-| `internal` | Restricted to company employees. |
-| `restricted` | Restricted to specific teams or roles. |
-
-#### 2.3.7 Semantic Versioning Classification
-
-| Version | Trigger / Architectural Change |
-|---|---|
-| **Major (2.0.0)** | Breaking API contract changes (e.g., removing a required field, changing an endpoint path, fundamentally altering a database schema). |
-| **Minor (1.1.0)** | Adding an optional field to an API response, adding a new non-breaking endpoint. |
-| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
 
 
 ### 2.4 Lifecycle & Audit

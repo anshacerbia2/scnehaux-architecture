@@ -1,13 +1,16 @@
 
 # ==============================================================================
-# ⚠️ WARNING: AUTOMATED DOCUMENTATION LINKAGE ⚠️
+# WARNING: AUTOMATED DOCUMENTATION LINKAGE
 # ==============================================================================
 # This YAML file is the Single Source of Truth (SSOT). If you modify any rules
-# below, you MUST regenerate the Markdown table in the respective GDC document.
-# 
-# Run this command from the scnehaux-architecture root directory:
-# > python scripts/generate_rules_doc.py
+# below, you MUST regenerate the Markdown table in the respective GDC document:
+#   > python scripts/generate_rules_doc.py   (CI verifies via --check)
 # ==============================================================================
+#
+# SAD = C2 physical solution of ONE deployable system (one per deployable unit).
+# Two-tier sub-content enforcement (mirrors PAD):
+#   required_section_keywords    -> universal forcing functions (ERROR/blocking)
+#   recommended_section_keywords -> type-specific items (WARNING; address or mark N/A)
 config:
   target_doc: GDC-010-sad-guideline.md
 
@@ -34,20 +37,73 @@ rules:
     - restricted
   structure:
     required_sections:
-    - Context
+    - Context & Scope
     - Solution Architecture
-    - Deployment & Topology
     - Runtime Flows
+    - Data Architecture
+    - Integration
+    - Security
     - Resilience & Failure Modes
-    - Observability
-    - Security Considerations
+    - Observability & Operations
+    - Deployment
+    - Trade-offs & Alternatives
     optional_sections:
     - Assumptions
-    - Alternatives Considered
     - Compatibility Strategy
-    - Data Classification
-    - Document Lifecycle & Statuses
   content:
     required_section_keywords:
-      Resilience:
+      Context & Scope:
+      - Objective
+      - Constraint
+      - Capability
+      - System Context
+      Data Architecture:
+      - Data Classification
+      Resilience & Failure Modes:
       - Blast Radius
+      - Graceful Degradation
+      Deployment:
+      - CI/CD
+      - Release
+      Trade-offs & Alternatives:
+      - Rejected
+    recommended_section_keywords:
+      Context & Scope:
+      - Requirement
+      - Assumption
+      Solution Architecture:
+      - Container
+      Runtime Flows:
+      - Sequence
+      Data Architecture:
+      - Database
+      - Storage
+      - Caching
+      Integration:
+      - API
+      - Event
+      - Consumed
+      - Published
+      Security:
+      - Authentication
+      - Authorization
+      - Encryption
+      - Secrets
+      - Audit
+      Resilience & Failure Modes:
+      - SLO
+      - RTO
+      - RPO
+      - Retry
+      - Circuit Breaker
+      - Failover
+      Observability & Operations:
+      - Monitoring
+      - Logging
+      - Tracing
+      - SLI
+      - Alerting
+      - Runbook
+      Deployment:
+      - Environment
+      - Infrastructure

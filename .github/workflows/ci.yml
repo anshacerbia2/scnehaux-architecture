@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  security-events: write   # required to upload SARIF results to code scanning
+
 jobs:
   internal-lint:
     name: "Enforce GDC Compliance (Self-Dogfooding)"
@@ -17,11 +21,29 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           cache: "pip"
 
-      - name: Install Dependencies
+      - name: Install Dependencies (pinned)
         run: pip install -r requirements.txt
 
-      - name: Run Central Linter
+      - name: Run Validator Tests & Coverage Enforcer (>=95%)
+        run: python -m pytest --cov=validators --cov-fail-under=95 validators/tests/
+
+      - name: Verify Rules-Doc Sync (SSOT reconciliation)
+        run: python scripts/generate_rules_doc.py --check
+
+      - name: Generate SARIF report
+        if: always()
+        run: python linter.py --format sarif > linter.sarif
+        continue-on-error: true
+
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: linter.sarif
+        continue-on-error: true
+
+      - name: Enforce Compliance Gate (authoritative)
         run: python linter.py --format text

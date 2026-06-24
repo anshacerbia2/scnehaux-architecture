@@ -18,10 +18,21 @@ VALIDATOR_REGISTRY = {
 
 def detect_doc_type(doc_id: str | None, filename: str, rel_path: str) -> str | None:
     """Determine document type from metadata ID, filename, or path."""
+    prefixes = ('GDC-', 'EAD-', 'STD-', 'PAD-', 'SAD-', 'ADR-', 'TDD-')
+    
     if doc_id:
-        for prefix in ('GDC-', 'EAD-', 'STD-', 'PAD-', 'SAD-', 'ADR-', 'TDD-'):
+        for prefix in prefixes:
             if doc_id.startswith(prefix):
                 return prefix.rstrip('-')
+                
+    if filename.endswith('.pad.md'):
+        return 'PAD'
+    if filename.endswith('.sad.md'):
+        return 'SAD'
+    for prefix in prefixes:
+        if filename.startswith(prefix):
+            return prefix.rstrip('-')
+            
     return None
 
 def get_validator(doc_type: str):

@@ -17,78 +17,45 @@ doc_meta:
 
 ---
 
-## 1. Business Capability
+## 1. Context & Scope
 
-**System Context & Business Drivers**: 
-To eliminate brand fragmentation, eradicate architectural redundancy, and ensure an accessible user experience across all digital touchpoints, the enterprise requires a centralized styling authority. Furthermore, a unified platform enables centralized component performance optimization—ensuring that a single rendering or bundle-size improvement at the primitive layer instantly propagates across the entire enterprise ecosystem.
+**Purpose.** The Scnehaux UI Platform is the enterprise **Visual Root of Trust** — a shared presentation foundation that enforces visual consistency, strict styling isolation, and accessible interaction semantics across both standalone applications and federated micro-frontends. It eliminates brand fragmentation and lets a single primitive-layer (rendering or bundle-size) improvement propagate across the entire ecosystem.
 
-The **Scnehaux UI Platform** serves as this authoritative **Visual Root of Trust**. It is a logical shared presentation foundation that enforces absolute visual consistency, strict styling isolation, and robust accessible interaction semantics across both standalone applications and federated micro-frontends.
+**Goals.**
 
-The platform capability is defined by a unified **3-Layer Visual Engine**:
-1.  **Layer 1: Primitive Components (Accessible Headless Core)**: Pure, style-agnostic, and polymorphic headless elements that guarantee accessibility compliance and robust interaction handling. These primitives are decoupled from physical visual styles, serving strictly as the logical layout skeleton.
-2.  **Layer 2: Design Tokens (The Design API)**: A platform-agnostic, multi-family token taxonomy structured as a 3-tier engine:
-    *   **Tier-1: Core Primitives (Raw Values)**: Platform-agnostic raw constants without semantic meaning, organized as precise mathematical scales (Colors, Dimensions, Typography, and Motion).
-    *   **Tier-2: Global Semantics (The Core Taxonomy)**: Standardized single source of truth mapping primitives to visual intent under a strict flat key notation.
-    *   **Tier-3: Component Aliases (Unique Overrides)**: Isolated overrides reserved strictly for component-unique behavior where independent styling divergence is structurally justified, preventing global semantic pollution.
-3.  **Layer 3: Styled Engine (Zero-Runtime Compiler)**: A static compilation engine that marries the Headless Primitives (Layer 1) with the Design Tokens (Layer 2) using static styling orchestration with zero runtime execution overhead.
+- Be the single authoritative source for visual primitives, design tokens, and styling.
+- Guarantee zero visual contamination across applications and brands.
+- Guarantee accessibility (WCAG) semantics at the primitive layer, inherited by all consumers.
 
-### 1.1 Fulfilling Systems
+**Non-Goals.** *(explicit boundaries — what this platform deliberately does NOT own)*
 
-This platform capability is physically fulfilled by the following systems:
--   **Scnehaux UI Platform Software Architecture**: Managed under the physical package registry defined in [scnehaux-ui-platform.sad.md](../../04-application/scnehaux-ui-platform/scnehaux-ui-platform.sad.md) (SAD-003).
--   **IAM Dashboard (Standalone SPA)**: Housed under `scnehaux-iam-dashboard` which directly integrates and consumes the semantic token suite as a standalone portal ([scnehaux-iam-dashboard.sad.md](../../04-application/scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md)).
--   **ERP Portal (Federated Host)**: The host shell orchestrating HRIS and Finance micro-frontends sharing `@scnx/system` styles.
+- **Application / business logic**: the platform owns presentation, not domain behavior or business data.
+- **Per-product screens & visual identity**: product-specific compositions consume the platform; they are not defined here.
+- **Arbitrary third-party theming**: white-labeling is bounded by the partial-contract invariant (§5), not an open runtime theming engine.
 
----
+*(Draft — confirm these are the intended exclusions.)*
 
-## 2. Trust Boundary & Security
+**Stakeholders.** Principal UI/UX Architect (owner); Frontend Architects, Application teams, Product Owners, and the ARB. Full RACI in §7.
 
-Visual styling and layout architectures represent critical application boundaries. The platform enforces the following security and isolation policies:
+## 2. Business Capability
 
--   **Zero Layout Contamination**: All layout frameworks must use strict CSS encapsulation. Component selectors are isolated using SCSS Modules, unique domain-specific namespace prefixes (e.g., `scnx-hris-`, `scnx-fin-`), or Build-time Atomic CSS Extraction (Zero-Runtime CSS-in-JS) to prevent side-effects, reserving the core `scnx-` prefix exclusively for the shared Scnehaux UI Platform core styles and visual tokens.
--   **CSP (Content Security Policy) Compliance**: The platform prohibits injecting inline `<style>` blocks at runtime. All styles must compile to static, hash-verified external CSS files, mitigating cross-site scripting (XSS) via styling injection.
--   **Anti-Flicker Transitions**: Active page overlays, modal animations, and skeletons must execute with frame sanitization (preventing RequestAnimationFrame queue stacking) to eliminate layout thrashing and rendering flickering.
--   **Data-Driven Aesthetics Protection**: Color contrasts must adhere strictly to **WCAG 2.2 AA** rules, guaranteeing a minimum contrast ratio of 4.5:1 for standard text and 3:1 for large graphical components under both light and dark modes.
+The platform provides a unified **3-Layer Visual Engine** capability:
 
----
+1. **Primitive Components (Accessible Headless Core)**: Style-agnostic, polymorphic headless elements guaranteeing accessibility compliance and robust interaction handling — the logical layout skeleton, decoupled from physical styles.
+2. **Design Tokens (The Design API)**: A platform-agnostic, multi-family token taxonomy as a 3-tier engine — **Tier-1 Core Primitives** (raw mathematical scales), **Tier-2 Global Semantics** (the SSOT mapping primitives to intent), **Tier-3 Component Aliases** (isolated component-unique overrides).
+3. **Styled Engine (Zero-Runtime Compiler)**: A static compilation engine binding Headless Primitives to Design Tokens with zero runtime execution overhead.
 
-## 3. Integration Contract
+**Capability Maturity.** Tier-1 shared platform — mature and adopted as the mandatory presentation foundation across all enterprise frontends.
 
-Downstream applications and component systems (e.g., `scnehaux-iam-dashboard`, `core-ui`) must consume the design token platform following this strict contract.
+## 3. Domain Model
 
-### 3.1 Token Mapping and Developer Convenience
-The platform maps structural design tokens to standard flat CSS Custom Properties (prefixed with `--ds-color-` and `--ds-spacing-`) and mirrors them as strongly-typed SCSS variables at compile-time to provide an excellent developer experience and eliminate manual string errors.
-*   Conceptual Surface Canvas $\rightarrow$ `--ds-color-neutral-canvas-default` / `$color-neutral-canvas-default`
-*   Conceptual Primary Hover $\rightarrow$ `--ds-color-primary-surface-hover` / `$color-primary-surface-hover`
-*   Conceptual Success Border $\rightarrow$ `--ds-color-success-border-default` / `$color-success-border-default`
+**Bounded Contexts.** The capability decomposes into three logical layers, each a distinct context independent of any implementation:
 
-### 3.2 The Master Semantic Taxonomy (Reference)
+- **Primitive / Headless** — interaction and accessibility semantics.
+- **Design Tokens** — the design API (Core / Semantic / Component tiers).
+- **Styled Engine** — compile-time orchestration of primitives and tokens.
 
-The SCNX Platform establishes a highly predictable combinatorial token taxonomy. However, to comply with the Abstraction Leakage Rule (GDC-000 §2.3), this PAD does not duplicate the token payload or taxonomy tree. 
-
-**Authoritative Sources (SSOT):**
-*   **Taxonomy Structure & Naming Convention**: Defined strictly in the Enterprise Architecture Record **[ADR-UIP-TKN-003](../../05-decisions/ui-platform/design-tokens/ADR-UIP-TKN-003-token-taxonomy-and-naming-convention.md)**.
-*   **Physical CSS Payload & OKLCH Generator Math**: Detailed in the project-level Technical Design Document **[TDD-SCNX-UI-JS-003](../../../js/module_federation_v1.5/packages/docs/06-designs/TDD-SCNX-UI-JS-003-semantic-token-dictionary.md)**.
-
-### 3.3 Cascading Multi-Theme & Partial Contracts Invariant
-The platform natively supports multi-theme and multi-brand white-label capabilities under a strict cascading model:
-1.  **Global Baseline Theme**: The default theme is the Visual Root of Trust, injecting all core variables onto the global :root selector.
-2.  **Cascading Overrides**: Brand or contextual themes only override specific visual characteristics. All structural variables (spacing, layout, typography) cascade from the global baseline theme.
-3.  **Partial Contract Invariant**: Override themes are validated against a brand-specific contract map. This contract represents a **partial subset** of the core $system contract. It must not introduce any undocumented keys or variables that are absent from the core $system contract, ensuring strict compile-time design safety and zero visual leakage.
-
-### 3.4 Token Consumption Governance
-
-> **Authoritative Source**: The full operational governance framework, consumption doctrines, alias budgeting rules, and enforcement mechanisms for design tokens are defined and maintained in **[STD-UIP-TKN-002 — UI Platform Token Consumption Governance](../../02-standards/ui-platform/design-tokens/STD-UIP-TKN-002-consumption-governance.md)**.
-
-The platform enforces zero-bypass doctrines:
-1. **Zero-Bypass Styling**: All downstream styling must resolve through Tier-2 semantic CSS custom properties (--ds-). Raw OKLCH/HSL/HEX literals in component files are prohibited.
-2. **Domain Semantic Layering**: Downstream portals must implement a thin logical alias mapping layer (state.fraud → --ds-color-danger-solid-default) instead of hardcoding primitive references deep in application logic.
-3. **Restricted Alias Budget**: Component-level Tier-3 aliases are strictly budgeted to prevent semantic entropy.
-
----
-## 4. Strategic Architecture
-
-The `@scnx/system` platform serves as the visual foundation distributed to container applications via Module Federation.
+**Context Mapping.** The platform is the upstream **Supplier**; container applications (the ERP host shell, micro-frontend remotes, and standalone SPAs) are **Consumers** that receive shared `@scnx/system` styles via Module Federation.
 
 ```mermaid
 graph TD
@@ -99,19 +66,56 @@ graph TD
     AppRemote -->|Module Federation Shared Styles| Web
 ```
 
-The token architecture structure is grouped in isolation to guarantee zero visual contamination:
+The token architecture is grouped in isolation to guarantee zero visual contamination:
 
-```
+```text
 [Tier 1: Core Primitives] -> [Tier 2: Global Semantic Contract] -> [Tier 3: Component Token]
 (Raw OKLCH coordinates)      (Symmetrical Semantic Tokens)          (Direct Component consumes)
 ```
 
----
+## 4. Trust & Data Boundaries
 
-## 5. Quality Attributes
+Visual styling and layout architectures represent critical application boundaries. The platform enforces the following isolation, compliance, and data policies:
 
--   **Performance Constraints**: CSS compilation output must be lightweight. The compressed global design system token bundle must not exceed `12KB` (gzip).
--   **Zero Layout Thrashing**: Any transition or animation must execute using GPU-accelerated CSS properties (`transform` and `opacity` only). Layout reflow triggers (e.g., modifying `width`, `height`, or `margin` inside animations) are prohibited to ensure p95 frame rendering completes within `16ms`.
--   **Theme Switching Latency**: Theme swaps (e.g., Light to Dark mode) must execute in under `50ms` by mutating a single global data-attribute (`data-theme`) on the root elements, avoiding application-wide component re-renders.
--   **Sub-Pixel Precision Styling**: All padding, spacing, and typography boundaries must match a strict 4px grid system, ensuring flawless visual alignment at any desktop screen resolution.
+- **Zero Layout Contamination (Trust)**: All layout frameworks must use strict CSS encapsulation. Selectors are isolated via SCSS Modules, domain-specific namespace prefixes (e.g., `scnx-hris-`, `scnx-fin-`), or build-time Atomic CSS extraction (Zero-Runtime CSS-in-JS) — reserving the core `scnx-` prefix exclusively for shared platform styles.
+- **CSP Compliance**: Runtime injection of inline `<style>` blocks is prohibited. All styles compile to static, hash-verified external CSS files, mitigating XSS via styling injection.
+- **Accessibility Compliance**: Color contrasts must adhere strictly to **WCAG 2.2 AA** (minimum 4.5:1 for standard text, 3:1 for large graphical components) under both light and dark modes.
+- **Anti-Flicker**: Overlays, modal animations, and skeletons must execute with frame sanitization (no RequestAnimationFrame queue stacking) to eliminate layout thrashing.
+- **Data Boundary**: The platform holds **no PII**; its only data is the design-token contract and theme metadata, distributed as static, versioned assets.
 
+## 5. Integration Contracts
+
+Downstream applications and component systems (e.g., `scnehaux-iam-dashboard`, `core-ui`) consume the platform via the following strict contract.
+
+- **Design API (Token Mapping)**: Structural tokens are exposed as flat CSS Custom Properties (`--ds-color-*`, `--ds-spacing-*`) and mirrored as strongly-typed SCSS variables at compile time (e.g. Surface Canvas → `--ds-color-neutral-canvas-default`), eliminating manual string errors.
+- **Consumers & Providers**: The platform is the sole visual **Provider**; all frontends are **Consumers** of the `@scnx/system` contract. Consumers integrate only through the published token API and headless components — never by reaching into internals.
+- **Cascading Multi-Theme Invariant**: A global baseline theme injects all core variables at `:root`; brand/contextual themes override only specific visual characteristics; structural variables cascade. Override themes are validated against a brand contract that is a **partial subset** of the core `$system` contract and must introduce no undocumented keys (compile-time design safety, zero visual leakage).
+- **Zero-Bypass Governance**: All downstream styling must resolve through Tier-2 semantic properties (`--ds-`); raw OKLCH/HSL/HEX literals are prohibited; Tier-3 aliases are strictly budgeted.
+- **Dependencies**: React (peer singleton, shared under Module Federation) and the consuming bundlers (Vite / Rspack); the platform has no runtime service dependencies.
+
+**Authoritative Sources (SSOT — not duplicated here, per GDC-000 §2.3):**
+
+- **Taxonomy & Naming Convention**: [ADR-UIP-TKN-003](../../05-decisions/ui-platform/design-tokens/ADR-UIP-TKN-003-token-taxonomy-and-naming-convention.md).
+- **Token Consumption Governance**: [STD-UIP-TKN-002](../../02-standards/ui-platform/design-tokens/STD-UIP-TKN-002-consumption-governance.md).
+
+## 6. Capability NFR Targets
+
+These are the capability's quantified promises; the mechanisms that achieve them live in the fulfilling SAD.
+
+- **Bundle Budget**: The compressed global design-token bundle must not exceed `12KB` (gzip).
+- **Render Performance**: Transitions/animations must use GPU-accelerated properties (`transform`, `opacity`) only; layout-reflow triggers are prohibited, so p95 frame rendering completes within `16ms`.
+- **Theme-Switch Latency**: Light↔Dark swaps must execute in under `50ms` by mutating a single root `data-theme` attribute, avoiding application-wide re-renders.
+- **Sub-Pixel Precision**: All spacing and typography must align to a strict `4px` grid at any desktop resolution.
+
+## 7. Ownership & Realizing Systems
+
+**Owner.** Principal UI/UX Architect.
+
+**RACI** — **R**: Principal UI/UX Architect (design) + UI Platform Engineering (implementation); **A**: Principal UI/UX Architect; **C**: Application teams & ARB; **I**: all Frontend Engineering.
+
+**Realizing Systems** (`fulfilled_by`, strict 1-to-N):
+
+- **UI Platform package & registry**: [scnehaux-ui-platform.sad.md](../../04-application/scnehaux-ui-platform/scnehaux-ui-platform.sad.md) (SAD-003)
+- **Consuming surfaces** (not owned, integrate the contract): the IAM Dashboard standalone SPA and the ERP federated host shell.
+
+**Capability governance.** A change to the core `$system` token contract or the trust boundary constitutes a Major version bump. Release mechanics (visual-regression gates, bundle-size checks, NPM publication) are realization concerns defined in the fulfilling SAD, not here.

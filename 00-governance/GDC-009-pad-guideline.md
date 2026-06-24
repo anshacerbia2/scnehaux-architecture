@@ -19,6 +19,24 @@ PADs represent the C2 Domain Architecture layer of the C4 metamodel, defining th
 
 PADs establish the "What". They serve as the design-time single source of truth (SSOT) for domain-level contracts. A single logical business capability (PAD) governs one or more physical software containers (SADs) in a strict 1-to-N mapping. They establish conceptual integration rules (such as trust boundaries and SLA targets) *before* physical systems are built. While concrete API specifications are delegated downstream via Web Developer Portals, the PAD remains the stable, logical anchor.
 
+### 1.1 Philosophy & Decision Horizon
+
+**Decision question:** *"What capability does this product or platform own, where are its boundaries, and what does it promise — independent of how any system builds it?"* A PAD is the domain charter tier: the logical plan, not the solution.
+
+**Every product AND platform has exactly one PAD.** A platform is simply a product whose consumers are internal; it is not a separate document type.
+
+**Position on the three governing dimensions:**
+
+- **Stability / half-life — 10+ years (one-way door).** The longest-lived C2 artifact. To stay durable it must remain thin — capability, boundaries, contracts, NFR promises — and exclude implementation detail.
+- **Abstraction — C2 logical.** Bounded contexts and contracts only; never containers, deployment, or technology choices (those are the SAD).
+- **Ownership — one stream-aligned domain team.**
+
+**Litmus test (PAD vs SAD):** *"Does this fact survive a complete technology rewrite?"* If yes → PAD. If it would change when you swap technology or topology → SAD.
+
+**Stability guardrail:** a PAD boundary is drawn by **bounded-context (capability) cohesion**, not by commercial or marketing packaging. Re-bundling products does not merge PADs — PADs follow domains, which keeps the 10-year horizon credible.
+
+**Traceability:** a PAD fulfills one or more EAD capabilities (upward) and is realized by one or more SADs via `fulfilled_by` (downward, 1-to-N).
+
 ---
 
 ## 2. Policy Framework
@@ -44,8 +62,11 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 | **Metadata** | Required Fields | <ul><li>`id`</li><li>`title`</li><li>`governed_by`</li><li>`owner`</li><li>`version`</li><li>`status`</li><li>`classification`</li><li>`fulfilled_by`</li><li>`review_cycle_days`</li><li>`last_reviewed`</li></ul> |
 | **Metadata** | Allowed Statuses | <ul><li>`proposed`</li><li>`approved`</li><li>`deprecated`</li></ul> |
 | **Metadata** | Allowed Classifications | <ul><li>`public`</li><li>`internal`</li><li>`restricted`</li></ul> |
-| **Structure** | Required Sections | <ul><li>`Business Capability`</li><li>`Trust Boundary & Security`</li><li>`Integration Contract`</li><li>`Strategic Architecture`</li><li>`Quality Attributes`</li></ul> |
-| **Structure** | Optional Sections | <ul><li>`Assumptions`</li><li>`Alternatives Considered`</li><li>`Data Classification`</li><li>`Document Lifecycle & Statuses`</li></ul> |
+| **Structure** | Required Sections | <ul><li>`Context & Scope`</li><li>`Business Capability`</li><li>`Domain Model`</li><li>`Trust & Data Boundaries`</li><li>`Integration Contracts`</li><li>`Capability NFR Targets`</li><li>`Ownership & Realizing Systems`</li></ul> |
+| **Structure** | Optional Sections | <ul><li>`Assumptions`</li><li>`Alternatives Considered`</li></ul> |
+| **Content** | Required Section Keywords | **Context & Scope**: <ul><li>`Purpose`</li><li>`Goals`</li><li>`Non-Goal`</li><li>`Stakeholder`</li></ul><br>**Business Capability**: <ul><li>`Capability`</li><li>`Maturity`</li></ul><br>**Domain Model**: <ul><li>`Bounded Context`</li><li>`Context Mapping`</li></ul><br>**Trust & Data Boundaries**: <ul><li>`Trust`</li><li>`Data`</li><li>`Compliance`</li></ul><br>**Integration Contracts**: <ul><li>`API`</li><li>`Consumer`</li><li>`Dependencies`</li></ul><br>**Ownership & Realizing Systems**: <ul><li>`Owner`</li><li>`fulfilled_by`</li></ul> |
+| **Content** | Recommended Section Keywords | **Domain Model**: <ul><li>`Domain Event`</li></ul><br>**Trust & Data Boundaries**: <ul><li>`Identity`</li></ul><br>**Integration Contracts**: <ul><li>`Event`</li><li>`Provider`</li><li>`External`</li></ul><br>**Capability NFR Targets**: <ul><li>`Availability`</li><li>`Scalability`</li><li>`Resilience`</li><li>`Performance`</li></ul> |
+| **Quantification** | Required For Sections | <ul><li>`Capability NFR Targets`</li></ul> |
 <!-- AUTO-GENERATED-RULES:END -->
 
 
@@ -59,12 +80,15 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 ### 2.3 Semantic Definitions
 
-#### 2.3.1 Taxonomy, Directory Structure & Naming Conventions
+#### 2.3.1 Naming Conventions
+
+The filename must strictly adhere to the `pad_pattern` regex: `^[a-z0-9-]+\.pad\.md$`.
+
+#### 2.3.2 Taxonomy
 
 PADs are **single, cohesive documents** (`[domain].pad.md`). **The Cohesion Rule:** Splitting a PAD into separate micro-files (e.g., separating it into `security.md` and `operations.md`) is strictly prohibited. All domain aspects must be fully encapsulated within the single canonical document's mandated sections to prevent drift.
 
-**Naming Convention:**
-The filename must strictly adhere to the `pad_pattern` regex: `^[a-z0-9-]+\.pad\.md$`.
+#### 2.3.3 Directory Structure
 
 They must utilize **Asset Container Folders** (`03-platform/[domain]/`), which act as an isolation boundary for the `.pad.md` file and its supporting assets (e.g., architecture diagrams, PlantUML files).
 
@@ -77,7 +101,7 @@ scnehaux-architecture/
         └── architecture-diagram.png
 ```
 
-#### 2.3.2 Metadata Schema Properties
+#### 2.3.4 Metadata Schema Properties
 
 Every PAD must begin with a YAML frontmatter block containing these fields:
 ```yaml
@@ -94,7 +118,41 @@ doc_meta:
   last_reviewed: YYYY-MM-DD           # Last audit date
 ```
 
-#### 2.3.3 Document Section Semantics
+| Metadata Field | Type | Description / Purpose |
+|---|---|---|
+| `id` | String | Unique identifier (e.g., `PAD-001`). |
+| `title` | String | Descriptive title of the document. |
+| `owner` | String | Lead Owner (e.g., Domain Architect). |
+| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
+| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
+| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
+| `fulfilled_by` | List[String] | Array of child SAD IDs that fulfill this domain architecture (e.g., `[SAD-AUTH-01]`). |
+| `review_cycle_days` | Integer | The frequency in days for required review. |
+| `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
+
+##### Allowed Lifecycle Statuses
+| Status | Meaning / Lifecycle Stage |
+|---|---|
+| `proposed` | The domain architecture is under design or ARB review. |
+| `approved` | The domain architecture is formalized and acts as the official contract. |
+| `deprecated` | The business capability is being phased out or has been replaced. |
+
+##### Allowed Classifications
+| Classification | Meaning / Data Sensitivity |
+|---|---|
+| `public` | Available to anyone. |
+| `internal` | Restricted to company employees. |
+| `restricted` | Restricted to specific teams or roles. |
+
+##### Semantic Versioning Classification
+
+| Version | Trigger / Architectural Change |
+|---|---|
+| **Major (2.0.0)** | Redesigning the boundary, shifting significant logical responsibilities to another domain, or breaking integration contracts (e.g., API rewrites). |
+| **Minor (1.1.0)** | Adding a new subsystem or capability without breaking existing integrations. |
+| **Patch (1.0.1)** | Editorial updates, formatting, mapping a new `fulfilled_by` SAD ID, fixing dead links. |
+
+#### 2.3.5 Document Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
@@ -108,42 +166,6 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | **Assumptions *(Optional)*** | Document any external dependencies or business assumptions. | Must list business, external, or operational assumptions the design relies upon. |
 | **Alternatives Considered *(Optional)*** | Document technical alternatives evaluated and their trade-offs. | Must list rejected technologies/designs and the rationale for rejection. |
 | **Data Classification *(Optional)*** | Detail sensitivity levels of data processed by the platform. | Must declare if PII, PHI, or sensitive financial data is present. |
-
-#### 2.3.4 Metadata Schema Properties
-| Metadata Field | Type | Description / Purpose |
-|---|---|---|
-| `id` | String | Unique identifier (e.g., `PAD-001`). |
-| `title` | String | Descriptive title of the document. |
-| `owner` | String | Lead Owner (e.g., Domain Architect). |
-| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
-| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
-| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
-| `fulfilled_by` | List[String] | Array of child SAD IDs that fulfill this domain architecture (e.g., `[SAD-AUTH-01]`). |
-| `review_cycle_days` | Integer | The frequency in days for required review. |
-| `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
-
-#### 2.3.5 Allowed Lifecycle Statuses
-| Status | Meaning / Lifecycle Stage |
-|---|---|
-| `proposed` | The domain architecture is under design or ARB review. |
-| `approved` | The domain architecture is formalized and acts as the official contract. |
-| `deprecated` | The business capability is being phased out or has been replaced. |
-
-#### 2.3.6 Allowed Classifications
-| Classification | Meaning / Data Sensitivity |
-|---|---|
-| `public` | Available to anyone. |
-| `internal` | Restricted to company employees. |
-| `restricted` | Restricted to specific teams or roles. |
-
-#### 2.3.7 Semantic Versioning Classification
-
-| Version | Trigger / Architectural Change |
-|---|---|
-| **Major (2.0.0)** | Altering the trust boundary, merging domains, or changing the fundamental logical integration contract. |
-| **Minor (1.1.0)** | Adding a new logical business capability to the domain (e.g., adding an MFA module to an existing Identity domain). |
-| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
-
 
 ### 2.4 Lifecycle & Audit
 

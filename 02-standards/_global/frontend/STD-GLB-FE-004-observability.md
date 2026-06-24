@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: STD-GLB-FE-006
+  id: STD-GLB-FE-004
   title: Enterprise Frontend Runtime, Security & Observability Standard
   owner: Principal Frontend Architect
   version: 1.0.0

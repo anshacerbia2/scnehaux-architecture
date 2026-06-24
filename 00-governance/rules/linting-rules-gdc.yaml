@@ -13,6 +13,7 @@ config:
 
 rules:
   metadata:
+    filename_pattern: ^GDC-\d{3}-[a-z0-9-]+\.md$
     required_fields:
     - id
     - title
@@ -23,6 +24,10 @@ rules:
     - classification
     - review_cycle_days
     - last_reviewed
+    optional_fields:
+    - tags
+    - aliases
+    - contributors
     version_format: semver
     allowed_classifications:
     - public
@@ -57,3 +62,14 @@ rules:
     - Semantic Versioning Classification
     - "Appendix: Architectural Clarifications & Trade-Offs"
     - "Appendix: Architectural Trade-Offs"
+    required_downstream_guideline_subsections:
+      "Semantic Definitions":
+      - Naming Conventions
+      - Taxonomy
+      - Directory Structure
+      - Metadata Schema Properties
+      - Document Section
+      "Metadata Schema Properties":
+      - Allowed Lifecycle Statuses
+      - Allowed Classifications
+      - Semantic Versioning Classification

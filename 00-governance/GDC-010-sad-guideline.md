@@ -19,6 +19,20 @@ SADs represent the C2 System/Software Architecture layer of the C4 metamodel, de
 
 SADs establish the "How". They serve as the definitive physical blueprint for a specific deployable unit. A single logical business capability (PAD) is physically fulfilled by one or more software containers (SADs) in a strict 1-to-N mapping. They establish the concrete technology stack, network isolation, and database engines required to execute the logical contracts defined by the PAD.
 
+### 1.1 Philosophy & Decision Horizon
+
+**Decision question:** *"How is one deployable system built to realize (part of) a PAD's capability?"* A SAD is the solution-planning tier for a single deployable unit: the physical reality.
+
+**Position on the three governing dimensions:**
+
+- **Stability / half-life — 3–5 years (two-way door).** Expected to be refactored as technology and load evolve. Because it is replaceable, it may carry rich physical detail.
+- **Abstraction — C2 physical (System Context + Container).** It stops at the container boundary; component- and class-level design (C3) belongs in the TDD.
+- **Ownership — one system / service team.**
+
+**Litmus test (SAD vs TDD):** *"Is this about how the system is composed and deployed (SAD), or how a unit is coded (TDD)?"* Containers, deployment topology, and runtime flows → SAD. Classes, schemas / DDL, algorithms, and queries → TDD.
+
+**Traceability:** every SAD declares its `parent_pad`; one PAD is realized by N SADs. A SAD never redefines a contract owned by its parent PAD — it implements it.
+
 ---
 
 ## 2. Policy Framework
@@ -49,9 +63,10 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 | **Metadata** | Required Fields | <ul><li>`id`</li><li>`title`</li><li>`governed_by`</li><li>`owner`</li><li>`version`</li><li>`status`</li><li>`classification`</li><li>`parent_pad`</li><li>`review_cycle_days`</li><li>`last_reviewed`</li></ul> |
 | **Metadata** | Allowed Statuses | <ul><li>`proposed`</li><li>`approved`</li><li>`deprecated`</li></ul> |
 | **Metadata** | Allowed Classifications | <ul><li>`public`</li><li>`internal`</li><li>`restricted`</li></ul> |
-| **Structure** | Required Sections | <ul><li>`Context`</li><li>`Solution Architecture`</li><li>`Deployment & Topology`</li><li>`Runtime Flows`</li><li>`Resilience & Failure Modes`</li><li>`Observability`</li><li>`Security Considerations`</li></ul> |
-| **Structure** | Optional Sections | <ul><li>`Assumptions`</li><li>`Alternatives Considered`</li><li>`Compatibility Strategy`</li><li>`Data Classification`</li><li>`Document Lifecycle & Statuses`</li></ul> |
-| **Content** | Required Section Keywords | **Resilience**: `['Blast Radius']` |
+| **Structure** | Required Sections | <ul><li>`Context & Scope`</li><li>`Solution Architecture`</li><li>`Runtime Flows`</li><li>`Data Architecture`</li><li>`Integration`</li><li>`Security`</li><li>`Resilience & Failure Modes`</li><li>`Observability & Operations`</li><li>`Deployment`</li><li>`Trade-offs & Alternatives`</li></ul> |
+| **Structure** | Optional Sections | <ul><li>`Assumptions`</li><li>`Compatibility Strategy`</li></ul> |
+| **Content** | Required Section Keywords | **Context & Scope**: <ul><li>`Objective`</li><li>`Constraint`</li><li>`Capability`</li><li>`System Context`</li></ul><br>**Data Architecture**: <ul><li>`Data Classification`</li></ul><br>**Resilience & Failure Modes**: <ul><li>`Blast Radius`</li><li>`Graceful Degradation`</li></ul><br>**Deployment**: <ul><li>`CI/CD`</li><li>`Release`</li></ul><br>**Trade-offs & Alternatives**: <ul><li>`Rejected`</li></ul> |
+| **Content** | Recommended Section Keywords | **Context & Scope**: <ul><li>`Requirement`</li><li>`Assumption`</li></ul><br>**Solution Architecture**: <ul><li>`Container`</li></ul><br>**Runtime Flows**: <ul><li>`Sequence`</li></ul><br>**Data Architecture**: <ul><li>`Database`</li><li>`Storage`</li><li>`Caching`</li></ul><br>**Integration**: <ul><li>`API`</li><li>`Event`</li><li>`Consumed`</li><li>`Published`</li></ul><br>**Security**: <ul><li>`Authentication`</li><li>`Authorization`</li><li>`Encryption`</li><li>`Secrets`</li><li>`Audit`</li></ul><br>**Resilience & Failure Modes**: <ul><li>`SLO`</li><li>`RTO`</li><li>`RPO`</li><li>`Retry`</li><li>`Circuit Breaker`</li><li>`Failover`</li></ul><br>**Observability & Operations**: <ul><li>`Monitoring`</li><li>`Logging`</li><li>`Tracing`</li><li>`SLI`</li><li>`Alerting`</li><li>`Runbook`</li></ul><br>**Deployment**: <ul><li>`Environment`</li><li>`Infrastructure`</li></ul> |
 <!-- AUTO-GENERATED-RULES:END -->
 
 
@@ -66,19 +81,23 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 ### 2.3 Semantic Definitions
 
-#### 2.3.1 Taxonomy, Directory Structure & Naming Conventions
+#### 2.3.1 Naming Conventions
+
+- **Naming Convention**:
+  - `[system-name].sad.md` (no suffix): Represents the **primary/core application** of the system.
+  - `[system-name]-[suffix].sad.md`: Represents **specific applications, clients, or workers** (e.g., `iam-web`, `iam-worker`).
+- **Ambiguity Rule**: If a system contains multiple SADs, **avoid using a suffix-less name**. It is highly recommended to use explicit suffixes for all containers (e.g., `iam-api.sad.md` and `iam-web.sad.md`) to prevent ambiguity.
+
+#### 2.3.2 Taxonomy
 
 SADs are **single, cohesive documents** (`[system-name].sad.md` or `[system-name]-[suffix].sad.md`). **The Cohesion Rule:** Splitting a SAD into separate micro-files (e.g., separating it into `security.md` and `operations.md`) is strictly prohibited. All system aspects must be fully encapsulated within the single canonical document's mandated sections to prevent drift.
 
-They must utilize **Asset Container Folders** (`04-application/[system-name]/`), which act as an isolation boundary for the system's `.sad.md` files and supporting assets (e.g., deployment topology diagrams).
-
-> [!NOTE]
-> - **Naming Convention**:
->   - `[system-name].sad.md` (no suffix): Represents the **primary/core application** of the system.
->   - `[system-name]-[suffix].sad.md`: Represents **specific applications, clients, or workers** (e.g., `iam-web`, `iam-worker`).
-> - **Ambiguity Rule**: If a system contains multiple SADs, **avoid using a suffix-less name**. It is highly recommended to use explicit suffixes for all containers (e.g., `iam-api.sad.md` and `iam-web.sad.md`) to prevent ambiguity.
-> - **Grouping Rule**: The implementation of a single logical PAD will often result in multiple physical SADs. To maintain cohesion, **all SADs fulfilling the same domain must be grouped together** within a single `[system-name]` directory. Do not create separate root folders for each container.
+- **Grouping Rule**: The implementation of a single logical PAD will often result in multiple physical SADs. To maintain cohesion, **all SADs fulfilling the same domain must be grouped together** within a single `[system-name]` directory. Do not create separate root folders for each container.
   *(Reminder: While they share a folder, each physical container must still be documented by exactly **one** SAD).*
+
+#### 2.3.3 Directory Structure
+
+They must utilize **Asset Container Folders** (`04-application/[system-name]/`), which act as an isolation boundary for the system's `.sad.md` files and supporting assets (e.g., deployment topology diagrams).
 
 **Example Directory Structure:**
 ```text
@@ -90,7 +109,7 @@ scnehaux-architecture/
         └── deployment-topology.png
 ```
 
-#### 2.3.2 Document Template Schema (Metadata Frontmatter)
+#### 2.3.4 Metadata Schema Properties
 
 Every SAD must begin with a YAML frontmatter block containing these fields:
 ```yaml
@@ -106,7 +125,41 @@ doc_meta:
   last_reviewed: YYYY-MM-DD           # Last audit date
 ```
 
-#### 2.3.3 Document Section Semantics
+| Metadata Field | Type | Description / Purpose |
+|---|---|---|
+| `id` | String | Unique identifier (e.g., `SAD-001`). |
+| `title` | String | Descriptive title of the document. |
+| `owner` | String | Lead Owner (e.g., System Architect). |
+| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
+| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
+| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
+| `parent_pad` | String | The parent PAD ID this system fulfills (e.g., `PAD-001`). |
+| `review_cycle_days` | Integer | The frequency in days for required review. |
+| `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
+
+##### Allowed Lifecycle Statuses
+| Status | Meaning / Lifecycle Stage |
+|---|---|
+| `proposed` | The software architecture is under design or peer review. |
+| `approved` | The software architecture is formalized and acts as the official design blueprint. |
+| `deprecated` | The system is being phased out or has been replaced. |
+
+##### Allowed Classifications
+| Classification | Meaning / Data Sensitivity |
+|---|---|
+| `public` | Available to anyone. |
+| `internal` | Restricted to company employees. |
+| `restricted` | Restricted to specific teams or roles. |
+
+##### Semantic Versioning Classification
+
+| Version | Trigger / Architectural Change |
+|---|---|
+| **Major (2.0.0)** | Overhauling the core framework, splitting the monolith, changing the persistence layer, or altering physical deployment topologies (e.g., VM to Kubernetes). |
+| **Minor (1.1.0)** | Adding a new bounded context, exposing a new major API version, or integrating a new managed service (e.g., adding an S3 bucket or a Redis cache). |
+| **Patch (1.0.1)** | Editorial updates, formatting, updating the `parent_pad` reference, fixing dead links. |
+
+#### 2.3.5 Document Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
@@ -123,42 +176,6 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | **Alternatives Considered *(Optional)*** | Document technical trade-offs of the chosen deployment architecture. | Must list rejected technologies/designs and the rationale for rejection. |
 | **Compatibility Strategy *(Optional)*** | Detail schema migration or API versioning compatibility rules. | Must outline API versioning or schema migration paths to avoid breaking changes. |
 | **Data Classification *(Optional)*** | Detail sensitivity levels of data stored/processed (PII, confidential). | Must declare if PII, PHI, or sensitive financial data is present. |
-
-#### 2.3.4 Metadata Schema Properties
-| Metadata Field | Type | Description / Purpose |
-|---|---|---|
-| `id` | String | Unique identifier (e.g., `SAD-001`). |
-| `title` | String | Descriptive title of the document. |
-| `owner` | String | Lead Owner (e.g., System Architect). |
-| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
-| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
-| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
-| `parent_pad` | String | The parent PAD ID this system fulfills (e.g., `PAD-001`). |
-| `review_cycle_days` | Integer | The frequency in days for required review. |
-| `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
-
-#### 2.3.5 Allowed Lifecycle Statuses
-| Status | Meaning / Lifecycle Stage |
-|---|---|
-| `proposed` | The system architecture is under design or ARB review. |
-| `approved` | The system architecture is formalized and approved for production deployment. |
-| `deprecated` | The system is being sunset, decommissioned, or has been replaced. |
-
-#### 2.3.6 Allowed Classifications
-| Classification | Meaning / Data Sensitivity |
-|---|---|
-| `public` | Available to anyone. |
-| `internal` | Restricted to company employees. |
-| `restricted` | Restricted to specific teams or roles. |
-
-#### 2.3.7 Semantic Versioning Classification
-
-| Version | Trigger / Architectural Change |
-|---|---|
-| **Major (2.0.0)** | Changing core physical infrastructure (e.g., VM to Kubernetes), swapping core databases, or altering Zero-Trust physical boundaries. |
-| **Minor (1.1.0)** | Adding a new physical container (e.g., adding a Redis cache sidecar) that does not break existing components. |
-| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
-
 
 ### 2.4 Lifecycle & Audit
 

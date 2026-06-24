@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: STD-GLB-FE-004
+  id: STD-GLB-FE-002
   title: Enterprise Frontend Performance and Rendering Standard
   owner: Principal Frontend Architect
   version: 1.0.0

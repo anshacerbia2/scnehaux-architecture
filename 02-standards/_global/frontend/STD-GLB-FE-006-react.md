@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: STD-GLB-FE-002
+  id: STD-GLB-FE-006
   title: Enterprise React Development Standard
   owner: Principal Frontend Architect
   version: 1.0.0

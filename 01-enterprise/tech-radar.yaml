@@ -1,0 +1,22 @@
+technology_radar:
+  adopt:
+    - postgresql
+    - react
+    - golang
+    - kubernetes
+    - aws
+  trial:
+    - rust
+    - surrealdb
+    - oklch
+  assess:
+    - wasm
+    - bun
+    - module-federation
+  hold:
+    - angularjs
+    - jquery
+    - oracle-db
+    - svn
+    - cvs
+    - memcached

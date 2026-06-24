@@ -67,119 +67,38 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 ### 2.3 Semantic Definitions
 
-#### 2.3.1 STD vs ADR Implementation Scenarios
+#### 2.3.1 Naming Conventions
 
-To resolve confusion on when to write an ADR vs an STD, teams must follow this matrix:
+ADR filenames must adhere to the pattern `^ADR-[A-Z]{2,4}(?:-[A-Z]{2,4})?-\d{3}-[a-z0-9-]+\.md$`.
+Example: `ADR-GLB-001-api-design.md` or `ADR-UIP-TKN-002-color-palette.md`.
 
-| Scenario | Global STD | Global ADR | Project ADR | Notes |
-|---|---|---|---|---|
-| Organization establishes a new enterprise-wide rule | ✅ Create | ⚠️ Optional | ❌ | Board can create an STD without an ADR |
-| Organization selects an enterprise strategic platform/tech | ✅ Update/Create | ✅ Create | ❌ | E.g., React, PostgreSQL, Kubernetes |
-| Organization adopts an external regulation | ✅ Create | ❌ Usually No | ❌ | PCI-DSS, ISO27001, GDPR |
-| Organization resolves a conflict between enterprise standards | ✅ Update | ✅ Create | ❌ | Enterprise-level conflict resolution |
-| Organization shifts enterprise architectural direction | ✅ Update | ✅ Create | ❌ | E.g., monolith → microservices |
-| STD dictates a single, exclusive solution | ✅ Existing | ❌ | ❌ | Project simply complies |
-| STD provides multiple approved options | ✅ Existing | ❌ | ✅ Create | Project selects an option |
-| STD mandates a capability but does not specify a product | ✅ Existing | ❌ | ✅ Create | Project selects the implementation |
-| Project adopts technology not covered by an STD | ❌ | ❌ | ✅ Create | Local architecture decision |
-| Project makes a local, isolated decision | ❌ | ❌ | ✅ Create | E.g., adopting an internal library |
-| Project deviates from an STD (waiver) | ✅ Existing | ❌ | ✅ Create | Exception decision |
-| Multiple projects request the exact same waiver | ✅ Update | ✅ Create | Existing | Indicates the STD needs revision |
-| Project faces a conflict between two STDs | ✅ Existing | ❌ | ✅ Create | Local conflict resolution |
-| Conflict applies across the entire enterprise | ✅ Update | ✅ Create | ❌ | Global conflict resolution |
-| Internal refactoring without architectural changes | ❌ | ❌ | ❌ | ADR not required |
-| Minor version upgrades that don't alter architecture | ❌ | ❌ | ❌ | ADR not required |
-| Replacing a strategic library in a single project | ❌ | ❌ | ✅ Create | E.g., Redux → Zustand |
-| Replacing a strategic library enterprise-wide | ✅ Update | ✅ Create | ❌ | Enterprise migration |
-| Project follows the STD fully without needing a choice | ✅ Existing | ❌ | ❌ | No decision necessary |
+#### 2.3.2 Taxonomy
 
-#### 2.3.2 Directory Structure & Naming Conventions
+ADRs are organized by their scope (Enterprise vs Local) and domain context.
+- **Enterprise ADRs**: Decisions that affect the entire organization or cross-cutting boundaries.
+- **Local ADRs**: Decisions contained within a specific bounded context or single application.
 
-Because ADRs are authored at both the Root Enterprise level and the Local Project level, they must utilize different structural taxonomies appropriate for their scope.
+#### 2.3.3 Directory Structure
 
 **Enterprise Level (Root Repo)**
-Enterprise ADRs must reside in the `05-decisions/` directory of the architecture-description repository, strictly adhering to a **Domain-Driven Taxonomy**.
-
-- **Naming Convention**: `ADR-GLB-[N]-[slug].md` (Global) or `ADR-[DOMAIN]-[CAPABILITY]-[N]-[slug].md` (Domain).
-
-**Example Directory Structure:**
 ```text
 scnehaux-architecture/
-└── 05-decisions/                    # (Domain-Driven Taxonomy)
+└── 05-decisions/
     ├── _global/
-    │   └── ADR-GLB-001-modular-monolith.md
+    │   └── ADR-GLB-001-api-design.md
     └── ui-platform/
-        └── design-tokens/
-            └── ADR-UIP-TKN-001-domain-based-taxonomy.md
+        └── ADR-UIP-001-react-framework.md
 ```
 
 **Project Level (Local Repo)**
-Local project ADRs must reside in the `docs/04-decisions/` directory of local workspaces, utilizing a **Module/Feature-Driven Taxonomy**.
-
-- **Naming Convention**: `ADR-[REPO]-[COMPONENT]-[N]-[slug].md`.
-
-**Example Directory Structure:**
 ```text
-scnehaux-ui-platform/                # (Project Repository)
+scnehaux-ui-platform/
 └── docs/
-    └── 04-decisions/                # (Module-Driven Taxonomy)
-        ├── auth-module/
-        │   └── ADR-UIP-AUTH-001-jwt-rotation.md
-        └── core-components/
-            └── ADR-UIP-CORE-001-button-api.md
+    └── 02-decisions/
+        └── ADR-UIP-CORE-001-state-management.md
 ```
 
-**Unified Indexing Invariant**
-- **Requirement**: Every repository (both Enterprise and Local) must maintain a root-level index catalog linking to every ADR with its current status. The index must be updated prior to merging any new ADR.
-
-#### 2.3.3 Document Template Schema (Metadata Frontmatter)
-
-**Enterprise Level (Root Repo)**
-```yaml
-doc_meta:
-  id: ADR-GLB-[Seq] | ADR-[DOM]-[CAP]-[Seq]  # e.g. ADR-GLB-001 or ADR-UIP-TKN-001
-  title: Short Descriptive Title
-  adr_type: foundational | implementation | exception | conflict_resolution | replacement
-  status: proposed | accepted | rejected | superseded | deprecated
-  created: YYYY-MM-DD
-  created_by: Creator Name | [Name1, Name2]
-```
-
-**Project/Local Level (Project Repo)**
-```yaml
-doc_meta:
-  id: ADR-[REPO]-[COMPONENT]-[Seq]  # e.g. ADR-SCNX-IAM-GO-001 or ADR-UIP-AUTH-001
-  title: Short Descriptive Title
-  adr_type: foundational | implementation | exception | conflict_resolution | replacement
-  status: proposed | accepted | rejected | superseded | deprecated
-  created: YYYY-MM-DD
-  created_by: Creator Name | [Name1, Name2]
-  parent_sad: [Parent SAD ID]       # Optional: Mapped parent Software Architecture Document
-
-  # Required ONLY if adr_type is "exception" (Waiver Approval)
-  exception_info:
-    approved_by: [Sponsor/Approver Name or ARB]
-    expiry_date: YYYY-MM-DD           # Waiver validity cap (max 365 days)
-    risk_classification: low | medium | high
-    exception_reason: Brief rationale explaining standard deviation
-```
-
-#### 2.3.4 Document Section Semantics
-
-The linter enforces the presence of these sections. Their semantic purposes are:
-
-| Section Name | Objective | Requirement |
-|---|---|---|
-| **Title** | The ADR ID and a descriptive title header. | Must follow the naming convention and clearly state the architecture decision. |
-| **Status** | Chronological table tracking state transitions (`Date`, `Status`), the `ADR Type`, the `Reviewers` (or SMEs) consulted, and the final `Approver`. | Must track the chronological state transitions, reviewers, and approvers. |
-| **Context** | The technical problem, constraints, and business requirements driving the decision. | Must objectively describe the problem space and constraints driving the decision. |
-| **Decision Drivers** | The core technical and business factors forcing the decision. | Must list the critical technical and business factors forcing the choice. |
-| **Decision** | The chosen course of action with concrete, binding statements. | Must explicitly define the chosen course of action in binding terms. |
-| **Consequences** | The results (Positive, Negative, Operational) of the decision. | Must analyze the positive, negative, and operational impacts of the decision. |
-| **Compliance Impact** | Defines related standards, compliance status, and required waivers. | Must list any standards violated and link to the required waivers. |
-| **Alternatives Considered** | Analysis of alternate paths rejected during review. | Must provide a comparative analysis of rejected options. |
-
-#### 2.3.5 Metadata Schema Properties
+#### 2.3.4 Metadata Schema Properties
 
 | Metadata Field | Type | Description / Purpose |
 |---|---|---|
@@ -200,8 +119,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | `risk_classification` | Enum | The evaluated risk (`low`, `medium`, `high`). |
 | `exception_reason` | String | Brief rationale explaining the standard deviation. |
 
-#### 2.3.6 Allowed Lifecycle Statuses
-
+##### Allowed Lifecycle Statuses
 | Status | Meaning / Lifecycle Stage |
 |---|---|
 | `proposed` | Under review or initial draft state. |
@@ -210,6 +128,26 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | `superseded` | Replaced by a newer ADR. |
 | `deprecated` | Phased out and no longer applicable. |
 
+##### Allowed Classifications
+*N/A for Architecture Decision Records (ADRs). ADRs are inherently technical decisions and inherit the classification of their parent repositories or systems.*
+
+##### Semantic Versioning Classification
+*N/A for Architecture Decision Records (ADRs). ADRs are immutable historical records. If an ADR changes, it must be superseded by a new ADR rather than versioned.*
+
+#### 2.3.5 Document Section
+
+The linter enforces the presence of these sections. Their semantic purposes are:
+
+| Section Name | Objective | Requirement |
+|---|---|---|
+| **Title** | The ADR ID and a descriptive title header. | Must follow the naming convention and clearly state the architecture decision. |
+| **Status** | Chronological table tracking state transitions (`Date`, `Status`), the `ADR Type`, the `Reviewers` (or SMEs) consulted, and the final `Approver`. | Must track the chronological state transitions, reviewers, and approvers. |
+| **Context** | The technical problem, constraints, and business requirements driving the decision. | Must objectively describe the problem space and constraints driving the decision. |
+| **Decision Drivers** | The core technical and business factors forcing the decision. | Must list the critical technical and business factors forcing the choice. |
+| **Decision** | The chosen course of action with concrete, binding statements. | Must explicitly define the chosen course of action in binding terms. |
+| **Consequences** | The results (Positive, Negative, Operational) of the decision. | Must analyze the positive, negative, and operational impacts of the decision. |
+| **Compliance Impact** | Defines related standards, compliance status, and required waivers. | Must list any standards violated and link to the required waivers. |
+| **Alternatives Considered** | Analysis of alternate paths rejected during review. | Must provide a comparative analysis of rejected options. |
 ### 2.4 Lifecycle & Audit
 
 #### 2.4.1 Document Lifecycle & Statuses

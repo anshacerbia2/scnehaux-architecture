@@ -48,7 +48,7 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 | **Metadata** | Allowed Statuses | <ul><li>`adopted`</li><li>`trial`</li><li>`assessed`</li><li>`hold`</li></ul> |
 | **Metadata** | Allowed Classifications | <ul><li>`public`</li><li>`internal`</li><li>`restricted`</li></ul> |
 | **Structure** | Required Sections | <ul><li>`Objective & Scope`</li><li>`Design Principles`</li><li>`Normative Rules`</li><li>`Exceptions`</li><li>`Enforcement Mechanism`</li></ul> |
-| **Content** | Prohibited Section Keywords | **Exceptions**: `['waiver', 'ADR', 'ARB', 'Approval Requirements']` |
+| **Content** | Prohibited Section Keywords | **Exceptions**: <ul><li>`waiver`</li><li>`ADR`</li><li>`ARB`</li><li>`Approval Requirements`</li></ul> |
 <!-- AUTO-GENERATED-RULES:END -->
 
 
@@ -61,18 +61,26 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 ### 2.3 Semantic Definitions
 
-#### 2.3.1 Taxonomy, Directory Structure & Naming Conventions
+#### 2.3.1 Naming Conventions
+
+- **Enterprise Naming Convention**: `STD-GLB-[N]-[slug].md` (Global) or `STD-[DOMAIN]-[CAPABILITY]-[N]-[slug].md` (Domain).
+- **Project Naming Convention**: `STD-[REPO]-[COMPONENT]-[N]-[slug].md`.
+
+#### 2.3.2 Taxonomy
 
 Because STDs are authored at both the Root Enterprise level and the Local Project level, they must utilize different structural taxonomies appropriate for their scope.
 
 **Enterprise Level (Root Repo)**
 Enterprise standards must strictly adhere to a **Domain-Driven Taxonomy** within the `02-standards/` directory.
-
-- **Naming Convention**: `STD-GLB-[N]-[slug].md` (Global) or `STD-[DOMAIN]-[CAPABILITY]-[N]-[slug].md` (Domain).
 - **Rule 1 (Max Depth)**: Directory nesting is strictly capped at Level 3 (`Root -> Domain -> Capability`). Creating further subdirectories inside a capability folder (Level 4+) is prohibited to prevent the "Russian Doll" anti-pattern.
 - **Rule 2 (Lexicographical Suffixing)**: To group multi-part documents without violating the Max Depth rule, use alphanumeric suffixing on the sequence ID (e.g., `001A`, `001B`).
 
-**Example Directory Structure:**
+**Project Level (Local Repo)**
+Because a project repository inherently represents a single Domain or System, Domain-Driven Taxonomy is redundant. Local standards must utilize **Module/Feature-Driven Taxonomy** to closely mirror the source code structure.
+
+#### 2.3.3 Directory Structure
+
+**Enterprise Level (Root Repo)**
 ```text
 scnehaux-architecture/
 └── 02-standards/                    # (Domain-Driven Taxonomy)
@@ -85,12 +93,7 @@ scnehaux-architecture/
 ```
 
 **Project Level (Local Repo)**
-Because a project repository inherently represents a single Domain or System, Domain-Driven Taxonomy is redundant. Local standards must utilize **Module/Feature-Driven Taxonomy** to closely mirror the source code structure.
-
-- **Naming Convention**: `STD-[REPO]-[COMPONENT]-[N]-[slug].md`.
-- **Location**: Must reside in the `docs/01-standards/` directory.
-
-**Example Directory Structure:**
+Must reside in the `docs/01-standards/` directory.
 ```text
 scnehaux-ui-platform/                # (Project Repository)
 └── docs/
@@ -101,7 +104,7 @@ scnehaux-ui-platform/                # (Project Repository)
             └── STD-UIP-FORM-001-validation.md
 ```
 
-#### 2.3.2 Document Template Schema (Metadata Frontmatter)
+#### 2.3.4 Metadata Schema Properties
 
 **Enterprise Level (Root Repo)**
 ```yaml
@@ -128,7 +131,39 @@ doc_meta:
   governed_by: [Authorizing ADR ID]        # Optional: Mapped authorizing ADR ID (e.g., ADR-SCNX-IAM-GO-001)
 ```
 
-#### 2.3.3 Document Section Semantics
+| Metadata Field | Type | Description / Purpose |
+|---|---|---|
+| `id` | String | Unique identifier. |
+| `title` | String | Descriptive title of the document. |
+| `owner` | String | Lead System Engineer / Team Name. |
+| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
+| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
+| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
+
+##### Allowed Lifecycle Statuses
+| Status | Meaning / Lifecycle Stage |
+|---|---|
+| `adopted` | Formally accepted and enforced. |
+| `trial` | In evaluation or POC phase. |
+| `assessed` | Evaluated but not necessarily adopted. |
+| `hold` | Suspended or pending retirement. (Triggers linter block for new adoptions). |
+
+##### Allowed Classifications
+| Classification | Meaning / Data Sensitivity |
+|---|---|
+| `public` | Available to anyone. |
+| `internal` | Restricted to company employees. |
+| `restricted` | Restricted to specific teams or roles. |
+
+##### Semantic Versioning Classification
+
+| Version | Trigger / Architectural Change |
+|---|---|
+| **Major (2.0.0)** | Radically changing a mandatory baseline (e.g., swapping approved database engines or introducing a new mandatory compliance layer). Breaks existing systems. |
+| **Minor (1.1.0)** | Adding a new supplemental best-practice or an optional paved road. Backwards-compatible. |
+| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
+
+#### 2.3.5 Document Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
@@ -139,39 +174,6 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | **Normative Rules** | The core constraints and DOs/DONTs. *(Optional: Include Examples/Snippets directly under the relevant rules to provide clarity).* | Must use RFC-2119 terminology (MUST, SHOULD, MUST NOT) for clear compliance. |
 | **Exceptions** | A direct mapping of normative rules to the specific technical conditions under which they may be bypassed. If no valid exceptions exist, this section must explicitly state `None.`.<br>**Constraint**: Prohibited keywords include `waiver`, `ADR`, `ARB`, `Approval Requirements`. Governance procedures must NOT be documented here; this section only describes technical boundary edges. | Must strictly define boundary conditions for deviation. Do NOT include governance procedures. |
 | **Enforcement Mechanism** | How compliance is measured (e.g., CI/CD Linter, ARB Review). *(Optional: Specify the Severity of the violation).* | Must specify the automated linter, pipeline hook, or review process enforcing the standard. |
-
-#### 2.3.4 Metadata Schema Properties
-| Metadata Field | Type | Description / Purpose |
-|---|---|---|
-| `id` | String | Unique identifier. |
-| `title` | String | Descriptive title of the document. |
-| `owner` | String | Lead System Engineer / Team Name. |
-| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
-| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
-| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
-
-#### 2.3.5 Allowed Lifecycle Statuses
-| Status | Meaning / Lifecycle Stage |
-|---|---|
-| `adopted` | Formally accepted and enforced. |
-| `trial` | In evaluation or POC phase. |
-| `assessed` | Evaluated but not necessarily adopted. |
-| `hold` | Suspended or pending retirement. (Triggers linter block for new adoptions). |
-
-#### 2.3.6 Allowed Classifications
-| Classification | Meaning / Data Sensitivity |
-|---|---|
-| `public` | Available to anyone. |
-| `internal` | Restricted to company employees. |
-| `restricted` | Restricted to specific teams or roles. |
-
-#### 2.3.7 Semantic Versioning Classification
-
-| Version | Trigger / Architectural Change |
-|---|---|
-| **Major (2.0.0)** | Radically changing a mandatory baseline (e.g., swapping approved database engines or introducing a new mandatory compliance layer). Breaks existing systems. |
-| **Minor (1.1.0)** | Adding a new supplemental best-practice or an optional paved road. Backwards-compatible. |
-| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
 
 
 ### 2.4 Lifecycle & Audit

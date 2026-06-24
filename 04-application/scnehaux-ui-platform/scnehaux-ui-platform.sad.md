@@ -16,26 +16,35 @@ doc_meta:
 
 ---
 
-## 1. Context
+## 1. Context & Scope
 
-The **Scnehaux UI Platform** is the concrete physical styling compiler and component infrastructure that fulfills the logical capabilities defined in the [Scnehaux UI Platform Architecture Platform Document (PAD-002)](../../03-platform/scnehaux-ui-platform/scnehaux-ui-platform.pad.md). 
+**Capability Realized.** This system realizes the logical UI Platform capability defined in [scnehaux-ui-platform.pad.md](../../03-platform/scnehaux-ui-platform/scnehaux-ui-platform.pad.md) (PAD-002). It is the concrete physical styling compiler and component infrastructure for that capability.
 
-It provides the physical visual foundation consumed by all frontend portals across the monorepo—including the [Scnehaux IAM Dashboard (SAD-002)](../scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) and the federated ERP Portal. It is developed as a set of isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
+It provides the physical visual foundation consumed by all frontend portals across the monorepo — including the [Scnehaux IAM Dashboard (SAD-002)](../scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) and the federated ERP Portal. It is developed as isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
 
-### 1.1 Architectural Principles & Core Philosophy
+**System Context (C1).** A set of build-time packages (`@scnx/system`, `@scnx/core-ui`) consumed by downstream portals via pnpm workspace (local) or the private NPM registry (production), with shared scoping under Module Federation. It has no runtime backend and serves only static, compiled CSS/JS assets.
 
-The platform operates at a high performance tier, inheriting and enforcing the global [Enterprise Frontend Performance and Rendering Standard (STD-E006)](../../05-standards/STD-E006-frontend-performance-rendering-standard.md) across all component and compilation layers:
+**Objectives.** Deliver a single, brand-consistent, accessible visual foundation with zero-runtime styling overhead, propagating a single primitive-layer improvement across all portals.
 
-1. **Zero Layout Thrashing (60FPS Render Guarantee)**: The platform prohibits synchronous geometry queries during high-frequency cycles. All dynamic layout adjustments are deferred and batched using `requestAnimationFrame`.
-2. **Polymorphic Rendering Safety**: The platform prefers the dynamic `as` prop pattern for high-performance polymorphism. The React `asChild` composition pattern is deprecated in high-frequency rendering loops due to children array mapping and cloning execution overhead.
-3. **Compound & Headless UI Separation**: Component logic, states, and event orchestration hooks are separated from visual markup. Headless engines remain blind to HTML wrappers, delegating structure layout composition to the downstream consumer.
-4. **Panda CSS & Data Contract Strictness**: Styling definitions must resolve back to established design tokens, avoiding hardcoded properties or raw layout declarations.
+**Constraints.** Zero-runtime styling only (no runtime CSS-in-JS); all styles resolve to design tokens; React must resolve to a singleton under Module Federation; the compressed token bundle is hard-capped.
+
+**Requirements.** Headless accessible primitives, a 3-tier token engine, multi-theme support, and a build-time extraction pipeline.
+
+**Assumptions.** Consumers use the supported bundlers (Vite/Rspack) and wrap entry roots with the platform's namespace classes.
+
+### 1.1 Architectural Principles
+The platform inherits and enforces the [Enterprise Frontend Performance and Rendering Standard](../../02-standards/_global/frontend/STD-GLB-FE-002-performance.md) across all layers:
+
+1. **Zero Layout Thrashing (60FPS Render Guarantee)**: Synchronous geometry queries during high-frequency cycles are prohibited; dynamic layout adjustments are deferred and batched via `requestAnimationFrame`.
+2. **Polymorphic Rendering Safety**: Prefers the dynamic `as` prop pattern; the React `asChild` composition pattern is deprecated in high-frequency loops due to children mapping/cloning overhead.
+3. **Compound & Headless UI Separation**: Logic, state, and event orchestration hooks are separated from visual markup; headless engines remain blind to HTML wrappers.
+4. **Token-Strict Styling**: Styling definitions must resolve to established design tokens — no hardcoded properties or raw layout declarations.
 
 ---
 
 ## 2. Solution Architecture
 
-The platform architecture is structured into two main physical package containers, married by a build-time Zero-Runtime styling extraction pipeline:
+The platform is structured into two physical package containers, married by a build-time Zero-Runtime styling extraction pipeline:
 
 ```mermaid
 graph TD
@@ -65,49 +74,29 @@ graph TD
 ```
 
 ### 2.1 Physical Package Boundaries
--   **`@scnx/system` (`packages/design-system`)**: The visual core of the enterprise. Housed under `packages/design-system`, it declares the raw core primitives (Tier-1), the global semantic theme contracts (Tier-2), and compiles them to CSS Custom Properties. It orchestrates all build-time configuration variables for static layout compilers.
--   **`@scnx/core-ui` (`packages/core-ui`)**: The physical component library containing style-agnostic, accessible, and polymorphic React primitives (e.g., `<Box>`, `<Flex>`, `<Grid>`, `<Text>`). It relies 100% on `@scnx/system` for visual styling and is completely decoupled from any direct vendor CSS frameworks.
+- **`@scnx/system` (`packages/design-system`)**: The visual core. Declares raw core primitives (Tier-1), global semantic theme contracts (Tier-2), and compiles them to CSS Custom Properties. Orchestrates build-time configuration for static layout compilers.
+- **`@scnx/core-ui` (`packages/core-ui`)**: The component library of style-agnostic, accessible, polymorphic React primitives (`<Box>`, `<Flex>`, `<Grid>`, `<Text>`). Relies 100% on `@scnx/system` for styling; decoupled from any vendor CSS framework.
 
 ### 2.2 Zero-Runtime Build Pipeline
-To ensure maximum client-side performance, the platform rejects runtime CSS-in-JS style injection. It utilizes a dual build-time engine:
-1.  **Panda CSS AST Scanner**: Scans downstream Javascript/TypeScript source files at compile time. It extracts utility token classes from markup and compiles them directly into static atomic utility CSS rules, avoiding runtime execution overhead.
-2.  **Sass Preprocessor**: Orchestrates global static structures, custom layout grids, and complex theme contracts (`_core-token.scss` and `_default-token.scss`). It outputs a consolidated, highly optimized CSS bundle containing custom properties and layout grids.
+The platform rejects runtime CSS-in-JS injection, using a dual build-time engine:
+1. **Panda CSS AST Scanner**: Scans downstream JS/TS source at compile time, extracting utility token classes from markup into static atomic CSS rules.
+2. **Sass Preprocessor**: Orchestrates global static structures, layout grids, and theme contracts (`_core-token.scss`, `_default-token.scss`), outputting a consolidated optimized CSS bundle.
 
-### 2.3 Design System Base Layer & Reset Isolation
-The `@scnx/system` package ships a dedicated **Base Layer** (housed under `packages/design-system/src/styles/base/`) to clean and equalize default browser rendering before styling components or applying styling utilities.
-1.  **Normalization & Reset Strategy**: 
-    - Normalization rules (`_normalize.scss`) equalize styling inconsistencies between client viewports.
-    - Core structural resets (`_reset.scss`) clean the native padding, margin, border, and typography properties of native interactive elements (`button`, `input`, `select`, `textarea`, `a`).
-    - Typographical and baseline alignments (`_base.scss` and `_typography.scss`) define global default weights, line heights, and SVG vertical alignments.
-2.  **Cascade Layer Isolation**:
-    - To prevent resets and normalizations from interfering with or overriding downstream utilities and components, all reset rules are wrapped in native CSS `@layer reset` and `@layer base`.
-    - The compiled bundles (`default-ui.scss`) declare the explicit cascade precedence order (`@layer reset, base, tokens, recipes, utilities;`), guaranteeing that base rules are evaluated first and cannot override design tokens or utility styles.
+### 2.3 Base Layer & Reset Isolation
+The `@scnx/system` package ships a dedicated **Base Layer** to equalize default browser rendering before styling:
+1. **Normalization & Reset**: `_normalize.scss` equalizes cross-viewport inconsistencies; `_reset.scss` cleans native element properties; `_base.scss`/`_typography.scss` define global defaults.
+2. **Cascade Layer Isolation**: All reset rules are wrapped in native CSS `@layer reset` / `@layer base`, with an explicit precedence order (`@layer reset, base, tokens, recipes, utilities;`) so base rules can never override tokens or utilities.
 
 ### 2.4 Physical Primitives & Theme Mappings (Reference)
 
-> **Abstraction Leakage Rule Compliance (GDC-000 §2.3)**: 
-> As a C2 System Architecture Document, this document does not contain component-level implementation mechanics, raw SASS maps, or CSS Custom Property payloads.
->
-> The exhaustive physical parameters, OKLCH scales, and CSS Variable mappings are maintained in the authoritative C3 Technical Design Document:
-> **[TDD-SCNX-UI-JS-003-semantic-token-dictionary](../../../../js/module_federation_v1.5/packages/docs/06-designs/TDD-SCNX-UI-JS-003-semantic-token-dictionary.md)**.
-
+> **Abstraction Leakage Rule (GDC-000 §2.3)**: As a C2 SAD, this document does not contain component-level mechanics, raw SASS maps, or CSS Custom Property payloads. The exhaustive physical parameters, OKLCH scales, and CSS variable mappings live in the authoritative C3 TDD (`TDD-SCNX-UI-JS-003`, downstream project repository).
 
 ---
 
-## 3. Deployment & Topology
+## 3. Runtime Flows
 
-The platform packages are developed locally within the monorepo and integrated into downstream applications via local workspace linkages:
-
--   **Development Isolation**: Downstream applications consume the design packages via **pnpm workspaces** locally. Changes to package files are hot-reloaded automatically inside Vite and Rspack bundlers.
--   **Production Delivery**: Built static assets (minified CSS files and TypeScript declarations) are published to the enterprise private NPM registry. The consuming SPA apps bundle these assets into their physical deployment targets during build time, serving them globally via global CDNs (e.g., AWS S3 and CloudFront).
--   **Encapsulation Boundary**: To prevent layout pollution under Module Federation, `@scnx/system` provides unique namespace classes (e.g., `.scnx-theme-wrapper`). Consuming micro-frontends wrap their entry roots with these classes to enforce isolated styling sandboxes.
-
----
-
-## 4. Runtime Flows
-
-### 4.1 Build-Time Compilation and Static Style Extraction Flow
-Demonstrates how raw SCSS variables and React primitive markups compile down to a zero-runtime static CSS bundle:
+### 3.1 Build-Time Compilation & Static Style Extraction
+How raw SCSS variables and React primitive markup compile to a zero-runtime static CSS bundle:
 
 ```mermaid
 sequenceDiagram
@@ -117,7 +106,7 @@ sequenceDiagram
     participant Preprocessor as Sass Preprocessor
     participant Bundle as Output Static CSS Bundle
     participant Browser as Browser Client
-    
+
     Developer->>Scanner: Scan React TSX markup (Box/Text props)
     Developer->>Preprocessor: Import _core-token.scss and _default-token.scss
     Scanner->>Scanner: Extract CSS utility names from AST
@@ -125,11 +114,11 @@ sequenceDiagram
     Scanner->>Bundle: Write static utility CSS
     Preprocessor->>Bundle: Write global layout CSS & theme overrides
     Bundle->>Browser: Load index.css static asset
-    Browser->>Browser: Fast painting with Zero JavaScript styling execution
+    Browser->>Browser: Fast painting with zero JavaScript styling execution
 ```
 
-### 4.2 Transition & Overlays Frame Sanitization Flow
-Ensures that all dynamic overlays, modals, and layout transition animations execute with clean momentum without visual queue piling or flickering:
+### 3.2 Transition & Overlay Frame Sanitization
+Ensures dynamic overlays/modals/transitions execute cleanly without visual queue piling or flickering:
 
 ```mermaid
 sequenceDiagram
@@ -138,42 +127,149 @@ sequenceDiagram
     participant OFSM as Orthogonal Finite State Machine
     participant RAF as requestAnimationFrame Queue
     participant GPU as GPU Paint Layer
-    
+
     Trigger->>OFSM: Dispatch Transition Phase (e.g. entering)
     OFSM->>RAF: Request Frame Sanitization (Clear past animation handles)
     RAF->>RAF: Align to V-Sync frame boundary
     RAF->>GPU: Mutate CSS transform & opacity properties
     GPU-->>OFSM: Animation completed (settled)
-    OFSM->>OFSM: Transition stabilized with Zero Flickering
+    OFSM->>OFSM: Transition stabilized with zero flickering
+```
+
+### 3.3 Theme Context Mutation
+State transition when a user swaps global themes (Light↔Dark, Tenant A↔B), bypassing heavy React trees for sub-50ms execution:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant Provider as ScnxThemeProvider
+    participant DOM as document.documentElement
+    participant CSSOM as CSS Object Model
+
+    User->>Provider: Toggle Dark Mode (Button Click)
+    Provider->>DOM: setAttribute('data-theme', 'dark')
+    DOM->>CSSOM: Trigger native CSS variable recalculation
+    Note over CSSOM: System swaps --ds-color-primary maps
+    CSSOM-->>User: Instant visual repaint (0 React re-renders)
 ```
 
 ---
 
-## 5. Resilience & Failure Modes
+## 4. Data Architecture
 
--   **Missing CSS Variables Fallback**: For environments with restricted stylesheet imports, Sass maps are pre-compiled into static fallback utility classes, allowing layout systems to degrade gracefully without breaking structural functionality.
-    -   **Blast Radius**: **Single Client Render Failure**. Degrades gracefully to fallback layout without affecting other users or backend services.
--   **Cumulative Layout Shift (CLS) Mitigation**: Unloaded visual components (e.g., dynamic tables, async charts) are matched with strict width/height sizing properties based on Tier-1 primitive values, rendering structured skeletons immediately to keep CLS strictly under `0.1`.
-    -   **Blast Radius**: **Component Level Disruption**. Only the affected asynchronous component remains in a skeleton state, rest of the page remains interactive.
--   **Momentum Reversal Interruption**: If a transition is interrupted mid-flight (e.g., user triggers a close animation while an overlay is still opening), the frame queue immediately purges the active animation handle, recalculates the elapsed transform coordinates, and gracefully reverses the animation without resetting the layout.
-    -   **Blast Radius**: **Single User Interaction**. Confined to the specific overlay state machine.
+The platform has no runtime datastore; its "data" is the design-token dictionary, resolved at build time.
 
----
-
-## 6. Observability & Quality Benchmarks
-
-To maintain peak web performance, the presentation platform enforces strict operational metrics:
-
--   **Performance Benchmarks (NFRs)**:
-    *   **Cumulative Layout Shift (CLS)**: Strictly $\le 0.1$.
-    *   **Interaction to Next Paint (INP)**: Strictly $\le 200\text{ms}$.
-    *   **P95 Layout Reflow Paint Duration**: Strictly $\le 100\text{ms}$.
-    *   **Gzip CSS Bundle Size**: Max limit of `12KB`.
--   **Error Telemetry**: The `@scnx/core-ui` components are wrapped in strict Error Boundary handlers. Unhandled rendering errors or CSS injection failure states trigger Sentry logging events containing specific component tag references and active theme state identifiers.
+- **Database**: Not Applicable — no runtime datastore.
+- **Storage**: The authoritative token data is SCSS/CSS-variable source (`_core-token.scss`, `_default-token.scss`) compiled to static CSS assets; published as immutable, hash-versioned bundles.
+- **Caching**: Compiled CSS assets are content-hashed for long-lived browser and CDN caching.
+- **Data Classification**: Public — design tokens and component markup carry no PII or secrets.
 
 ---
 
-## 7. Security Considerations
+## 5. Integration
 
--   **Strict Content-Security-Policy (CSP)**: The presentation layer prevents inline style injections (`style-src 'unsafe-inline'`). All compiled utilities are loaded via static assets linked to build-time hashes, or injected using trusted stylesheet nonces.
--   **Polymorphic ARIA Accessibility Core**: Accessible behaviors are built directly into the polymorphic Layer-1 primitives of `@scnx/core-ui` (incorporating focus-trapping inside modal overlays, ARIA state bindings for custom controls, and keyboard navigation support), guaranteeing compliance with WCAG 2.2 AA standards at the visual root of trust.
+- **Published API (packages)**: `@scnx/system` (token API as CSS custom properties + Sass maps) and `@scnx/core-ui` (polymorphic React primitives) are **Published** to the private NPM registry.
+- **Consumed by**: Downstream portals (IAM Dashboard SAD-002, ERP host + remotes) via pnpm workspace (local) or NPM (production).
+- **Federated Distribution**: Under Module Federation, the platform relies on strict `shared` scoping so all hosts/remotes resolve a **React Singleton** and a single global `scnx-system.css` asset — no duplicated CSS payloads, no context tearing.
+- **Events (Producer/Consumer)**: None — distribution is build-time/package-based, not event-driven.
+
+```mermaid
+graph TD
+    subgraph Host [ERP Portal Host]
+        Shell[App Shell]
+        React_Singleton[(React Singleton)]
+    end
+    subgraph Remote1 [HRIS Remote]
+        CoreUI1["@scnx/core-ui"]
+    end
+    subgraph Remote2 [Finance Remote]
+        CoreUI2["@scnx/core-ui"]
+    end
+
+    Shell --> Remote1 & Remote2
+    Remote1 & Remote2 --> React_Singleton
+    CoreUI1 & CoreUI2 --> |Consume Global| CSS_Asset[scnx-system.css]
+
+    style Host fill:#1e293b,stroke:#3b82f6,color:#fff
+    style Remote1 fill:#0f172a,stroke:#10b981,color:#fff
+    style Remote2 fill:#0f172a,stroke:#10b981,color:#fff
+    style React_Singleton fill:#b91c1c,color:#fff
+```
+
+---
+
+## 6. Security
+
+- **Strict Content-Security-Policy (CSP)**: The presentation layer prevents inline style injections (`style-src 'unsafe-inline'`). All compiled utilities load via static assets linked to build-time hashes, or via trusted stylesheet nonces.
+- **Polymorphic ARIA Accessibility Core**: Accessible behaviors are built directly into the polymorphic Layer-1 primitives of `@scnx/core-ui` (focus-trapping in modal overlays, ARIA state bindings, keyboard navigation), guaranteeing WCAG 2.2 AA compliance at the visual root of trust.
+- **Supply-Chain Integrity**: Packages are published immutably with content hashes; consumers pin versions, preventing silent style/markup substitution.
+
+---
+
+## 7. Resilience & Failure Modes
+
+- **Missing CSS Variables Fallback (Graceful Degradation)**: For environments with restricted stylesheet imports, Sass maps are pre-compiled into static fallback utility classes, allowing layout systems to degrade gracefully without breaking structural functionality.
+  - *Blast Radius*: **Single Client Render** — degrades gracefully to a fallback layout without affecting other users or backend services.
+- **Cumulative Layout Shift (CLS) Mitigation**: Async components are matched with strict width/height sizing from Tier-1 primitives, rendering structured skeletons immediately to keep CLS under `0.1`.
+  - *Blast Radius*: **Component Level** — only the affected async component remains in a skeleton state; the rest of the page stays interactive.
+- **Momentum Reversal Interruption**: An interrupted transition purges the active animation handle, recalculates elapsed transform coordinates, and gracefully reverses without resetting the layout.
+  - *Blast Radius*: **Single User Interaction** — confined to the specific overlay state machine.
+
+---
+
+## 8. Observability & Operations
+
+- **Performance Benchmarks (SLI)**: CLS ≤ `0.1`; Interaction-to-Next-Paint (INP) ≤ `200ms`; P95 layout-reflow paint ≤ `100ms`; gzip CSS bundle hard-capped at `12KB`.
+- **Monitoring / Tracing**: Bundle-size and visual-regression metrics are tracked per release; consumer-side render telemetry correlates by component tag and theme state.
+- **Logging / Telemetry**: `@scnx/core-ui` components are wrapped in Error Boundaries; rendering errors or CSS injection failures emit Sentry events with component tag references and active theme identifiers.
+- **Alerting / Runbook**: Bundle-budget breaches block release (see §9); the runbook covers token-regression rollback and theme-contract reconciliation.
+
+---
+
+## 9. Deployment
+
+The platform packages are developed within the monorepo and integrated into downstream applications via workspace linkages, then published for production.
+
+- **Environment / Infrastructure**: Local pnpm workspaces for development (hot-reloaded in Vite/Rspack); production assets published to the private NPM registry and served globally via CDN (AWS S3 / CloudFront).
+- **Encapsulation Boundary**: `@scnx/system` provides namespace classes (e.g., `.scnx-theme-wrapper`); consuming micro-frontends wrap their entry roots to enforce isolated styling sandboxes.
+- **CI/CD & Release Governance**: A change to a core utility/token can blast-radius across 50+ downstream apps, so every change passes a mandatory quality gate before merge and `Semantic Release` to NPM:
+
+```mermaid
+stateDiagram-v2
+    [*] --> PR_Created
+    PR_Created --> Unit_Tests
+    PR_Created --> Governance_Linter
+
+    state Parallel_Quality_Gates <<fork>>
+    Unit_Tests --> Parallel_Quality_Gates
+    Governance_Linter --> Parallel_Quality_Gates
+
+    Parallel_Quality_Gates --> Visual_Regression
+    Parallel_Quality_Gates --> Bundle_Analyzer
+
+    Visual_Regression --> Approval_Required : Visual Diffs Detected
+    Visual_Regression --> Passed : No Visual Diffs
+    Bundle_Analyzer --> Blocked : Gzip > 12KB
+    Bundle_Analyzer --> Passed : Gzip <= 12KB
+
+    Passed --> Merge_to_Main
+    Merge_to_Main --> Semantic_Release
+    Semantic_Release --> Private_NPM_Registry
+```
+
+---
+
+## 10. Trade-offs & Alternatives
+
+### 10.1 Runtime CSS-in-JS
+- *Rejected*: Runtime style injection adds per-render execution overhead and conflicts with strict CSP. A zero-runtime build-time extraction pipeline was chosen instead.
+
+### 10.2 `asChild` Composition Pattern
+- *Rejected (deprecated in hot paths)*: Children array mapping/cloning overhead in high-frequency rendering loops; the dynamic `as` prop pattern is preferred for polymorphism.
+
+### 10.3 External CSS Frameworks / Component Libraries
+- *Rejected*: Vendor frameworks (Tailwind config sprawl, MUI runtime) compromise brand consistency and bundle budget; the platform owns its token engine and headless primitives.
+
+### 10.4 Single Monolithic Package vs Two-Package Split
+- *Rejected (monolith)*: A single package would couple token data to component markup. *Accepted trade-off*: a two-package split (`@scnx/system` + `@scnx/core-ui`) adds release coordination cost in exchange for clean token/markup separation and independent versioning.

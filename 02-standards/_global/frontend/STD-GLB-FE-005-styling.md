@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: STD-GLB-FE-007
+  id: STD-GLB-FE-005
   title: Enterprise Frontend Styling Standard
   owner: Principal Frontend Architect
   version: 1.0.0

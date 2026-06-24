@@ -1,6 +1,6 @@
 # Contributing to Scnehaux Architecture
 
-Whether you are authoring a local component blueprint (**TDD**) in a downstream project repository, or submitting a global strategy (**EAD**) to this root repository, you must adhere to the highest standards of engineering rigor. 
+Whether you are authoring a local component blueprint (**TDD**) in a downstream project repository, or submitting a global strategy (**EAD**) to this root repository, you must adhere to the highest standards of engineering rigor.
 
 > [!IMPORTANT]
 > **Mandatory Prerequisite:** Before making any contributions, you **MUST** read the [Enterprise Governance Policy (GDC-000)](./00-governance/GDC-000-governance-policy.md). It serves as the constitution for this repository and defines the exact architectural laws you are legally bound to follow within this ecosystem.
@@ -39,22 +39,22 @@ flowchart LR
    classDef remediation fill:#F59E0B,stroke:#B45309,stroke-width:2px,color:#FFFFFF
 
    Start([Author Document]):::startEnd --> LocalLinter{"1. Local Validation<br>(pre-commit hook)"}:::automated
-   
+
    LocalLinter -- Fails --> FixMachine[Fix Linter Format]:::remediation
    FixMachine --> LocalLinter
    LocalLinter -- Passes --> PR[Submit Pull Request]:::manual
-   
+
    PR --> CIGates{"2. CI/CD Gates<br>(Automated Linter)"}:::automated
    CIGates -- Fails --> FixMachine
-   
+
    CIGates -- Passes --> PeerReview{"3. Peer Review<br>(GDC-002 Score Sheet)"}:::manual
    PeerReview -- Changes Requested --> FixHuman[Revise Architecture Content]:::remediation
    FixHuman --> LocalLinter
-   
+
    PeerReview -- Approved --> RiskCheck{"High-Risk Pivot?"}:::critical
    RiskCheck -- Yes --> ARB{"4. ARB Review<br>(GDC-003)"}:::critical
    RiskCheck -- No --> Merge([5. Approved & Merged]):::success
-   
+
    ARB -- Approved --> Merge
    ARB -- Rejected --> FixHuman
 ```
@@ -75,6 +75,7 @@ When designing a system, executing an architectural decision, or defining a doma
 
 > [!WARNING]
 > **Boundary Enforcement:**
+>
 > - **GDCs** (Governance Policies) must be authored or modified exclusively via **Path B**.
 > - **TDDs** (Component Designs - Level C3): While strictly governed by the rules and templates defined in this repository, physical TDD files **MUST** be authored inside the target application's local source code repository to synchronize with code and prevent documentation rot. Do not commit TDDs here.
 
@@ -82,6 +83,7 @@ When designing a system, executing an architectural decision, or defining a doma
 
 > [!IMPORTANT]
 > **Path B Mandatory Reading:** Modifying governance rules alters the compliance pipeline for the entire enterprise. Before attempting to modify this layer, you **MUST** thoroughly understand the mechanics of the core enforcement engines:
+>
 > 1. [GDC-001: Compliance Engine](./00-governance/GDC-001-compliance-engine.md) (The Linter framework)
 > 2. [GDC-002: Quality Rubric](./00-governance/GDC-002-quality-rubric.md) (The 10-parameter human assessment)
 > 3. [GDC-003: Review Process](./00-governance/GDC-003-review-process.md) (The ARB escalation flow)
@@ -89,14 +91,19 @@ When designing a system, executing an architectural decision, or defining a doma
 When contributing to the `00-governance` directory, your workflow depends entirely on whether you are changing an enforceable constraint or simply improving context.
 
 #### Scenario 1: Contextual & Editorial Updates
+
 If you are fixing typos, improving semantic clarity, adding Mermaid diagrams, or updating historical context, you may edit the Markdown documents (`GDC-*.md`) directly and submit a PR.
 
 #### Scenario 2: Modifying Architectural Rules & Constraints
-When you need to introduce a new architectural rule, add a structural constraint, or modify an existing validation (e.g., prohibiting a format, adding a mandatory metadata field), you **cannot just type it into the Markdown document**. 
 
-At Scnehaux, **if a rule is not enforceable by the linter, it is merely a suggestion**. 
+When you need to introduce a new architectural rule, add a structural constraint, or modify an existing validation (e.g., prohibiting a format, adding a mandatory metadata field), you **cannot just type it into the Markdown document**.
 
-You MUST follow the declarative reconciliation workflow. The granular, step-by-step procedure for modifying YAML schemas, regenerating documentation, and updating the human governance rubric is explicitly defined in **[GDC-006 — GDC Guideline](./00-governance/GDC-006-gdc-guideline.md)** (Section 3: The Reconciliation Flow). 
+At Scnehaux, **if a rule is not enforceable by the linter, it is merely a suggestion**.
+
+You MUST follow the declarative reconciliation workflow. The granular, step-by-step procedure for modifying YAML schemas, regenerating documentation, and updating the human governance rubric is explicitly defined in **[GDC-006 — GDC Guideline](./00-governance/GDC-006-gdc-guideline.md)** (Section 3: The Reconciliation Flow).
+
+> [!CAUTION]
+> **Validator Engine Modification:** If your rule modification requires writing custom Python logic in `validators/` (e.g., adding a new conditional check in `validators/adr.py`), you **MUST** also update the Pytest suite in the `validators/tests/` directory. The CI pipeline enforces a strict **>=95% test coverage** for the Python linter engine. Pull Requests that drop the coverage below 95% will be automatically rejected.
 
 > [!WARNING]
 > **Exception Protocol**: If you must deviate from a paved road without permanently modifying the global rules, you must submit an ADR explaining the rationale, the risk mitigation, and receive explicit approval from the ARB.

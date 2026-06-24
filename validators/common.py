@@ -6,7 +6,7 @@ from .utils import parse_date, clean_content_for_length, extract_section_content
 from .schema import DocMeta
 from pydantic import ValidationError
 
-def run_common_validations(validator: BaseValidator):
+def run_common_validations(validator: BaseValidator) -> None:
     _validate_naming(validator)
     _validate_metadata_schema(validator)
     _validate_review_age(validator)
@@ -14,46 +14,35 @@ def run_common_validations(validator: BaseValidator):
     _validate_structure(validator)
     _validate_cross_references(validator)
     _validate_internal_links(validator)
+    _validate_inline_references(validator)
     _validate_quantification(validator)
 
-def _validate_naming(v: BaseValidator):
-    rules_fed = v.rules['rules'].get('federated_governance', {})
-    naming_conventions = rules_fed.get('naming_conventions', {})
-    pattern_to_check = None
-    expected_format_desc = ""
+def _validate_inline_references(v: BaseValidator) -> None:
+    """
+    Detect architecture document IDs cited inline in prose (e.g. '(**ADR-018**)')
+    that do not resolve to any document in this repository. Reported as a
+    non-blocking WARNING because a citation may legitimately point at an external
+    or downstream document not present in this registry.
+    """
+    from .utils import extract_doc_id_references
+    own_id = (v.doc_meta or {}).get('id')
+    for ref in extract_doc_id_references(v.content):
+        if ref == own_id:
+            continue
+        if ref not in v.all_doc_ids:
+            v.add_error('inline_reference_missing',
+                f"Inline reference to '{ref}' does not resolve to any document in this repository "
+                "(possible typo, renamed ID, or an external/downstream document).")
 
-    if v.rel_path.startswith('05-decisions/'):
-        if '/_global/' in v.rel_path:
-            pattern_to_check = naming_conventions.get('global_adr_pattern')
-            expected_format_desc = "Global ADR (ADR-GLB-###-slug.md)"
-        else:
-            pattern_to_check = naming_conventions.get('domain_adr_pattern')
-            expected_format_desc = "Domain ADR (ADR-[DOM]-[CAP]-###-slug.md)"
-    elif v.rel_path.startswith('02-standards/'):
-        if '/_global/' in v.rel_path:
-            pattern_to_check = naming_conventions.get('global_std_pattern')
-            expected_format_desc = "Global Standard (STD-GLB-###-slug.md)"
-        else:
-            pattern_to_check = naming_conventions.get('domain_std_pattern')
-            expected_format_desc = "Domain Standard (STD-[DOM]-[CAP]-###[letter]-slug.md)"
-    elif v.rel_path.startswith('03-platform/'):
-        pattern_to_check = naming_conventions.get('pad_pattern')
-        expected_format_desc = "PAD ([domain]-platform.pad.md)"
-    elif v.rel_path.startswith('04-application/'):
-        pattern_to_check = naming_conventions.get('sad_pattern')
-        expected_format_desc = "SAD ([system-name].sad.md)"
-    elif v.rel_path.startswith('00-governance/'):
-        pattern_to_check = naming_conventions.get('gdc_pattern')
-        expected_format_desc = "Governance (GDC-###-slug.md)"
-    elif v.rel_path.startswith('01-enterprise/'):
-        pattern_to_check = naming_conventions.get('ead_pattern')
-        expected_format_desc = "Enterprise Architecture (EAD-###-slug.md)"
+def _validate_naming(v: BaseValidator) -> None:
+    rules_metadata = v.rules.get('rules', {}).get('metadata', {})
+    pattern_to_check = rules_metadata.get('filename_pattern')
 
     if pattern_to_check:
         if not re.match(pattern_to_check, v.filename):
-            v.add_error('naming_style_deviation', f"Filename '{v.filename}' does not match expected format for {expected_format_desc}.")
+            v.add_error('naming_style_deviation', f"Filename '{v.filename}' does not match expected format: {pattern_to_check}.")
 
-def _validate_metadata_schema(v: BaseValidator):
+def _validate_metadata_schema(v: BaseValidator) -> None:
     if not v.doc_meta:
         return
         
@@ -71,7 +60,20 @@ def _validate_metadata_schema(v: BaseValidator):
         if field not in v.doc_meta:
             v.add_error('missing_metadata', f"Missing required metadata field: '{field}' under doc_meta.")
             
-def _validate_review_age(v: BaseValidator):
+    # 3. Check allowed statuses and classifications dynamically based on YAML rules
+    rules_metadata = v.rules.get('rules', {}).get('metadata', {})
+    allowed_statuses = rules_metadata.get('allowed_statuses', [])
+    allowed_classifications = rules_metadata.get('allowed_classifications', [])
+    
+    status = v.doc_meta.get('status')
+    if status and allowed_statuses and status not in allowed_statuses:
+        v.add_error('missing_metadata', f"Status '{status}' is not in allowed list: {allowed_statuses}.")
+        
+    classification = v.doc_meta.get('classification')
+    if classification and allowed_classifications and classification not in allowed_classifications:
+        v.add_error('missing_metadata', f"Classification '{classification}' is not in allowed list: {allowed_classifications}.")
+            
+def _validate_review_age(v: BaseValidator) -> None:
     if not v.doc_meta:
         return
     last_reviewed_raw = v.doc_meta.get('last_reviewed')
@@ -85,7 +87,7 @@ def _validate_review_age(v: BaseValidator):
             if age_days > limit:
                 v.add_error('old_review', f"Document review age of {age_days} days exceeds limit of {limit} days (last reviewed {last_reviewed}).")
 
-def _validate_internal_links(v: BaseValidator):
+def _validate_internal_links(v: BaseValidator) -> None:
     links = extract_links(v.content)
     base_dir = os.path.dirname(v.file_path)
     
@@ -104,7 +106,7 @@ def _validate_internal_links(v: BaseValidator):
         if not os.path.exists(target_path):
             v.add_error('cross_reference_missing', f"Link rot detected: Internal link '{link}' points to a non-existent file.")
 
-def _validate_content_quality(v: BaseValidator):
+def _validate_content_quality(v: BaseValidator) -> None:
     text_content = clean_content_for_length(v.content)
     rules_content = v.rules['rules'].get('content', {})
     
@@ -121,7 +123,7 @@ def _validate_content_quality(v: BaseValidator):
             if re.search(pattern, text_content, re.IGNORECASE):
                 v.add_error('vague_claim', message)
 
-def _validate_structure(v: BaseValidator):
+def _validate_structure(v: BaseValidator) -> None:
     sections_map = extract_section_contents(v.content)
     found_sections = []
     
@@ -185,7 +187,7 @@ def _validate_structure(v: BaseValidator):
         if len(clean_text) < min_length:
             v.add_error('stylistic_deviation', f"Section '{orig_name}' content length ({len(clean_text)} chars) is below minimum of {min_length} chars.")
 
-def _validate_cross_references(v: BaseValidator):
+def _validate_cross_references(v: BaseValidator) -> None:
     if not v.doc_meta:
         return
         
@@ -202,7 +204,7 @@ def _validate_cross_references(v: BaseValidator):
             if ref_id not in v.all_doc_ids:
                 v.add_error('cross_reference_missing', f"Cross-reference '{field}: {ref_id}' not found in this repository. Verify it exists in an external project repo.")
 
-def _validate_quantification(v: BaseValidator):
+def _validate_quantification(v: BaseValidator) -> None:
     sections_map = extract_section_contents(v.content)
     rules_quantification = v.rules['rules'].get('quantification', {})
     rules_content = v.rules['rules'].get('content', {})
@@ -210,6 +212,7 @@ def _validate_quantification(v: BaseValidator):
     quant_req_sections = rules_quantification.get('required_for_sections', [])
     metric_pattern = rules_quantification.get('metric_pattern')
     req_sec_keywords = rules_content.get('required_section_keywords', {})
+    recommended_sec_keywords = rules_content.get('recommended_section_keywords', {})
     prohibited_sec_keywords = rules_content.get('prohibited_section_keywords', {})
 
     for section_name, section_text in sections_map.items():
@@ -227,8 +230,18 @@ def _validate_quantification(v: BaseValidator):
         for req_sec, keywords in req_sec_keywords.items():
             if req_sec.lower() in section_name.lower():
                 for kw in keywords:
-                    if not re.search(r'\b' + re.escape(kw) + r'\b', clean_text, re.IGNORECASE):
+                    # Suffix-tolerant: a required keyword matches its inflections/plurals
+                    # (e.g. 'Domain Event' satisfies 'Domain Events', 'Bounded Context' -> 'Bounded Contexts').
+                    if not re.search(r'\b' + re.escape(kw) + r'\w*', clean_text, re.IGNORECASE):
                         v.add_error('missing_section_keyword', f"Section '{section_name}' is missing mandatory keyword: '{kw}'")
+
+        # Recommended (non-blocking) sub-content: type-specific items that should be
+        # addressed where applicable, or explicitly marked Not Applicable.
+        for rec_sec, keywords in recommended_sec_keywords.items():
+            if rec_sec.lower() in section_name.lower():
+                for kw in keywords:
+                    if not re.search(r'\b' + re.escape(kw) + r'\w*', clean_text, re.IGNORECASE):
+                        v.add_error('recommended_keyword_missing', f"Section '{section_name}' is recommended to address '{kw}' (or mark it Not Applicable).")
 
         for banned_sec, keywords in prohibited_sec_keywords.items():
             if banned_sec.lower() == section_name.lower():

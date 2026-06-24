@@ -1,0 +1,72 @@
+name: "Scnehaux Code-Level Fitness Functions (Reusable Template)"
+
+# Per GDC-005, downstream SOURCE repositories enforce architectural fitness at the
+# CODE level (layering, dependency direction, decay, security). This governance
+# repository contains no application source, so these jobs are provided as a
+# reusable TEMPLATE for downstream repos to call:
+#
+#   jobs:
+#     fitness:
+#       uses: scnehaux/scnehaux-architecture/.github/workflows/fitness-functions.yml@main
+#       with:
+#         languages: "go,javascript"
+#
+# Each downstream repo commits its own rule configs (.semgrep.yml,
+# .dependency-cruiser.js) that encode its architectural constraints.
+
+on:
+  workflow_call:
+    inputs:
+      languages:
+        description: "CodeQL languages (comma-separated), e.g. 'go,javascript'."
+        required: false
+        default: "javascript"
+        type: string
+      run_semgrep:
+        description: "Run Semgrep layering checks (requires .semgrep.yml)."
+        required: false
+        default: true
+        type: boolean
+      run_dependency_cruiser:
+        description: "Run dependency-cruiser (requires .dependency-cruiser.js)."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  codeql:
+    name: "CodeQL (architectural decay / security)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ inputs.languages }}
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+
+  semgrep:
+    name: "Semgrep (layering & dependency-direction rules)"
+    if: ${{ inputs.run_semgrep }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep
+        run: |
+          pip install semgrep
+          # Downstream repos commit .semgrep.yml encoding layering rules
+          # (e.g. "domain layer MUST NOT import infrastructure"). See GDC-005.
+          semgrep --config .semgrep.yml --error .
+
+  dependency-cruiser:
+    name: "dependency-cruiser (module boundaries)"
+    if: ${{ inputs.run_dependency_cruiser }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run dependency-cruiser
+        run: npx --yes dependency-cruiser --config .dependency-cruiser.js --validate .

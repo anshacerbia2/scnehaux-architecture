@@ -1,4 +1,5 @@
 from .base import BaseValidator
+import datetime
 
 class ADRValidator(BaseValidator):
     
@@ -7,16 +8,6 @@ class ADRValidator(BaseValidator):
             return
             
         rules_metadata = self.rules['rules'].get('metadata', {})
-        allowed_statuses = rules_metadata.get('allowed_statuses', [])
-        allowed_classifications = rules_metadata.get('allowed_classifications', [])
-        
-        status = self.doc_meta.get('status')
-        if status and allowed_statuses and status not in allowed_statuses:
-            self.add_error('missing_metadata', f"Status '{status}' is not in allowed list: {allowed_statuses}.")
-            
-        classification = self.doc_meta.get('classification')
-        if classification and allowed_classifications and classification not in allowed_classifications:
-            self.add_error('missing_metadata', f"Classification '{classification}' is not in allowed list: {allowed_classifications}.")
 
         # Existing adr_type validation
         adr_type = self.doc_meta.get('adr_type')
@@ -42,6 +33,5 @@ class ADRValidator(BaseValidator):
                 status = self.doc_meta.get('status')
                 if status == 'accepted':
                     expiry_date = exception_info.get('expiry_date')
-                    import datetime
                     if isinstance(expiry_date, datetime.date) and expiry_date < datetime.date.today():
                         self.add_error('exception_expired', f"Exception waiver has expired on {expiry_date}.")
