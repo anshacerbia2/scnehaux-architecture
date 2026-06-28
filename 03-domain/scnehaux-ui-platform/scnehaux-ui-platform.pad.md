@@ -5,8 +5,9 @@ doc_meta:
   owner: Principal UI/UX Architect
   version: 1.0.0
   status: approved
-  classification: public
+  classification: restricted
   governed_by: [GDC-000]
+  realizes_capability: EAD-003
   review_cycle_days: 180
   last_reviewed: 2026-05-18
   fulfilled_by:
@@ -115,7 +116,7 @@ These are the capability's quantified promises; the mechanisms that achieve them
 
 **Realizing Systems** (`fulfilled_by`, strict 1-to-N):
 
-- **UI Platform package & registry**: [scnehaux-ui-platform.sad.md](../../04-application/scnehaux-ui-platform/scnehaux-ui-platform.sad.md) (SAD-003)
+- **UI Platform package & registry**: [scnehaux-ui-platform.sad.md](../../04-system/scnehaux-ui-platform/scnehaux-ui-platform.sad.md) (SAD-003)
 - **Consuming surfaces** (not owned, integrate the contract): the IAM Dashboard standalone SPA and the ERP federated host shell.
 
 **Capability governance.** A change to the core `$system` token contract or the trust boundary constitutes a Major version bump. Release mechanics (visual-regression gates, bundle-size checks, NPM publication) are realization concerns defined in the fulfilling SAD, not here.

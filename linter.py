@@ -6,16 +6,23 @@ import os
 import sys
 import yaml
 import json
+import copy
+import logging
 import argparse
+import datetime
+from typing import Any
 from validators.factory import detect_doc_type, get_validator
 from validators.scanner import resolve_registry_with_duplicates
 from validators.traceability import audit_traceability_graph
-from validators.utils import parse_frontmatter
-import copy
+from validators.utils import parse_frontmatter, parse_date
+from validators.rule_schema import validate_rule_file
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def deep_update(d, u):
+logger = logging.getLogger(__name__)
+
+
+def deep_update(d: dict, u: dict) -> dict:
     """
     Recursively merge two dictionaries.
     This is used to overlay specific document rules (e.g., SAD, PAD)
@@ -28,7 +35,8 @@ def deep_update(d, u):
             d[k] = v
     return d
 
-def load_rules(rules_path):
+
+def load_rules(rules_path: str) -> dict:
     """
     Load and parse a YAML ruleset file.
     Terminates the program if the file cannot be found.
@@ -37,17 +45,22 @@ def load_rules(rules_path):
         with open(rules_path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
     except FileNotFoundError:
-        print(f"Error: Rules file '{rules_path}' not found.")
+        logger.critical("Rules file '%s' not found.", rules_path)
         sys.exit(1)
 
-def print_errors(file_path, errors, output_format="text"):
+
+def print_errors(
+    file_path: str,
+    errors: list[tuple[str, str]],
+    output_format: str = "text",
+) -> tuple[list[tuple[str, str]], bool, bool]:
     """
     Format and aggregate errors for a specific file.
-    Determines if the file contains any "blocking" errors (CRITICAL or ERROR).
-    WARNINGs will be flagged but are considered non-blocking for CI.
+    Returns (errors, is_clean, has_blocking).
+      - is_clean: True only when there are zero issues (no errors, no warnings).
+      - has_blocking: True when CRITICAL or ERROR level findings exist.
     """
     has_blocking = any(sev in ('CRITICAL', 'ERROR') for sev, _ in errors)
-    has_warnings = any(sev == 'WARNING' for sev, _ in errors)
 
     # If JSON output is requested, do not print to stdout yet, just return the state.
     if output_format == "json":
@@ -55,7 +68,7 @@ def print_errors(file_path, errors, output_format="text"):
 
     # If there are no errors, mark as PASS
     if not errors:
-        print(f"[PASS] {file_path}")
+        logger.info("[PASS] %s", file_path)
         return errors, True, False
 
     # Print the formatted failure/warning message to stdout
@@ -64,22 +77,34 @@ def print_errors(file_path, errors, output_format="text"):
     for sev, msg in errors:
         print(f"  - [{sev}] {msg}")
 
-    return errors, not has_blocking and not has_warnings, has_blocking
+    return errors, not errors, has_blocking
 
-def _disable_info(validator):
+
+def _disable_info(validator: Any) -> dict:
     """Capture lint_disable governance state from a validator for the CI audit."""
     return {
         'disabled': {r: validator.disable_reasons.get(r) for r in validator.disabled_rules},
         'rejected': set(getattr(validator, 'rejected_disables', set())),
     }
 
-def lint_file(file_path, global_rules, all_doc_ids, all_doc_metadata, output_format="text"):
+
+def lint_file(
+    file_path: str,
+    global_rules: dict,
+    all_doc_ids: set,
+    all_doc_metadata: dict,
+    output_format: str = "text",
+) -> tuple[list[tuple[str, str]], bool, bool, dict]:
     """
     Orchestrate validation for a single markdown file.
     This executes the core lifecycle: Read -> Parse Metadata -> Identify Type -> Merge Rules -> Validate.
-    Returns (errors, passed, is_blocking, disable_info).
+    Returns (errors, is_clean, has_blocking, disable_info).
     """
-    rel_path = os.path.relpath(file_path, '.').replace('\\', '/')
+    try:
+        rel_path = os.path.relpath(file_path, '.').replace('\\', '/')
+    except ValueError:
+        # Occurs on Windows if file_path and CWD are on different drives (e.g. C: vs D: in pytest temp dirs)
+        rel_path = file_path.replace('\\', '/')
     filename = os.path.basename(file_path)
 
     # Step 1: Read the raw markdown content
@@ -99,13 +124,11 @@ def lint_file(file_path, global_rules, all_doc_ids, all_doc_metadata, output_for
 
     if doc_meta and str(doc_meta.get('status', '')).lower() == 'draft':
         # Enforce max_draft_age_days even for skipped drafts
-        draft_errs = []
+        draft_errs: list[tuple[str, str]] = []
         last_reviewed_raw = doc_meta.get('last_reviewed')
         if not last_reviewed_raw:
             draft_errs.append(('ERROR', "Draft document is missing 'last_reviewed' date to track draft age. Drafts cannot evade governance indefinitely."))
         else:
-            import datetime
-            from validators.utils import parse_date
             last_reviewed = parse_date(last_reviewed_raw)
             if last_reviewed:
                 age_days = (datetime.date.today() - last_reviewed).days
@@ -118,7 +141,7 @@ def lint_file(file_path, global_rules, all_doc_ids, all_doc_metadata, output_for
             return errs, p, b, {}
 
         if output_format == 'text':
-            print(f"[SKIP] {file_path} (status: draft — exempt from scoring)")
+            logger.info("[SKIP] %s (status: draft — exempt from scoring)", file_path)
         return [], True, False, {}
 
     # Step 3: Detect the Document Type (SAD, PAD, ADR, etc.) based on ID or filename
@@ -161,7 +184,8 @@ def lint_file(file_path, global_rules, all_doc_ids, all_doc_metadata, output_for
     errs, p, b = print_errors(file_path, errors, output_format)
     return errs, p, b, _disable_info(validator)
 
-def build_sarif(results):
+
+def build_sarif(results: list[dict]) -> dict:
     """
     Convert aggregated results into a SARIF 2.1.0 document so violations surface as
     inline annotations on GitHub PRs (via code-scanning upload).
@@ -198,7 +222,8 @@ def build_sarif(results):
         }]
     }
 
-def main():
+
+def main() -> None:
     """
     Main entrypoint for the Linter engine.
     Parses arguments, traverses the directory tree, runs per-file and repo-level
@@ -208,21 +233,37 @@ def main():
     parser = argparse.ArgumentParser(description='Scnehaux Architecture Linter')
     parser.add_argument('--format', choices=['text', 'json', 'sarif'], default='text', help='Output format')
     parser.add_argument('--target', nargs='+', default=['.'], help='Target directories or files to lint (default: current directory)')
+    parser.add_argument('--verbose', action='store_true', help='Enable DEBUG-level logging')
     args = parser.parse_args()
+
+    # Configure logging
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format='%(levelname)s: %(message)s',
+    )
 
     # Step 2: Load the Global Governance Rules baseline
     global_rules_path = os.path.join(SCRIPT_DIR, '00-governance/rules/linting-rules.yaml')
     global_rules = load_rules(global_rules_path)
+
+    # Step 2.1: Validate the rule file schema (governance of the governance engine)
+    schema_errors = validate_rule_file(global_rules, global_rules_path)
+    if schema_errors:
+        for err_msg in schema_errors:
+            logger.critical(err_msg)
+        sys.exit(1)
+
     severity_levels = global_rules.get('severity_levels', {})
 
     # Step 3: Pre-scan all files to build the registry of doc IDs (cross-reference) and detect duplicates.
     all_doc_ids, all_doc_metadata, duplicate_ids = resolve_registry_with_duplicates('.')
 
     has_blocking_errors = False
-    results = []                 # [{"file", "errors": [(sev,msg)]}]
-    disabled_usages = {}
-    undocumented_disables = {}
-    rejected_usages = {}
+    results: list[dict] = []
+    disabled_usages: dict[str, dict] = {}
+    undocumented_disables: dict[str, list] = {}
+    rejected_usages: dict[str, list] = {}
     total_files = 0
     pass_count = 0
     warning_count = 0
@@ -231,7 +272,7 @@ def main():
     if args.format == 'text':
         print("Starting Modular Architecture Documentation Audit (linter)...\n")
 
-    files_to_lint = []
+    files_to_lint: list[str] = []
     for target in args.target:
         if os.path.isfile(target):
             files_to_lint.append(target)
@@ -247,15 +288,15 @@ def main():
         if not full_path.lower().endswith('.md'): continue
 
         filename = os.path.basename(full_path)
-        # Filter 2: Ignore root standard files like README or index
-        if filename.lower() in ('readme.md', 'index.md', 'contributing.md'): continue
+        # Filter 2: Ignore root standard files like README, CHANGELOG, or index
+        if filename.lower() in ('readme.md', 'index.md', 'contributing.md', 'changelog.md'): continue
 
         # Filter 3: Ignore template and copy files (these are blueprints, not actual documentation)
         if full_path.lower().endswith('.copy.md'): continue
         if full_path.lower().endswith('.template.md') or full_path.lower().endswith('-template.md') or 'templates' in os.path.basename(os.path.dirname(full_path)).lower(): continue
 
         # Execute linting for the current valid file
-        file_errors, passed, is_blocking, disable_info = lint_file(full_path, global_rules, all_doc_ids, all_doc_metadata, args.format)
+        file_errors, is_clean, is_blocking, disable_info = lint_file(full_path, global_rules, all_doc_ids, all_doc_metadata, args.format)
 
         # Track lint_disable governance
         disabled = disable_info.get('disabled', {})
@@ -272,7 +313,7 @@ def main():
         total_files += 1
         if is_blocking:
             fail_count += 1
-        elif not passed:
+        elif not is_clean:
             warning_count += 1
         else:
             pass_count += 1
@@ -285,7 +326,7 @@ def main():
             has_blocking_errors = True
 
     # Step 4: Repo-level audits (only meaningful across the full registry)
-    repo_findings = []  # (severity, message, pseudo_file)
+    repo_findings: list[tuple[str, str, str]] = []
     for dup_id, paths in sorted(duplicate_ids.items()):
         sev = severity_levels.get('duplicate_id', 'ERROR')
         repo_findings.append((sev,

@@ -1,6 +1,7 @@
 from .base import BaseValidator
 
 class EADValidator(BaseValidator):
+    doc_type_name: str = "EAD"
     @property
     def mandatory_sections(self):
         req_sec = self.rules.get('rules', {}).get('structure', {}).get('required_sections', [])

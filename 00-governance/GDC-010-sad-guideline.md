@@ -1,7 +1,7 @@
 ---
 doc_meta:
   id: GDC-010
-  title: Software Architecture Document (SAD) Guideline
+  title: System Architecture Document (SAD) Guideline
   owner: Architecture Review Board (ARB)
   version: 1.0.0
   status: approved
@@ -11,13 +11,13 @@ doc_meta:
   last_reviewed: 2026-05-22
 ---
 
-# Software Architecture Document (SAD) Guideline
+# System Architecture Document (SAD) Guideline
 
 ## 1. Context & Scope
 
 SADs represent the C2 System/Software Architecture layer of the C4 metamodel, defining the physical execution containment, deployment topology, container boundaries, failure modes, and runtime observability (e.g., backend service monoliths, web SPAs, or mobile clients).
 
-SADs establish the "How". They serve as the definitive physical blueprint for a specific deployable unit. A single logical business capability (PAD) is physically fulfilled by one or more software containers (SADs) in a strict 1-to-N mapping. They establish the concrete technology stack, network isolation, and database engines required to execute the logical contracts defined by the PAD.
+SADs establish the "How". They serve as the definitive physical blueprint for a specific deployable unit. A single logical domain capability (PAD) is physically fulfilled by one or more software containers (SADs) in a strict 1-to-N mapping. They establish the concrete technology stack, network isolation, and database engines required to execute the logical contracts defined by the PAD.
 
 ### 1.1 Philosophy & Decision Horizon
 
@@ -41,15 +41,30 @@ SADs establish the "How". They serve as the definitive physical blueprint for a 
 
 - **Specificity Rule**: Unlike PADs, SADs must completely drop agnosticity. They must explicitly specify the concrete physical deployment topology, technology stacks, cache stores, database engines, and physical container boundaries.
 - **Containment Invariant**: SADs must explicitly document failure containment boundaries, specifically defining the Blast Radius for all major failure modes.
-- **Physical Container Separation (Beyond Frontend/Backend)**: To prevent logical boundaries from being contaminated by deployment-specific execution mechanics, **every distinct deployable unit must have its own SAD**, even if they serve the same business capability. For example, a single Identity PAD (`scnehaux-iam.pad.md`) might be fulfilled by:
+- **Physical Container Separation (Deployable Units Only)**: To prevent logical boundaries from being contaminated by deployment-specific execution mechanics, **every distinct deployable unit must have its own SAD**. Non-deployable components (e.g., shared UI libraries, internal SDKs) are strictly exempt from requiring a standalone SAD (see Section 2.2). For deployable systems, a single Identity PAD (`scnehaux-iam.pad.md`) might be fulfilled by:
   - **Backend API Service**: `scnehaux-iam.sad.md` (The core HTTP server).
   - **Frontend SPA**: `scnehaux-iam-web.sad.md` (The browser client).
   - **Async Worker**: `scnehaux-iam-worker.sad.md` (Kafka consumer handling background email dispatch).
   - **Data Pipeline/Cron**: `scnehaux-iam-archiver.sad.md` (Nightly job moving old sessions to cold storage).
 
-### 2.2 The Ruleset Architecture
+### 2.2 The Master SAD Federation (Multi-Repo & SDKs)
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-compliance-engine.md)**, the SAD specification is strictly governed by the following domain-specific linter components:
+While microservices map neatly (one repo to one deployable unit), modern ecosystems often utilize **multi-repo libraries, SDKs, or Module Federation** where multiple repositories compile into a single deployable artifact. Forcing a SAD for every library repository creates excessive documentation noise and violates the physical deployment definition of a SAD.
+
+To govern this, Scnehaux utilizes the **Aggregator-Component Pattern**:
+
+1. **The Host Repository (The Master SAD)**: The primary repository responsible for compiling or deploying the final execution unit acts as the **Aggregator**. It must maintain the `Master SAD`. This document defines the aggregate physical topology, treating the remote SDKs and libraries as internal components within its container boundary.
+2. **The Library/SDK Repositories (The Components)**: Repositories producing non-deployable libraries are **exempt** from requiring a SAD. They only require a **TDD** (Technical Design Document, `GDC-012`) to document their internal execution logic and API contracts.
+3. **The Traceability Pointer**: To maintain the automated CI/CD Directed Acyclic Graph (DAG) and prevent the linter from flagging the library as an illegal orphan, the library repository must explicitly declare its governance inheritance in its `linting-rules.yaml`:
+   ```yaml
+   governance:
+     master_sad: "SAD-UIP-001-scnehaux-ui-platform"
+   ```
+   The Compliance Engine (`linter.py`) will automatically validate that the referenced Master SAD exists in the Root Architecture Registry, and gracefully exempt the local repository from the SAD requirement.
+
+### 2.3 The Ruleset Architecture
+
+In addition to the global structural enforcement defined in **[GDC-002](./GDC-002-compliance-engine.md)**, the SAD specification is strictly governed by the following domain-specific linter components:
 
 > [!WARNING]
 > **DO NOT EDIT THIS TABLE MANUALLY.**
@@ -97,12 +112,12 @@ SADs are **single, cohesive documents** (`[system-name].sad.md` or `[system-name
 
 #### 2.3.3 Directory Structure
 
-They must utilize **Asset Container Folders** (`04-application/[system-name]/`), which act as an isolation boundary for the system's `.sad.md` files and supporting assets (e.g., deployment topology diagrams).
+They must utilize **Asset Container Folders** (`04-system/[system-name]/`), which act as an isolation boundary for the system's `.sad.md` files and supporting assets (e.g., deployment topology diagrams).
 
 **Example Directory Structure:**
 ```text
 scnehaux-architecture/
-└── 04-application/                  # (Asset Container Folders)
+└── 04-system/                  # (Asset Container Folders)
     └── iam/                         # (System grouping folder)
         ├── iam-api.sad.md           # (Backend API SAD, explicit suffix)
         ├── iam-web.sad.md           # (Client application SAD)
@@ -120,7 +135,7 @@ doc_meta:
   version: 1.0.0                      # Semantic versioning format
   status: approved                    # proposed | approved | deprecated
   classification: internal            # public | internal | restricted
-  parent_pad: PAD-XXX               # Referencing the Parent Business Capability PAD ID
+  parent_pad: PAD-XXX               # Referencing the Parent Domain Capability PAD ID
   review_cycle_days: 180              # Review cycle period
   last_reviewed: YYYY-MM-DD           # Last audit date
 ```
@@ -165,7 +180,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 | Section Name | Objective | Requirement |
 |---|---|---|
-| **Context** | Explain the technical "Why" behind the system boundary. | Must explicitly link to the governing business capability PAD. |
+| **Context** | Explain the technical "Why" behind the system boundary. | Must explicitly link to the governing domain capability PAD. |
 | **Solution Architecture** | Concrete C2 container diagrams detailing the physical technology stack. | Must illustrate all physical containers, network zones, and persistence layers. |
 | **Deployment & Topology** | Document network boundaries, scaling assumptions, resource limits (CPU/Memory), and scaling triggers. | Must contain a physical topology diagram and specific hardware/container limits. |
 | **Runtime Flows** | Detail request lifecycles, asynchronous event publishing, and degradation paths. | Must contain sequence diagrams for critical operations. |
@@ -182,7 +197,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 All SAD documents must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.
 
 **Qualitative Enforcement (ARB Audit)**
-*Note: Qualitative scoring is inherited from **[GDC-002 §2 — Scoring Criteria](./GDC-002-quality-rubric.md)**.*
+*Note: Qualitative scoring is inherited from **[GDC-003 §2 — Scoring Criteria](./GDC-003-quality-rubric.md)**.*
 
 SADs have the following custom overriding audit metric:
 1. **Blast Radius Analysis**: Under the Resilience section, every major failure mode must specify the *Blast Radius* (e.g., "Single User Session", "Full Tenant Isolation", "Entire Platform Outage") to pass the review gate.

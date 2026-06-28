@@ -67,8 +67,8 @@ All database schemas must be declaratively defined in a `schema.hcl` file under 
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Enterprise Data Architecture Strategy (EAD-002)](..\..\01-enterprise\EAD-002-data-architecture.md)
-- [Scnehaux IAM Software Architecture Document (SAD-001)](..\..\04-application\scnehaux-iam\scnehaux-iam.sad.md)
+- [Enterprise Data Architecture Strategy (EAD-002)](../../01-enterprise/EAD-002-data-architecture.md)
+- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
 
 ### Compliance Status
 Compliant.

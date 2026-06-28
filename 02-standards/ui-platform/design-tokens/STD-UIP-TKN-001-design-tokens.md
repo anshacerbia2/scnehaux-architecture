@@ -25,7 +25,7 @@ This standard defines the architecture, compilation pipeline, consumption contra
 
 It guarantees that visual properties — colors, dimensions, typography, and motion — are structured, compiled, and delivered consistently across all products, enabling design changes without manual style refactoring and preventing semantic drift as the platform scales to multi-brand environments with hundreds of components and federated micro-frontends.
 
-**Authoritative Source**: This document is the single source of truth for all token standards. The Platform Architecture Document (PAD-002) references this document for governance details and must not replicate these rules.
+**Authoritative Source**: This document is the single source of truth for all token standards. The Product Architecture Document (PAD-002) references this document for governance details and must not replicate these rules.
 
 ## 2. Design Principles
 

@@ -117,8 +117,8 @@ func (h *BoundedHasher) Hash(ctx context.Context, password string) (string, erro
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Scnehaux IAM Software Architecture Document (SAD-001)](..\..\04-application\scnehaux-iam\scnehaux-iam.sad.md)
-- [Enterprise Security Standard (STD-E003)](..\..\05-standards\STD-E003-identity-security-standard.md)
+- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- Enterprise Security Standard (STD-E003)
 
 ### Compliance Status
 Compliant.

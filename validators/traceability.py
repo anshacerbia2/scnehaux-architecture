@@ -9,8 +9,8 @@ Self-references (e.g. GDC-000 declaring `governed_by: [GDC-000]`, the constituti
 governing itself) are intentional and are NOT treated as cycles.
 """
 
-# Edges that point "upward" toward higher-authority documents.
-UPWARD_EDGE_FIELDS = ('parent_pad', 'parent_sad', 'governed_by')
+# Hardcoded list of metadata fields that represent an upward dependency in the DAG
+UPWARD_EDGE_FIELDS = ('realizes_capability', 'parent_pad', 'parent_sad', 'governed_by')
 
 
 def _as_list(value):

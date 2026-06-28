@@ -2,6 +2,7 @@ from .base import BaseValidator
 import datetime
 
 class ADRValidator(BaseValidator):
+    doc_type_name: str = "ADR"
     
     def validate_type_specific(self):
         if not self.doc_meta:

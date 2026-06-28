@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-003
+  id: GDC-004
   title: Architecture Review Process
   owner: Architecture Review Board (ARB)
   version: 1.0.0
@@ -74,7 +74,7 @@ The ARB assumes the document is already structurally perfect before interrogatin
 2. **Systemic Blast Radius & Coupling**: 
    - Does this decision tightly couple two previously decoupled domains (violating PAD boundaries)?
    - If this component fails, does the failure cascade globally?
-3. **TCO & Tech Lifecycle (GDC-004)**: 
+3. **TCO & Tech Lifecycle (GDC-005)**: 
    - Does this introduce a fragmented technology that Platform Engineering/SRE cannot support? 
    - Does it align with the `Invest` or `Hold` rings of the technology radar?
 4. **Enterprise Risk Posture**: 
@@ -104,18 +104,19 @@ This repository (`scnehaux-architecture`) follows a simplified Trunk-Based Devel
 ### 3.2 Branch Protection & Merge Rules
 Every Pull Request targeting `main` must satisfy the following algorithmic and human gates:
 
-1. **The Machine Gate (GDC-001)**: The CI/CD Linter must return an `Exit 0`. If the linter fails, the Pull Request is hard-blocked.
-2. **The Human Gate (Lead Approval)**: Because architecture documentation acts as a binding contract, standard "Peer Review" is insufficient. Every Pull Request must be explicitly approved by the **Lead** of the respective owning team according to the following matrix:
+1. **The Machine Gate (GDC-002)**: The CI/CD Linter must return an `Exit 0`. If the linter fails, the Pull Request is hard-blocked.
+2. **The Human Gate (Lead Approval)**: Because architecture documentation acts as a binding contract, standard "Peer Review" is insufficient. Every Pull Request must be explicitly approved by the **Lead** of the respective owning team according to the following matrix. **CRITICAL:** This must be enforced via GitHub Branch Protection Rules requiring at least 1 review from a `CODEOWNERS` matched team.
 
 | Document Type | Target Scope | Required Lead Approver (PR Reviewer) |
 | :--- | :--- | :--- |
 | **GDC** (Governance) | Enterprise Policy | **ARB** (Architecture Review Board) |
 | **EAD** (Enterprise) | Enterprise Strategy | **ARB** (Architecture Review Board) |
-| **STD** (Standard) | Contextual Policy | **Inherited Lead** (ARB for Global STDs, Domain Lead for Local STDs) |
+| **STD** (Standard) | Contextual Policy | **Inherited Lead** (ARB for Global STDs, Domain/System Lead for Local STDs) |
 | **PAD** (Platform) | Domain Capability | **Domain Team Lead** |
 | **SAD** (Software) | System Solution | **System Team Lead** |
 | **TDD** (Technical Design) | Component Blueprint | **Component Team Lead** |
 | **ADR** (Decision Record) | Contextual Pivot | **Inherited Lead** (ARB for Global ADRs, Domain/System Lead for Local ADRs) |
+
 3. **The ARB Gate (Two Escalation Paths)**: The Architecture Review Board (ARB) must approve the Pull Request if it reaches their desk via either of these two paths:
    - **Path A (Automated Git Routing)**: The Pull Request modifies globally restricted documents (e.g., GDC, EAD, or ADR). Git will automatically block the merge and assign the ARB via the `CODEOWNERS` file. *Exception for Trivial Changes: If the Pull Request is strictly a typo, formatting, or dead-link fix (a `Patch` version bump), any single ARB member may "Fast-Track" approve the PR in seconds without conducting a formal 7-dimension audit.*
    - **Path B (Human Escalation)**: The Pull Request modifies a standard domain document (PAD/SAD), but its content triggers a "High-Risk Pivot" (see [Section 2.2: High-Risk Pivots (ARB Escalation Triggers)](#22-high-risk-pivots-arb-escalation-triggers)). Because Git cannot read business context, the Peer Reviewer is strictly prohibited from merging and MUST manually escalate the Pull Request by tagging the ARB.

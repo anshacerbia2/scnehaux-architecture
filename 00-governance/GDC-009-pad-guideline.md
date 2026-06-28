@@ -1,7 +1,7 @@
 ---
 doc_meta:
   id: GDC-009
-  title: Platform Architecture Document (PAD) Guideline
+  title: Product Architecture Document (PAD) Guideline
   owner: Architecture Review Board (ARB)
   version: 1.0.0
   status: approved
@@ -11,13 +11,13 @@ doc_meta:
   last_reviewed: 2026-05-22
 ---
 
-# Platform Architecture Document (PAD) Guideline
+# Product Architecture Document (PAD) Guideline
 
 ## 1. Context & Scope
 
-PADs represent the C2 Domain Architecture layer of the C4 metamodel, defining the logical business capabilities, bounded contexts, trust boundaries, and strategic positioning of a business domain (e.g., `identity`, `ui-platform`, `hris`, `finance`).
+PADs represent the C2 Domain Architecture layer of the C4 metamodel, defining the logical domain capabilities, bounded contexts, trust boundaries, and strategic positioning of a business domain (e.g., `identity`, `ui-platform`, `hris`, `finance`).
 
-PADs establish the "What". They serve as the design-time single source of truth (SSOT) for domain-level contracts. A single logical business capability (PAD) governs one or more physical software containers (SADs) in a strict 1-to-N mapping. They establish conceptual integration rules (such as trust boundaries and SLA targets) *before* physical systems are built. While concrete API specifications are delegated downstream via Web Developer Portals, the PAD remains the stable, logical anchor.
+PADs establish the "What". They serve as the design-time single source of truth (SSOT) for domain-level contracts. A single logical domain capability (PAD) governs one or more physical software containers (SADs) in a strict 1-to-N mapping. They establish conceptual integration rules (such as trust boundaries and SLA targets) *before* physical systems are built. While concrete API specifications are delegated downstream via Web Developer Portals, the PAD remains the stable, logical anchor.
 
 ### 1.1 Philosophy & Decision Horizon
 
@@ -48,7 +48,7 @@ PADs establish the "What". They serve as the design-time single source of truth 
 
 ### 2.2 The Ruleset Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-compliance-engine.md)**, the PAD specification is strictly governed by the following domain-specific linter components:
+In addition to the global structural enforcement defined in **[GDC-002](./GDC-002-compliance-engine.md)**, the PAD specification is strictly governed by the following domain-specific linter components:
 
 > [!WARNING]
 > **DO NOT EDIT THIS TABLE MANUALLY.**
@@ -59,12 +59,12 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 <!-- AUTO-GENERATED-RULES:START -->
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata** | Required Fields | <ul><li>`id`</li><li>`title`</li><li>`governed_by`</li><li>`owner`</li><li>`version`</li><li>`status`</li><li>`classification`</li><li>`fulfilled_by`</li><li>`review_cycle_days`</li><li>`last_reviewed`</li></ul> |
+| **Metadata** | Required Fields | <ul><li>`id`</li><li>`title`</li><li>`governed_by`</li><li>`owner`</li><li>`version`</li><li>`status`</li><li>`classification`</li><li>`realizes_capability`</li><li>`fulfilled_by`</li><li>`review_cycle_days`</li><li>`last_reviewed`</li></ul> |
 | **Metadata** | Allowed Statuses | <ul><li>`proposed`</li><li>`approved`</li><li>`deprecated`</li></ul> |
 | **Metadata** | Allowed Classifications | <ul><li>`public`</li><li>`internal`</li><li>`restricted`</li></ul> |
-| **Structure** | Required Sections | <ul><li>`Context & Scope`</li><li>`Business Capability`</li><li>`Domain Model`</li><li>`Trust & Data Boundaries`</li><li>`Integration Contracts`</li><li>`Capability NFR Targets`</li><li>`Ownership & Realizing Systems`</li></ul> |
+| **Structure** | Required Sections | <ul><li>`Context & Scope`</li><li>`Domain Capability`</li><li>`Domain Model`</li><li>`Trust & Data Boundaries`</li><li>`Integration Contracts`</li><li>`Capability NFR Targets`</li><li>`Ownership & Realizing Systems`</li></ul> |
 | **Structure** | Optional Sections | <ul><li>`Assumptions`</li><li>`Alternatives Considered`</li></ul> |
-| **Content** | Required Section Keywords | **Context & Scope**: <ul><li>`Purpose`</li><li>`Goals`</li><li>`Non-Goal`</li><li>`Stakeholder`</li></ul><br>**Business Capability**: <ul><li>`Capability`</li><li>`Maturity`</li></ul><br>**Domain Model**: <ul><li>`Bounded Context`</li><li>`Context Mapping`</li></ul><br>**Trust & Data Boundaries**: <ul><li>`Trust`</li><li>`Data`</li><li>`Compliance`</li></ul><br>**Integration Contracts**: <ul><li>`API`</li><li>`Consumer`</li><li>`Dependencies`</li></ul><br>**Ownership & Realizing Systems**: <ul><li>`Owner`</li><li>`fulfilled_by`</li></ul> |
+| **Content** | Required Section Keywords | **Context & Scope**: <ul><li>`Purpose`</li><li>`Goals`</li><li>`Non-Goal`</li><li>`Stakeholder`</li></ul><br>**Domain Capability**: <ul><li>`Capability`</li><li>`Maturity`</li></ul><br>**Domain Model**: <ul><li>`Bounded Context`</li><li>`Context Mapping`</li></ul><br>**Trust & Data Boundaries**: <ul><li>`Trust`</li><li>`Data`</li><li>`Compliance`</li></ul><br>**Integration Contracts**: <ul><li>`API`</li><li>`Consumer`</li><li>`Dependencies`</li></ul><br>**Ownership & Realizing Systems**: <ul><li>`Owner`</li><li>`fulfilled_by`</li></ul> |
 | **Content** | Recommended Section Keywords | **Domain Model**: <ul><li>`Domain Event`</li></ul><br>**Trust & Data Boundaries**: <ul><li>`Identity`</li></ul><br>**Integration Contracts**: <ul><li>`Event`</li><li>`Provider`</li><li>`External`</li></ul><br>**Capability NFR Targets**: <ul><li>`Availability`</li><li>`Scalability`</li><li>`Resilience`</li><li>`Performance`</li></ul> |
 | **Quantification** | Required For Sections | <ul><li>`Capability NFR Targets`</li></ul> |
 <!-- AUTO-GENERATED-RULES:END -->
@@ -90,12 +90,12 @@ PADs are **single, cohesive documents** (`[domain].pad.md`). **The Cohesion Rule
 
 #### 2.3.3 Directory Structure
 
-They must utilize **Asset Container Folders** (`03-platform/[domain]/`), which act as an isolation boundary for the `.pad.md` file and its supporting assets (e.g., architecture diagrams, PlantUML files).
+They must utilize **Asset Container Folders** (`03-domain/[domain]/`), which act as an isolation boundary for the `.pad.md` file and its supporting assets (e.g., architecture diagrams, PlantUML files).
 
 **Example Directory Structure:**
 ```text
 scnehaux-architecture/
-└── 03-platform/                     # (Asset Container Folders)
+└── 03-domain/                     # (Asset Container Folders)
     └── ui-platform/
         ├── ui-platform.pad.md
         └── architecture-diagram.png
@@ -106,13 +106,13 @@ scnehaux-architecture/
 Every PAD must begin with a YAML frontmatter block containing these fields:
 ```yaml
 doc_meta:
-  id: PAD-XXX                       # Business capability ID
-  title: [Capability Title]           # Descriptive title of the Business Capability
+  id: PAD-XXX                       # Domain capability ID
+  title: [Capability Title]           # Descriptive title of the Domain Capability
   owner: [Domain Team/Role]           # Authoritative team owner
   version: 1.0.0                      # Semantic versioning format
   status: approved                    # proposed | approved | deprecated
   classification: public              # public | internal | restricted
-  fulfilled_by:                       # List of physical SAD IDs fulfilling this business capability
+  fulfilled_by:                       # List of physical SAD IDs fulfilling this domain capability
     - SAD-XXX
   review_cycle_days: 180              # Review cycle period
   last_reviewed: YYYY-MM-DD           # Last audit date
@@ -135,7 +135,7 @@ doc_meta:
 |---|---|
 | `proposed` | The domain architecture is under design or ARB review. |
 | `approved` | The domain architecture is formalized and acts as the official contract. |
-| `deprecated` | The business capability is being phased out or has been replaced. |
+| `deprecated` | The domain capability is being phased out or has been replaced. |
 
 ##### Allowed Classifications
 | Classification | Meaning / Data Sensitivity |
@@ -158,7 +158,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 | Section Name | Objective | Requirement |
 |---|---|---|
-| **Business Capability** | Define the business value, bounded context, and macro-level features that define this business capability. Focus on logical boundaries. |  Must remain technology-agnostic. Focus on logical boundaries rather than libraries or infrastructure. |
+| **Domain Capability** | Define the business value, bounded context, and macro-level features that define this domain capability. Focus on logical boundaries. |  Must remain technology-agnostic. Focus on logical boundaries rather than libraries or infrastructure. |
 | **Trust Boundary & Security** | Map the isolation levels, identity propagation (e.g., Zero Trust), data encryption, and tenant separation models. | Detail how user contexts and application credentials traverse system boundaries. |
 | **Integration Contract** | Specify strict API contracts, required proprietary headers (e.g., `Scnehaux-Account`), and authentication handshakes. | Must define retry envelopes and payload validation standards for external clients. |
 | **Strategic Architecture** | Illustrate the C1/C2 macro-topology and its relationship with other enterprise systems (diagrams mandatory). | Must contain a clean structural diagram (such as Mermaid or similar) mapping domains. |
@@ -169,7 +169,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 ### 2.4 Lifecycle & Audit
 
-As the Single Source of Truth (SSOT) for Platform Architecture Documents (PAD), the PAD represents highly stable business capabilities. They must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.
+As the Single Source of Truth (SSOT) for Product Architecture Documents (PAD), the PAD represents highly stable domain capabilities. They must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.
 
 ---
 

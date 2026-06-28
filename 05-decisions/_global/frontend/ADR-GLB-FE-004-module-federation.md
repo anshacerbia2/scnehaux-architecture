@@ -44,7 +44,7 @@ For all frontend applications authorized to utilize an MFE architecture, we mand
 
 ## 7. Compliance Impact
 ### Related Standards
-- [STD-GLB-FE-007 (Micro-Frontend)](..\..\..\02-standards\_global\frontend\STD-GLB-FE-007-micro-frontend.md) - This standard establishes the normative rules and exact threshold conditions for when to adopt Module Federation.
+- [STD-GLB-FE-007 (Micro-Frontend)](../../../02-standards/_global/frontend/STD-GLB-FE-007-micro-frontend.md) - This standard establishes the normative rules and exact threshold conditions for when to adopt Module Federation.
 
 ### Compliance Status
 Compliant.

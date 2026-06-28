@@ -109,8 +109,8 @@ err = pglogrepl.StartReplication(ctx, conn, "scnehaux_outbox_slot", startLSN, pg
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Enterprise Application Architecture Strategy (EAD-003)](..\..\01-enterprise\EAD-003-application-architecture.md)
-- [Scnehaux IAM Software Architecture Document (SAD-001)](..\..\04-application\scnehaux-iam\scnehaux-iam.sad.md)
+- [Enterprise Application Architecture Strategy (EAD-003)](../../01-enterprise/EAD-003-application-architecture.md)
+- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
 
 ### Compliance Status
 Compliant.

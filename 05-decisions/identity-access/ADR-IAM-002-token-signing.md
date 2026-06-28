@@ -97,9 +97,9 @@ copy(sigBytes[64-len(sBytes):64], sBytes)
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Identity Platform Domain Strategy (PAD-001)](..\..\03-platform\identity-platform\identity-platform.pad.md)
-- [Scnehaux IAM Software Architecture Document (SAD-001)](..\..\04-application\scnehaux-iam\scnehaux-iam.sad.md)
-- [Epoch-Based Session Management Decision (ADR-E004)](..\..\04-decisions\ADR-E004-epoch-based-session-management.md)
+- [Identity Platform Domain Strategy (PAD-001)](../../03-domain/identity-platform/identity-platform.pad.md)
+- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- [Epoch-Based Session Management Decision (ADR-E004)](../../04-decisions/ADR-E004-epoch-based-session-management.md)
 
 ### Compliance Status
 Compliant.

@@ -1,10 +1,18 @@
 import re
 import os
 import datetime
+import logging
+import yaml
+from urllib.parse import unquote
 from .base import BaseValidator
 from .utils import parse_date, clean_content_for_length, extract_section_contents, normalize_section, extract_links, get_section_order
 from .schema import DocMeta
 from pydantic import ValidationError
+
+logger = logging.getLogger(__name__)
+
+# Document types that reference deployable technology surfaces.
+_TECHNOLOGY_HOLD_DOC_TYPES = frozenset({'SAD', 'TDD'})
 
 def run_common_validations(validator: BaseValidator) -> None:
     _validate_naming(validator)
@@ -16,6 +24,7 @@ def run_common_validations(validator: BaseValidator) -> None:
     _validate_internal_links(validator)
     _validate_inline_references(validator)
     _validate_quantification(validator)
+    _validate_technology_hold(validator)
 
 def _validate_inline_references(v: BaseValidator) -> None:
     """
@@ -92,11 +101,13 @@ def _validate_internal_links(v: BaseValidator) -> None:
     base_dir = os.path.dirname(v.file_path)
     
     for link in links:
-        # Ignore external links or empty links
+        # Ignore external links, mailto, and fragment-only links
         if not link or link.startswith('http') or link.startswith('mailto:') or link.startswith('#'):
             continue
             
-        # Strip anchor if present
+        link = unquote(link)
+            
+        # Strip fragment identifier if present for file existence check
         file_part = link.split('#')[0]
         if not file_part:
             continue
@@ -225,6 +236,14 @@ def _validate_quantification(v: BaseValidator) -> None:
                 break
         if is_quant_req and metric_pattern:
             if not re.search(metric_pattern, clean_text, re.IGNORECASE):
+                # We also check for vague claims (ambiguity pattern)
+                # If there's no metric, and we find a vague word, it's an ERROR (vague_claim_in_nfr)
+                ambiguity = rules_content.get('ambiguity_check', {})
+                if ambiguity:
+                    pattern = ambiguity.get('pattern')
+                    if pattern and re.search(pattern, clean_text, re.IGNORECASE):
+                        v.add_error('vague_claim_in_nfr', f"Section '{section_name}' requires quantified metrics. Vague claim detected instead of metrics.")
+                        continue # Don't double report
                 v.add_error('vague_claim', f"Section '{section_name}' requires quantified metrics but none found matching pattern '{metric_pattern}'.")
 
         for req_sec, keywords in req_sec_keywords.items():
@@ -244,7 +263,37 @@ def _validate_quantification(v: BaseValidator) -> None:
                         v.add_error('recommended_keyword_missing', f"Section '{section_name}' is recommended to address '{kw}' (or mark it Not Applicable).")
 
         for banned_sec, keywords in prohibited_sec_keywords.items():
-            if banned_sec.lower() == section_name.lower():
+            if banned_sec.lower() in section_name.lower():
                 for kw in keywords:
                     if re.search(r'\b' + re.escape(kw) + r'\b', clean_text, re.IGNORECASE):
                         v.add_error('prohibited_word', f"Section '{section_name}' contains prohibited governance boilerplate word: '{kw}'")
+
+def _validate_technology_hold(v: BaseValidator) -> None:
+    """
+    Check if the document references technologies on HOLD status in the tech radar.
+    Only fires for document types that describe deployable technology surfaces (SAD, TDD).
+    Centralised here to eliminate DRY violation (previously duplicated in sad.py and tdd.py).
+    """
+    if v.doc_type_name not in _TECHNOLOGY_HOLD_DOC_TYPES:
+        return
+
+    tech_radar_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '01-enterprise', 'tech-radar.yaml')
+    if not os.path.exists(tech_radar_path):
+        return
+
+    try:
+        with open(tech_radar_path, 'r', encoding='utf-8') as f:
+            radar = yaml.safe_load(f)
+            hold_techs = radar.get('technology_radar', {}).get('hold', [])
+    except Exception as e:
+        logger.debug("Failed to load tech radar from '%s': %s", tech_radar_path, e)
+        return
+
+    if not hold_techs:
+        return
+
+    clean_text = clean_content_for_length(v.content)
+    for tech in hold_techs:
+        if re.search(r'\b' + re.escape(tech) + r'\b', clean_text, re.IGNORECASE):
+            v.add_error('technology_hold_violation', f"Document implements technology on HOLD status: '{tech}'.")
+

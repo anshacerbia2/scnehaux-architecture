@@ -44,8 +44,8 @@ We will adopt a **Dual-Engine State Management Strategy**, strictly separating s
 
 ## 7. Compliance Impact
 ### Related Standards
-- [STD-GLB-FE-002 (React Standards)](..\..\..\02-standards\_global\frontend\STD-GLB-FE-002-react.md)
-- [STD-GLB-FE-010 (Data Access)](..\..\..\02-standards\_global\frontend\STD-GLB-FE-010-data-access.md)
+- STD-GLB-FE-002 (React Standards)
+- [STD-GLB-FE-010 (Data Access)](../../../02-standards/_global/frontend/STD-GLB-FE-010-data-access.md)
 
 ### Compliance Status
 Compliant.

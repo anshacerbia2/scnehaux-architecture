@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: scnehaux-linter
+Version: 1.2.0
+Summary: Scnehaux Architecture Documentation Governance Linter
+License-Expression: MIT
+Requires-Python: >=3.11
+Requires-Dist: markdown-it-py==4.0.0
+Requires-Dist: pydantic==2.13.1
+Requires-Dist: PyYAML==6.0.3
+Provides-Extra: dev
+Requires-Dist: pytest==9.1.1; extra == "dev"
+Requires-Dist: pytest-cov==7.1.0; extra == "dev"

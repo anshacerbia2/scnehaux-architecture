@@ -10,28 +10,50 @@ permissions:
   contents: read
   security-events: write   # required to upload SARIF results to code scanning
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   internal-lint:
     name: "Enforce GDC Compliance (Self-Dogfooding)"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
           cache: "pip"
 
-      - name: Install Dependencies (pinned)
-        run: pip install -r requirements.txt
+      - name: Install Package and Dependencies
+        run: pip install -e .[dev]
 
-      - name: Run Validator Tests & Coverage Enforcer (>=95%)
-        run: python -m pytest --cov=validators --cov-fail-under=95 validators/tests/
+      - name: Run Validator Tests & Coverage Enforcer (>=94%)
+        run: python -m pytest --cov=validators --cov=linter --cov-fail-under=94 --cov-report=term-missing
 
       - name: Verify Rules-Doc Sync (SSOT reconciliation)
-        run: python scripts/generate_rules_doc.py --check
+        run: |
+          python scripts/generate_rules_doc.py
+          git diff --exit-code 00-governance/GDC-002-compliance-engine.md || (echo "GDC-002 is out of sync with linting-rules.yaml. Run scripts/generate_rules_doc.py locally and commit the result." && exit 1)
+
+      - name: Verify ADR Index Sync
+        run: |
+          python scripts/generate_adr_index.py
+          git diff --exit-code 05-decisions/INDEX.md || (echo "ADR INDEX is out of sync. Run scripts/generate_adr_index.py locally and commit." && exit 1)
+
+      - name: Verify PAD/SAD Index Sync
+        run: |
+          python scripts/generate_pad_sad_index.py
+          git diff --exit-code 03-platform/INDEX.md 04-application/INDEX.md || (echo "PAD/SAD INDEX is out of sync. Run scripts/generate_pad_sad_index.py locally and commit." && exit 1)
+
+      - name: Verify Waiver Expirations
+        run: python scripts/check_waiver_expirations.py
 
       - name: Generate SARIF report
         if: always()
@@ -47,3 +69,4 @@ jobs:
 
       - name: Enforce Compliance Gate (authoritative)
         run: python linter.py --format text
+

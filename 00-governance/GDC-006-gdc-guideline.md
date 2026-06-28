@@ -27,7 +27,7 @@ All meta-level governance documents (GDC) must strictly adhere to the defined me
 
 ### 2.1 The Linter Ruleset (Machine-Readable)
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-compliance-engine.md)**, Governance Document Contracts (GDC) are strictly governed by the following domain-specific linter components:
+In addition to the global structural enforcement defined in **[GDC-002](./GDC-002-compliance-engine.md)**, Governance Document Contracts (GDC) are strictly governed by the following domain-specific linter components:
 
 > [!WARNING]
 > **DO NOT EDIT THIS TABLE MANUALLY.**
@@ -74,7 +74,7 @@ scnehaux-architecture/
 └── 00-governance/
     ├── rules/
     │   └── linting-rules-gdc.yaml
-    └── GDC-001-compliance-engine.md
+    └── GDC-002-compliance-engine.md
 ```
 
 #### 2.3.4 Metadata Schema Properties
@@ -163,7 +163,7 @@ If you need to introduce a new constraint or modify an existing rule across any 
    ```
 3. **Update Semantic Definitions**: The automated script only updates the machine-readable table. You **MUST** manually update the Semantic Definitions section in the corresponding Guideline document to explain the "Why" and "How" behind your new constraints for human readers.
 4. **Qualitative Synchronization (Human Governance)**: If your rule modification impacts the qualitative evaluation of architecture (e.g., prohibiting new vague terms, demanding new quantitative NFR metrics, or altering risk disclosure requirements), you **MUST** also manually synchronize the human-driven governance artifacts:
-   - Update `GDC-002-quality-rubric.md` (The 10-Parameter Qualitative Benchmark).
+   - Update `GDC-003-quality-rubric.md` (The 10-Parameter Qualitative Benchmark).
    - Update `review-score-sheet-template.md` (The ARB Peer-Review Execution Tool).
 
 Failure to follow this reconciliation flow will result in Documentation Drift and a rejected Pull Request.
@@ -172,7 +172,7 @@ Failure to follow this reconciliation flow will result in Documentation Drift an
 
 ## 4. Enforcement Mechanism
 
-In addition to the global structural enforcement defined in `GDC-001`, GDC documents are strictly governed by the following domain-specific linter components:
+In addition to the global structural enforcement defined in `GDC-002`, GDC documents are strictly governed by the following domain-specific linter components:
 
 | Linter Component | File | Enforcement Logic |
 | :--- | :--- | :--- |

@@ -33,7 +33,7 @@ The `02-standards` directory is the authoritative collection of mandatory rules,
 
 ### 2.2 The Ruleset Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-compliance-engine.md)**, the STD specification is strictly governed by the following domain-specific linter components:
+In addition to the global structural enforcement defined in **[GDC-002](./GDC-002-compliance-engine.md)**, the STD specification is strictly governed by the following domain-specific linter components:
 
 > [!WARNING]
 > **DO NOT EDIT THIS TABLE MANUALLY.**
@@ -115,7 +115,7 @@ doc_meta:
   version: Y.Y.Y
   status: adopted | trial | assessed | hold
   classification: public | internal | restricted
-  governed_by: [Authorizing ADR ID]        # Optional: Mapped authorizing ADR ID (e.g., ADR-GLB-001)
+  governed_by: [Parent Context ID]         # Required: Must point to EAD, PAD, SAD, or GDC-000 (if purely technical/global)
 ```
 
 **Project/Local Level (Project Repo)**
@@ -128,7 +128,7 @@ doc_meta:
   status: adopted | trial | assessed | hold
   classification: public | internal | restricted
   parent_std: [Parent Enterprise Standard ID] # e.g., STD-GLB-001 or STD-E006 (Traceability link)
-  governed_by: [Authorizing ADR ID]        # Optional: Mapped authorizing ADR ID (e.g., ADR-SCNX-IAM-GO-001)
+  governed_by: [Parent Context ID]         # Required: Must point to EAD, PAD, SAD, or GDC-000 (if purely technical/global)
 ```
 
 | Metadata Field | Type | Description / Purpose |
@@ -181,9 +181,9 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 #### 2.4.1 Standard Maturity Model
 To prevent rigid compliance grids from stifling innovation, every enterprise standard must declare a maturity phase in its `status` field.
 
-> **Authoritative Source**: The canonical definitions of the four maturity phases (Assessed, Trial, Adopted, Hold), including their adoption requirements, deviation policies, and sunset procedures, are defined and maintained in **[GDC-004 — Technology Lifecycle & Standards Governance](./GDC-004-tech-lifecycle.md)**.
+> **Authoritative Source**: The canonical definitions of the four maturity phases (Assessed, Trial, Adopted, Hold), including their adoption requirements, deviation policies, and sunset procedures, are defined and maintained in **[GDC-005 — Technology Lifecycle & Standards Governance](./GDC-005-tech-lifecycle.md)**.
 
-All STD documents must declare one of the four phases defined in GDC-004 in their `status` metadata field.
+All STD documents must declare one of the four phases defined in GDC-005 in their `status` metadata field.
 
 #### 2.4.2 The Living Specification Principle (Mutability & Versioning)
 Unlike ADRs (which are immutable historical logs of a specific point-in-time decision), **STDs are living specifications** that represent the *currently active* engineering mandates.

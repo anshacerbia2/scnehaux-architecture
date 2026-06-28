@@ -1,6 +1,7 @@
 from .base import BaseValidator
 
 class PADValidator(BaseValidator):
+    doc_type_name: str = "PAD"
     def validate_type_specific(self):
         if not self.doc_meta:
             return
@@ -27,3 +28,15 @@ class PADValidator(BaseValidator):
                             if self_id not in parent_list:
                                 self.add_error('traceability_violation',
                                     f"PAD '{self_id}' lists SAD '{sad_id}' in 'fulfilled_by', but SAD '{sad_id}' does not reference this PAD as its 'parent_pad'. Bidirectional traceability is broken.")
+
+        realizes_capability = self.doc_meta.get('realizes_capability')
+        if realizes_capability is None or (isinstance(realizes_capability, list) and len(realizes_capability) == 0):
+            self.add_error('traceability_violation',
+                "PAD document is missing required traceability field: 'realizes_capability'. "
+                "Every PAD must trace upward to at least one EAD business capability.")
+        else:
+            ead_ids = realizes_capability if isinstance(realizes_capability, list) else [realizes_capability]
+            for ead_id in ead_ids:
+                if ead_id not in self.all_doc_ids:
+                    self.add_error('traceability_violation',
+                        f"PAD 'realizes_capability' references EAD '{ead_id}' which does not exist in the repository.")

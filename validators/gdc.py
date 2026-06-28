@@ -3,6 +3,7 @@ from .utils import extract_section_contents
 import re
 
 class GDCValidator(BaseValidator):
+    doc_type_name: str = "GDC"
     def validate_type_specific(self):
         if not self.doc_meta:
             return

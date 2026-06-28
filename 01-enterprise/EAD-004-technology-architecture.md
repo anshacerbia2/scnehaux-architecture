@@ -60,6 +60,6 @@ The Paved Road is not a prison. Unique workloads require unique tools. An absolu
 
 ## 6. Technology Radar
 
-The enterprise architecture is an evolutionary trajectory: technologies and patterns move through a managed lifecycle of **Assess → Trial → Adopt → Hold**, governed by [GDC-004](../00-governance/GDC-004-tech-lifecycle.md).
+The enterprise architecture is an evolutionary trajectory: technologies and patterns move through a managed lifecycle of **Assess → Trial → Adopt → Hold**, governed by [GDC-005](../00-governance/GDC-005-tech-lifecycle.md).
 
 The authoritative radar is maintained as machine-readable policy in [`tech-radar.yaml`](./tech-radar.yaml) — the linter enforces it directly: a document that adopts a technology on `Hold` fails CI. This section intentionally does **not** re-list the entries, to avoid drifting from that single source of truth.

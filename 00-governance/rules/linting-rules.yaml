@@ -14,14 +14,14 @@
 # WARNING: AUTOMATED DOCUMENTATION LINKAGE
 # ==============================================================================
 # This YAML file is the Single Source of Truth (SSOT). If you modify any rules
-# below, you MUST regenerate the Markdown table in GDC-001:
+# below, you MUST regenerate the Markdown table in GDC-002:
 #   > python scripts/generate_rules_doc.py
 # CI enforces synchronization via:
 #   > python scripts/generate_rules_doc.py --check
 # ==============================================================================
 
 config:
-  target_doc: GDC-001-compliance-engine.md
+  target_doc: GDC-002-compliance-engine.md
 
 rules:
   # Structural Validation
@@ -79,7 +79,8 @@ rules:
 
 # Three-Gate CI Rule Categorization (Hard Block Exit 1 vs Non-Blocking Warning)
 severity_levels:
-  # BLOCKING (Hard Gate - CI fails with Exit 1)
+  # BLOCKING
+  vague_claim_in_nfr: ERROR
   security_isolation_violation: CRITICAL
   structural_integrity_violation: CRITICAL
   technology_hold_violation: CRITICAL

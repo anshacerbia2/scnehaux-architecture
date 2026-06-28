@@ -62,8 +62,8 @@ We officially establish a mandatory event schema evolution policy governed by th
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Enterprise Event-Driven Architecture & Messaging Standard (STD-E016)](..\..\05-standards\STD-E016-event-driven-architecture-messaging-standard.md)
-- [Enterprise Data Classification, Governance & Retention Standard (STD-E017)](..\..\05-standards\STD-E017-data-classification-governance-retention-standard.md)
+- Enterprise Event-Driven Architecture & Messaging Standard (STD-E016)
+- Enterprise Data Classification, Governance & Retention Standard (STD-E017)
 
 ### Compliance Status
 Compliant.

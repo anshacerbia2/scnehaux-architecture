@@ -1,6 +1,7 @@
 from .base import BaseValidator
 
 class STDValidator(BaseValidator):
+    doc_type_name: str = "STD"
     def validate_type_specific(self):
         if not self.doc_meta:
             return

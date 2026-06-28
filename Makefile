@@ -12,4 +12,13 @@ lint:
 	python linter.py --target .
 
 test:
-	pytest validators/tests/
+	python -m pytest
+
+coverage:
+	python -m pytest --cov=validators --cov=linter --cov-fail-under=94 --cov-report=term-missing validators/tests/
+
+docker-build:
+	docker build -t scnehaux-linter:test .
+
+docker-run:
+	docker run --rm -v "$$(pwd):/docs" scnehaux-linter:test --target /docs

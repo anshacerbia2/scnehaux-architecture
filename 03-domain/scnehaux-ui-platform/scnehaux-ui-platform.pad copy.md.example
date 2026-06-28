@@ -39,8 +39,8 @@ The platform delivers a unified **3-Layer Visual Engine**:
 ### 1.1 Fulfilling Systems
 
 This platform capability is physically fulfilled by the following systems:
--   **Scnehaux UI Platform Software Architecture**: Managed under the physical package registry defined in [scnehaux-ui-platform.sad.md](../../04-application/scnehaux-ui-platform/scnehaux-ui-platform.sad.md) (DOC-S003).
--   **IAM Dashboard (Standalone SPA)**: Housed under `scnehaux-iam-dashboard` which directly integrates and consumes the semantic token suite as a standalone portal ([scnehaux-iam-dashboard.sad.md](../../04-application/scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md)).
+-   **Scnehaux UI Platform Software Architecture**: Managed under the physical package registry defined in [scnehaux-ui-platform.sad.md](../../04-system/scnehaux-ui-platform/scnehaux-ui-platform.sad.md) (DOC-S003).
+-   **IAM Dashboard (Standalone SPA)**: Housed under `scnehaux-iam-dashboard` which directly integrates and consumes the semantic token suite as a standalone portal ([scnehaux-iam-dashboard.sad.md](../../04-system/scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md)).
 -   **ERP Portal (Federated Host)**: The host shell orchestrating HRIS and Finance micro-frontends sharing `@scnx/system` styles.
 
 ---

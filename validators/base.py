@@ -42,7 +42,10 @@ class BaseValidator:
         self.all_doc_ids = all_doc_ids
         self.all_doc_metadata = all_doc_metadata or {}
         self.errors: list[tuple[str, str]] = []
-        self.rel_path = os.path.relpath(file_path, '.').replace('\\', '/')
+        try:
+            self.rel_path = os.path.relpath(file_path, '.').replace('\\', '/')
+        except ValueError:
+            self.rel_path = file_path.replace('\\', '/')
         self.filename = os.path.basename(file_path)
 
         # Parse lint_disable directives. Format (reason optional but recommended):

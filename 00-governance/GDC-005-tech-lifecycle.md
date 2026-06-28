@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-004
+  id: GDC-005
   title: Technology Lifecycle & Standards Governance
   owner: Architecture Review Board (ARB)
   version: 1.0.0

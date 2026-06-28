@@ -1,0 +1,14 @@
+.git
+__pycache__
+.coverage
+.pytest_cache
+*.txt
+.vscode
+.github
+01-enterprise/
+02-domains/
+03-systems/
+04-components/
+05-decisions/
+docs/
+tests/

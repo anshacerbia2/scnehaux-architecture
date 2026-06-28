@@ -37,7 +37,7 @@ scnehaux-ui-platform/                # (Project Repository)
 
 ### 2.2 The Ruleset Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-compliance-engine.md)**, the TDD specification is strictly governed by the following domain-specific linter components:
+In addition to the global structural enforcement defined in **[GDC-002](./GDC-002-compliance-engine.md)**, the TDD specification is strictly governed by the following domain-specific linter components:
 
 > [!WARNING]
 > **DO NOT EDIT THIS TABLE MANUALLY.**
@@ -64,7 +64,7 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 **Engine Execution Mechanics**:
 1. **Hold Technology Enforcement**: The automated linter will execute a Hard Block (Exit 1) on any TDD document that implements a technology currently marked as `Hold` in its respective lifecycle phase.
 2. **Traceability**: The linter ensures that a `parent_sad` attribute exists in the TDD metadata, preventing isolated or "orphan" components.
-3. **Remote Execution (Security Constraint)**: Downstream project repositories must not maintain local copies of the linter. Local CI/CD pipelines must invoke the central linter remotely. See **[GDC-001: Downstream Integration](./GDC-001-compliance-engine.md#41-downstream-integration-remote-execution)** for detailed setup instructions.
+3. **Remote Execution (Security Constraint)**: Downstream project repositories must not maintain local copies of the linter. Local CI/CD pipelines must invoke the central linter remotely. See **[GDC-002: Downstream Integration](./GDC-002-compliance-engine.md#41-downstream-integration-remote-execution)** for detailed setup instructions.
 
 ### 2.3 Semantic Definitions
 

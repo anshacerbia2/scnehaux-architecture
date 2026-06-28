@@ -1,8 +1,5 @@
-import sys
-import os
 import pytest
 from datetime import date, timedelta
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from validators.gdc import GDCValidator
 from validators.ead import EADValidator
@@ -11,118 +8,108 @@ from validators.pad import PADValidator
 from validators.sad import SADValidator
 from validators.adr import ADRValidator
 from validators.tdd import TDDValidator
+from validators.tests.conftest import make_validator
 
-class MockADRValidator(ADRValidator):
-    def __init__(self, doc_meta, content=""):
-        self.doc_meta = doc_meta
-        self.rules = {'rules': {'metadata': {'exception_info_required_fields': ['expiry_date'], 'allowed_types': ['standard', 'exception']}}}
-        self.errors = []
-        self.content = content
-        self.all_doc_ids = set()
-        self.filename = "ADR-001.md"
-        self.disabled_rules = set()
+
+# ---------- ADR ----------
 
 def test_adr_exception_missing_info():
-    v = MockADRValidator({'adr_type': 'exception'})
+    rules = {'rules': {'metadata': {'exception_info_required_fields': ['expiry_date'], 'allowed_types': ['standard', 'exception']}}, 'severity_levels': {}}
+    v = make_validator(cls=ADRValidator, doc_meta={'adr_type': 'exception'}, rules=rules, filename='ADR-001.md')
     v.validate_type_specific()
     assert any('missing the required' in msg for sev, msg in v.errors)
 
 def test_adr_exception_expired():
     past = date.today() - timedelta(days=1)
-    meta = {
-        'adr_type': 'exception',
-        'status': 'accepted',
-        'exception_info': {'expiry_date': past}
-    }
-    v = MockADRValidator(meta)
+    meta = {'adr_type': 'exception', 'status': 'accepted', 'exception_info': {'expiry_date': past}}
+    rules = {'rules': {'metadata': {'exception_info_required_fields': ['expiry_date'], 'allowed_types': ['standard', 'exception']}}, 'severity_levels': {}}
+    v = make_validator(cls=ADRValidator, doc_meta=meta, rules=rules, filename='ADR-001.md')
     v.validate_type_specific()
     assert any('has expired' in msg for sev, msg in v.errors)
 
-class MockSADValidator(SADValidator):
-    def __init__(self, doc_meta, all_doc_metadata=None):
-        self.doc_meta = doc_meta
-        self.rules = {'rules': {'metadata': {}}}
-        self.errors = []
-        self.all_doc_ids = {'PAD-001'}
-        self.all_doc_metadata = all_doc_metadata or {}
-        self.filename = "SAD-001.md"
-        self.disabled_rules = set()
+def test_adr_invalid_type():
+    rules = {'rules': {'metadata': {'exception_info_required_fields': ['expiry_date'], 'allowed_types': ['standard', 'exception']}}, 'severity_levels': {}}
+    v = make_validator(cls=ADRValidator, doc_meta={'adr_type': 'invalid_type'}, rules=rules, filename='ADR-001.md')
+    v.validate_type_specific()
+    assert any("not in allowed list" in e[1] for e in v.errors)
+
+def test_adr_missing_exception_block():
+    rules = {'rules': {'metadata': {'exception_info_required_fields': ['expiry_date'], 'allowed_types': ['standard', 'exception']}}, 'severity_levels': {}}
+    v = make_validator(cls=ADRValidator, doc_meta={'adr_type': 'exception'}, rules=rules, filename='ADR-001.md')
+    v.validate_type_specific()
+    assert any("missing the required 'exception_info'" in e[1] for e in v.errors)
+
+
+# ---------- SAD ----------
 
 def test_sad_missing_parent_pad():
-    v = MockSADValidator({'status': 'draft'})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=SADValidator, doc_meta={'status': 'draft'}, rules=rules, filename='SAD-001.md')
     v.validate_type_specific()
     assert any('missing required traceability' in msg for sev, msg in v.errors)
 
 def test_sad_invalid_parent_pad():
-    v = MockSADValidator({'parent_pad': 'PAD-999'})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=SADValidator, doc_meta={'parent_pad': 'PAD-999'}, rules=rules, all_doc_ids={'PAD-001'}, filename='SAD-001.md')
     v.validate_type_specific()
     assert any('does not exist' in msg for sev, msg in v.errors)
 
 def test_sad_bidirectional_traceability_fail():
-    v = MockSADValidator({'id': 'SAD-001', 'parent_pad': 'PAD-001'}, all_doc_metadata={'PAD-001': {'fulfilled_by': ['SAD-999']}})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=SADValidator, doc_meta={'id': 'SAD-001', 'parent_pad': 'PAD-001'}, rules=rules,
+        all_doc_ids={'PAD-001'}, all_doc_metadata={'PAD-001': {'fulfilled_by': ['SAD-999']}}, filename='SAD-001.md')
     v.validate_type_specific()
     assert any('Bidirectional traceability is broken' in msg for sev, msg in v.errors)
 
 def test_sad_bidirectional_traceability_pass():
-    v = MockSADValidator({'id': 'SAD-001', 'parent_pad': 'PAD-001'}, all_doc_metadata={'PAD-001': {'fulfilled_by': ['SAD-001']}})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=SADValidator, doc_meta={'id': 'SAD-001', 'parent_pad': 'PAD-001'}, rules=rules,
+        all_doc_ids={'PAD-001'}, all_doc_metadata={'PAD-001': {'fulfilled_by': ['SAD-001']}}, filename='SAD-001.md')
     v.validate_type_specific()
     assert len(v.errors) == 0
 
-class MockPADValidator(PADValidator):
-    def __init__(self, doc_meta, all_doc_metadata=None):
-        self.doc_meta = doc_meta
-        self.rules = {'rules': {'metadata': {}}}
-        self.errors = []
-        self.all_doc_ids = {'SAD-001'}
-        self.all_doc_metadata = all_doc_metadata or {}
-        self.filename = "PAD-001.md"
-        self.disabled_rules = set()
+
+# ---------- PAD ----------
 
 def test_pad_invalid_fulfilled_by():
-    v = MockPADValidator({'fulfilled_by': ['SAD-999']})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=PADValidator, doc_meta={'fulfilled_by': ['SAD-999']}, rules=rules, all_doc_ids={'SAD-001'}, filename='PAD-001.md')
     v.validate_type_specific()
     assert any('does not exist' in msg for sev, msg in v.errors)
 
 def test_pad_bidirectional_traceability_fail():
-    v = MockPADValidator({'id': 'PAD-001', 'fulfilled_by': ['SAD-001']}, all_doc_metadata={'SAD-001': {'parent_pad': 'PAD-999'}})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=PADValidator, doc_meta={'id': 'PAD-001', 'fulfilled_by': ['SAD-001']}, rules=rules,
+        all_doc_ids={'SAD-001'}, all_doc_metadata={'SAD-001': {'parent_pad': 'PAD-999'}}, filename='PAD-001.md')
     v.validate_type_specific()
     assert any('Bidirectional traceability is broken' in msg for sev, msg in v.errors)
 
 def test_pad_bidirectional_traceability_pass():
-    v = MockPADValidator({'id': 'PAD-001', 'fulfilled_by': ['SAD-001']}, all_doc_metadata={'SAD-001': {'parent_pad': 'PAD-001'}})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=PADValidator, doc_meta={'id': 'PAD-001', 'fulfilled_by': ['SAD-001'], 'realizes_capability': 'EAD-001'}, rules=rules,
+        all_doc_ids={'SAD-001', 'EAD-001'}, all_doc_metadata={'SAD-001': {'parent_pad': 'PAD-001'}, 'EAD-001': {}}, filename='PAD-001.md')
     v.validate_type_specific()
     assert len(v.errors) == 0
 
-class MockSTDValidator(STDValidator):
-    def __init__(self, doc_meta):
-        self.doc_meta = doc_meta
-        self.rules = {'rules': {'metadata': {}}}
-        self.errors = []
-        self.filename = "STD-001.md"
-        self.disabled_rules = set()
+
+# ---------- STD ----------
 
 def test_std_hold_status():
-    v = MockSTDValidator({'status': 'hold'})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=STDValidator, doc_meta={'status': 'hold'}, rules=rules, filename='STD-001.md')
     v.validate_type_specific()
     assert any('retirement phase' in msg for sev, msg in v.errors)
 
-class MockGDCValidator(GDCValidator):
-    def __init__(self, filename, content, rules=None):
-        self.doc_meta = {'status': 'draft'}
-        # Subsections are sourced from the YAML SSOT (rules.structure), matching the
-        # refactored GDCValidator. The previous hardcoded-pillar mock drifted from the engine.
-        self.rules = rules or {'rules': {'structure': {'required_downstream_guideline_subsections': {
-            'Semantic Definitions': ['Naming Conventions', 'Taxonomy'],
-            'Metadata Schema Properties': ['Allowed Lifecycle Statuses', 'Allowed Classifications'],
-        }}}}
-        self.errors = []
-        self.filename = filename
-        self.content = content
-        self.disabled_rules = set()
+
+# ---------- GDC ----------
 
 def test_gdc_guideline_interface():
+    rules = {'rules': {'structure': {'required_downstream_guideline_subsections': {
+        'Semantic Definitions': ['Naming Conventions', 'Taxonomy'],
+        'Metadata Schema Properties': ['Allowed Lifecycle Statuses', 'Allowed Classifications'],
+    }}}, 'severity_levels': {}}
     # Neither required parent section present -> one missing_section error per parent (2).
-    v = MockGDCValidator('EAD-007-guideline.md', "## Introduction")
+    v = make_validator(cls=GDCValidator, doc_meta={'status': 'draft'}, content="## Introduction", rules=rules, filename='EAD-007-guideline.md')
     v.validate_type_specific()
     assert len(v.errors) == 2
 
@@ -132,109 +119,94 @@ def test_gdc_guideline_interface():
         "## Metadata Schema Properties\n"
         "### Allowed Lifecycle Statuses\n### Allowed Classifications\n"
     )
-    v_good = MockGDCValidator('EAD-007-guideline.md', good_content)
+    v_good = make_validator(cls=GDCValidator, doc_meta={'status': 'draft'}, content=good_content, rules=rules, filename='EAD-007-guideline.md')
     v_good.validate_type_specific()
     assert len(v_good.errors) == 0
 
 def test_gdc_missing_subsection():
+    rules = {'rules': {'structure': {'required_downstream_guideline_subsections': {
+        'Semantic Definitions': ['Naming Conventions', 'Taxonomy'],
+        'Metadata Schema Properties': ['Allowed Lifecycle Statuses', 'Allowed Classifications'],
+    }}}, 'severity_levels': {}}
     content = (
         "## Semantic Definitions\n### Naming Conventions\n"  # 'Taxonomy' missing
         "## Metadata Schema Properties\n### Allowed Lifecycle Statuses\n### Allowed Classifications\n"
     )
-    v = MockGDCValidator('EAD-007-guideline.md', content)
+    v = make_validator(cls=GDCValidator, doc_meta={'status': 'draft'}, content=content, rules=rules, filename='EAD-007-guideline.md')
     v.validate_type_specific()
     assert any("missing mandatory subsection 'Taxonomy'" in m for _, m in v.errors)
 
 def test_gdc_subsection_out_of_order():
+    rules = {'rules': {'structure': {'required_downstream_guideline_subsections': {
+        'Semantic Definitions': ['Naming Conventions', 'Taxonomy'],
+        'Metadata Schema Properties': ['Allowed Lifecycle Statuses', 'Allowed Classifications'],
+    }}}, 'severity_levels': {}}
     content = (
         "## Semantic Definitions\n### Taxonomy\n### Naming Conventions\n"  # reversed
         "## Metadata Schema Properties\n### Allowed Lifecycle Statuses\n### Allowed Classifications\n"
     )
-    v = MockGDCValidator('EAD-007-guideline.md', content)
+    v = make_validator(cls=GDCValidator, doc_meta={'status': 'draft'}, content=content, rules=rules, filename='EAD-007-guideline.md')
     v.validate_type_specific()
     assert any('out of order' in m for _, m in v.errors)
 
 def test_gdc_non_guideline_file_skipped():
-    # Only '*-guideline.md' files are subject to the downstream interface check.
-    v = MockGDCValidator('GDC-001-compliance-engine.md', "## Anything")
+    rules = {'rules': {'structure': {'required_downstream_guideline_subsections': {
+        'Semantic Definitions': ['Naming Conventions', 'Taxonomy'],
+    }}}, 'severity_levels': {}}
+    v = make_validator(cls=GDCValidator, doc_meta={'status': 'draft'}, content="## Anything", rules=rules, filename='GDC-002-compliance-engine.md')
     v.validate_type_specific()
     assert len(v.errors) == 0
+
+
+# ---------- EAD ----------
 
 def test_ead_mandatory_sections_resolution():
     # dict branch: resolve by EAD id embedded in filename
     rules = {'rules': {'structure': {'required_sections': {
-        'EAD-001': ['Business Capabilities'], 'EAD-002': ['Data Domains']}}}}
-    v = EADValidator('EAD-001-business.md', '', {'id': 'EAD-001'}, rules, set())
+        'EAD-001': ['Business Capabilities'], 'EAD-002': ['Data Domains']}}}, 'severity_levels': {}}
+    v = make_validator(cls=EADValidator, doc_meta={'id': 'EAD-001'}, rules=rules, filename='EAD-001-business.md')
     assert v.mandatory_sections == ['Business Capabilities']
     # no matching template -> fallback empty list
-    v2 = EADValidator('EAD-099-other.md', '', {'id': 'EAD-099'}, rules, set())
+    v2 = make_validator(cls=EADValidator, doc_meta={'id': 'EAD-099'}, rules=rules, filename='EAD-099-other.md')
     assert v2.mandatory_sections == []
     # list branch: returned as-is
-    rules2 = {'rules': {'structure': {'required_sections': ['A', 'B']}}}
-    v3 = EADValidator('EAD-001.md', '', {}, rules2, set())
+    rules2 = {'rules': {'structure': {'required_sections': ['A', 'B']}}, 'severity_levels': {}}
+    v3 = make_validator(cls=EADValidator, doc_meta={}, rules=rules2, filename='EAD-001.md')
     assert v3.mandatory_sections == ['A', 'B']
 
-def test_missing_doc_meta_for_all():
-    v1 = MockADRValidator(None)
-    v1.validate_type_specific()
-    assert len(v1.errors) == 0
-    
-    v2 = MockSADValidator(None)
-    v2.validate_type_specific()
-    assert len(v2.errors) == 0
-    
-    v3 = MockPADValidator(None)
-    v3.validate_type_specific()
-    assert len(v3.errors) == 0
-    
-    v4 = MockSTDValidator(None)
-    v4.validate_type_specific()
-    assert len(v4.errors) == 0
-    
-    v5 = MockGDCValidator('EAD.md', '')
-    v5.doc_meta = None
-    v5.validate_type_specific()
-    assert len(v5.errors) == 0
-    
-    v6 = EADValidator('EAD.md', '', None, {}, set())
-    v6.validate_type_specific()
-    assert len(v6.errors) == 0
-    
-    v7 = TDDValidator('TDD.md', '', None, {}, set(), {})
-    v7.validate_type_specific()
-    assert len(v7.errors) == 0
 
-class MockTDDValidator(TDDValidator):
-    def __init__(self, doc_meta):
-        self.doc_meta = doc_meta
-        self.rules = {'rules': {'metadata': {}}}
-        self.errors = []
-        self.all_doc_ids = {'SAD-001'}
-        self.all_doc_metadata = {}
-        self.filename = "TDD-001.md"
-        self.disabled_rules = set()
+# ---------- TDD ----------
 
 def test_tdd_missing_parent_sad():
-    v = MockTDDValidator({'status': 'draft'})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=TDDValidator, doc_meta={'status': 'draft'}, rules=rules, all_doc_ids={'SAD-001'}, filename='TDD-001.md')
     v.validate_type_specific()
     assert any('missing required traceability' in msg for sev, msg in v.errors)
 
 def test_tdd_invalid_parent_sad():
-    v = MockTDDValidator({'parent_sad': 'SAD-999'})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=TDDValidator, doc_meta={'parent_sad': 'SAD-999'}, rules=rules, all_doc_ids={'SAD-001'}, filename='TDD-001.md')
     v.validate_type_specific()
     assert any('does not exist' in msg for sev, msg in v.errors)
 
 def test_tdd_valid_parent_sad():
-    v = MockTDDValidator({'parent_sad': 'SAD-001'})
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    v = make_validator(cls=TDDValidator, doc_meta={'parent_sad': 'SAD-001'}, rules=rules, all_doc_ids={'SAD-001'}, filename='TDD-001.md')
     v.validate_type_specific()
     assert len(v.errors) == 0
 
-def test_adr_invalid_type():
-    v = MockADRValidator({'adr_type': 'invalid_type'})
-    v.validate_type_specific()
-    assert any("not in allowed list" in e[1] for e in v.errors)
 
-def test_adr_missing_exception_block():
-    v = MockADRValidator({'adr_type': 'exception'}) # without exception_info
-    v.validate_type_specific()
-    assert any("missing the required 'exception_info'" in e[1] for e in v.errors)
+# ---------- Missing doc_meta for all validators ----------
+
+def test_missing_doc_meta_for_all():
+    rules = {'rules': {'metadata': {}}, 'severity_levels': {}}
+    for cls, fname in [
+        (ADRValidator, 'ADR-001.md'), (SADValidator, 'SAD-001.md'),
+        (PADValidator, 'PAD-001.md'), (STDValidator, 'STD-001.md'),
+        (GDCValidator, 'GDC-002.md'), (EADValidator, 'EAD-001.md'),
+        (TDDValidator, 'TDD-001.md'),
+    ]:
+        v = make_validator(cls=cls, doc_meta={}, rules=rules, filename=fname)
+        v.doc_meta = None  # Simulate truly missing metadata
+        v.validate_type_specific()
+        assert len(v.errors) == 0, f"{cls.__name__} should not crash on None doc_meta"

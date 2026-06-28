@@ -67,8 +67,8 @@ Application middleware and ingress controllers must automatically drop incoming 
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Enterprise System Resilience & Fault Tolerance Standard (STD-E015)](..\..\05-standards\STD-E015-system-resilience-fault-tolerance-standard.md)
-- [Enterprise Observability Standard (STD-E004)](..\..\05-standards\STD-E004-observability-standard.md)
+- Enterprise System Resilience & Fault Tolerance Standard (STD-E015)
+- Enterprise Observability Standard (STD-E004)
 
 ### Compliance Status
 Compliant.

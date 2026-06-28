@@ -1,0 +1,54 @@
+"""
+Shared test fixtures for the Scnehaux Architecture Linter test suite.
+
+Provides a proper `make_validator()` factory that calls `BaseValidator.__init__()`
+correctly, ensuring lint_disable parsing, rejected_disables, and rel_path computation
+are exercised — matching production execution paths.
+"""
+import os
+import pytest
+from validators.base import BaseValidator
+from validators.adr import ADRValidator
+from validators.sad import SADValidator
+from validators.pad import PADValidator
+from validators.ead import EADValidator
+from validators.std import STDValidator
+from validators.tdd import TDDValidator
+from validators.gdc import GDCValidator
+
+
+def make_validator(
+    cls=BaseValidator,
+    file_path: str = "/fake/test.md",
+    content: str = "",
+    doc_meta: dict = None,
+    rules: dict = None,
+    all_doc_ids: set = None,
+    all_doc_metadata: dict = None,
+    filename: str = None,
+):
+    """
+    Create a validator instance that calls the REAL __init__,
+    ensuring lint_disable parsing and all initialisation logic is exercised.
+    """
+    if doc_meta is None:
+        doc_meta = {}
+    if rules is None:
+        rules = {'rules': {}, 'severity_levels': {}}
+    if all_doc_ids is None:
+        all_doc_ids = set()
+    if all_doc_metadata is None:
+        all_doc_metadata = {}
+
+    v = cls(
+        file_path=file_path,
+        content=content,
+        doc_meta=doc_meta,
+        rules=rules,
+        all_doc_ids=all_doc_ids,
+        all_doc_metadata=all_doc_metadata,
+    )
+    # Allow callers to override filename for tests that need specific naming patterns.
+    if filename is not None:
+        v.filename = filename
+    return v

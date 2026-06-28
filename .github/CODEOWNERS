@@ -57,7 +57,8 @@
 # ----------------------------------------------------------------------------
 # Explicit Domain Overrides (Identity)
 /03-platform/identity-platform/    @scnehaux/iam-core-team
-/04-application/identity-platform/ @scnehaux/iam-core-team
+/04-application/scnehaux-iam/      @scnehaux/iam-core-team
+/04-application/scnehaux-iam-dashboard/ @scnehaux/iam-core-team
 
 # Explicit Domain Overrides (UI Platform)
 /03-platform/scnehaux-ui-platform/    @scnehaux/ui-platform-team

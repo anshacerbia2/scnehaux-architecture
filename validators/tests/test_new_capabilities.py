@@ -7,20 +7,19 @@ Tests for the v1.1 engine hardening + new capabilities:
   - Traceability graph cycle detection
   - SARIF output
   - Non-destructive generator --check
+  - Rule schema validation (D-02)
 """
 import os
 import re
-import sys
-import yaml
 import importlib.util
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+import yaml
 
 from validators.base import BaseValidator
 from validators.common import _validate_inline_references
 from validators.scanner import resolve_registry_with_duplicates
 from validators.traceability import audit_traceability_graph
 from validators.utils import strip_code_fences, extract_doc_id_references
+from validators.rule_schema import validate_rule_file
 from linter import build_sarif
 
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..')
@@ -173,6 +172,11 @@ def test_build_sarif_maps_levels():
     assert levels.count('error') == 2 and levels.count('warning') == 1
     assert doc['runs'][0]['results'][0]['locations'][0]['physicalLocation']['artifactLocation']['uri'] == 'a.md'
 
+def test_build_sarif_empty_results():
+    doc = build_sarif([])
+    assert doc['version'] == '2.1.0'
+    assert doc['runs'][0]['results'] == []
+
 
 # ---------- FIX#4: non-destructive generator --check ----------
 
@@ -188,3 +192,55 @@ def test_generator_check_is_non_destructive():
     gen = _load_generator()
     drift = gen.process(check=True)
     assert isinstance(drift, list)  # returns drift records, writes nothing
+
+
+# ---------- D-02: Rule schema validation ----------
+
+def test_rule_schema_valid():
+    rules = _global_rules()
+    errors = validate_rule_file(rules, 'linting-rules.yaml')
+    assert errors == [], f"Global rules failed schema validation: {errors}"
+
+def test_rule_schema_rejects_empty():
+    errors = validate_rule_file({}, 'bad.yaml')
+    assert len(errors) > 0
+
+def test_rule_schema_rejects_bad_severity():
+    data = {'rules': {'metadata': {}}, 'severity_levels': {'foo': 'INVALID'}}
+    errors = validate_rule_file(data, 'bad.yaml')
+    assert len(errors) > 0
+
+def test_rule_schema_rejects_bad_required_fields_type():
+    data = {'rules': {'metadata': {'required_fields': 'not_a_list'}}}
+    errors = validate_rule_file(data, 'bad.yaml')
+    assert len(errors) > 0
+
+def test_rule_schema_rejects_no_rules_or_severity():
+    data = {'config': {}}
+    errors = validate_rule_file(data, 'bad.yaml')
+    assert len(errors) > 0
+
+def test_rule_schema_allows_unknown_top_keys():
+    data = {'rules': {'unknown_key': {}}, 'severity_levels': {}}
+    errors = validate_rule_file(data, 'ok.yaml')
+    assert len(errors) == 0
+
+def test_rule_schema_rejects_bad_allowed_statuses():
+    data = {'rules': {'metadata': {'allowed_statuses': 'not_a_list'}}}
+    errors = validate_rule_file(data, 'bad.yaml')
+    assert len(errors) > 0
+
+def test_rule_schema_rejects_bad_allowed_classifications():
+    data = {'rules': {'metadata': {'allowed_classifications': 'not_a_list'}}}
+    errors = validate_rule_file(data, 'bad.yaml')
+    assert len(errors) > 0
+
+def test_rule_schema_rejects_bad_required_sections():
+    data = {'rules': {'structure': {'required_sections': 'not_a_list_or_dict'}}}
+    errors = validate_rule_file(data, 'bad.yaml')
+    assert len(errors) > 0
+
+def test_rule_schema_rejects_bad_optional_sections():
+    data = {'rules': {'structure': {'optional_sections': 'not_a_list'}}}
+    errors = validate_rule_file(data, 'bad.yaml')
+    assert len(errors) > 0

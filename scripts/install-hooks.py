@@ -12,7 +12,36 @@ def install_hook():
         
     hook_path = os.path.join(hooks_dir, 'pre-commit')
     
-    hook_content = """#!/bin/bash
+    is_windows = sys.platform.startswith('win')
+    
+    if is_windows:
+        hook_content = """#!/usr/bin/env pwsh
+# Pre-commit hook to enforce Scnehaux Architecture Governance
+Write-Host "Running Scnehaux Governance Linter..."
+
+$CHANGED_FILES = git diff --cached --name-only --diff-filter=ACM | Select-String -Pattern '\\.md$' | ForEach-Object { $_.Line }
+
+if (-not $CHANGED_FILES) {
+    Write-Host "No markdown files changed. Skipping linter."
+    exit 0
+}
+
+$TARGETS = $CHANGED_FILES -join ' '
+
+Invoke-Expression "python linter.py --format text --target $TARGETS"
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "❌ [CRITICAL] Architecture Linter failed!"
+    Write-Host "Commit rejected. Please fix the governance violations before committing."
+    exit 1
+}
+
+Write-Host "✅ Governance check passed. Proceeding with commit."
+exit 0
+"""
+    else:
+        hook_content = """#!/bin/bash
 # Pre-commit hook to enforce Scnehaux Architecture Governance
 echo "Running Scnehaux Governance Linter..."
 
@@ -43,11 +72,12 @@ exit 0
     with open(hook_path, 'w', encoding='utf-8') as f:
         f.write(hook_content)
         
-    # Make the script executable
-    st = os.stat(hook_path)
-    os.chmod(hook_path, st.st_mode | stat.S_IEXEC)
+    # Make the script executable on Unix-like systems
+    if not is_windows:
+        st = os.stat(hook_path)
+        os.chmod(hook_path, st.st_mode | stat.S_IEXEC)
     
-    print(f"Successfully installed pre-commit hook at {hook_path}")
+    print(f"Successfully installed pre-commit hook at {hook_path} (OS: {'Windows' if is_windows else 'Unix'})")
 
 if __name__ == "__main__":
     install_hook()

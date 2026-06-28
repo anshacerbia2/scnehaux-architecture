@@ -17,7 +17,7 @@ doc_meta:
 
 EADs represent the C1 global context layer of the C4 metamodel, defining the global "City Map" and enterprise-wide directives.
 
-EADs establish the "Why". They dictate the Business Drivers, Enterprise Principles, and the "North Star" cross-domain standardization principles that govern all downstream documentation, including Enterprise Standards (STD), Platform Architecture Documents (PAD), System Architecture Documents (SAD), Architecture Decision Records (ADR), and Technical Design Documents (TDD).
+EADs establish the "Why". They dictate the Business Drivers, Enterprise Principles, and the "North Star" cross-domain standardization principles that govern all downstream documentation, including Enterprise Standards (STD), Product Architecture Documents (PAD), System Architecture Documents (SAD), Architecture Decision Records (ADR), and Technical Design Documents (TDD).
 
 ### 1.1 Philosophy & Decision Horizon
 
@@ -45,7 +45,7 @@ EADs must remain conceptually agnostic (e.g., Business, Data, Application layers
 
 ### 2.2 The Ruleset Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-compliance-engine.md)**, the EAD specification is strictly governed by the following domain-specific linter rules.
+In addition to the global structural enforcement defined in **[GDC-002](./GDC-002-compliance-engine.md)**, the EAD specification is strictly governed by the following domain-specific linter rules.
 
 > [!WARNING]
 > **DO NOT EDIT THIS TABLE MANUALLY.**

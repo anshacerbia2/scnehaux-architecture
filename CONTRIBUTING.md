@@ -19,8 +19,8 @@ Regardless of your contribution path, all Pull Requests are subject to the follo
 
 1. **Local Validation (Shift-Left)**: You MUST install the pre-commit hook (`python scripts/install-hooks.py`). This forces a localized AST validation to automatically block commits that violate structural integrity or contain prohibited terminology.
 2. **CI/CD Gates (Hard Block)**: Your PR must pass the automated linter pipeline (100% pass) to be eligible for merge. The CI pipeline is the ultimate source of truth.
-3. **Qualitative Peer Review**: After passing the machine linter, human reviewers will evaluate your PR against the 10-parameter [Quality Rubric (GDC-002)](./00-governance/GDC-002-quality-rubric.md) using the [review-score-sheet-template.md](./00-governance/review-score-sheet-template.md). This ensures architectural boundaries, measurable NFRs, and trade-offs are logically sound.
-4. **ARB Strategic Review**: High-risk PRs (e.g., enterprise pivots, standard waivers, core domain shifts, or high-blast-radius systems) are escalated to a formal audit by the Architecture Review Board. See the [Review Process (GDC-003)](./00-governance/GDC-003-review-process.md) for exact escalation triggers.
+3. **Qualitative Peer Review**: After passing the machine linter, human reviewers will evaluate your PR against the 10-parameter [Quality Rubric (GDC-003)](./00-governance/GDC-003-quality-rubric.md) using the [review-score-sheet-template.md](./00-governance/review-score-sheet-template.md). This ensures architectural boundaries, measurable NFRs, and trade-offs are logically sound.
+4. **ARB Strategic Review**: High-risk PRs (e.g., enterprise pivots, standard waivers, core domain shifts, or high-blast-radius systems) are escalated to a formal audit by the Architecture Review Board. See the [Review Process (GDC-004)](./00-governance/GDC-004-review-process.md) for exact escalation triggers.
 5. **Resolution**: All blocker feedback must be resolved before merging.
 
 ### Contribution Pipeline
@@ -47,12 +47,12 @@ flowchart LR
    PR --> CIGates{"2. CI/CD Gates<br>(Automated Linter)"}:::automated
    CIGates -- Fails --> FixMachine
 
-   CIGates -- Passes --> PeerReview{"3. Peer Review<br>(GDC-002 Score Sheet)"}:::manual
+   CIGates -- Passes --> PeerReview{"3. Peer Review<br>(GDC-003 Score Sheet)"}:::manual
    PeerReview -- Changes Requested --> FixHuman[Revise Architecture Content]:::remediation
    FixHuman --> LocalLinter
 
    PeerReview -- Approved --> RiskCheck{"High-Risk Pivot?"}:::critical
-   RiskCheck -- Yes --> ARB{"4. ARB Review<br>(GDC-003)"}:::critical
+   RiskCheck -- Yes --> ARB{"4. ARB Review<br>(GDC-004)"}:::critical
    RiskCheck -- No --> Merge([5. Approved & Merged]):::success
 
    ARB -- Approved --> Merge
@@ -84,9 +84,9 @@ When designing a system, executing an architectural decision, or defining a doma
 > [!IMPORTANT]
 > **Path B Mandatory Reading:** Modifying governance rules alters the compliance pipeline for the entire enterprise. Before attempting to modify this layer, you **MUST** thoroughly understand the mechanics of the core enforcement engines:
 >
-> 1. [GDC-001: Compliance Engine](./00-governance/GDC-001-compliance-engine.md) (The Linter framework)
-> 2. [GDC-002: Quality Rubric](./00-governance/GDC-002-quality-rubric.md) (The 10-parameter human assessment)
-> 3. [GDC-003: Review Process](./00-governance/GDC-003-review-process.md) (The ARB escalation flow)
+> 1. [GDC-002: Compliance Engine](./00-governance/GDC-002-compliance-engine.md) (The Linter framework)
+> 2. [GDC-003: Quality Rubric](./00-governance/GDC-003-quality-rubric.md) (The 10-parameter human assessment)
+> 3. [GDC-004: Review Process](./00-governance/GDC-004-review-process.md) (The ARB escalation flow)
 
 When contributing to the `00-governance` directory, your workflow depends entirely on whether you are changing an enforceable constraint or simply improving context.
 

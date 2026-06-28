@@ -18,7 +18,7 @@ doc_meta:
 
 ## 1. Context & Scope
 
-**Capability Realized.** This system realizes the logical UI Platform capability defined in [scnehaux-ui-platform.pad.md](../../03-platform/scnehaux-ui-platform/scnehaux-ui-platform.pad.md) (PAD-002). It is the concrete physical styling compiler and component infrastructure for that capability.
+**Capability Realized.** This system realizes the logical UI Platform capability defined in [scnehaux-ui-platform.pad.md](../../03-domain/scnehaux-ui-platform/scnehaux-ui-platform.pad.md) (PAD-002). It is the concrete physical styling compiler and component infrastructure for that capability.
 
 It provides the physical visual foundation consumed by all frontend portals across the monorepo — including the [Scnehaux IAM Dashboard (SAD-002)](../scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) and the federated ERP Portal. It is developed as isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
 
@@ -36,7 +36,7 @@ It provides the physical visual foundation consumed by all frontend portals acro
 The platform inherits and enforces the [Enterprise Frontend Performance and Rendering Standard](../../02-standards/_global/frontend/STD-GLB-FE-002-performance.md) across all layers:
 
 1. **Zero Layout Thrashing (60FPS Render Guarantee)**: Synchronous geometry queries during high-frequency cycles are prohibited; dynamic layout adjustments are deferred and batched via `requestAnimationFrame`.
-2. **Polymorphic Rendering Safety**: Prefers the dynamic `as` prop pattern; the React `asChild` composition pattern is deprecated in high-frequency loops due to children mapping/cloning overhead.
+2. **Polymorphic Rendering Safety**: The `asChild` composition pattern via the native `<Slot>` proxy is the approved polymorphism engine. However, its usage is strictly restricted to `@scnx/core-ui` layer-1 layout primitives to prevent unchecked mapping/cloning overhead in downstream feature code. Dynamic `as` prop injection is deprecated.
 3. **Compound & Headless UI Separation**: Logic, state, and event orchestration hooks are separated from visual markup; headless engines remain blind to HTML wrappers.
 4. **Token-Strict Styling**: Styling definitions must resolve to established design tokens — no hardcoded properties or raw layout declarations.
 
@@ -87,9 +87,23 @@ The `@scnx/system` package ships a dedicated **Base Layer** to equalize default 
 1. **Normalization & Reset**: `_normalize.scss` equalizes cross-viewport inconsistencies; `_reset.scss` cleans native element properties; `_base.scss`/`_typography.scss` define global defaults.
 2. **Cascade Layer Isolation**: All reset rules are wrapped in native CSS `@layer reset` / `@layer base`, with an explicit precedence order (`@layer reset, base, tokens, recipes, utilities;`) so base rules can never override tokens or utilities.
 
-### 2.4 Physical Primitives & Theme Mappings (Reference)
+### 2.4 Realizing C3 Designs (Reference)
 
-> **Abstraction Leakage Rule (GDC-000 §2.3)**: As a C2 SAD, this document does not contain component-level mechanics, raw SASS maps, or CSS Custom Property payloads. The exhaustive physical parameters, OKLCH scales, and CSS variable mappings live in the authoritative C3 TDD (`TDD-SCNX-UI-JS-003`, downstream project repository).
+> **Abstraction Leakage Rule (GDC-000 §2.3)**: As a C2 SAD, this document does not contain component-level mechanics, raw SASS maps, or CSS Custom Property payloads. The exhaustive C3 blueprints live in the **downstream project repository** under `docs/02-designs/scnx-ui-js/` (all `parent_sad: SAD-003`):
+
+| TDD | Scope |
+| :--- | :--- |
+| `TDD-SCNX-UI-JS-001` | Build-Time Extraction Pipeline (Panda + Sass + tsup, dual ESM/CJS, `"use client"` restoration, packaging). |
+| `TDD-SCNX-UI-JS-002` | Polymorphic Headless Primitives (`@scnx/core-ui` — `Slot`/`asChild`, `as`-prop, primitive + compound inventory, `data-slot` contract). |
+| `TDD-SCNX-UI-JS-003` | Semantic Token Dictionary & OKLCH Reference (3-tier engine, `generate-scheme-matrix`, validator, `--ds-*` contract). |
+| `TDD-SCNX-UI-JS-004` | Design System Components (`@scnx/system` atoms/layouts/organisms; SCSS-class vs Panda-recipe styling). |
+| `TDD-SCNX-UI-JS-005` | Theme Transitions & Context Engine (`ScnxThemeProvider`, Transition OFSM, Disclosure registry). |
+
+### 2.5 Component Taxonomy & Theme Families (Physical)
+
+- **`@scnx/core-ui` structural layer**: headless primitives (`Box`/`Flex`/`Grid`/`Text`/`Heading`/`List`/`Divider`/`Button`) plus stateful compounds (`accordion`, `collapsible`, `disclosure`, `navigation`, `navigation-bar`, `sidebar`, `table-of-contents`, `edge-layout`, `floating-layout`, `transition`). Behavior/ARIA only; styling delegated.
+- **`@scnx/system` styled layer**: organized atomic-design as **atoms / layouts / organisms**, each wrapping a headless primitive and styled by one of two zero-runtime strategies — **SCSS class + `data-variant`** (skinned atoms, e.g. `Button`) or **Panda recipe** (structural layouts, e.g. `Flex`). Dependency direction is strictly `@scnx/system → @scnx/core-ui`.
+- **Theme families**: the always-on **`default`** baseline (light + dark) plus a partial-override brand theme **`achromatic`** (primary→neutral remap), validated against a partial-subset contract — the physical realization of the Cascading Multi-Theme Invariant (PAD-002 §5).
 
 ---
 
@@ -227,11 +241,17 @@ graph TD
 
 ---
 
-## 9. Deployment
+## 9. Deployment & Source Code Management
 
 The platform packages are developed within the monorepo and integrated into downstream applications via workspace linkages, then published for production.
 
-- **Environment / Infrastructure**: Local pnpm workspaces for development (hot-reloaded in Vite/Rspack); production assets published to the private NPM registry and served globally via CDN (AWS S3 / CloudFront).
+- **Repository Topology (Monorepo)**: Structured as a monorepo utilizing **pnpm workspaces** for isolated dependency resolution and rapid local hot-reloading (Vite/Rspack).
+- **SDLC & Branching Strategy**: Enforces strict **Trunk-Based Development**. Manual merges to the `main` branch are prohibited. All features must be integrated via short-lived branches.
+- **Pull Request (PR) Quality Gates**:
+  - Requires a minimum of **1 Approval** from a peer engineer.
+  - Changes modifying `/styles/` or core tokens require explicit approval from the Principal Architect (enforced via `.github/CODEOWNERS`).
+  - Pre-commit code formatting and linting are strictly enforced locally via **Husky** hooks to prevent CI pipeline congestion.
+- **Environment / Infrastructure**: Production assets published to the private NPM registry and served globally via CDN (AWS S3 / CloudFront).
 - **Encapsulation Boundary**: `@scnx/system` provides namespace classes (e.g., `.scnx-theme-wrapper`); consuming micro-frontends wrap their entry roots to enforce isolated styling sandboxes.
 - **CI/CD & Release Governance**: A change to a core utility/token can blast-radius across 50+ downstream apps, so every change passes a mandatory quality gate before merge and `Semantic Release` to NPM:
 
@@ -265,8 +285,8 @@ stateDiagram-v2
 ### 10.1 Runtime CSS-in-JS
 - *Rejected*: Runtime style injection adds per-render execution overhead and conflicts with strict CSP. A zero-runtime build-time extraction pipeline was chosen instead.
 
-### 10.2 `asChild` Composition Pattern
-- *Rejected (deprecated in hot paths)*: Children array mapping/cloning overhead in high-frequency rendering loops; the dynamic `as` prop pattern is preferred for polymorphism.
+### 10.2 Dynamic `as` Prop Pattern
+- *Rejected*: Pushing the `as` prop downwards complicates strict type-checking and ref-forwarding in polymorphic trees. *Accepted trade-off*: We utilize a highly-optimized `<Slot>` engine (`asChild`) strictly at the `@scnx/core-ui` level, accepting minor cloning overhead in exchange for superior composition API ergonomics.
 
 ### 10.3 External CSS Frameworks / Component Libraries
 - *Rejected*: Vendor frameworks (Tailwind config sprawl, MUI runtime) compromise brand consistency and bundle budget; the platform owns its token engine and headless primitives.

@@ -61,8 +61,8 @@ Core modules (e.g., `internal/auth`, `internal/tenant`, `internal/token` in IAM)
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Technology Architecture Strategy (EAD-004)](..\..\01-enterprise\EAD-004-technology-architecture.md)
-- [Scnehaux IAM Software Architecture Document (SAD-001)](..\..\04-application\scnehaux-iam\scnehaux-iam.sad.md)
+- [Technology Architecture Strategy (EAD-004)](../../01-enterprise/EAD-004-technology-architecture.md)
+- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
 
 ### Compliance Status
 Compliant.

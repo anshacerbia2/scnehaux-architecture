@@ -44,8 +44,8 @@ We will standardize on a **Zero-Runtime Styling Strategy** for the core enterpri
 
 ## 7. Compliance Impact
 ### Related Standards
-- [STD-GLB-FE-007 (Styling)](..\..\..\02-standards\_global\frontend\STD-GLB-FE-007-styling.md)
-- [ADR-UIP-TKN-002 (OKLCH)](..\..\ui-platform\design-tokens\ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md)
+- STD-GLB-FE-007 (Styling)
+- [ADR-UIP-TKN-002 (OKLCH)](../../ui-platform/design-tokens/ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md)
 
 ### Compliance Status
 Compliant.

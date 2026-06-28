@@ -1,9 +1,5 @@
-import sys
-import os
 import pytest
 from datetime import date
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-
 from pydantic import ValidationError
 from validators.schema import DocMeta, ExceptionInfo
 
@@ -30,7 +26,7 @@ def test_docmeta_valid_full():
         },
         "parent_pad": "PAD-001",
         "parent_sad": ["SAD-001", "SAD-002"],
-        "governed_by": "GDC-001",
+        "governed_by": "GDC-002",
         "fulfilled_by": "SAD-003",
         "adr_type": "exception"
     }

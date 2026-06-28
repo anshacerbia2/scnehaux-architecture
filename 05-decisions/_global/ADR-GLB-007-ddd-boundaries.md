@@ -66,9 +66,9 @@ We officially establish Domain-Driven Design (DDD) aggregate constraints and ass
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Enterprise Domain Modeling Standard (STD-E018)](..\..\05-standards\STD-E018-domain-modeling-standard.md)
-- [Enterprise Data Classification, Governance & Retention Standard (STD-E017)](..\..\05-standards\STD-E017-data-classification-governance-retention-standard.md)
-- [Enterprise Database & Persistence Strategy Standard (STD-E002)](..\..\05-standards\STD-E002-database-standard.md)
+- Enterprise Domain Modeling Standard (STD-E018)
+- Enterprise Data Classification, Governance & Retention Standard (STD-E017)
+- Enterprise Database & Persistence Strategy Standard (STD-E002)
 
 ### Compliance Status
 Compliant.

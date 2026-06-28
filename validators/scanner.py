@@ -1,6 +1,9 @@
 import os
 import re
 import yaml
+import logging
+
+logger = logging.getLogger(__name__)
 
 def resolve_registry_with_duplicates(target_dir):
     """
@@ -36,8 +39,9 @@ def resolve_registry_with_duplicates(target_dir):
                                 ids.add(doc_id)
                                 metadata_registry[doc_id] = data['doc_meta']
                                 first_seen_path[doc_id] = norm_path
-            except Exception:
-                # Intentionally silent: malformed files are handled by the main linter loop.
+            except Exception as e:
+                # Malformed files are handled by the main linter loop; log here for diagnostics.
+                logger.debug("Scanner skipping '%s': %s", path, e)
                 continue
     return ids, metadata_registry, duplicates
 

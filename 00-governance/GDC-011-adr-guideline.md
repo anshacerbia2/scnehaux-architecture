@@ -37,7 +37,7 @@ Every ADR must declare its `adr_type` to clarify the intent of the decision. The
 
 ### 2.2 The Ruleset Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-compliance-engine.md)**, the ADR specification is strictly governed by the following domain-specific linter components:
+In addition to the global structural enforcement defined in **[GDC-002](./GDC-002-compliance-engine.md)**, the ADR specification is strictly governed by the following domain-specific linter components:
 
 > [!WARNING]
 > **DO NOT EDIT THIS TABLE MANUALLY.**
@@ -48,7 +48,7 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 <!-- AUTO-GENERATED-RULES:START -->
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata** | Required Fields | <ul><li>`id`</li><li>`title`</li><li>`adr_type`</li><li>`status`</li><li>`created`</li><li>`created_by`</li></ul> |
+| **Metadata** | Required Fields | <ul><li>`id`</li><li>`title`</li><li>`adr_type`</li><li>`status`</li><li>`created`</li><li>`created_by`</li><li>`governed_by`</li></ul> |
 | **Metadata** | Allowed Statuses | <ul><li>`proposed`</li><li>`accepted`</li><li>`rejected`</li><li>`superseded`</li><li>`deprecated`</li></ul> |
 | **Metadata** | Exception Info Required Fields | <ul><li>`approved_by`</li><li>`expiry_date`</li><li>`risk_classification`</li><li>`exception_reason`</li></ul> |
 | **Metadata** | Allowed Types | <ul><li>`foundational`</li><li>`implementation`</li><li>`exception`</li><li>`conflict_resolution`</li><li>`replacement`</li></ul> |
@@ -74,13 +74,13 @@ Example: `ADR-GLB-001-api-design.md` or `ADR-UIP-TKN-002-color-palette.md`.
 
 #### 2.3.2 Taxonomy
 
-ADRs are organized by their scope (Enterprise vs Local) and domain context.
-- **Enterprise ADRs**: Decisions that affect the entire organization or cross-cutting boundaries.
-- **Local ADRs**: Decisions contained within a specific bounded context or single application.
+ADRs are organized by their scope (Global vs Domain/System context).
+- **Global ADRs**: Decisions that affect the entire organization or cross-cutting boundaries.
+- **Domain/System ADRs**: Decisions contained within a specific bounded context (Domain) or a single application (System). Note: Physically, all ADRs are strictly centralized in the root architecture repository; there are no "local" project-level ADR folders.
 
 #### 2.3.3 Directory Structure
 
-**Enterprise Level (Root Repo)**
+**Centralized Repository (Root Repo)**
 ```text
 scnehaux-architecture/
 └── 05-decisions/
@@ -88,14 +88,6 @@ scnehaux-architecture/
     │   └── ADR-GLB-001-api-design.md
     └── ui-platform/
         └── ADR-UIP-001-react-framework.md
-```
-
-**Project Level (Local Repo)**
-```text
-scnehaux-ui-platform/
-└── docs/
-    └── 02-decisions/
-        └── ADR-UIP-CORE-001-state-management.md
 ```
 
 #### 2.3.4 Metadata Schema Properties
@@ -108,6 +100,7 @@ scnehaux-ui-platform/
 | `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
 | `created` | Date | The creation date (YYYY-MM-DD). |
 | `created_by` | String | The author of the ADR. |
+| `governed_by` | List[String] | **Required**: Must point to EAD, PAD, SAD, or GDC-000 (if purely technical/global). Links the ADR to the DAG. |
 
 **Exception Info Required Fields (Conditional)**
 *Required only if `adr_type` is `exception`.*

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scnehaux-linter"
+version = "1.2.0"
+description = "Scnehaux Architecture Documentation Governance Linter"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "markdown-it-py==4.0.0",
+    "pydantic==2.13.1",
+    "PyYAML==6.0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["validators/tests"]
+pythonpath = ["."]
+addopts = "--cov=validators --cov=linter --cov-fail-under=95 --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["validators", "linter"]
+omit = ["validators/tests/*"]

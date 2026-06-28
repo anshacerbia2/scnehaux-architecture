@@ -18,7 +18,7 @@ doc_meta:
 
 ## 1. Context & Scope
 
-**Capability Realized.** This system realizes the Enterprise Identity & Access capability defined in [identity-platform.pad.md](../../03-platform/identity-platform/identity-platform.pad.md) (PAD-001). It is the concrete physical execution unit for that logical capability.
+**Capability Realized.** This system realizes the Enterprise Identity & Access capability defined in [identity-platform.pad.md](../../03-domain/identity-platform/identity-platform.pad.md) (PAD-001). It is the concrete physical execution unit for that logical capability.
 
 Scnehaux IAM is architected as a **Modular Monolith** in **Golang** to deliver high-performance authentication with low operational complexity.
 

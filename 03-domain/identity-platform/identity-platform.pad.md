@@ -7,6 +7,7 @@ doc_meta:
   status: approved
   classification: restricted
   governed_by: [GDC-000]
+  realizes_capability: EAD-001
   review_cycle_days: 180
   last_reviewed: 2026-05-18
   fulfilled_by:
@@ -124,7 +125,7 @@ These are the **capability's promises** (quantified targets). The mechanisms tha
 
 **Realizing Systems** (`fulfilled_by`, strict 1-to-N):
 
-- **Core IAM Modular Monolith**: [scnehaux-iam.sad.md](../../04-application/scnehaux-iam/scnehaux-iam.sad.md) (SAD-001)
-- **IAM Dashboard SPA**: [scnehaux-iam-dashboard.sad.md](../../04-application/scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) (SAD-002)
+- **Core IAM Modular Monolith**: [scnehaux-iam.sad.md](../../04-system/scnehaux-iam/scnehaux-iam.sad.md) (SAD-001)
+- **IAM Dashboard SPA**: [scnehaux-iam-dashboard.sad.md](../../04-system/scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) (SAD-002)
 
 **Capability governance.** A change to the core JWT schema or to the trust boundary constitutes a Major version bump. Release mechanics (canary rollout, CI/CD security gates, deployment cadence) are realization concerns defined in the fulfilling SADs, not here.

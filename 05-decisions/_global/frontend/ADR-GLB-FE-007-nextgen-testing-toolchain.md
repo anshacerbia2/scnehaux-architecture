@@ -44,7 +44,7 @@ We will standardize our frontend testing ecosystem on a next-generation toolchai
 
 ## 7. Compliance Impact
 ### Related Standards
-- [STD-GLB-FE-008 (Testing)](..\..\..\02-standards\_global\frontend\STD-GLB-FE-008-testing.md) - This document dictates the normative rules on how the testing toolchain is implemented in CI/CD.
+- [STD-GLB-FE-008 (Testing)](../../../02-standards/_global/frontend/STD-GLB-FE-008-testing.md) - This document dictates the normative rules on how the testing toolchain is implemented in CI/CD.
 
 ### Compliance Status
 Compliant.

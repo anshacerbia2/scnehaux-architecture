@@ -22,5 +22,14 @@ COPY 00-governance/rules/ ./00-governance/rules/
 
 # Documents are mounted here by the caller.
 WORKDIR /docs
+RUN useradd -m linteruser && \
+    chown -R linteruser:linteruser /linter && \
+    chown -R linteruser:linteruser /docs
+
+USER linteruser
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD python -c "import validators; print('ok')" || exit 1
+
 ENTRYPOINT ["python", "/linter/linter.py"]
 CMD ["--target", "/docs"]

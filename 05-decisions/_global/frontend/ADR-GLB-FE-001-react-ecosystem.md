@@ -53,8 +53,8 @@ We will standardize **React** as the exclusive rendering engine and foundational
 ## 7. Compliance Impact
 ### Related Standards
 - [ADR-GLB-FE-002 (Build Toolchains)](./ADR-GLB-FE-002-build-toolchain.md) - Dictates the mandatory build and compilation toolchains for React applications.
-- [STD-GLB-FE-001 (Tech Stack)](..\..\..\02-standards\_global\frontend\STD-GLB-FE-001-tech-stack.md) - Contains the normative rules for using React and Next.js/Vite.
-- [STD-GLB-FE-007 (React Standards)](..\..\..\02-standards\_global\frontend\STD-GLB-FE-007-react.md) - Defines the strict rendering rules and boundaries.
+- [STD-GLB-FE-001 (Tech Stack)](../../../02-standards/_global/frontend/STD-GLB-FE-001-tech-stack.md) - Contains the normative rules for using React and Next.js/Vite.
+- STD-GLB-FE-007 (React Standards) - Defines the strict rendering rules and boundaries.
 
 ### Compliance Status
 Compliant.

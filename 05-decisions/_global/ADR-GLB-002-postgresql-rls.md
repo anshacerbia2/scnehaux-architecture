@@ -64,8 +64,8 @@ For every table containing tenant-specific data, RLS must be enabled. The applic
 
 ## 7. Compliance Impact
 ### Related Standards
-- [Enterprise Data Architecture Strategy (EAD-002)](..\..\01-enterprise\EAD-002-data-architecture.md)
-- [Platform Identity Architecture Document (PAD-001)](..\..\03-platform\identity-platform\identity-platform.pad.md)
+- [Enterprise Data Architecture Strategy (EAD-002)](../../01-enterprise/EAD-002-data-architecture.md)
+- [Platform Identity Architecture Document (PAD-001)](../../03-domain/identity-platform/identity-platform.pad.md)
 
 ### Compliance Status
 Compliant.

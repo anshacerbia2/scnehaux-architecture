@@ -1,9 +1,9 @@
 ---
 doc_meta:
   id: GDC-001
-  title: Documentation Linter Framework
+  title: Architecture Fitness Functions & Compliance Engine
   owner: Architecture Review Board (ARB)
-  version: 1.0.0
+  version: 2.0.0
   status: approved
   classification: public
   governed_by: [GDC-000]
@@ -12,14 +12,13 @@ doc_meta:
 ---
 
 <!-- lint-disable vague_claim -->
-# Scnehaux Documentation Linter Framework
+# Architecture Fitness Functions & Compliance Engine
 
 ## 1. Context & Scope
 
-This document defines the **Documentation Linter Execution Framework** managed by the CI/CD pipeline (`linter.py`). 
-Rather than being a simple list of global rules, this framework establishes how the linter orchestrates validation, merges distributed rulesets, and executes domain-specific schemas across the enterprise documentation tree.
+This document defines the **Architecture Fitness Functions** and the **Compliance Engine (`linter.py`)**, managed by the CI/CD pipeline to enforce structural integrity across the Scnehaux enterprise ecosystem.
 
-The linter acts as the automated governance gatekeeper. Before any architecture document is merged into the `main` branch, the linter validates the following vectors:
+Rather than relying on human memory to enforce architecture guidelines, this framework acts as the automated governance gatekeeper. Before any architecture document is merged into the `main` branch, the linter validates the fitness of the document structure, traceability, content constraints, and adherence to technology radar lifecycles.
 
 1. **Metadata & Taxonomy**: Ensures the YAML frontmatter (`doc_meta`) contains all required fields, uses valid Semantic Versioning, and strictly matches the Allowed Statuses and Classifications for that specific document type.
 2. **Structural Compliance**: Verifies that the Markdown body contains the exact required `##` and `###` headers dictated by the domain ruleset (e.g., ensuring a SAD has a `Runtime Flows` section).
@@ -173,7 +172,52 @@ All honored and rejected disables are collected and printed in the final CI audi
 > [!IMPORTANT]
 > **SSOT is machine-enforced.** The reconciliation between the YAML rulesets and their generated Markdown tables is verified in CI by `python scripts/generate_rules_doc.py --check`, which fails the build on any drift. Synchronization is guaranteed by the pipeline, not by convention.
 
-## 3. Linter Execution Flow (CI/CD Automated Gate)
+## 3. Technology Lifecycle Governance
+
+The compliance engine is also responsible for enforcing the enterprise **Technology Radar** (`tech-radar.yaml`), ensuring standards evolve dynamically to avoid technological debt and vendor lock-in.
+
+### 3.1 Standards Maturity Model
+
+To prevent rigid compliance grids, every enterprise standard must declare one of four maturity phases:
+
+1. **Assessed (Evaluation)**: The standard is experimental or undergoing evaluation. Teams are encouraged to run pilots, but adoption is optional. No waivers are required to deviate.
+2. **Trial (Limited Adoption)**: The standard is verified in pilot programs. It is recommended for new services, but existing services are exempt.
+3. **Adopted (Default Mandate)**: The standard is the default mandatory baseline. Deviations require an approved exception waiver.
+4. **Hold (Retirement)**: The standard is deprecated. New implementations are prohibited from adopting it. Existing implementations must schedule a migration path to replacement systems.
+
+### 3.2 Technology Sunset & Deprecation Strategy
+
+When a standard technology, framework, or library decays (due to security concerns, obsolescence, or vendor deprecation), the system must execute this 3-Stage Sunset Strategy:
+
+1. **Sunset Recommendation (Stage 1)**:
+   - The Architecture Review Board (ARB) transitions the standard's state to `Hold`.
+   - The ARB must publish a companion migration guide or successor standard within `30 days`.
+2. **Phase-Out Grace Window (Stage 2)**:
+   - Existing active systems enter a grace window of maximum `180 days` to migrate off the legacy technology.
+   - During this phase, compile checks emit warnings but do not fail the build.
+3. **Hard Enforcement Block (Stage 3)**:
+   - Upon expiration of the grace window, warnings escalate to hard errors. The CI compliance engine (`linter.py`) blocks any new pull requests containing references to the deprecated technology (`technology_hold_violation`).
+
+## 4. Severity & Exception Waivers
+
+### 4.1 Applicability Criteria Framework
+
+To prevent excessive exception waivers, standards must not apply absolute mandates unconditionally. Standards must declare an **Applicability Criteria Matrix**:
+- **Team Size Metric**: Tooling frameworks (e.g., Module Federation) are `Adopted` only if the team count is greater than `3` and independent deployments are required. Otherwise, standalone monolithic deployments are `Recommended`.
+- **System Scale Metric**: Advanced scaling patterns (e.g., read replicas, microservices partition keys) are `Trial` or `Hold` by default and become `Adopted` only when query throughput exceeds defined performance metrics (e.g., >5000 read QPS).
+
+### 4.2 Exception Waiver Procedure
+
+When a team must deviate from a mandatory engineering standard or architectural constraint (e.g. using an uncertified database engine or violating a frontend layer limit):
+- **Waiver Request Initiation**: The requesting team must draft a dedicated local project Exception ADR detailing the deviation, the specific standard rule being bypassed, and the mitigation strategies implemented.
+- **Approval Authority Matrix**:
+  - *Tier 1 Deviation (High Impact - Database, Core Security)*: Requires unanimous sign-off from the Architecture Review Board (ARB).
+  - *Tier 2 Deviation (Medium Impact - Frontend Stack, Observability)*: Requires approval from the Domain Lead.
+  - *Tier 3 Deviation (Low Impact - Custom Helpers, Internal Tooling)*: Requires approval from the Lead System Engineer.
+- **Time-Bound Review Commitments**: The reviewing authority must issue an official decision (Approved, Rejected, or Request Info) within `5 business days` of the waiver ADR submission.
+- **Auditing and Expiration**: Approved waivers must carry an expiration date not exceeding `365 days` from approval. The CI engine mathematically checks expiration dates against the system clock (`exception_expired` ERROR).
+
+## 5. Linter Execution Flow (CI/CD Automated Gate)
 
 The execution of the automated compliance gate is orchestrated by `linter.py`. The diagram below illustrates the complete execution flow, detailing how contextual rules are dynamically merged and evaluated:
 
@@ -240,14 +284,14 @@ flowchart TD
     CheckBlocking -- "No (Pass or WARNING only)" --> Exit0(["sys.exit 0: CI Pass"])
 ```
 
-## 4. Compliance & Enforcement
+## 6. Compliance & Enforcement
 
 1. **Commit Hook Checks**: Pre-commit hooks must scan new architecture documents (e.g., ADRs) to verify that the YAML frontmatter contains valid fields and matches the schema defined in their respective guidelines.
 2. **Conditional Schema Validation**: The CI linter dynamically shifts its validation rules based on domain-specific attributes delegated to the respective guideline validators.
 3. **Domain-Specific Lifecycle Enforcement**: The CI pipeline executes lifecycle and temporal logic as explicitly defined in downstream domain guidelines (e.g., executing exception mechanisms as delegated by GDC-011).
 4. **Distributed Enforcement (Remote Execution)**: Downstream project repositories (containing C3/C4 artifacts) MUST NOT maintain their own copies of `linter.py`. To ensure strict, untamperable governance, local CI/CD pipelines must validate documents by remotely executing the central linter.
 
-### 4.1 Downstream Integration (Remote Execution)
+### 6.1 Downstream Integration (Remote Execution)
 
 To prevent security vulnerabilities and local tampering, downstream repositories (e.g., `scnehaux-ui-platform`) must remotely invoke this Compliance Engine during their CI/CD runs. 
 
@@ -267,10 +311,13 @@ docker run --rm -v $(pwd):/docs ghcr.io/scnehaux/gdc-linter:latest
 
 ---
 
-## 5. Appendix: Architectural Trade-Offs
+## 7. Appendix: Architectural Trade-Offs
 
-In accordance with the Quality Rubric (Trade-Offs parameter), the ARB explicitly documents the technical compromises of this Compliance Engine:
+In accordance with the Quality Rubric (Trade-Offs parameter), the ARB explicitly documents the technical compromises of this Fitness Function & Compliance Engine:
 
 1. **Custom Python Linter vs. Spectral / Checkov**
    - *Why rejected*: Spectral is excellent for OpenAPI, and Checkov is standard for IaC, but neither natively supports complex Markdown AST parsing intertwined with dynamic YAML deep-merging based on custom ID prefixes.
    - *The Trade-Off*: We incur the ongoing maintenance burden of owning a custom Python CLI (`linter.py`). In exchange, we gain absolute control over the Open-Closed Principle (OCP) dynamic validator loading, enabling complex cross-document hyperlink resolution and federated governance.
+2. **180-Day Sunset Grace Period vs. Immediate Deprecation**
+   - *Why rejected*: Immediate deprecation halts all product delivery, forcing teams into unplanned emergency migrations and jeopardizing business roadmaps.
+   - *The Trade-Off*: We consciously accept the security and maintenance risk of running obsolete technology for up to 180 days. In exchange, we provide engineering teams a predictable, humane runway to schedule their technical debt payoff without halting feature velocity.

@@ -23,6 +23,7 @@ rules:
     - version
     - status
     - classification
+    - realizes_capability
     - fulfilled_by
     - review_cycle_days
     - last_reviewed

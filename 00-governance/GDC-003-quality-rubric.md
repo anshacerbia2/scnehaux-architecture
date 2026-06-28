@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: GDC-002
+  id: GDC-003
   title: Documentation Quality Framework
   owner: Architecture Review Board (ARB)
   version: 1.0.0
@@ -19,9 +19,9 @@ This document defines the **Qualitative Evaluation Criteria** for all architectu
 ### The `00-governance` Ecosystem (Separation of Concerns)
 To prevent overlap and ensure a FAANG-grade modular governance model, the Governance Suite is divided into distinct operational boundaries:
 1.  **Governance Policy (GDC-000)**: *The Law*. Defines the architectural metamodel (C4/TOGAF/AWS) and the structural Context-Aware Templates (PAD/SAD/TDD/EAD).
-2.  **Compliance Engine / Linting Rules (GDC-001)**: *The Machine Police*. Automated CI/CD enforcement of the governance structure and semantic baseline (blocking prohibited words).
-3.  **Quality Framework (GDC-002) - [THIS DOCUMENT]**: *The Qualitative Standard*. Defines the 10 deep architectural parameters (e.g., Trade-offs, Blast Radius, Quantification) that human reviewers must evaluate.
-4.  **ARB Review Process (GDC-003)**: *The ARB Process*. Defines the formal procedure, risk registers, and macro-dimensions for Architecture Review Board (ARB) audits.
+2.  **Compliance Engine / Linting Rules (GDC-002)**: *The Machine Police*. Automated CI/CD enforcement of the governance structure and semantic baseline (blocking prohibited words).
+3.  **Quality Framework (GDC-003) - [THIS DOCUMENT]**: *The Qualitative Standard*. Defines the 10 deep architectural parameters (e.g., Trade-offs, Blast Radius, Quantification) that human reviewers must evaluate.
+4.  **ARB Review Process (GDC-004)**: *The ARB Process*. Defines the formal procedure, risk registers, and macro-dimensions for Architecture Review Board (ARB) audits.
 5.  **Architecture Review Score Sheet**: *The Execution Tool*. The physical markdown table filled out by the Certified Reviewer during a Pull Request, derived directly from the 10 Quality Framework criteria.
 
 ## 2. Policy Framework

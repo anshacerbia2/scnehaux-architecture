@@ -43,9 +43,9 @@ This repository synthesizes the core concepts and mental models of industry-stan
 The central nervous system of the architecture. It contains the fundamental laws, the automated CI/CD engine (`linter.py`), and the qualitative human rubrics that govern all other documents in the ecosystem.
 
 - **The Constitution**: [GDC-000 — Documentation Governance Policy](./00-governance/GDC-000-governance-policy.md)
-- **The Automated Engine**: [GDC-001 — Compliance Engine](./00-governance/GDC-001-compliance-engine.md)
-- **The Human Rubric**: [GDC-002 — Quality Rubric](./00-governance/GDC-002-quality-rubric.md)
-- **The Review Process**: [GDC-003 — Review Process](./00-governance/GDC-003-review-process.md)
+- **The Automated Engine**: [GDC-002 — Compliance Engine](./00-governance/GDC-002-compliance-engine.md)
+- **The Human Rubric**: [GDC-003 — Quality Rubric](./00-governance/GDC-003-quality-rubric.md)
+- **The Review Process**: [GDC-004 — Review Process](./00-governance/GDC-004-review-process.md)
 - **Guideline**: [GDC-006 — Governance Document Contract (GDC) Guideline](./00-governance/GDC-006-gdc-guideline.md)
 
 ### 01-enterprise / EAD (The Strategic Layer - C1 Context)
@@ -60,17 +60,17 @@ Mandatory granular policies that establish the architecture baseline and supplem
 
 - **Guideline**: [GDC-008 — Enterprise Standard (STD) Guideline](./00-governance/GDC-008-std-guideline.md)
 
-### 03-platform / PAD (Logical Domain - C2 Context)
+### 03-domain / PAD (Logical Domain - C2 Context)
 
 Defines the logical business capabilities, bounded contexts, system trust contracts, and strategic positioning of a business domain (e.g., `identity`, `finance`).
 
-- **Guideline**: [GDC-009 — Platform Architecture Document (PAD) Guideline](./00-governance/GDC-009-pad-guideline.md)
+- **Guideline**: [GDC-009 — Product Architecture Document (PAD) Guideline](./00-governance/GDC-009-pad-guideline.md)
 
-### 04-application / SAD (Physical System - C2 Context)
+### 04-system / SAD (Physical System - C2 Context)
 
 Defines the physical deployment topology, container boundaries, runtime execution flows, failure modes, observability, and concrete systems fulfilling the PAD.
 
-- **Guideline**: [GDC-010 — Software Architecture Document (SAD) Guideline](./00-governance/GDC-010-sad-guideline.md)
+- **Guideline**: [GDC-010 — System Architecture Document (SAD) Guideline](./00-governance/GDC-010-sad-guideline.md)
 
 ### 05-decisions / ADR (The Rationale Layer)
 
@@ -126,7 +126,7 @@ Our automated compliance engine (`linter.py`) aggressively verifies **Governance
 - **Structural Compliance**: Mandatory design sections, minimum content length, and link rot prevention.
 - **Content Quality**: Prohibition of vague vocabulary, mandatory quantifiable metrics, and temporal waiver expiration.
 
-For the exhaustive list of automated rules, see **[GDC-001 — Compliance Engine](./00-governance/GDC-001-compliance-engine.md)**.
+For the exhaustive list of automated rules, see **[GDC-002 — Compliance Engine](./00-governance/GDC-002-compliance-engine.md)**.
 
 ---
 
