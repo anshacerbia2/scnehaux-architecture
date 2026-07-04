@@ -1,0 +1,207 @@
+{
+  "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/gdc.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Governance & Decision Control (GDC) Validation Policies",
+  "type": "object",
+  "config": {
+    "target_doc": "GDC-006-gdc-guideline.md"
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/metadata_policies"
+    },
+    {
+      "$ref": "#/definitions/section_policies"
+    },
+    {
+      "$ref": "#/definitions/content_policies"
+    }
+  ],
+  "definitions": {
+    "metadata_policies": {
+      "title": "Metadata Policies",
+      "description": "Policies for the YAML Frontmatter (doc_meta)",
+      "required": [
+        "doc_meta"
+      ],
+      "properties": {
+        "doc_meta": {
+          "title": "Required Fields",
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "governed_by",
+            "owner",
+            "version",
+            "status",
+            "classification",
+            "review_cycle_days",
+            "last_reviewed"
+          ],
+          "properties": {
+            "id": {
+              "title": "Document ID",
+              "type": "string"
+            },
+            "title": {
+              "title": "Document Title",
+              "type": "string"
+            },
+            "governed_by": {
+              "title": "Governed By",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "owner": {
+              "title": "Owner",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "version": {
+              "title": "Version",
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "status": {
+              "title": "Allowed Statuses",
+              "type": "string",
+              "enum": [
+                "approved",
+                "draft"
+              ]
+            },
+            "classification": {
+              "title": "Allowed Classifications",
+              "type": "string",
+              "enum": [
+                "public",
+                "internal",
+                "restricted",
+                "confidential"
+              ]
+            },
+            "review_cycle_days": {
+              "title": "Review Cycle (Days)",
+              "type": "integer"
+            },
+            "last_reviewed": {
+              "title": "Last Reviewed Date",
+              "type": "string",
+              "format": "date"
+            }
+          }
+        }
+      }
+    },
+    "section_policies": {
+      "title": "Section Policies",
+      "description": "Policies for required and recommended sections in the Markdown body",
+      "required": [
+        "Context & Scope",
+        "Policy Framework"
+      ],
+      "recommended": [
+        "Enforcement Mechanism",
+        "Enforcement Mechanism & Rule Reconciliation",
+        "Severity & Exceptions",
+        "Document Types (Glossary of Truth)",
+        "Document Lifecycle & State Management",
+        "Linter Execution Flow (CI/CD Automated Gate)",
+        "Compliance & Enforcement",
+        "The Git Workflow & Access Control",
+        "The Reconciliation Flow (Adding or Modifying Rules)",
+        "Directory Structure & Taxonomy",
+        "Directory Structure & Naming Conventions",
+        "Document Template Schema (Metadata Frontmatter)",
+        "Document Section Semantics",
+        "Semantic Versioning Classification",
+        "Appendix: Architectural Clarifications & Trade-Offs",
+        "Appendix: Architectural Trade-Offs"
+      ],
+      "x-titles": {
+        "required": "Required Sections",
+        "recommended": "Recommended Sections"
+      }
+    },
+    "content_policies": {
+      "title": "Content Quality Policies",
+      "description": "Policies for required and recommended keywords inside specific Markdown sections",
+      "properties": {
+        "Policy Framework": {
+          "type": "string",
+          "x-titles": {
+            "required": "Policy Framework (Required Keywords for GDC Guideline)"
+          },
+          "if": {
+            "properties": {
+              "filename": {
+                "pattern": ".*-guideline\\.md$"
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "pattern": "[\\s\\S]*Semantic Definitions[\\s\\S]*"
+              }
+            ],
+            "if": {
+              "pattern": "[\\s\\S]*Semantic Definitions[\\s\\S]*"
+            },
+            "then": {
+              "x-titles": {
+                "required": "Semantic Definitions (Required Sub Sections)"
+              },
+              "allOf": [
+                {
+                  "pattern": "[\\s\\S]*Naming Conventions[\\s\\S]*"
+                },
+                {
+                  "pattern": "[\\s\\S]*Taxonomy[\\s\\S]*"
+                },
+                {
+                  "pattern": "[\\s\\S]*Directory Structure[\\s\\S]*"
+                },
+                {
+                  "pattern": "[\\s\\S]*Artifact Section[\\s\\S]*"
+                }
+              ],
+              "if": {
+                "pattern": "[\\s\\S]*Metadata Schema Properties[\\s\\S]*"
+              },
+              "then": {
+                "x-titles": {
+                  "required": "Metadata Schema Properties (Required Sub Sections)"
+                },
+                "allOf": [
+                  {
+                    "pattern": "[\\s\\S]*Allowed Lifecycle Statuses[\\s\\S]*"
+                  },
+                  {
+                    "pattern": "[\\s\\S]*Allowed Classifications[\\s\\S]*"
+                  },
+                  {
+                    "pattern": "[\\s\\S]*Semantic Versioning Classification[\\s\\S]*"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

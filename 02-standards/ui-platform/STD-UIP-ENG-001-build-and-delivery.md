@@ -4,7 +4,7 @@ doc_meta:
   title: UI Platform Build & Delivery Standards
   owner: Principal UI/UX Architect
   version: 1.0.0
-  status: approved
+  status: adopted
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180

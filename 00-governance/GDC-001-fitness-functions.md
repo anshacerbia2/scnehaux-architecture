@@ -2,7 +2,7 @@
 doc_meta:
   id: GDC-001
   title: Architecture Fitness Functions & Compliance Engine
-  owner: Architecture Review Board (ARB)
+  owner: Architecture Authority
   version: 2.0.0
   status: approved
   classification: public
@@ -11,138 +11,237 @@ doc_meta:
   last_reviewed: 2026-06-11
 ---
 
-<!-- lint-disable vague_claim -->
+
 # Architecture Fitness Functions & Compliance Engine
 
 ## 1. Context & Scope
 
-This document defines the **Architecture Fitness Functions** and the **Compliance Engine (`linter.py`)**, managed by the CI/CD pipeline to enforce structural integrity across the Scnehaux enterprise ecosystem.
+### 1.1 The Core Mandate: The Master Fitness Function
+The **Master Fitness Function** is the central automated compliance engine designed to operationalize all five ecosystem goals established in the [Scnehaux Architectural Constitution](./GDC-000-governance-policy.md#11-the-ecosystem-goals).
 
-Rather than relying on human memory to enforce architecture guidelines, this framework acts as the automated governance gatekeeper. Before any architecture document is merged into the `main` branch, the linter validates the fitness of the document structure, traceability, content constraints, and adherence to technology radar lifecycles.
+Rather than relying on manual, bottleneck-prone reviews, we enforce these goals through the philosophy of **Separation of Concerns (SoC) Artifact Domains**. We mandate that every architectural perimeter must be fully automatable. To achieve this, we centralize critical boundaries, taxonomies, and lineages into the document's YAML Frontmatter (`doc_meta`) and structural Abstract Syntax Tree (AST). 
 
-1. **Metadata & Taxonomy**: Ensures the YAML frontmatter (`doc_meta`) contains all required fields, uses valid Semantic Versioning, and strictly matches the Allowed Statuses and Classifications for that specific document type.
-2. **Structural Compliance**: Verifies that the Markdown body contains the exact required `##` and `###` headers dictated by the domain ruleset (e.g., ensuring a SAD has a `Runtime Flows` section).
-3. **Traceability & Orphan Detection**: Enforces frontmatter dependency links (e.g., a SAD must reference a valid `parent_pad` ID) **and** validates inline ID citations in prose (e.g. `(**ADR-018**)`) against the document registry, so a renamed or deleted ID cannot rot silently inside body text.
-4. **Content Constraints**: Scans the document body for prohibited vague vocabulary (e.g., "highly scalable", "very fast") and enforces mandatory quantifiable metrics with real units.
-5. **Temporal Expiration (Waivers)**: Checks if time-bound exceptions (such as temporary ADR waivers) have expired against the current system clock, immediately failing the pipeline to prevent technical debt accumulation.
-6. **Global Invariants (Repo-Level)**: Beyond per-file checks, the engine enforces repository-wide invariants — **globally unique document IDs** (no duplicate `doc_meta.id`) and an **acyclic traceability graph** (upward `parent_pad` / `parent_sad` / `governed_by` references must form a DAG; intentional self-references such as `GDC-000` are exempt).
+By transforming human-readable principles into mathematically verifiable constraints, the Master Fitness Function ensures that the architectural standards are enforced deterministically at the CI/CD boundary. It acts as a continuous, automated guardrail that preserves engineering quality without sacrificing speed.
+
+### 1.2 The Automation Scope & Domain Boundaries
+To fulfill the Constitution (GDC-000), we divide the automation scope of the Master Fitness Function into three definitive architectural perimeters. This list serves as the **strict foundational boundary** for any developer contributing to the `engine` codebase. Any new validation rule MUST fall into one of these physical domains:
+
+1. **The Metadata Domain (YAML Frontmatter)**
+   All rules that validate the `doc_meta` schema. This domain guarantees the identity and administrative governance of the artifact.
+   - **Ontology & Identity**: Enforces unique architectural IDs, semantic versioning, and explicit status transitions. *[Non-Leakage Policy](./GDC-000-governance-policy.md#21-the-boundary-constraints-non-leakage-policy)*
+   - **Meta-Governance**: Validates the `governed_by` field to guarantee the artifact explicitly declares its governing guideline. *[Circular Governance](./GDC-000-governance-policy.md#28-the-metaprogramming-principle-circular-governance)*
+   - **Ownership & Access Control**: Verifies the `owner` field maps to authorized entities (ARB/Squads). *[Architecture Authority](./GDC-000-governance-policy.md#211-the-architecture-authority)*
+   - **Temporal Governance**: Uses the system clock against dates in metadata to expire exception waivers and technology deprecation periods. *[Waivers](./GDC-000-governance-policy.md#210-architecture-exceptions-waivers) & [Grandfathering](./GDC-000-governance-policy.md#29-legacy-systems--transition-grandfathering)*
+   - **Traceability & Lineage (The C4 DAG)**: Automates detection of circular references, strict parent attachments (`parent_sad`, `parent_pad`), and orphaned artifacts to ensure the "Line of Sight". *[Contractual Lineage](./GDC-000-governance-policy.md#23-contractual-lineage-the-c4-dag)*
+
+2. **The Structural & Content Domain (Markdown AST)**
+   All rules that parse the actual Markdown body to enforce structural integrity and architectural mapping.
+   - **NFR Taxonomy Enforcement**: Enforces that all non-functional requirements are categorically mapped to the AWS Well-Architected Framework pillars. *[NFR Taxonomy](./GDC-000-governance-policy.md#24-non-functional-requirements-nfr-taxonomy)*
+   <!-- lint_disable_start: vague_claim -->
+   - **Structural Integrity & Content Quality**: Enforces mandatory sections and eradicates subjective terminology (e.g., "blazingly fast"). *[The Quality Framework](./GDC-000-governance-policy.md#27-the-quality-framework)*
+   <!-- lint_disable_end: vague_claim -->
+
+3. **The Lifecycle & Execution Domain (Git & CI/CD Environment)**
+   All rules that execute outside the file itself, utilizing the environment to enforce state changes and execution delegation.
+   - **Immutability Lock**: Utilizes Git history audits to lock approved documents into an immutable state, requiring explicit semantic version bumps for any modifications. *[Artifact Lifecycle & Versioning](./GDC-000-governance-policy.md#25-artifact-lifecycle--versioning)*
+   - **Federated Execution Delegation**: The engine dynamically defers and merges domain-specific validations from local guidelines instead of hardcoding them. *[The Fractal Boundary](./GDC-000-governance-policy.md#22-the-fractal-boundary-physical-vs-logical-decentralization)*
+   - **Execution Enforcement**: Ensures that the Master Fitness Function is strictly embedded as a blocking PR check. *[Policy-as-Code](./GDC-000-governance-policy.md#26-policy-as-code)*
+
+### 1.3 The Fractal Implementation Strategy
+The `engine` does not hardcode domains into a monolithic linter. It implements the [**Fractal Triad**](./GDC-000-governance-policy.md#22-the-fractal-boundary-physical-vs-logical-decentralization) concept defined in the Constitution. 
+
+At runtime, the Master Fitness Function bootstraps a foundational global root policy (`schemas/base.schema.json` and `engine/validators/global_rules.py`). It then dynamically deep-merges the root policy with the specific triad requested by the artifact's `governed_by` metadata.
+
+For example, if validating an SAD, it dynamically merges the global root with the SAD Triad:
+1. **Guideline**: [`GDC-009-sad-guideline.md`](./GDC-009-sad-guideline.md)
+2. **Schema**: `schemas/sad.schema.json`
+3. **Validator**: `engine/validators/domains/sad_validator.py`
 
 > [!IMPORTANT]
-> **The Docs-as-Code Philosophy**: At Scnehaux, if an architectural rule is not enforceable by the linter, it is merely a suggestion. We do not rely on humans memorizing guidelines. Therefore, **every update to architecture guidelines MUST be codified in the corresponding `linting-rules-[type].yaml`**. You cannot simply type a new rule into a Markdown document.
+> **The Docs-as-Code Philosophy**: At Scnehaux, if an architectural rule is not enforceable by the linter, it is merely a suggestion. We do not rely on humans memorizing guidelines. Therefore, **every update to architecture guidelines MUST be codified in the corresponding domain schema (`.schema.json`) or validator script**. You cannot simply type a new rule into a Markdown document.
 
 ## 2. Policy Framework
 
-The linter utilizes a decentralized, composable configuration model based on the Open-Closed Principle. The core engine dynamically deep-merges global baseline rules with document-specific rulesets.
+The engine utilizes a decentralized, composable architecture based on the Open-Closed Principle. To contribute effectively, developers must first understand the physical layout of the engine.
 
-### 2.1 The Ruleset Architecture (YAML Federation)
+### 2.1 The Engine Topography (Physical Structure)
 
-The linter evaluates YAML configuration files mapped by Document Category.
+The Master Fitness Function resides entirely within the `06-fitness-function/` directory. The codebase is strictly modularized according to the Separation of Concerns (SoC) domains defined in [Section 1.2: The Automation Scope & Domain Boundaries](#12-the-automation-scope--domain-boundaries):
 
-**Naming Convention Rule**: To achieve dynamic Deep-Merging, the linter automatically identifies the necessary document-specific ruleset by extracting the document type from the file's ID (e.g. `ADR-001` -> `adr`). It then resolves the specific YAML file by mapping it to the naming convention: `linting-rules-[doc_type].yaml`, where `[doc_type]` is the exact acronym in lowercase. If a specific ruleset is required but missing, the linter SHOULD trigger a Hard Block.
+> [!WARNING]
+> **DO NOT EDIT THIS TREE MANUALLY.**
+> This directory tree is automatically generated from the live physical structure of the `engine/` directory.
+> If the codebase structure changes, regenerate this block by running:
+> `python 06-fitness-function/generators/generate_engine_topography.py`
 
-| Document Type | Ruleset File | Scope / Responsibilities |
-| :--- | :--- | :--- |
-| **Global Baseline** | `linting-rules.yaml` | The universal parent. Enforces generic syntax, minimum word counts, banned vocabulary, and overarching layout structures. |
-| **Domain-Specific Rulesets** | `linting-rules-[doc_type].yaml` | To adhere to the Open-Closed Principle, domain-specific YAML rules are documented exclusively within their respective guidelines:<br>• [GDC](./GDC-000-governance-policy.md)<br>• [EAD](./GDC-007-ead-guideline.md)<br>• [STD](./GDC-008-std-guideline.md)<br>• [PAD](./GDC-009-pad-guideline.md)<br>• [SAD](./GDC-010-sad-guideline.md)<br>• [ADR](./GDC-011-adr-guideline.md)<br>• [TDD](./GDC-012-tdd-guideline.md) |
+<!-- BEGIN_ENGINE_TOPOGRAPHY -->
+```text
+scnehaux-architecture/
+├── 06-fitness-function/
+│   └── engine/
+│       ├── auditors/            # (External environment validators)
+│       │   ├── git_auditor.py
+│       │   └── graph_auditor.py
+│       ├── cli.py               # (The Master Fitness Function Entrypoint)
+│       ├── config/              # (Engine configuration & environment variables)
+│       │   └── loader.py
+│       ├── fs/                  # (File system utilities & workspace traversal)
+│       │   └── crawler.py
+│       ├── parsing/             # (Data extraction from raw files)
+│       │   └── markdown_ast.py
+│       ├── reporting/           # (CLI output formatting & CI/CD error logs)
+│       │   └── reporter.py
+│       └── validators/          # (The core policy sandbox)
+│           ├── base.py
+│           ├── domains/         # (Federated domain-specific triad scripts)
+│           │   ├── adr_validator.py
+│           │   ├── ead_validator.py
+│           │   ├── gdc_validator.py
+│           │   ├── pad_validator.py
+│           │   ├── sad_validator.py
+│           │   ├── std_validator.py
+│           │   └── tdd_validator.py
+│           ├── global_rules.py  # (Foundational Python rules for all documents)
+│           └── registry.py
+```
+<!-- END_ENGINE_TOPOGRAPHY -->
 
-#### 2.1.1 Global Baseline Rules (`linting-rules.yaml`)
+### 2.2 The Engine Capabilities (Functions)
+
+The table below maps the core engine auditor functions directly to the architecture enforcement policies.
+
+> [!WARNING]
+> **DO NOT EDIT THIS TABLE MANUALLY.**
+> This table is automatically generated by parsing the docstrings of the core auditor and validator scripts.
+> If you add or modify an engine function, regenerate this block by running:
+> `python 06-fitness-function/generators/generate_functions_doc.py`
+
+<!-- AUTO-GENERATED-FUNCTIONS:START -->
+
+| Module / Function                                                                 | Description                                                                                                                                                                                                                                                                            |
+| :-------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine/validators/global_rules.py` <br> **\_validate_content_quality**           | Ensure the content avoids prohibited boilerplate words and vague claims based on the governance constraints.                                                                                                                                                                           |
+| `engine/validators/global_rules.py` <br> **\_validate_cross_references**          | Verify that any architecture IDs referenced in the document metadata actually exist in the registry.                                                                                                                                                                                   |
+| `engine/validators/global_rules.py` <br> **\_validate_nfr_taxonomy**              | Enforces that all non-functional requirements are categorized strictly according to the AWS Well-Architected Framework pillars.                                                                                                                                                          |
+| `engine/validators/global_rules.py` <br> **\_validate_naming**                    | Enforce the naming convention (filename pattern) as defined in the global governance metadata rules.                                                                                                                                                                                   |
+| `engine/validators/global_rules.py` <br> **\_validate_quantification**            | Ensure that non-functional requirements and other specific sections contain quantified metrics and mandatory keywords.                                                                                                                                                                 |
+| `engine/validators/global_rules.py` <br> **\_validate_technology_hold**           | Check if the document references technologies on HOLD status in the tech radar.                                                                                                                                                                                                        |
+| `engine/auditors/graph_auditor.py` <br> **audit_traceability_graph**              | Detects circular references and validates the upward-directed C4 DAG graph constraint.                                                                                                                                                                                                 |
+| `engine/auditors/graph_auditor.py` <br> **audit_hierarchy_tiers**                 | Enforces strict parent attachment types (e.g., TDD must declare `parent_sad`, PAD cannot declare `parent_pad`).                                                                                                                                                                        |
+| `engine/auditors/graph_auditor.py` <br> **audit_orphans**                         | Detects artifacts disconnected from the main C4 DAG graph (preventing architectural silos).                                                                                                                                                                                            |
+| `engine/auditors/git_auditor.py` <br> **audit_version_bump**                      | Enforces immutability by intercepting unversioned modifications to `approved` documents via `git diff`.                                                                                                                                                                                |
+| `engine/validators/domains/*` <br> **validate_type_specific**                     | Domain-specific logic sandbox enforcing unique constraints per Document Type (e.g., SAD interface requirements).                                                                                                                                                                       |
+
+<!-- AUTO-GENERATED-FUNCTIONS:END -->
+
+### 2.3 The Schema Architecture (JSON Federation)
+
+The engine evaluates JSON Schema configuration files mapped by Document Type.
+
+> [!NOTE]
+> All JSON Schema files intentionally reside within the `00-governance/schemas/` directory to keep them tightly coupled with the architecture documentation. This colocation makes it straightforward for contributors to edit rules side-by-side with their governing policies.
+
+**Naming Convention Rule**: To achieve dynamic Deep-Merging of the [**Fractal Triad**](./GDC-000-governance-policy.md#222-logical-decentralization-the-fractal-triad), the engine automatically identifies the necessary document-specific schema by extracting the Document Type prefix from the artifact's `doc_meta.id` (e.g., `ADR-001` -> `ADR`). It then resolves the specific JSON schema file by mapping it to the strict naming convention: `schemas/[doc_type].schema.json` (where `[doc_type]` is the exact acronym in lowercase, e.g., `schemas/adr.schema.json`). If a specific schema is required but missing, the engine MUST trigger a Hard Block.
+
+| Document Type                | Ruleset File                    | Scope / Responsibilities                                                                                                                                                                                                                                                                                                                                                                                               |
+| :--------------------------- | :------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Global Baseline**          | `schemas/base.schema.json`            | The universal parent. Enforces generic syntax, minimum word counts, banned vocabulary, and overarching layout structures.                                                                                                                                                                  |
+| **Domain-Specific Rulesets** | `schemas/[doc_type].schema.json` | To adhere to the Open-Closed Principle, domain-specific JSON schemas are documented exclusively within their respective guidelines:<br>• [GDC](./GDC-005-gdc-guideline.md)<br>• [EAD](./GDC-006-ead-guideline.md)<br>• [STD](./GDC-007-std-guideline.md)<br>• [PAD](./GDC-008-pad-guideline.md)<br>• [SAD](./GDC-009-sad-guideline.md)<br>• [ADR](./GDC-010-adr-guideline.md)<br>• [TDD](./GDC-011-tdd-guideline.md) |
+
+#### 2.3.1 Global Baseline Rules (`schemas/base.schema.json`)
 
 The global baseline applies universally to all architecture documents across the repository to ensure foundational quality.
 
 > [!WARNING]
 > **DO NOT EDIT THIS TABLE MANUALLY.**
-> This table is automatically generated from `linting-rules.yaml` (the Single Source of Truth).
-> If you need to update a rule, modify the YAML file and run:
-> `python scripts/generate_rules_doc.py`
+> This table is automatically generated from the JSON Schema (`schemas/base.schema.json`).
+> If you need to update a rule, modify the schema file and run:
+> `python 06-fitness-function/generators/generate_rules_doc.py`
 
 <!-- AUTO-GENERATED-RULES:START -->
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
+
+| Rule Category      | Parameter                | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| :----------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Structure** | Min Content Length Chars | `50` |
 | **Content** | Prohibited Words | <ul><li>`maybe`</li><li>`probably`</li><li>`should consider`</li><li>`TBD`</li><li>`coming soon`</li><li>`and so on`</li><li>`seamless`</li><li>`seamlessly`</li><li>`obviously`</li><li>`blazingly`</li><li>`trivially`</li></ul> |
 | **Content** | Ambiguity Check | **Pattern**: `\b(highly\|very\|extremely\|super\|incredibly)\s+(scalable\|fast\|secure\|reliable\|available\|performant\|robust\|efficient)\b`<br>**Message**: `Vague claim detected. Must be quantified with metrics.` |
-| **Quantification** | Required For Sections | <ul><li>`Non-Functional Requirements`</li><li>`Observability Requirements`</li></ul> |
-| **Quantification** | Metric Pattern | `\d+(\.\d+)?\s*(ns\|us\|ms\|s\|m\|h\|d\|%\|req/s\|rps\|qps\|rpm\|kb\|mb\|gb\|tb\|pb\|seconds?\|milliseconds?\|minutes?\|hours?\|days?\|nines)(?!\w)` |
-| **Governance** | Max Review Age Days | `365` |
-| **Governance** | Max Draft Age Days | `30` |
-| **Governance** | Require Adr Links | `True` |
-| **Governance** | Naming Conventions | **Global Adr Pattern**: `^ADR-GLB-(?:[A-Z]{2,4}-)?\d{3}-[a-z0-9-]+\.md$`<br>**Domain Adr Pattern**: `^ADR-[A-Z]{2,4}(?:-[A-Z]{2,4})?-\d{3}-[a-z0-9-]+\.md$`<br>**Global Std Pattern**: `^STD-GLB-(?:[A-Z]{2,4}-)?\d{3}-[a-z0-9-]+\.md$`<br>**Domain Std Pattern**: `^STD-[A-Z]{2,4}(?:-[A-Z]{2,4})?-\d{3}[A-Za-z]?-[a-z0-9-]+\.md$`<br>**Pad Pattern**: `^[a-z0-9-]+\.pad\.md$`<br>**Sad Pattern**: `^[a-z0-9-]+\.sad\.md$`<br>**Gdc Pattern**: `^GDC-\d{3}-[a-z0-9-]+\.md$`<br>**Ead Pattern**: `^EAD-\d{3}-[a-z0-9-]+\.md$` |
+| **Governance** | Version Format | `semver` |
+| **Quantification** | Aws Waf Pillars | <ul><li>`Operational Excellence`</li><li>`Security`</li><li>`Reliability`</li><li>`Performance Efficiency`</li><li>`Cost Optimization`</li><li>`Sustainability`</li></ul> |
 
 ### Severity Levels
 
-| Error Code | Severity (CI Action) |
-| :--- | :--- |
+| Error Code                        | Severity (CI Action) |
+| :-------------------------------- | :------------------- |
+| `vague_claim_in_nfr` | **ERROR** |
 | `security_isolation_violation` | **CRITICAL** |
 | `structural_integrity_violation` | **CRITICAL** |
 | `technology_hold_violation` | **CRITICAL** |
 | `operational_stability_violation` | **ERROR** |
 | `missing_metadata` | **ERROR** |
-| `missing_section` | **ERROR** |
-| `missing_section_keyword` | **ERROR** |
-| `exception_expired` | **ERROR** |
-| `missing_exception_reason` | **ERROR** |
-| `traceability_violation` | **ERROR** |
-| `draft_expired` | **ERROR** |
-| `duplicate_id` | **ERROR** |
-| `unrecognized_section` | **WARNING** |
-| `cross_reference_missing` | **WARNING** |
-| `inline_reference_missing` | **WARNING** |
-| `recommended_keyword_missing` | **WARNING** |
-| `prohibited_word` | **WARNING** |
-| `vague_claim` | **WARNING** |
-| `old_review` | **WARNING** |
-| `stylistic_deviation` | **WARNING** |
-| `naming_style_deviation` | **WARNING** |
-| `onboarding_complexity_untracked` | **WARNING** |
+
 <!-- AUTO-GENERATED-RULES:END -->
 
-### 2.2 Validator Federation (Polymorphic Engine)
+#### 2.3.2 The Universal Schema Generator
 
-The Validator Engine operates by consuming the deeply-merged configuration (Global Rules + Domain-Specific Rules) generated during the YAML Federation phase (2.1). While the YAML rulesets provide static declarative constraints, certain document types require dynamic, runtime validation based on their internal state or relationships. To adhere to the Open-Closed Principle (OCP), the `linter.py` core engine delegates both the execution of these YAML rules and the injection of complex domain logic to specialized Python Validator classes residing in the `validators/` directory.
+To maintain the "Docs-as-Code" philosophy, all JSON Schema constraints are automatically mapped into human-readable Markdown tables across the GDC documents. This is handled by the Universal Schema Generator (`06-fitness-function/generators/generate_rules_doc.py`). 
 
-**Naming Convention Rule**: The `validators/factory.py` automatically maps the document to its validator by matching the Document ID prefix (e.g., `ADR-001` -> `ADR`). It then attempts to load the validator class using the strict naming convention: `[DocType]Validator` (e.g., `ADRValidator`), which must reside in the python file `validators/[doc_type].py` (lowercase, e.g., `validators/adr.py`). If the registry fails to find a validator for an expected document type, the linter SHOULD trigger a Hard Block.
+The generator is capable of mapping complex JSON Schema constructs:
+1. **Dynamic Conditionals (`allOf` + `if`/`then`)**: Automatically detects conditional schema branches and dynamically annotates the required sections (e.g., extracting `const: EAD-001` to display conditional requirements explicitly in the tables).
+2. **Title Overrides (`x-titles`)**: Uses the `x-titles` metadata to override raw JSON property keys with highly descriptive, human-readable column parameters.
+3. **Regex Extraction (`pattern`)**: Strips down complex regex string enforcements into clean, readable keywords.
+4. **Soft vs Hard Enforcement (`recommended` vs `required`)**: Explicitly partitions and tags keywords that are strictly required (`required`) versus those that are best-practice (`recommended`).
+
+### 2.4 Validator Federation (Polymorphic Engine)
+
+The Validator Engine operates by consuming the deeply-merged configuration (Global Rules + Domain-Specific Rules) generated during the JSON Federation phase (2.3). While the JSON schemas provide static declarative constraints, certain document types require dynamic, runtime validation based on their internal state or relationships. To adhere to the Open-Closed Principle (OCP), the `engine/cli.py` core engine delegates both the execution of these JSON schemas and the injection of complex domain logic to specialized Python Validator classes residing in the `engine/validators/` directory.
+
+**Naming Convention Rule**: To enforce the [**Fractal Triad**](./GDC-000-governance-policy.md#222-logical-decentralization-the-fractal-triad), the `engine/validators/registry.py` automatically maps the artifact to its validator by extracting the Document Type prefix from the artifact's `doc_meta.id` (e.g., `ADR-001` -> `ADR`). It then attempts to load the validator class using the strict naming convention: `[DocType]Validator` (e.g., `ADRValidator`), which must reside in the python file `engine/validators/domains/[doc_type]_validator.py` (lowercase, e.g., `engine/validators/domains/adr_validator.py`). If the registry fails to find a validator for an expected Document Type, the engine MUST trigger a Hard Block.
 
 **Execution Isolation (`validate_type_specific`)**: To guarantee clean Separation of Concerns (SoC), global rules (e.g., checking mandatory sections, banned vocabulary) are handled entirely by the parent `BaseValidator`. The specialized child classes (like `ADRValidator` or `SADValidator`) are strictly prohibited from implementing global logic. They MUST isolate their custom domain-logic entirely within the overridden `validate_type_specific()` function. This function serves as the exclusive sandbox for executing document-specific rules.
 
 The architecture of the engine is divided into two primary domains:
-1. **The Validator Federation** (Sections 2.2.1 - 2.2.6): Dedicated Python classes extending the `BaseValidator` to enforce domain-specific logic.
-2. **Core Framework Dependencies** (Section 2.2.7): Utility modules that provide foundational support (parsing, type-safety, and registry scanning) to the federation.
 
-#### 2.2.1 `BaseValidator` (`validators/base.py`)
-The abstract parent class. Executes the merged YAML schema, handles global errors, and dictates severity.
+1. **The Validator Federation** (Sections 2.4.1 - 2.4.2): Dedicated Python classes extending the `BaseValidator` to enforce domain-specific logic.
+2. **Core Framework Dependencies** (Section 2.4.3): Utility modules that provide foundational support (parsing, type-safety, and registry scanning) to the federation.
 
-| Function / Property Signature | Responsibilities & Logic |
-| :--- | :--- |
-| **Instance Variables** | `file_path`, `content`, `doc_meta`, `rules`, `all_doc_ids`, `errors`, `rel_path`, `filename`, `disabled_rules` |
-| `@property`<br>`mandatory_sections(self)` | Retrieves `rules.structure.required_sections` from the YAML rules. |
-| `@property`<br>`optional_sections(self)` | Retrieves `rules.structure.optional_sections` from the YAML rules. |
-| `@property`<br>`required_metadata_fields(self)` | Retrieves `rules.metadata.required_fields` from the YAML rules. |
-| `__init__(self, file_path: str, content: str, doc_meta: dict, rules: dict, all_doc_ids: set)` | Instantiates the context variables. Parses `<!-- lint_disable: rule_name, rule_name -->` HTML comments in `content` to populate the `disabled_rules` set. |
-| `add_error(self, category: str, message: str)` | Evaluates if `category` exists in `disabled_rules`. If not, maps the category to a severity using `severity_levels` in the YAML (defaults to `'ERROR'`), and appends `(severity, message)` to `self.errors`. |
-| `validate(self) -> list[tuple[str, str]]` | Orchestrates the execution: triggers `run_common_validations(self)` from `common.py`, invokes `self.validate_type_specific()`, and returns `self.errors`. |
-| `validate_type_specific(self)` | Abstract interface intended to be overridden by child classes for domain isolation (`pass` by default). |
+#### 2.4.1 `BaseValidator` (`engine/validators/base.py`)
 
-#### 2.2.2 Domain-Specific Validators
+The abstract parent class. Executes the merged JSON schema, handles global errors, and dictates severity.
+
+| Function / Property Signature                                                                 | Responsibilities & Logic                                                                                                                                                                                     |
+| :-------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Instance Variables**                                                                        | `file_path`, `content`, `doc_meta`, `rules`, `all_doc_ids`, `errors`, `rel_path`, `filename`, `disabled_rules`                                                                                               |
+| `@property`<br>`mandatory_sections(self)`                                                     | Retrieves `rules.structure.required_sections` from the JSON rules.                                                                                                                                           |
+| `@property`<br>`optional_sections(self)`                                                      | Retrieves `rules.structure.optional_sections` from the JSON rules.                                                                                                                                           |
+| `@property`<br>`required_metadata_fields(self)`                                               | Retrieves `rules.metadata.required_fields` from the JSON rules.                                                                                                                                              |
+| `__init__(self, file_path: str, content: str, doc_meta: dict, rules: dict, all_doc_ids: set)` | Instantiates the context variables. Parses `<!-- lint_disable: rule_name, rule_name -->` HTML comments in `content` to populate the `disabled_rules` set.                                                    |
+| `add_error(self, category: str, message: str)`                                                | Evaluates if `category` exists in `disabled_rules`. If not, maps the category to a severity using `severity_levels` in the schema (defaults to `'ERROR'`), and appends `(severity, message)` to `self.errors`. |
+| `validate(self) -> list[tuple[str, str]]`                                                     | Orchestrates the execution: triggers `run_common_validations(self)` from `global_rules.py`, invokes `self.validate_type_specific()`, and returns `self.errors`.                                                    |
+| `validate_type_specific(self)`                                                                | Abstract interface intended to be overridden by child classes for domain isolation (`pass` by default).                                                                                                      |
+
+#### 2.4.2 Domain-Specific Validators
 
 To adhere to the Open-Closed Principle, domain-specific Python logic (the `validate_type_specific` implementation) is documented exclusively within their respective guidelines:
-- [GDC](./GDC-006-gdc-guideline.md) (`validators/gdc.py`)
-- [EAD](./GDC-007-ead-guideline.md) (`validators/ead.py`)
-- [STD](./GDC-008-std-guideline.md) (`validators/std.py`)
-- [PAD](./GDC-009-pad-guideline.md) (`validators/pad.py`)
-- [SAD](./GDC-010-sad-guideline.md) (`validators/sad.py`)
-- [ADR](./GDC-011-adr-guideline.md) (`validators/adr.py`)
-- [TDD](./GDC-012-tdd-guideline.md) (`validators/tdd.py`)
 
-#### 2.2.3 Core Framework Dependencies
+- [GDC](./GDC-005-gdc-guideline.md) (`engine/validators/domains/gdc_validator.py`)
+- [EAD](./GDC-006-ead-guideline.md) (`engine/validators/domains/ead_validator.py`)
+- [STD](./GDC-007-std-guideline.md) (`engine/validators/domains/std_validator.py`)
+- [PAD](./GDC-008-pad-guideline.md) (`engine/validators/domains/pad_validator.py`)
+- [SAD](./GDC-009-sad-guideline.md) (`engine/validators/domains/sad_validator.py`)
+- [ADR](./GDC-010-adr-guideline.md) (`engine/validators/domains/adr_validator.py`)
+- [TDD](./GDC-011-tdd-guideline.md) (`engine/validators/domains/tdd_validator.py`)
 
-The `validators/` directory contains critical utility modules that power the core Linter Engine, providing Type-Safety, AST parsing, and cross-reference resolutions.
+#### 2.4.3 Core Framework Dependencies
 
-| Component | File | Responsibilities & Logic |
-| :--- | :--- | :--- |
-| **Scanner** | `validators/scanner.py` | **Fast-Scan Phase**: Recursively walks the repository to build a global registry of all valid document IDs (by extracting `doc_meta.id`). This registry is injected into the validators to guarantee cross-reference integrity (e.g., ensuring `fulfilled_by` or `parent_pad` points to existing documents). It additionally detects **duplicate IDs** (SSOT uniqueness violations) rather than silently overwriting them. |
-| **Schema** | `validators/schema.py` | **Type-Safety Enforcement**: Utilizes `Pydantic` to strictly cast and validate the `doc_meta` YAML block. Features include enforcing strict Semantic Versioning (`X.Y.Z`) on the `version` field and guaranteeing schema constraints for nested objects like `ExceptionInfo`. |
-| **Utilities** | `validators/utils.py` | **AST Processing**: Uses `markdown_it` to tokenize the markdown into an Abstract Syntax Tree (AST). Provides modular functions to accurately extract section content (`extract_section_contents`), strip styling for character counts (`clean_content_for_length`), harvest `href` links (`extract_links`), strip code fences/inline code for safe directive parsing (`strip_code_fences`), harvest inline ID citations (`extract_doc_id_references`), and normalize YAML `datetime` values (`parse_date`). |
-| **Traceability** | `validators/traceability.py` | **Graph Audit**: Builds the upward-reference graph (`parent_pad` / `parent_sad` / `governed_by`) across the full registry once per run and detects circular dependencies, enforcing that the C4 traceability chain remains a DAG. |
+The `engine/` directory contains critical utility modules that power the core Engine, providing AST parsing, global schema validation, and cross-reference resolutions.
+
+| Component        | File                               | Responsibilities & Logic                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| :--------------- | :--------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Crawler**      | `engine/fs/crawler.py`             | **Fast-Scan Phase**: Recursively walks the repository to build a global registry of all valid document IDs (by extracting `doc_meta.id`). This registry is injected into the validators to guarantee cross-reference integrity (e.g., ensuring `fulfilled_by` or `parent_pad` points to existing documents). It additionally detects **duplicate IDs** (SSOT uniqueness violations) rather than silently overwriting them.                                                                                  |
+| **Config Loader**| `engine/config/loader.py`          | **Type-Safety Enforcement**: Utilizes `jsonschema` to strictly cast and validate the `doc_meta` block against the deep-merged `.schema.json` configurations. Features include enforcing strict Semantic Versioning (`X.Y.Z`) on the `version` field and guaranteeing schema constraints for nested objects.                                                                                                                                                                                                 |
+| **AST Parser**   | `engine/parsing/markdown_ast.py`   | **AST Processing**: Uses `markdown_it` to tokenize the markdown into an Abstract Syntax Tree (AST). Provides modular functions to accurately extract section content, strip styling for character counts, harvest `href` links, strip code fences/inline code for safe directive parsing, harvest inline ID citations, and normalize YAML `datetime` values. |
+| **Graph Auditor**| `engine/auditors/graph_auditor.py` | **Graph Audit**: Builds the upward-reference graph (`parent_pad` / `parent_sad` / `governed_by`) across the full registry once per run. It detects circular dependencies and enforces C4-tier strict attachments (e.g., TDD must attach to SAD).                                                                                                                                                                                                                                                                           |
+| **Git Auditor**  | `engine/auditors/git_auditor.py`   | **Immutability Lock**: Interfaces directly with `git HEAD` to extract the historical status of a document. Enforces that any document that has already achieved `approved` status cannot be modified structurally without a mandatory `version` bump.                                                                                                                                                                                                                                                                           |
 
 ### 2.3 Inline Policy Exemptions (`lint_disable`)
 
@@ -154,23 +253,22 @@ A `lint_disable` directive suppresses a specific **non-blocking** finding on a d
 
 The directive is **governed** — it is not an unconditional override:
 
-1. **CRITICAL findings cannot be silenced.** A directive targeting a `CRITICAL`-severity category (e.g. `structural_integrity_violation`, `security_isolation_violation`, `technology_hold_violation`) is *rejected*: the finding still fires, and the attempt is recorded in the CI audit under **Rejected Disables**.
-2. **Code is not a directive.** Directives inside fenced code blocks or inline code spans are ignored, so documentation *examples* of `lint_disable` are never parsed as live suppressions.
+1. **CRITICAL findings cannot be silenced.** A directive targeting a `CRITICAL`-severity category (e.g. `structural_integrity_violation`, `security_isolation_violation`, `technology_hold_violation`) is _rejected_: the finding still fires, and the attempt is recorded in the CI audit under **Rejected Disables**.
+2. **Code is not a directive.** Directives inside fenced code blocks or inline code spans are ignored, so documentation _examples_ of `lint_disable` are never parsed as live suppressions.
 3. **Reasons are captured.** A directive lacking a `(reason: …)` clause is reported as `UNDOCUMENTED` in the audit summary for reviewer scrutiny.
 
 All honored and rejected disables are collected and printed in the final CI audit summary.
 
-### 2.4 Engine v1.1 — Hardened & Repo-Level Checks
+### 2.4 NFR Taxonomy Enforcement (AWS WAF)
 
-| Capability | Module | Behavior |
-| :--- | :--- | :--- |
-| **Inline Reference Integrity** | `validators/common.py` | Validates architecture IDs cited in prose (e.g. `(**ADR-018**)`) against the registry. Reported as `inline_reference_missing` (WARNING — a citation may legitimately target an external or downstream document). |
-| **Duplicate ID Detection** | `validators/scanner.py` | Two documents declaring the same `doc_meta.id` raise `duplicate_id` (ERROR, blocking). Such collisions were previously overwritten silently. |
-| **Traceability Graph Audit** | `validators/traceability.py` | Detects circular `parent_pad` / `parent_sad` / `governed_by` dependencies (`traceability_violation`, blocking). Intentional self-references are exempt. |
-| **SARIF Output** | `linter.py --format sarif` | Emits SARIF 2.1.0 so violations surface as inline annotations on GitHub PRs via code-scanning upload (in addition to `text` and `json`). |
+To ensure non-functional requirements are structured uniformly across all systems, the engine enforces strict mapping to the AWS Well-Architected Framework. Any NFRs declared in architecture documents must be categorized under one of the 6 pillars (e.g., `### Security`, `### Reliability`). The `engine/validators/global_rules.py` module evaluates the headers under the "Non-Functional Requirements" section to guarantee alignment with `aws_waf_pillars` defined in the global schema.
+
+### 2.5 Artifact Lifecycle & Immutability Lock
+
+Once an architectural decision (such as an ADR) reaches the `approved` status, it enters an immutable state. The `engine/auditors/git_auditor.py` intercepts any modifications to approved documents by comparing the local file against `git HEAD`. If structural or content modifications are detected, the engine raises a `CRITICAL` violation unless the `version` metadata is explicitly incremented, establishing a verifiable chain of custody for all historical decisions.
 
 > [!IMPORTANT]
-> **SSOT is machine-enforced.** The reconciliation between the YAML rulesets and their generated Markdown tables is verified in CI by `python scripts/generate_rules_doc.py --check`, which fails the build on any drift. Synchronization is guaranteed by the pipeline, not by convention.
+> **SSOT is machine-enforced.** The reconciliation between the JSON schemas and their generated Markdown tables is verified in CI by `python scripts/generate_rules_doc.py --check`, which fails the build on any drift. Synchronization is guaranteed by the pipeline, not by convention.
 
 ## 3. Technology Lifecycle Governance
 
@@ -196,107 +294,171 @@ When a standard technology, framework, or library decays (due to security concer
    - Existing active systems enter a grace window of maximum `180 days` to migrate off the legacy technology.
    - During this phase, compile checks emit warnings but do not fail the build.
 3. **Hard Enforcement Block (Stage 3)**:
-   - Upon expiration of the grace window, warnings escalate to hard errors. The CI compliance engine (`linter.py`) blocks any new pull requests containing references to the deprecated technology (`technology_hold_violation`).
+   - Upon expiration of the grace window, warnings escalate to hard errors. The CI compliance engine (`engine/cli.py`) blocks any new pull requests containing references to the deprecated technology (`technology_hold_violation`).
 
 ## 4. Severity & Exception Waivers
 
 ### 4.1 Applicability Criteria Framework
 
 To prevent excessive exception waivers, standards must not apply absolute mandates unconditionally. Standards must declare an **Applicability Criteria Matrix**:
+
 - **Team Size Metric**: Tooling frameworks (e.g., Module Federation) are `Adopted` only if the team count is greater than `3` and independent deployments are required. Otherwise, standalone monolithic deployments are `Recommended`.
 - **System Scale Metric**: Advanced scaling patterns (e.g., read replicas, microservices partition keys) are `Trial` or `Hold` by default and become `Adopted` only when query throughput exceeds defined performance metrics (e.g., >5000 read QPS).
 
 ### 4.2 Exception Waiver Procedure
 
 When a team must deviate from a mandatory engineering standard or architectural constraint (e.g. using an uncertified database engine or violating a frontend layer limit):
+
 - **Waiver Request Initiation**: The requesting team must draft a dedicated local project Exception ADR detailing the deviation, the specific standard rule being bypassed, and the mitigation strategies implemented.
 - **Approval Authority Matrix**:
-  - *Tier 1 Deviation (High Impact - Database, Core Security)*: Requires unanimous sign-off from the Architecture Review Board (ARB).
-  - *Tier 2 Deviation (Medium Impact - Frontend Stack, Observability)*: Requires approval from the Domain Lead.
-  - *Tier 3 Deviation (Low Impact - Custom Helpers, Internal Tooling)*: Requires approval from the Lead System Engineer.
+  - _Tier 1 Deviation (High Impact - Database, Core Security)_: Requires unanimous sign-off from the Architecture Review Board (ARB).
+  - _Tier 2 Deviation (Medium Impact - Frontend Stack, Observability)_: Requires approval from the Domain Lead.
+  - _Tier 3 Deviation (Low Impact - Custom Helpers, Internal Tooling)_: Requires approval from the Lead System Engineer.
 - **Time-Bound Review Commitments**: The reviewing authority must issue an official decision (Approved, Rejected, or Request Info) within `5 business days` of the waiver ADR submission.
 - **Auditing and Expiration**: Approved waivers must carry an expiration date not exceeding `365 days` from approval. The CI engine mathematically checks expiration dates against the system clock (`exception_expired` ERROR).
 
 ## 5. Linter Execution Flow (CI/CD Automated Gate)
 
-The execution of the automated compliance gate is orchestrated by `linter.py`. The diagram below illustrates the complete execution flow, detailing how contextual rules are dynamically merged and evaluated:
+The execution of the automated compliance gate is orchestrated by `engine/cli.py`. The diagram below illustrates the complete execution flow, detailing how contextual rules are dynamically merged and evaluated:
 
 ```mermaid
 flowchart TD
     Start(["Start Automated Compliance Check"]) --> ParseArgs["Determine Output Format (CI/CD vs Terminal)"]
-    ParseArgs --> LoadGlobal["Load Enterprise Global Rules (linting-rules.yaml)"]
+    ParseArgs --> LoadGlobal["Load Enterprise Global Rules (base.schema.json)"]
     LoadGlobal --> ResolveIDs["Phase 1: Fast-Scan (Harvest All Document IDs for Cross-Referencing)"]
     ResolveIDs --> WalkDirs["Phase 2: Deep-Crawl (Traverse Directory Tree & File Nodes)"]
-    
+
     WalkDirs --> FilterDirs["Exclude System & Dependency Folders (.git, node_modules)"]
     FilterDirs --> CheckFiles{"Is Architecture Document?"}
-    
+
     CheckFiles -- "No" --> SkipFile1["Ignore Non-Architecture File"]
     CheckFiles -- "readme, index" --> SkipFile1
     CheckFiles -- "Contains 'copy'/'template'" --> SkipFile1
     CheckFiles -- "Yes" --> LintFileStart["Begin Document Audit"]
-    
+
     SkipFile1 --> NextFile["Next Document"]
     NextFile --> WalkDirs
-    
+
     subgraph "Document Audit Process"
         LintFileStart --> ReadFile["Read Document Content"]
         ReadFile -- Failed --> ErrRead["Return ERROR"]
         ReadFile -- Success --> ParseFront["Extract Metadata Header"]
-        
+
         ParseFront -- "Missing/Invalid Header" --> ErrFront["Return ERROR: Hard Block"]
         ParseFront -- Valid --> DetectType["Identify Document Category from Metaheader ID"]
-        
+
         DetectType -- "Unknown/Missing ID" --> ErrType["Return ERROR: Hard Block"]
         DetectType -- "Category Recognized" --> GetValidator["Load Category-Specific Validator Engine (Extends BaseValidator)"]
-        
+
         GetValidator -- "No Validator Engine Found" --> ErrVal["Return ERROR: Hard Block"]
         GetValidator -- "Validator Engine Loaded" --> DeepCopy["Deep Copy Enterprise Global Rules"]
-        
+
         DeepCopy --> CheckSpecificFile{"Does Type-Specific Rules File Exist?"}
         CheckSpecificFile -- No --> ErrSpec["Return ERROR: Hard Block"]
         CheckSpecificFile -- Yes --> LoadSpecific["Load Type-Specific Rules"]
-        
+
         LoadSpecific --> DeepMerge["Deep Merge Enterprise Global + Type Rules"]
         DeepMerge --> ExecValidator["Instantiate Validator Class & Execute .validate()"]
-        
+
         ExecValidator --> EnforceRules["Enforce Enterprise Global Rules + Category-Specific Rules"]
         EnforceRules --> PrintErrors["Compile Audit Report"]
     end
-    
+
     ErrRead --> Aggregation
     ErrFront --> Aggregation
     ErrType --> Aggregation
     ErrVal --> Aggregation
     ErrSpec --> Aggregation
     PrintErrors --> Aggregation["Full Aggregation Audit (Collect Errors, Non Fail-Fast)"]
-    
+
     Aggregation --> UpdateState["Store errors & Update has_blocking_errors state"]
     UpdateState --> NextFile
-    
+
     UpdateState -- "Loop Finished" --> CheckFormat{"Check Argument --format"}
     CheckFormat -- json --> PrintJson["Print Output JSON Array"]
     CheckFormat -- text --> CheckBlocking{"has_blocking_errors?"}
-    
+
     PrintJson --> CheckBlocking
-    
+
     CheckBlocking -- "Yes (CRITICAL/ERROR exists)" --> Exit1(["sys.exit 1: CI Fail"])
     CheckBlocking -- "No (Pass or WARNING only)" --> Exit0(["sys.exit 0: CI Pass"])
+```
+
+### 5.1 Zoom-In: Deep-Merge Configuration Workflow
+
+The linter utilizes a fractal schema strategy. To maintain OCP (Open-Closed Principle), domain-specific rules are not hardcoded into the global engine.
+
+```mermaid
+sequenceDiagram
+    participant CLI as Linter Engine
+    participant Global as base.schema.json
+    participant Specific as [domain].schema.json
+    participant Validator as Domain Validator
+
+    CLI->>Global: Load Enterprise Constraints (AWS WAF, Naming)
+    Global-->>CLI: Global Config Object
+    CLI->>Specific: Load Domain Constraints (e.g. SAD, ADR)
+    Specific-->>CLI: Domain Config Object
+    CLI->>CLI: Deep Merge (Domain overrides Global)
+    CLI->>Validator: Instantiate with Merged Schema
+    Validator->>Validator: Enforce Fractal Rules
+```
+
+### 5.2 Zoom-In: Traceability Graph & Orphan Audit
+
+Traceability is not verified locally per-file; it requires a repository-wide C4-tier graph resolution.
+
+```mermaid
+flowchart LR
+    A[TDD Layer] -->|parent_sad| B(SAD Layer)
+    B -->|parent_pad| C(PAD Layer)
+    C -->|governed_by| D{EAD Layer}
+    E[ADR / STD] -.->|governed_by| D
+    E -.->|parent_pad| C
+
+    subgraph Graph Auditor Engine
+        C1[Detect Cycles]
+        C2[Detect Orphans]
+        C3[Tier Integrity]
+    end
+
+    B -- Audit --> C1
+    A -. Missing Parent .-> C2
+    B -. Wrong Parent Type .-> C3
+```
+
+### 5.3 Zoom-In: Git-Aware Version Bump Mandate
+
+Once an architectural decision is approved, it becomes immutable. Any further modifications require an explicit version bump to ensure downstream dependents are aware of the change.
+
+```mermaid
+sequenceDiagram
+    participant Dev as Architect
+    participant FS as Local Filesystem
+    participant Git as Git History (HEAD)
+    participant Engine as Git Auditor
+
+    Dev->>FS: Edits an Approved ADR (without version bump)
+    Engine->>FS: Reads Current Document
+    Engine->>Git: Fetches Previous Commit Content
+    Engine->>Engine: Normalizes & Compares Text
+    Engine-->>Dev: CRITICAL ERROR (Version bump required)
 ```
 
 ## 6. Compliance & Enforcement
 
 1. **Commit Hook Checks**: Pre-commit hooks must scan new architecture documents (e.g., ADRs) to verify that the YAML frontmatter contains valid fields and matches the schema defined in their respective guidelines.
 2. **Conditional Schema Validation**: The CI linter dynamically shifts its validation rules based on domain-specific attributes delegated to the respective guideline validators.
-3. **Domain-Specific Lifecycle Enforcement**: The CI pipeline executes lifecycle and temporal logic as explicitly defined in downstream domain guidelines (e.g., executing exception mechanisms as delegated by GDC-011).
-4. **Distributed Enforcement (Remote Execution)**: Downstream project repositories (containing C3/C4 artifacts) MUST NOT maintain their own copies of `linter.py`. To ensure strict, untamperable governance, local CI/CD pipelines must validate documents by remotely executing the central linter.
+3. **Domain-Specific Lifecycle Enforcement**: The CI pipeline executes lifecycle and temporal logic as explicitly defined in downstream domain guidelines (e.g., executing exception mechanisms as delegated by GDC-010).
+4. **Distributed Enforcement (Remote Execution)**: Downstream project repositories (containing C3/C4 artifacts) MUST NOT maintain their own copies of `engine/cli.py`. To ensure strict, untamperable governance, local CI/CD pipelines must validate documents by remotely executing the central linter.
 
 ### 6.1 Downstream Integration (Remote Execution)
 
-To prevent security vulnerabilities and local tampering, downstream repositories (e.g., `scnehaux-ui-platform`) must remotely invoke this Compliance Engine during their CI/CD runs. 
+To prevent security vulnerabilities and local tampering, downstream repositories (e.g., `scnehaux-ui-platform`) must remotely invoke this Compliance Engine during their CI/CD runs.
 
 **Option A: Reusable GitHub Workflow (Recommended)**
 Reference the central linter directly in your local `.github/workflows/lint.yml`:
+
 ```yaml
 jobs:
   architecture-lint:
@@ -305,6 +467,7 @@ jobs:
 
 **Option B: Centralized Docker Image**
 Execute the immutable, centrally-published linter image against your local directory:
+
 ```bash
 docker run --rm -v $(pwd):/docs ghcr.io/scnehaux/gdc-linter:latest
 ```
@@ -316,8 +479,9 @@ docker run --rm -v $(pwd):/docs ghcr.io/scnehaux/gdc-linter:latest
 In accordance with the Quality Rubric (Trade-Offs parameter), the ARB explicitly documents the technical compromises of this Fitness Function & Compliance Engine:
 
 1. **Custom Python Linter vs. Spectral / Checkov**
-   - *Why rejected*: Spectral is excellent for OpenAPI, and Checkov is standard for IaC, but neither natively supports complex Markdown AST parsing intertwined with dynamic YAML deep-merging based on custom ID prefixes.
-   - *The Trade-Off*: We incur the ongoing maintenance burden of owning a custom Python CLI (`linter.py`). In exchange, we gain absolute control over the Open-Closed Principle (OCP) dynamic validator loading, enabling complex cross-document hyperlink resolution and federated governance.
+   - _Why rejected_: Spectral is excellent for OpenAPI, and Checkov is standard for IaC, but neither natively supports complex Markdown AST parsing intertwined with dynamic YAML deep-merging based on custom ID prefixes.
+   - _The Trade-Off_: We incur the ongoing maintenance burden of owning a custom Python CLI (`engine/cli.py`). In exchange, we gain absolute control over the Open-Closed Principle (OCP) dynamic validator loading, enabling complex cross-document hyperlink resolution and federated governance.
 2. **180-Day Sunset Grace Period vs. Immediate Deprecation**
-   - *Why rejected*: Immediate deprecation halts all product delivery, forcing teams into unplanned emergency migrations and jeopardizing business roadmaps.
-   - *The Trade-Off*: We consciously accept the security and maintenance risk of running obsolete technology for up to 180 days. In exchange, we provide engineering teams a predictable, humane runway to schedule their technical debt payoff without halting feature velocity.
+   - _Why rejected_: Immediate deprecation halts all product delivery, forcing teams into unplanned emergency migrations and jeopardizing business roadmaps.
+   - _The Trade-Off_: We consciously accept the security and maintenance risk of running obsolete technology for up to 180 days. In exchange, we provide engineering teams a predictable, humane runway to schedule their technical debt payoff without halting feature velocity.
+

@@ -1,0 +1,269 @@
+{
+  "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/sad.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "System Architecture Document (SAD) Validation Policies",
+  "type": "object",
+  "config": {
+    "target_doc": "GDC-010-sad-guideline.md"
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/metadata_policies"
+    },
+    {
+      "$ref": "#/definitions/section_policies"
+    },
+    {
+      "$ref": "#/definitions/content_policies"
+    }
+  ],
+  "definitions": {
+    "metadata_policies": {
+      "title": "Metadata Policies",
+      "description": "Policies for the YAML Frontmatter (doc_meta)",
+      "required": [
+        "doc_meta"
+      ],
+      "properties": {
+        "doc_meta": {
+          "title": "Required Fields",
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "governed_by",
+            "owner",
+            "version",
+            "status",
+            "classification",
+            "parent_pad",
+            "review_cycle_days",
+            "last_reviewed"
+          ],
+          "properties": {
+            "status": {
+              "title": "Allowed Statuses",
+              "type": "string",
+              "enum": [
+                "proposed",
+                "approved",
+                "deprecated"
+              ]
+            },
+            "classification": {
+              "title": "Allowed Classifications",
+              "type": "string",
+              "enum": [
+                "public",
+                "internal",
+                "restricted"
+              ]
+            },
+            "id": {
+              "title": "Document ID",
+              "type": "string"
+            },
+            "title": {
+              "title": "Document Title",
+              "type": "string"
+            },
+            "governed_by": {
+              "title": "Governed By",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "owner": {
+              "title": "Owner",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "version": {
+              "title": "Version",
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "parent_pad": {
+              "title": "Parent PAD",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "review_cycle_days": {
+              "title": "Review Cycle (Days)",
+              "type": "integer"
+            },
+            "last_reviewed": {
+              "title": "Last Reviewed Date",
+              "type": "string",
+              "format": "date"
+            }
+          }
+        }
+      }
+    },
+    "section_policies": {
+      "title": "Section Policies",
+      "description": "Policies for required and recommended sections in the Markdown body",
+      "required": [
+        "Purpose",
+        "Scope",
+        "Solution Context",
+        "Architecture Model",
+        "Data Flow",
+        "Integration Contract",
+        "Security Model",
+        "Deployment Model",
+        "NFR",
+        "Decisions",
+        "Traceability"
+      ],
+      "recommended": [
+        "Risks",
+        "Migration Strategy",
+        "Operational Considerations"
+      ],
+      "x-titles": {
+        "required": "Required Sections",
+        "recommended": "Recommended Sections"
+      }
+    },
+    "content_policies": {
+      "title": "Content Quality Policies",
+      "description": "Policies for required and recommended keywords inside specific Markdown sections",
+      "properties": {
+        "Scope": {
+          "type": "string",
+          "allOf": [
+            {
+              "pattern": "[\\s\\S]*Objective[\\s\\S]*"
+            },
+            {
+              "pattern": "[\\s\\S]*Constraint[\\s\\S]*"
+            },
+            {
+              "pattern": "[\\s\\S]*Capability[\\s\\S]*"
+            },
+            {
+              "pattern": "[\\s\\S]*System Context[\\s\\S]*"
+            }
+          ],
+          "recommended": [
+            "Requirement",
+            "Assumption"
+          ],
+          "x-titles": {
+            "required": "Context & Scope (Required)",
+            "recommended": "Context & Scope (Recommended)"
+          }
+        },
+        "Architecture Model": {
+          "type": "string",
+          "recommended": [
+            "Container"
+          ],
+          "x-titles": {
+            "recommended": "System Architecture (Recommended)"
+          }
+        },
+        "Data Flow": {
+          "type": "string",
+          "recommended": [
+            "Sequence"
+          ],
+          "x-titles": {
+            "recommended": "Runtime Flows (Recommended)"
+          }
+        },
+        "Integration Contract": {
+          "type": "string",
+          "recommended": [
+            "API",
+            "Event",
+            "Consumed",
+            "Published"
+          ],
+          "x-titles": {
+            "recommended": "Integration (Recommended)"
+          }
+        },
+        "Security Model": {
+          "type": "string",
+          "recommended": [
+            "Authentication",
+            "Authorization",
+            "Encryption",
+            "Secrets",
+            "Audit"
+          ],
+          "x-titles": {
+            "recommended": "Security (Recommended)"
+          }
+        },
+        "Deployment Model": {
+          "type": "string",
+          "allOf": [
+            {
+              "pattern": "[\\s\\S]*CI/CD[\\s\\S]*"
+            },
+            {
+              "pattern": "[\\s\\S]*Release[\\s\\S]*"
+            }
+          ],
+          "recommended": [
+            "Environment",
+            "Infrastructure"
+          ],
+          "x-titles": {
+            "recommended": "Deployment (Recommended)"
+          }
+        },
+        "Decisions": {
+          "type": "string",
+          "allOf": [
+            {
+              "pattern": "[\\s\\S]*Rejected[\\s\\S]*"
+            }
+          ]
+        },
+        "NFR": {
+          "type": "string",
+          "recommended": [
+            "Latency",
+            "Throughput",
+            "RPS",
+            "Scalability",
+            "Caching",
+            "Observability",
+            "Telemetry",
+            "Alerting",
+            "Runbook",
+            "Circuit Breaker",
+            "Retry",
+            "Timeout",
+            "Resilience",
+            "Failover"
+          ],
+          "x-titles": {
+            "recommended": "NFR Derivatives (Recommended)"
+          }
+        }
+      }
+    }
+  }
+}

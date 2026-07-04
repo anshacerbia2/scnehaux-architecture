@@ -63,7 +63,7 @@ Applications must implement a comprehensive testing strategy adhering to the ent
 
 ### 3.6 Accessibility & Performance Testing
 - **Automated A11y**: Unit and integration tests must run automated accessibility assertions (e.g., `jest-axe`).
-- **Performance Budgets**: E2E pipelines must incorporate performance audits (e.g., Lighthouse CI) to assert that Core Web Vitals remain within the budgets defined in [STD-GLB-FE-004 (Performance)](./STD-GLB-FE-004-performance.md).
+- **Performance Budgets**: E2E pipelines must incorporate performance audits (e.g., Lighthouse CI) to assert that Core Web Vitals remain within the budgets defined in [STD-GLB-FE-002 (Performance)](./STD-GLB-FE-002-performance.md).
 
 ---
 

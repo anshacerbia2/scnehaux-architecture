@@ -87,7 +87,7 @@ The polymorphic composition system must enforce a uniform property and reference
 - **Ref Transparency**: The custom Slot engine must forward and compose refs transparently, ensuring that parent and child refs are chained without memory leaks or unnecessary re-renders. Under React 19, `ref` must be processed as a standard property.
 - **Intelligent Attribute Merging**: The Slot engine must perform a shallow merge of properties (`className`, inline `style`) and chain event execution sequences (executing both parent and child handlers).
 - **TypeScript Contract Safety**: Components supporting polymorphism must expose an `asChild` contract using generic type helpers that omit overlapping native HTML attributes to prevent compiler bailouts.
-- **Reference Implementation**: For concrete code blueprints, type definitions (e.g. `SlotProps`), and integration examples, developers must refer to the local repository technical standards and decision records (e.g., `STD-SCNX-UI-JS-004` and `ADR-SCNX-UI-JS-003`).
+- **Reference Implementation**: For concrete code blueprints, type definitions (e.g. `SlotProps`), and integration examples, developers must refer to the local repository technical standards and decision records.
 
 #### Performance Constraints
 - **Low-Frequency Layouts**: The use of `asChild` is permitted in static areas or low-frequency rendering contexts (such as card layouts, main layout headers).

@@ -1,0 +1,235 @@
+{
+  "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/ead.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Enterprise Architecture Document (EAD) Validation Policies",
+  "type": "object",
+  "config": {
+    "target_doc": "GDC-007-ead-guideline.md"
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/metadata_policies"
+    },
+    {
+      "$ref": "#/definitions/section_policies"
+    },
+    {
+      "$ref": "#/definitions/content_policies"
+    }
+  ],
+  "definitions": {
+    "metadata_policies": {
+      "title": "Metadata Policies",
+      "description": "Policies for the YAML Frontmatter (doc_meta)",
+      "required": [
+        "doc_meta"
+      ],
+      "properties": {
+        "doc_meta": {
+          "title": "Required Fields",
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "governed_by",
+            "owner",
+            "version",
+            "status",
+            "classification",
+            "review_cycle_days",
+            "last_reviewed"
+          ],
+          "properties": {
+            "status": {
+              "title": "Allowed Statuses",
+              "type": "string",
+              "enum": [
+                "proposed",
+                "approved",
+                "deprecated"
+              ]
+            },
+            "classification": {
+              "title": "Allowed Classifications",
+              "type": "string",
+              "enum": [
+                "public",
+                "internal",
+                "restricted"
+              ]
+            },
+            "id": {
+              "title": "Document ID",
+              "type": "string"
+            },
+            "title": {
+              "title": "Document Title",
+              "type": "string"
+            },
+            "governed_by": {
+              "title": "Governed By",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "owner": {
+              "title": "Owner",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "version": {
+              "title": "Version",
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "review_cycle_days": {
+              "title": "Review Cycle (Days)",
+              "type": "integer"
+            },
+            "last_reviewed": {
+              "title": "Last Reviewed Date",
+              "type": "string",
+              "format": "date"
+            }
+          }
+        }
+      }
+    },
+    "section_policies": {
+      "title": "Section Policies",
+      "description": "Policies for required and recommended sections in the Markdown body",
+      "required": [
+        "Purpose",
+        "Scope",
+        "Enterprise Context",
+        "Architecture Model",
+        "Principles & Rules",
+        "Ownership",
+        "Dependencies",
+        "Traceability"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "doc_meta": {
+                "properties": {
+                  "id": {
+                    "const": "EAD-001"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "Vision",
+              "Mission",
+              "Strategic Objectives",
+              "Business Capability Map",
+              "Value Stream",
+              "Operating Model",
+              "Team Topology Principles",
+              "Stakeholder"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_meta": {
+                "properties": {
+                  "id": {
+                    "const": "EAD-002"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "Enterprise Data Principles",
+              "Master Data",
+              "Data Ownership",
+              "Data Classification",
+              "Data Governance",
+              "Data Lifecycle",
+              "Data Flow Landscape"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_meta": {
+                "properties": {
+                  "id": {
+                    "const": "EAD-003"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "Application Portfolio",
+              "Application Interaction",
+              "Application Classification",
+              "Build vs Buy",
+              "Enterprise Integration Strategy"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_meta": {
+                "properties": {
+                  "id": {
+                    "const": "EAD-004"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "Cloud Strategy",
+              "Security Principles",
+              "Observability Principles",
+              "Platform Strategy",
+              "Technology Principles",
+              "Technology Radar"
+            ]
+          }
+        }
+      ],
+      "recommended": [
+        "Risks & Constraints",
+        "Future Direction",
+        "References",
+        "Glossary"
+      ],
+      "x-titles": {
+        "required": "Required Sections",
+        "recommended": "Recommended Sections"
+      }
+    },
+    "content_policies": {
+      "title": "Content Quality Policies",
+      "description": "Policies for required and recommended keywords inside specific Markdown sections",
+      "properties": {}
+    }
+  }
+}

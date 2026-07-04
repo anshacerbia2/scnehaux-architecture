@@ -84,7 +84,7 @@ All micro-frontend architectures must strictly adhere to the Supreme Frontend Go
 - **SemVer Compliance Verification**: The host shell must verify that the loaded remote's major version matches the designated dependency range in the host deployment config. If a major mismatch is detected, the host must block loading the remote and fall back to the last known stable cached build.
 
 #### Remote Bundle Budgets
-- **Bundle Budgets**: To prevent micro-frontends from degrading host page load speeds or violating [STD-GLB-FE-004 (Performance & Rendering)](./STD-GLB-FE-004-performance.md#451-core-web-vitals) metrics:
+- **Bundle Budgets**: To prevent micro-frontends from degrading host page load speeds or violating [STD-GLB-FE-002 (Performance & Rendering)](./STD-GLB-FE-002-performance.md#451-core-web-vitals) metrics:
   - *Remote Entrypoint Size*: The primary remote entrypoint bundle (`remoteEntry.js`) must not exceed `20KB` gzipped.
   - *Initial Loaded Assets*: The initial shared bundle chunk of a remote must not exceed `150KB` gzipped.
   - *Lazy Chunks*: Individual lazy-loaded asset chunks must not exceed `100KB` gzipped.
@@ -107,5 +107,5 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 ## 5. Enforcement Mechanism
 
 - **Configuration Audits**: CI/CD pipelines must audit bundler configuration files to ensure singleton dependency configurations are correctly established.
-- **Runtime Dependency Monitoring**: Browser logging must flag any occurrences of duplicate library initialization (e.g. multiple React instances loaded), feeding directly into the telemetry systems defined in **[STD-GLB-FE-006 (Observability & Telemetry)](./STD-GLB-FE-006-observability.md)**.
+- **Runtime Dependency Monitoring**: Browser logging must flag any occurrences of duplicate library initialization (e.g. multiple React instances loaded), feeding directly into the telemetry systems defined in **[STD-GLB-FE-004 (Observability & Telemetry)](./STD-GLB-FE-004-observability.md)**.
 - **Waiver Protocol**: Custom federation configurations or remote dependency adjustments require a documented project ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.

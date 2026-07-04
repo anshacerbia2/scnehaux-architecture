@@ -9,7 +9,7 @@ doc_meta:
   governed_by: [GDC-000]
   realizes_capability: EAD-001
   review_cycle_days: 180
-  last_reviewed: 2026-05-18
+  last_reviewed: "2026-05-18"
   fulfilled_by:
     - SAD-001
     - SAD-002
@@ -41,12 +41,14 @@ doc_meta:
 
 ## 2. Business Capability
 
-The platform provides four centralized capabilities:
+The platform provides six centralized capabilities:
 
 1. **Authentication (AuthN)**: Secure verification of primary credentials, TOTP, and WebAuthn.
 2. **Federation**: OIDC and OAuth2 brokering with external identity providers (Google/GitHub).
 3. **Session Operations**: Token issuance, Refresh Token Rotation (RTR), and active session revocation.
 4. **Tenant Governance**: Strict multi-tenant context management and lifecycle orchestration.
+5. **Policy & Authorization (AuthZ)**: Governance policy engine for coarse-grained access control and tenant administration roles.
+6. **Security Audit**: Immutable, hash-chained logging of all critical identity and access lifecycle events.
 
 **Capability boundary (CGAC vs FGAC).** The platform operates strictly at the **Coarse-Grained Access Control (CGAC)** level: it asserts "who the actor is" and "what tenant they belong to". Downstream business domains (HRIS, Finance) consume this context but retain exclusive ownership of their own **Fine-Grained Access Control (FGAC)** rules (local RBAC/ABAC).
 
@@ -60,6 +62,8 @@ The platform provides four centralized capabilities:
 - **Federation** — external IdP brokering and OIDC/OAuth2 flows.
 - **Session** — token issuance, Refresh Token Rotation, and epoch-based revocation.
 - **Tenant Governance** — tenant provisioning, context propagation, and lifecycle.
+- **Policy & Authorization** — centralized governance and role/claim definitions.
+- **Security Audit** — immutable, append-only security event tracing.
 
 **Context Mapping.** IAM is the upstream **Supplier** of identity context; all business domains are downstream **Consumers**. The platform exposes public OIDC endpoints at the trust edge and propagates verified context to internal domains via mTLS.
 
@@ -110,8 +114,8 @@ All downstream domains (e.g., HRIS, Finance) must integrate with the IAM platfor
 
 These are the **capability's promises** (quantified targets). The mechanisms that achieve them live in the fulfilling SADs.
 
-- **Throughput & Scaling**: Engineered to sustain `10,000 requests per second (RPS)` to support global peak traffic.
-- **CPU Hardening & Anti-DoS**: Cryptographic password hashing (Argon2id) is governed by a process-level weighted semaphore capped at `Runtime.NumCPU() - 1` to prevent CPU exhaustion. Requests exceeding the threshold are subject to fast-shedding backpressure, returning an HTTP 429 within `100ms` to protect the host scheduler from starvation.
+- **Scalability & Throughput**: Engineered to sustain `10,000 requests per second (RPS)` to support global peak traffic.
+- **Performance & CPU Hardening**: Cryptographic password hashing (Argon2id) is governed by a process-level weighted semaphore capped at `Runtime.NumCPU() - 1` to prevent CPU exhaustion. Requests exceeding the threshold are subject to fast-shedding backpressure, returning an HTTP 429 within `100ms` to protect the host scheduler from starvation.
 - **Latency Targets**: p95 credential validation must complete within `200ms` when concurrency limits are not saturated.
 - **High Availability**: Multi-region redundancy to hit `>= 99.99%` uptime over a rolling 30-day window.
 - **Resilience & Recovery**: Primary data stores must support Point-in-Time Recovery (PITR) with an RPO `< 5 minutes` and RTO `< 1 hour`.

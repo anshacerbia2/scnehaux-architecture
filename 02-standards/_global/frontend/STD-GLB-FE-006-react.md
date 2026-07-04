@@ -319,7 +319,7 @@ Aside from stabilizing data or callbacks passed to children, manual memoization 
 ### Performance Profiling & Monitoring
 - **React DevTools Profiler**: Components exhibiting more than 3 unnecessary re-renders per user interaction (renders where no inputs, state, or context values have changed) must be investigated and optimized using the React DevTools Profiler flame graph.
 - **React Strict Mode**: Development builds must run with `<React.StrictMode>` enabled to surface impure renders, missing cleanup functions, and deprecated API usage through intentional double-invocation.
-- **Production Monitoring**: Real User Monitoring (RUM) must track component-level rendering latency for critical user flows. Components consistently exceeding 16ms render time must be flagged for architectural review. This monitoring must comply with the trace propagation and telemetry rules defined in [STD-GLB-FE-006 (Frontend Observability & Telemetry)](./STD-GLB-FE-006-observability.md#35-frontend-observability--telemetry) and respect the execution boundaries in [STD-GLB-FE-004 (Zero Layout Thrashing)](./STD-GLB-FE-004-performance.md#zero-layout-thrashing-60fps-render-guarantee).
+- **Production Monitoring**: Real User Monitoring (RUM) must track component-level rendering latency for critical user flows. Components consistently exceeding 16ms render time must be flagged for architectural review. This monitoring must comply with the trace propagation and telemetry rules defined in [STD-GLB-FE-004 (Frontend Observability & Telemetry)](./STD-GLB-FE-004-observability.md#35-frontend-observability--telemetry) and respect the execution boundaries in [STD-GLB-FE-002 (Zero Layout Thrashing)](./STD-GLB-FE-002-performance.md#zero-layout-thrashing-60fps-render-guarantee).
 
 ---
 

@@ -8,7 +8,7 @@ doc_meta:
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
-  last_reviewed: 2026-05-19
+  last_reviewed: "2026-05-19"
   parent_pad: PAD-002
 ---
 
@@ -90,6 +90,8 @@ The `@scnx/system` package ships a dedicated **Base Layer** to equalize default 
 ### 2.4 Realizing C3 Designs (Reference)
 
 > **Abstraction Leakage Rule (GDC-000 §2.3)**: As a C2 SAD, this document does not contain component-level mechanics, raw SASS maps, or CSS Custom Property payloads. The exhaustive C3 blueprints live in the **downstream project repository** under `docs/02-designs/scnx-ui-js/` (all `parent_sad: SAD-003`):
+
+<!-- lint_disable: inline_reference_missing (reason: Table contains illustrative TDD references) -->
 
 | TDD | Scope |
 | :--- | :--- |
@@ -293,3 +295,11 @@ stateDiagram-v2
 
 ### 10.4 Single Monolithic Package vs Two-Package Split
 - *Rejected (monolith)*: A single package would couple token data to component markup. *Accepted trade-off*: a two-package split (`@scnx/system` + `@scnx/core-ui`) adds release coordination cost in exchange for clean token/markup separation and independent versioning.
+
+## 11. Assumptions
+- Consuming applications use a modern bundler capable of tree-shaking ESM modules.
+- Server-side rendering (SSR) environments support React 19 / RSC architectures.
+
+## 12. Compatibility Strategy
+- The design system adheres to Semantic Versioning (SemVer).
+- Breaking changes require a major version bump and a migration guide.

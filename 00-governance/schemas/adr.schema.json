@@ -1,0 +1,119 @@
+{
+  "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/adr.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Architecture Decision Record (ADR) Validation Rules",
+  "type": "object",
+  "config": {
+    "target_doc": "GDC-011-adr-guideline.md"
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/metadata_policies"
+    },
+    {
+      "$ref": "#/definitions/section_policies"
+    },
+    {
+      "$ref": "#/definitions/content_policies"
+    }
+  ],
+  "definitions": {
+    "metadata_policies": {
+      "title": "Metadata Policies",
+      "description": "Rules for the YAML Frontmatter (doc_meta)",
+      "required": ["doc_meta"],
+      "properties": {
+        "doc_meta": {
+          "title": "Required Fields",
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "adr_type",
+            "status",
+            "created",
+            "created_by"
+          ],
+          "properties": {
+            "status": {
+              "title": "Allowed Statuses",
+              "type": "string",
+              "enum": [
+                "proposed",
+                "accepted",
+                "rejected",
+                "superseded",
+                "deprecated"
+              ]
+            },
+            "adr_type": {
+              "title": "Allowed Types",
+              "type": "string",
+              "enum": [
+                "foundational",
+                "implementation",
+                "exception",
+                "conflict_resolution",
+                "replacement"
+              ]
+            },
+            "exception_info": {
+              "title": "Exception Information",
+              "type": "object",
+              "properties": {
+                "approved_by": { "type": "string" },
+                "expiry_date": { "type": "string" },
+                "risk_classification": { "type": "string" },
+                "exception_reason": { "type": "string" }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": { "adr_type": { "const": "exception" } }
+              },
+              "then": {
+                "required": ["exception_info"],
+                "properties": {
+                  "exception_info": {
+                    "required": [
+                      "approved_by",
+                      "expiry_date",
+                      "risk_classification",
+                      "exception_reason"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "section_policies": {
+      "title": "Section Policies",
+      "description": "Rules for required and recommended sections in the Markdown body",
+      "required": [
+        "Title",
+        "Status",
+        "Context",
+        "Decision Drivers",
+        "Decision",
+        "Consequences",
+        "Compliance Impact",
+        "Alternatives Considered"
+      ],
+      "recommended": [],
+      "x-titles": {
+        "required": "Required Sections",
+        "recommended": "Recommended Sections"
+      }
+    },
+    "content_policies": {
+      "title": "Content Quality Policies",
+      "description": "Rules for required and recommended keywords inside specific Markdown sections",
+      "properties": {}
+    }
+  }
+}

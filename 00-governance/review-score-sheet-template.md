@@ -3,7 +3,7 @@
 
 This score sheet is used by Reviewers and the Architecture Review Board (ARB) during the manual review phase of PAD, SAD, TDD, and ADR documents.
 
-It supplements the automated `linter.py` checks. While the linter ensures structural and policy-as-code compliance, this score sheet evaluates the qualitative engineering aspects based on the **10 Parameters of the Quality Rubric (GDC-003)**.
+It supplements the automated `engine/cli.py` checks. While the linter ensures structural and policy-as-code compliance, this score sheet evaluates the qualitative engineering aspects based on the **10 Parameters of the Quality Rubric (GDC-002)**.
 
 ## Document Meta
 - **Document ID**: 

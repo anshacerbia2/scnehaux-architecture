@@ -8,7 +8,7 @@ doc_meta:
   classification: restricted
   governed_by: [GDC-000]
   review_cycle_days: 180
-  last_reviewed: 2026-05-18
+  last_reviewed: "2026-05-18"
   parent_pad: PAD-001
 ---
 
@@ -204,3 +204,10 @@ The IAM Dashboard is deployed as a stateless, client-rendered SPA.
 
 ### 10.4 External Component Libraries (Radix / MUI)
 - *Rejected*: Prohibited to enforce enterprise brand consistency and minimize bundle payload; the dashboard consumes only `@scnx/core-ui`.
+
+## 11. Assumptions
+- Modern evergreen browsers are supported (ES2022 target).
+- Authentication state is managed via secure, HttpOnly cookies established by the IAM platform.
+
+## 12. Compatibility Strategy
+- Graceful degradation for clients without JavaScript is not a requirement for this internal admin dashboard.

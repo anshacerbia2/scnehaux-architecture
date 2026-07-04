@@ -1,0 +1,54 @@
+{
+  "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/base.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Base Governance Policies",
+  "type": "object",
+  "x-engine-config": {
+    "config": {
+      "target_doc": "GDC-001-fitness-functions.md"
+    },
+    "rules": {
+      "structure": {
+        "min_content_length_chars": 50
+      },
+      "content": {
+        "prohibited_words": [
+          "maybe",
+          "probably",
+          "should consider",
+          "TBD",
+          "coming soon",
+          "and so on",
+          "seamless",
+          "seamlessly",
+          "obviously",
+          "blazingly",
+          "trivially"
+        ],
+        "ambiguity_check": {
+          "pattern": "\\b(highly|very|extremely|super|incredibly)\\s+(scalable|fast|secure|reliable|available|performant|robust|efficient)\\b",
+          "message": "Vague claim detected. Must be quantified with metrics."
+        }
+      },
+      "version_format": "semver",
+      "quantification": {
+        "aws_waf_pillars": [
+          "Operational Excellence",
+          "Security",
+          "Reliability",
+          "Performance Efficiency",
+          "Cost Optimization",
+          "Sustainability"
+        ]
+      }
+    },
+    "severity_levels": {
+      "vague_claim_in_nfr": "ERROR",
+      "security_isolation_violation": "CRITICAL",
+      "structural_integrity_violation": "CRITICAL",
+      "technology_hold_violation": "CRITICAL",
+      "operational_stability_violation": "ERROR",
+      "missing_metadata": "ERROR"
+    }
+  }
+}

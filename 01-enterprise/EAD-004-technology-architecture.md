@@ -55,7 +55,7 @@ The Paved Road is not a prison. Unique workloads require unique tools. An absolu
 
 - **Opinionated Paved Road**: a curated, fully-supported default stack maximizes developer mobility and optimizes infrastructure cost; deviation requires an approved ADR (see §4.2).
 - **Backend direction**: a compiled, concurrency-first language for low-latency, critical-path domains (e.g. Core IAM, Ledger); a TypeScript runtime for business-logic and Backend-For-Frontend aggregation. *Binding stack: see the backend STDs.*
-- **Frontend direction**: a single standardized component model, build toolchain, and state strategy across all surfaces. *Binding stack: see [`STD-GLB-FE-*`](../02-standards/_global/frontend/).*
+- **Frontend direction**: a single standardized component model, build toolchain, and state strategy across all surfaces. *Binding stack: see [`STD-GLB-FE-001`](../02-standards/_global/frontend/).*
 - **Workload isolation**: critical (Tier-0) workloads receive guaranteed, predictable resourcing and explicit autoscaling targets; the concrete QoS classes and HPA thresholds are defined in the platform STD, not here.
 
 ## 6. Technology Radar

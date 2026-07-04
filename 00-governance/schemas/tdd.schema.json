@@ -1,0 +1,130 @@
+{
+  "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/tdd.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Technical Design Document (TDD) Validation Policies",
+  "type": "object",
+  "config": {
+    "target_doc": "GDC-012-tdd-guideline.md"
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/metadata_policies"
+    },
+    {
+      "$ref": "#/definitions/section_policies"
+    },
+    {
+      "$ref": "#/definitions/content_policies"
+    }
+  ],
+  "definitions": {
+    "metadata_policies": {
+      "title": "Metadata Policies",
+      "description": "Policies for the YAML Frontmatter (doc_meta)",
+      "required": [
+        "doc_meta"
+      ],
+      "properties": {
+        "doc_meta": {
+          "title": "Required Fields",
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "owner",
+            "version",
+            "status",
+            "classification",
+            "parent_sad",
+            "review_cycle_days",
+            "last_reviewed"
+          ],
+          "properties": {
+            "status": {
+              "title": "Allowed Statuses",
+              "type": "string",
+              "enum": [
+                "proposed",
+                "approved",
+                "deprecated"
+              ]
+            },
+            "classification": {
+              "title": "Allowed Classifications",
+              "type": "string",
+              "enum": [
+                "public",
+                "internal",
+                "restricted"
+              ]
+            },
+            "id": {
+              "title": "Document ID",
+              "type": "string"
+            },
+            "title": {
+              "title": "Document Title",
+              "type": "string"
+            },
+            "owner": {
+              "title": "Owner",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "version": {
+              "title": "Version",
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "review_cycle_days": {
+              "title": "Review Cycle (Days)",
+              "type": "integer"
+            },
+            "last_reviewed": {
+              "title": "Last Reviewed Date",
+              "type": "string",
+              "format": "date"
+            }
+          }
+        }
+      }
+    },
+    "section_policies": {
+      "title": "Section Policies",
+      "description": "Policies for required and recommended sections in the Markdown body",
+      "required": [
+        "Purpose",
+        "Scope",
+        "Technical Context",
+        "Component Design",
+        "Data Model",
+        "API / Interface",
+        "Algorithms / Logic",
+        "Configuration",
+        "Testing Strategy",
+        "Traceability"
+      ],
+      "recommended": [
+        "Performance Notes",
+        "Security Notes",
+        "Operational Notes"
+      ],
+      "x-titles": {
+        "required": "Required Sections",
+        "recommended": "Recommended Sections"
+      }
+    },
+    "content_policies": {
+      "title": "Content Quality Policies",
+      "description": "Policies for required and recommended keywords inside specific Markdown sections",
+      "properties": {}
+    }
+  }
+}

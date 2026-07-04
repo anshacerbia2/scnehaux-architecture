@@ -1,12 +1,12 @@
 ---
 doc_meta:
+  governed_by: GDC-007
   id: EAD-001
   title: Enterprise Business Architecture
   owner: Chief Enterprise Architect
   version: 1.0.0
   status: approved
   classification: public
-  governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-05-18
 ---

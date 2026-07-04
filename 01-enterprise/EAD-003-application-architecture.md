@@ -73,7 +73,12 @@ To manage API changes without breaking client integrations:
 *   **Minor Versioning**: Non-breaking updates or minor feature variations must use header-based media type content negotiation.
 *   **Deprecation Policy**: Deprecated endpoints must return the standard `Sunset: <date>` header and `Link: <url>; rel="successor-version"` header to alert consumer developers. The deprecation window is strictly capped at **6 months** before termination.
 
-### 5.4 Unified Visual Engine Strategy
+### 5.4 Design-Time vs. Consumption-Time Separation
+To prevent documentation rot and ensure developers have access to low-level actionable details without polluting the high-level architecture registry, the enterprise mandates a strict separation of concerns for integration contracts:
+- **Design-Time (Architecture Git)**: The architecture repository serves as the authoritative Single Source of Truth for the ARB and CI/CD linter. It defines logical domain boundaries and governance constraints, but must not contain low-level API payloads or execution schemas.
+- **Consumption-Time (Web Developer Portal)**: Concrete integration manuals, API endpoints, JSON payloads, and SDKs must be published and consumed via automated Web Developer Portals (e.g., Swagger, ReDoc, Backstage) generated directly from code annotations.
+
+### 5.5 Unified Visual Engine Strategy
 All frontend applications must consume the unified **Scnehaux UI Platform**, structured as a strict 3-Layer Visual Engine:
 1.  **Layer 1: Primitive Components (Accessible Headless Core)**
 2.  **Layer 2: Design Tokens (The Design API)**

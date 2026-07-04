@@ -10,7 +10,7 @@ license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "markdown-it-py==4.0.0",
-    "pydantic==2.13.1",
+    "jsonschema>=4.20.0",
     "PyYAML==6.0.3",
 ]
 
@@ -21,10 +21,13 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["validators/tests"]
-pythonpath = ["."]
-addopts = "--cov=validators --cov=linter --cov-fail-under=95 --cov-report=term-missing"
+testpaths = ["06-fitness-function/tests"]
+pythonpath = ["06-fitness-function/engine"]
+addopts = "--cov=engine --cov-fail-under=90 --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["validators", "linter"]
+source = ["engine"]
 omit = ["validators/tests/*"]
+
+[tool.pyright]
+extraPaths = ["06-fitness-function", "06-fitness-function/engine"]

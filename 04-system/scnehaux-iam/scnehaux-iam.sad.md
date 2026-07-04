@@ -8,7 +8,7 @@ doc_meta:
   classification: restricted
   governed_by: [GDC-000]
   review_cycle_days: 180
-  last_reviewed: 2026-05-18
+  last_reviewed: "2026-05-18"
   parent_pad: PAD-001
 ---
 
@@ -32,7 +32,7 @@ Scnehaux IAM is architected as a **Modular Monolith** in **Golang** to deliver h
 
 **Assumptions.** Downstream domains validate tokens locally; the gateway terminates TLS and forwards mTLS; KMS is reachable at startup/rotation.
 
-## 2. Solution Architecture
+## 2. System Architecture
 
 The application is structured into isolated vertical domain slices coordinated strictly via an event-driven outbox, maintaining clear boundaries inside a single compile unit (a strict separation between synchronous user actions and asynchronous side effects). Container- and system-level structure is described here (C2); component- and class-level design (C3) lives in the downstream TDD.
 
@@ -345,3 +345,11 @@ Scnehaux IAM is deployed as a cloud-native, stateless containerized service:
 
 ### 10.6 Database-Per-Tenant isolation
 - *Rejected*: Unviable infrastructure footprint and migration complexity for thousands of concurrent small tenants; RLS chosen instead.
+
+## 11. Assumptions
+- Hardware scaling (vertical/horizontal) is handled transparently by the managed Kubernetes cluster.
+- The PostgreSQL managed instance handles connection pooling at the PaaS level or via pgBouncer.
+
+## 12. Compatibility Strategy
+- The API is strictly versioned via URL path (`/v1`, `/v2`).
+- Deprecations require a 6-month notice period.

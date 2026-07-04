@@ -39,21 +39,21 @@ jobs:
 
       - name: Verify Rules-Doc Sync (SSOT reconciliation)
         run: |
-          python scripts/generate_rules_doc.py
-          git diff --exit-code 00-governance/GDC-002-compliance-engine.md || (echo "GDC-002 is out of sync with linting-rules.yaml. Run scripts/generate_rules_doc.py locally and commit the result." && exit 1)
+          python 06-fitness-function/generators/generate_rules_doc.py
+          git diff --exit-code 00-governance/GDC-002-compliance-engine.md || (echo "GDC-002 is out of sync with linting-rules.yaml. Run 06-fitness-function/generators/generate_rules_doc.py locally and commit the result." && exit 1)
 
       - name: Verify ADR Index Sync
         run: |
-          python scripts/generate_adr_index.py
-          git diff --exit-code 05-decisions/INDEX.md || (echo "ADR INDEX is out of sync. Run scripts/generate_adr_index.py locally and commit." && exit 1)
+          python 06-fitness-function/generators/generate_adr_index.py
+          git diff --exit-code 05-decisions/INDEX.md || (echo "ADR INDEX is out of sync. Run 06-fitness-function/generators/generate_adr_index.py locally and commit." && exit 1)
 
       - name: Verify PAD/SAD Index Sync
         run: |
-          python scripts/generate_pad_sad_index.py
-          git diff --exit-code 03-platform/INDEX.md 04-application/INDEX.md || (echo "PAD/SAD INDEX is out of sync. Run scripts/generate_pad_sad_index.py locally and commit." && exit 1)
+          python 06-fitness-function/generators/generate_pad_sad_index.py
+          git diff --exit-code 03-platform/INDEX.md 04-application/INDEX.md || (echo "PAD/SAD INDEX is out of sync. Run 06-fitness-function/generators/generate_pad_sad_index.py locally and commit." && exit 1)
 
       - name: Verify Waiver Expirations
-        run: python scripts/check_waiver_expirations.py
+        run: python 06-fitness-function/scripts/waiver-expiry-check.py
 
       - name: Generate SARIF report
         if: always()

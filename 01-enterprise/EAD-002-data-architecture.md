@@ -17,7 +17,7 @@ doc_meta:
 
 ## 1. Enterprise Data Principles
 
-Data is the most critical asset of the Scnehaux Foundation. The Enterprise Data Architecture ensures that information remains accurate, secure, compliant, and highly available.
+Data is the most critical asset of the Scnehaux Foundation. The Enterprise Data Architecture ensures that information remains accurate, secure, compliant, and available (99.99% SLA).
 
 ### 1.1 Single Source of Truth
 Every data entity must have one, and only one, authoritative system of record. Distributing write authority across systems introduces transaction race conditions and split-brain inconsistency. Data duplication is forbidden unless explicitly designed as a read-only projection (e.g., CQRS read models).

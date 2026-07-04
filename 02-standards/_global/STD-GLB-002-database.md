@@ -40,4 +40,4 @@ To prevent data fragmentation and licensing lock-in, this standard mandates the 
 Highly specialized data models like Timeseries metrics or full-text search indices.
 
 ## Enforcement Mechanism
-Atlas schema diffing in CI/CD.
+Atlas schema diffing in CI/CD pipeline blocking PR merges automatically.
