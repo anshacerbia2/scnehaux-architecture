@@ -3,7 +3,7 @@ import stat
 import sys
 
 def install_hook():
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
     hooks_dir = os.path.join(repo_root, '.git', 'hooks')
     
     if not os.path.exists(hooks_dir):
