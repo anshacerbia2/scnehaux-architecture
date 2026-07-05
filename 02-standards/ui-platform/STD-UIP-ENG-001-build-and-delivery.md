@@ -48,7 +48,11 @@ To support modern Module Federation consumers while maintaining legacy fallback 
 - **Dual Formats:** All packages MUST compile and publish in both **ESM** and **CJS** formats.
 - **React Directives:** The `"use client"` directive MUST be explicitly restored post-bundle (via esbuild plugins) to guarantee compatibility with React Server Components (RSC) and Next.js App Routers.
 
-## 4. Enforcement & Compliance
+## 4. Exceptions
+
+None.
+
+## 5. Enforcement Mechanism
 
 These standards are enforced directly by CI/CD pipelines (Quality Gates). Any PR that breaches the 12KB budget or fails Visual Regression will be **Hard Blocked** from merging. Temporary waivers must be escalated to the Architecture Review Board (ARB) via an Architecture Decision Record (ADR).
 

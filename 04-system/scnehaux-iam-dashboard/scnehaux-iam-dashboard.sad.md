@@ -18,6 +18,9 @@ doc_meta:
 
 ## 1. Purpose
 
+## Scope
+
+
 **Capability Realized.** This system realizes the administrative-interface aspect of the Enterprise Identity & Access capability defined in [identity-platform.pad.md](../../03-domain/identity-platform/identity-platform.pad.md) (PAD-001).
 
 The Scnehaux IAM Dashboard is the concrete frontend application serving as the administrative interface for the platform. It is architected as a standalone Single Page Application (SPA) for maximum isolation, operational simplicity, and strict boundary separation from other business-capability frontends. It consumes the enterprise design system packages (`@scnx/system` and `@scnx/core-ui`) with zero external primitive component libraries.
@@ -221,4 +224,5 @@ The IAM Dashboard is deployed as a stateless, client-rendered SPA.
 ## 12. Compatibility Strategy
 
 - Graceful degradation for clients without JavaScript is not a requirement for this internal admin dashboard.
+
 

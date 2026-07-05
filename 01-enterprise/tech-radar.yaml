@@ -55,6 +55,7 @@ technology_radar:
       date_entered: 2026-02-01
       owner: UI Platform Team
       rationale_adr: ADR-UIP-TKN-002
+      trial_end_date: 2026-08-01
 
   assess:
     - name: wasm
