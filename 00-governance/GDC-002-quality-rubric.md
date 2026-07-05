@@ -44,7 +44,7 @@ All architecture documents are evaluated against 10 critical parameters. Each pa
 | **7** | **Trade-Offs & Alternatives** | Radical honesty in engineering. | A comprehensive "Alternatives Considered" section explaining exactly _why_ other patterns were rejected, and detailing the technical debt consciously accepted. | Proposing a "perfect" solution without acknowledging its inherent weaknesses, costs, or maintenance burden. |
 | **8** | **Risk & Graceful Degradation** | Chaos readiness and blast radius containment. | Explicitly maps SPOFs (Single Points of Failure) and details the Graceful Degradation strategy (e.g., "If the caching layer dies, the service returns stale data rather than crashing"). | Designing under the assumption that dependencies (databases, 3rd party APIs, network) will never fail. |
 | **9** | **Lifecycle & Deprecation Strategy** | Safe forward and backward evolution. | Clear deprecation timelines are established. The _Ephemeral TDD Fate Matrix_ is executed (obsolete TDDs are actively archived). | Introducing a v2 API/Schema without a concrete timeline and automated strategy to sunset v1, or leaving stale TDDs rotting in the active directory. |
-| **10** | **Governance & Namespace Hygiene** | Structural integrity for automation. | Files strictly conform to the scalable federated namespace (e.g., `ADR-SCNX-IAM-GO-SECURITY-003`) to prevent global namespace collisions and enable Policy-as-Code linter parsing. | Arbitrary file naming, missing YAML metadata headers, or bypassing structural templates. |
+| **10** | **Governance & Namespace Hygiene** | Structural integrity for automation. | Files strictly conform to the scalable federated namespace (e.g., `ADR-IAM-001`) to prevent global namespace collisions and enable Policy-as-Code linter parsing. | Arbitrary file naming, missing YAML metadata headers, or bypassing structural templates. |
 
 ### 2.2 Document-Specific Quality Focus & Lifespan Expectancy
 
@@ -96,3 +96,4 @@ In accordance with the 10th parameter (Trade-Offs), the ARB explicitly documents
 
 1. **10 Binary (Pass/Fail) Checks vs. Weighted Individual Scoring (1-5)**
    - _Why rejected_: Grading _individual_ parameters on a subjective 1-5 scale introduces negotiation between reviewer and author. Instead, we strictly enforce 10 binary (Pass/Fail) checks, which objectively sum up to a Total Score of 0-10.
+

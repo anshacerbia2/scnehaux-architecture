@@ -16,7 +16,7 @@ doc_meta:
 
 ---
 
-## 1. Context & Scope
+## 1. Purpose
 
 **Capability Realized.** This system realizes the Enterprise Identity & Access capability defined in [identity-platform.pad.md](../../03-domain/identity-platform/identity-platform.pad.md) (PAD-001). It is the concrete physical execution unit for that logical capability.
 
@@ -369,3 +369,4 @@ Scnehaux IAM is deployed as a cloud-native, stateless containerized service:
 
 - The API is strictly versioned via URL path (`/v1`, `/v2`).
 - Deprecations require a 6-month notice period.
+

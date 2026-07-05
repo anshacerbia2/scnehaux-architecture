@@ -118,3 +118,4 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 - **Configuration Audits**: CI/CD pipelines must audit bundler configuration files to ensure singleton dependency configurations are correctly established.
 - **Runtime Dependency Monitoring**: Browser logging must flag any occurrences of duplicate library initialization (e.g. multiple React instances loaded), feeding directly into the telemetry systems defined in **[STD-GLB-FE-004 (Observability & Telemetry)](./STD-GLB-FE-004-observability.md)**.
 - **Waiver Protocol**: Custom federation configurations or remote dependency adjustments require a documented project ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.
+

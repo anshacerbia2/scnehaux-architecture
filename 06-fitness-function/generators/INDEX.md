@@ -74,3 +74,4 @@ This index documents the internal functions and classes of the Generators.
 | **parse_metadata** | Safely extract the `doc_meta` YAML block from a specific markdown file. Returns None if parsing fails or the block is missing. |
 
 <!-- AUTO-GENERATED-FUNCTIONS:END -->
+

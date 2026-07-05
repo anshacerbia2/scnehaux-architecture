@@ -95,7 +95,7 @@ scnehaux-architecture/
 
 | Metadata Field | Type | Description / Purpose |
 | --- | --- | --- |
-| `id` | String | Unique identifier (e.g., `ADR-001`). |
+| `id` | String | Unique identifier (e.g., `ADR-IAM-001`). |
 | `title` | String | Descriptive title of the document. |
 | `adr_type` | Enum | The intent of the decision (must match Allowed Types in §2.1). |
 | `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
@@ -206,3 +206,4 @@ In accordance with the Quality Rubric (Trade-Offs), the ARB explicitly documents
 1. **Decentralized Markdown ADRs vs. Centralized Database Tooling**
    - _Why rejected_: Storing architectural decisions in a centralized system (like Jira or a custom DB) disconnects the decision from the exact commit state of the source code it governs.
    - _The Trade-Off_: We lose robust querying capabilities (e.g., "Show me all ADRs related to React"). In exchange, ADRs live and die alongside the codebase, ensuring that checking out an old branch inherently checks out the architectural context of that exact point in time.
+

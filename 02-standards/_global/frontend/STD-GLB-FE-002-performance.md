@@ -109,3 +109,4 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
   - _Independent Remote Micro-Frontends (MFEs)_: Capped at `150KB` for initial bundle size, and `100KB` for individual lazy-loaded chunks.
   - _Build Failure_: If a pull request exceeds these budgets by more than `5%`, the build must fail.
 - **Code Review Audits**: Component pull requests introducing new global event listeners or dynamic element cloning must explicitly document cleanup lifecycles and performance justifications.
+

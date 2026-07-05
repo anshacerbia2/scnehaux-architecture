@@ -365,3 +365,4 @@ The data topology evolves by adding domain-owned datasets and governed data prod
 - Enterprise Integration Patterns — Gregor Hohpe
 - Change Data Capture (CDC) patterns
 - Event-Driven Architecture
+

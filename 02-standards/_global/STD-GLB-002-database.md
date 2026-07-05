@@ -50,3 +50,4 @@ Highly specialized data models like Timeseries metrics or full-text search indic
 ## Enforcement Mechanism
 
 Atlas schema diffing in CI/CD pipeline blocking PR merges automatically.
+

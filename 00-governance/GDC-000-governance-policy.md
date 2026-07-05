@@ -6,7 +6,7 @@ doc_meta:
   version: 1.0.0
   status: approved
   classification: public
-  governed_by: [GDC-000, GDC-005]
+  governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-05-22
 ---
@@ -516,3 +516,4 @@ To prevent ambiguity, the term "Fractal" is used in three distinct but related c
 | **Circular Governance** | The metaprogramming principle that governance artifacts are validated by the same engine they mandate | §2.9 |
 
 These three concepts are complementary but operate at different abstraction layers: Fractal Boundary is the organizational principle, Fractal Triad is the implementation pattern, and Circular Governance is the self-referential enforcement property.
+

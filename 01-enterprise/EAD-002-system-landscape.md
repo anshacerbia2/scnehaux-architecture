@@ -367,3 +367,4 @@ The landscape evolves by adding systems inside existing domains before ever char
 - Microservices Patterns — Chris Richardson
 - Enterprise Integration Patterns — Gregor Hohpe
 - Wardley Mapping — Simon Wardley
+

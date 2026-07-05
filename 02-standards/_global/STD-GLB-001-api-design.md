@@ -59,3 +59,4 @@ Legacy systems currently running SOAP or XML are exempt until their scheduled su
 ## Enforcement Mechanism
 
 API schema validation via the API Gateway and CI/CD spectral linters.
+

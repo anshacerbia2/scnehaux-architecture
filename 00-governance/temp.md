@@ -217,3 +217,4 @@ At Scnehaux, **if an architectural rule is not enforceable by the fitness functi
 Because the process of adding or modifying a rule is fundamentally an act of modifying a Governance Document Contract (GDC), the exact 4-step execution flow for updating YAML rules, regenerating documentation, and synchronizing qualitative rubrics is defined strictly within its authoritative guideline: 👉 **[GDC-006 §3 — The Reconciliation Flow](./GDC-006-gdc-guideline.md#3-the-reconciliation-flow-adding-or-modifying-rules)**
 
 ---
+

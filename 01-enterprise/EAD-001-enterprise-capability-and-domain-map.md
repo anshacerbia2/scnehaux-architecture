@@ -367,3 +367,4 @@ The capability map evolves by refining domain boundaries as bounded contexts mat
 - Data Mesh — Zhamak Dehghani
 - Platform Engineering: paved-road principles
 - Accelerate — Nicole Forsgren, Jez Humble, Gene Kim (DORA metrics)
+

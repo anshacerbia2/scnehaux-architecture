@@ -75,4 +75,5 @@ None.
 ## 8. Alternatives Considered
 
 - **REST APIs (OpenAPI/Swagger)**: Rejected. Prone to over-fetching and requires the frontend to write complex orchestration logic to join data from multiple microservices.
-- **gRPC-Web**: Rejected. While extremely performant via Protobuf, the ecosystem for frontend debugging and normalized caching is far less mature than GraphQL.
+- **gRPC-Web**: Rejected. While highly optimized for low latency (< 10ms serialization) via Protobuf, the ecosystem for frontend debugging and normalized caching is far less mature than GraphQL.
+

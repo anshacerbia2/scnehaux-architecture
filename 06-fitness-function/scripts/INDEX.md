@@ -31,3 +31,4 @@ This index documents the internal functions and classes of the CI/CD scripts.
 | **check_waiver_expiry** | Scan all accepted ADR Exceptions (waivers) for expiration against their declared `expiry_date`. Returns exit code 1 if any waivers have expired, breaking the CI/CD pipeline. |
 
 <!-- AUTO-GENERATED-FUNCTIONS:END -->
+

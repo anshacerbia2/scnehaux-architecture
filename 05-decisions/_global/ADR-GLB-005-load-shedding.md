@@ -75,15 +75,15 @@ Application middleware and ingress controllers must automatically drop incoming 
 
 ### Operational
 
-- Codified in the Enterprise System Resilience Standard (`STD-E015`).
+- Codified in the Enterprise System Resilience Standard (`STD-GLB-005`).
 - Implementation utilizes middleware parsing incoming HTTP headers (`X-Priority-Class`) and checking CPU limits from `/sys/fs/cgroup`.
 
 ## 7. Compliance Impact
 
 ### Related Standards
 
-- Enterprise System Resilience & Fault Tolerance Standard (STD-E015)
-- Enterprise Observability Standard (STD-E004)
+- Enterprise System Resilience & Fault Tolerance Standard (STD-GLB-005)
+- Enterprise Observability Standard (STD-GLB-004)
 
 ### Compliance Status
 
@@ -106,3 +106,4 @@ None.
 - **Pros**: Requires low configuration effort to implement globally at the API Gateway.
 - **Cons**: Rejects incoming requests indiscriminately. Critical authentication check calls are dropped at the same rate as background analytical exports.
 - **Why Rejected**: Drops high-priority customer transactions during spikes, causing business disruption.
+

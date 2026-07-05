@@ -77,3 +77,4 @@ None.
 
 - **HTTP Long-Polling**: Rejected. While easier to scale on legacy load balancers than WebSockets, it still incurs massive HTTP header overhead and connection churn compared to SSE or true WebSockets.
 - **WebRTC**: Rejected for general data transfer. While perfect for peer-to-peer audio/video streaming, it is vastly over-engineered and difficult to traverse via NAT/TURN servers for straightforward JSON data synchronization.
+

@@ -63,7 +63,7 @@ Upon each refresh request:
 - **O(1) Execution**: Session invalidation is completed instantly with a single write (incrementing the epoch integer).
 - **Sub-Millisecond Middleware Latency**: Middleware checks are lightweight memory comparisons in Redis rather than complex DB table lookups.
 - **Fail-Secure Architecture**: Suspending an account instantly blocks all active tokens across all services.
-- **Seamless User Experience**: Eliminates false-positive logout events under poor cell reception.
+- **Automated User Experience**: Eliminates false-positive logout events under poor cell reception.
 
 ### Negative
 
@@ -106,7 +106,7 @@ Upon each refresh request:
 
 ### Related Standards
 
-- [Technology Architecture Strategy (EAD-004)](../../01-enterprise/EAD-004-technology-architecture.md)
+- [EAD-004 (Integration Architecture)](../../01-enterprise/EAD-004-enterprise-integration-architecture.md)
 - [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
 
 ### Compliance Status
@@ -130,3 +130,4 @@ None.
 - **Pros**: Hardest security boundary; instant revocation on any reuse.
 - **Cons**: Extremely high rate of false-positive session terminations on mobile clients due to network package retries.
 - **Why Rejected**: Severely damages UX and increases customer support tickets for random logouts.
+

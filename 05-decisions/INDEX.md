@@ -27,3 +27,4 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-UIP-TKN-001](ui-platform/design-tokens/ADR-UIP-TKN-001-three-tier-isolation-architecture.md) | ADR-UIP-TKN-001 Three-Tier Design Token Isolation Architecture | foundational | accepted | 2026-05-01 | N/A |
 | [ADR-UIP-TKN-002](ui-platform/design-tokens/ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md) | ADR-UIP-TKN-002 OKLCH Gamut and Dual-Engine Alpha Blending Architecture | foundational | accepted | 2026-05-01 | N/A |
 | [ADR-UIP-TKN-003](ui-platform/design-tokens/ADR-UIP-TKN-003-token-taxonomy-and-naming-convention.md) | ADR-UIP-TKN-003 Token Taxonomy & Naming Convention | foundational | accepted | 2026-05-01 | N/A |
+

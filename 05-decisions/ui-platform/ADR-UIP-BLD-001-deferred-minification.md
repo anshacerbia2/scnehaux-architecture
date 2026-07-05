@@ -1,7 +1,8 @@
 ---
 doc_meta:
   id: ADR-UIP-BLD-001
-  title: Deferred Minification Strategy for UI Libraries
+  title: Deferred Minification
+  adr_type: foundational
   owner: Principal UI/UX Architect
   version: 1.0.1
   status: approved
@@ -15,7 +16,7 @@ doc_meta:
 
 ## 1. Context & Problem Statement
 
-The Scnehaux UI Platform distributes two core shared packages: `@scnx/core-ui` (React primitives) and `@scnx/system` (tokens/styling logic). Originally, the Technical Design Document (TDD-001) specified that the build compiler (`tsup`) should run `minify: true` to compress output JS/CSS assets prior to publishing to the NPM registry.
+The Scnehaux UI Platform distributes two core shared packages: `@scnx/core-ui` (React primitives) and `@scnx/system` (tokens/styling logic). Originally, the Technical Design Document (STD-GLB-FE-008) specified that the build compiler (`tsup`) should run `minify: true` to compress output JS/CSS assets prior to publishing to the NPM registry.
 
 However, minifying source code at the library distribution level introduces significant debugging friction for consuming applications and can conflict with application-level bundler optimizations.
 
@@ -39,3 +40,4 @@ We will **deliberately disable minification** (`minify: false`) for all UI libra
 ## 4. Alternatives Considered
 
 - **Minifying Library Code (Status Quo):** Rejected because the minor savings during `npm install` do not justify the massive loss in debuggability and the risk of tree-shaking failures downstream.
+

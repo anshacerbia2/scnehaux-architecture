@@ -136,11 +136,11 @@ Format: `[component].[element].[property].[state]` (Note: `[element]` and `[stat
 
 ### Related Standards
 
-- [Documentation Governance Standard (GDC-000)](../../../00-governance/documentation-governance-standard.md)
+- [Documentation Governance Standard (GDC-000)](../../../00-governance/GDC-000-governance-policy.md)
 - [Scnehaux UI Platform Logical PAD (DOC-P002)](../../../03-domain/scnehaux-ui-platform/scnehaux-ui-platform.pad.md)
 - [Scnehaux UI Platform Physical SAD (SAD-003)](../../../04-system/scnehaux-ui-platform/scnehaux-ui-platform.sad.md)
 - SCNX Master Semantic Taxonomy (located in `packages/design-system/src/styles/docs/scnx-master-semantic-taxonomy.md` of the UI Platform Repo)
-- SCNX Downstream Integration Standard (located in `packages/docs/05-standards/STD-SCNX-UI-JS-002-developer-integration-standard.md` of the UI Platform Repo)
+- SCNX Downstream Integration Standard (located in `packages/docs/05-standards/STD-UIP-ENG-001-developer-integration-standard.md` of the UI Platform Repo)
 
 ### Compliance Status
 
@@ -165,3 +165,4 @@ None.
 - **Why Rejected**: Retained strictly for Photometric Alpha utility usage, but rejected as the primary matrix compiler in favor of Ahead-Of-Time (AOT) static CSS variable generation for maximum runtime performance.
 
 ---
+

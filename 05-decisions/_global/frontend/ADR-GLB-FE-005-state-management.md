@@ -69,3 +69,4 @@ None.
 - **Redux / Redux Toolkit**: Rejected. The underlying Flux architecture forces a level of indirection and boilerplate that is disproportionate for 90% of our enterprise CRUD applications.
 - **React Context API (Global)**: Rejected for global state. Context does not support render-bailing based on object properties (selectors), violating our strict performance benchmarks.
 - **Jotai / Recoil**: Rejected. Introduces mental overhead that is unnecessary for standard enterprise dashboards compared to Zustand's familiar structured store.
+

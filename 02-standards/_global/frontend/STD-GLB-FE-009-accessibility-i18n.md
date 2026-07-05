@@ -102,3 +102,4 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 - **Automated A11y Audits**: CI/CD pipelines must execute automated accessibility assertion tools (e.g., `axe-core`) against component libraries and critical application routes. PRs introducing new WCAG violations will be blocked.
 - **Translation Coverage**: Build tools must fail the compilation step if unresolved translation keys or missing locale dictionaries are detected.
 - **Waiver Protocol**: Deviations from this standard must be documented in a local project ADR. The Architecture Review Board (ARB) must respond with a review decision within **5 business days** of the ADR submission.
+

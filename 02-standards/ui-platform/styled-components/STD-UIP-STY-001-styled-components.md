@@ -69,3 +69,4 @@ None. All styled component architecture rules apply unconditionally. Deviations 
 
 - **Static Analysis**: CI/CD pipelines must check Rspack/Webpack configurations to block non-static styling libraries.
 - **Waiver Protocol**: Deviations from the zero-runtime mandate or style prefix boundaries require a documented project ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.
+

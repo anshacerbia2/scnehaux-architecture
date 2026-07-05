@@ -102,3 +102,4 @@ None.
 - **Pros**: Perfect hardware-level isolation.
 - **Cons**: Extremely expensive infrastructure footprints, slow schema migrations (running migrations across thousands of databases), and massive connection pool exhaustion.
 - **Why Rejected**: Unviable due to high operational costs and scaling constraints for thousands of small tenants.
+

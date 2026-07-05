@@ -141,3 +141,4 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 - **Build Violations**: Build pipelines must reject pull requests that exceed defined budget limits unless accompanied by a approved architectural waiver.
 - **Security Scoping**: CI pipelines must run production-scoped security checks on every build.
 - **Waiver Protocol**: Deviations from the runtime budgets, security rules, or communication standards require a documented ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.
+

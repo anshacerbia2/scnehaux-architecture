@@ -134,3 +134,4 @@ None. All primitive component architecture rules apply unconditionally. Deviatio
 
 - **Accessibility Audits**: Build pipelines must execute static accessibility testing (e.g. `eslint-plugin-jsx-a11y`) to block accessibility violations.
 - **Waiver Protocol**: Custom polymorphic patterns or non-headless interactive widgets require a documented project ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.
+

@@ -257,3 +257,4 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 - **Linting Rules**: CI/CD pipelines must enforce style rules using strict linter configuration suites (e.g., `eslint-plugin-panda`, `stylelint`). Violations will trigger a Hard Block (Exit 1).
 - **Visual Regression Checks**: Core system modifications must pass pixel-perfect visual regression tests inside the CI pipeline before release to prevent visual bugs.
 - **Waiver Protocol**: Custom styling engine integrations or deviations from the design token system require a documented project ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.
+

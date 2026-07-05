@@ -128,7 +128,7 @@ doc_meta:
 | `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
 | `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
 | `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
-| `fulfilled_by` | List[String] | Array of child SAD IDs that fulfill this domain architecture (e.g., `[SAD-AUTH-01]`). |
+| `fulfilled_by` | List[String] | Array of child SAD IDs that fulfill this domain architecture (e.g., `[SAD-001]`). |
 | `review_cycle_days` | Integer | The frequency in days for required review. |
 | `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
 
@@ -185,3 +185,4 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **C1/C2 Separation (PAD vs. SAD) vs. Unified Architecture Artifacts**
    - _Why rejected_: A unified artifact containing both logical capabilities and physical servers rapidly decays. When physical servers scale or database engines change, the logical boundary artifact requires constant, unnecessary updates.
    - _The Trade-Off_: We accept the cognitive overhead of maintaining two separate but linked artifacts (PAD for logical, SAD for physical). In exchange, we gain highly stable logical contracts (PADs) that do not break when physical infrastructure topologies mutate.
+

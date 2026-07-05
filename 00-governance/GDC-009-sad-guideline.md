@@ -219,3 +219,4 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **Manual Blast Radius Enforcement vs. Automated Chaos Engineering**
    - _Why rejected_: Fully automated Chaos Engineering requires significant infrastructure maturity and cannot run effectively during the design phase before code is written.
    - _The Trade-Off_: We rely on the architect's manual, theoretical calculation of the "Blast Radius" during the design phase. In exchange, we force engineers to confront and document failure boundaries proactively, preventing SPOFs from entering the codebase in the first place.
+

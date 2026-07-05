@@ -103,3 +103,4 @@ None.
 - **Pros**: Native browser support, zero build-time dependency.
 - **Cons**: Lacks semantic validation, no compile-time contract enforcement, high risk of inconsistent visual tokens leaking into components.
 - **Why Rejected**: Bypasses the centralized design system governance and token contract validation pipeline.
+

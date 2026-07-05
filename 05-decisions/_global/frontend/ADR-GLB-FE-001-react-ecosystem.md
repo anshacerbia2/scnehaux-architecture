@@ -31,7 +31,7 @@ As the enterprise scales its digital ecosystem across dozens of independent prod
 
 - **UI Platform Consolidation**: The Enterprise UI Platform (Design Tokens and Primitives) requires a single, exclusive compilation target to eliminate the overhead of maintaining multiple framework wrappers.
 - **Hybrid Rendering Mandate**: The engine must robustly support both high-interactivity Single Page Applications (SPAs) and Server-Side Rendering (SSR) paradigms without fragmenting the component architecture.
-- **Talent Acquisition & Mobility**: Enterprise scale demands a technology with a vast, mature global talent pool to accelerate hiring and enable engineers to move seamlessly between product verticals.
+- **Talent Acquisition & Mobility**: Enterprise scale demands a technology with a vast, mature global talent pool to accelerate hiring and enable engineers to move fluently between product verticals.
 - **Ecosystem Maturity**: The framework must possess an enterprise-grade ecosystem of third-party tooling, testing libraries, and community support to minimize in-house maintenance overhead.
 
 ## 5. Decision
@@ -78,3 +78,4 @@ None.
 - **Vue.js / Nuxt**: Rejected. While offering excellent developer ergonomics, the surrounding enterprise ecosystem and external talent pool are vastly eclipsed by React.
 - **Svelte**: Rejected. Despite superior baseline bundle sizes, its meta-framework ecosystem is not yet mature enough to support our complex Micro-Frontend requirements.
 - **Vanilla Web Components**: Rejected. Deeply flawed interoperability with complex state management and poor SSR hydration stories.
+

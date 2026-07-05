@@ -59,7 +59,7 @@ To solve the issue of Alpha compositing, the UI Platform will employ a strict Du
 
 - **Positive:** Unprecedented accuracy in color generation. WCAG 3.0 (APCA) contrast compliance is mathematically guaranteed at compile-time.
 - **Negative:** Increased complexity in the Tier 1 Core Token generator scripts. Browsers lacking `color(display-p3)` or `oklch()` support will require fallback compilation strategies (graceful degradation to sRGB).
-- **Architecture Validation:** The internal mechanics and solving algorithms for this decision are detailed deeply within the project-level TDD (`TDD-SCNX-UI-JS-002`) and Guide (`GD-SCNX-UI-JS-003`).
+- **Architecture Validation:** The internal mechanics and solving algorithms for this decision are detailed deeply within the project-level TDD (`STD-UIP-ENG-001`) and Guide (`GD-SCNX-UI-JS-003`).
 
 ### Negative / Risks
 
@@ -100,3 +100,4 @@ None.
 - **Pros**: Single alpha engine, direct multiplier arithmetic.
 - **Cons**: Causes color-shifting and visual muddying when transparent colors are overlaid on complex or saturated backgrounds.
 - **Why Rejected**: Destroys semantic brand integrity and breaks accessibility (APCA) contrast compliance.
+

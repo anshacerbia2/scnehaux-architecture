@@ -70,15 +70,15 @@ We officially establish a mandatory event schema evolution policy governed by th
 
 ### Operational
 
-- Codified in the Enterprise Event-Driven Architecture Standard (`STD-E016`).
+- Codified in the Enterprise Event-Driven Architecture Standard (`STD-GLB-004`).
 - Implemented using JSON Schema drafts in a registry matching the CloudEvents envelope pattern.
 
 ## 7. Compliance Impact
 
 ### Related Standards
 
-- Enterprise Event-Driven Architecture & Messaging Standard (STD-E016)
-- Enterprise Data Classification, Governance & Retention Standard (STD-E017)
+- Enterprise Event-Driven Architecture & Messaging Standard (STD-GLB-004)
+- Enterprise Data Classification, Governance & Retention Standard (STD-GLB-006)
 
 ### Compliance Status
 
@@ -101,3 +101,4 @@ None.
 - **Pros**: High flexibility; zero validation checks.
 - **Cons**: Leads to silent data corruption, makes debugging runtime errors difficult, and forces consumers to write complex defensive code to verify field existence.
 - **Why Rejected**: Fails to meet the enterprise reliability and predictability targets, shifting integration bugs to production.
+

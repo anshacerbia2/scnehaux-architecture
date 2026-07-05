@@ -59,3 +59,4 @@ Any request to exceed the Tier-3 alias budget implies a structural flaw in the c
 ## 5. Enforcement Mechanism
 
 Each platform repository must implement automated static analysis to block raw literal styling and enforce alias limits at the CI/CD pipeline.
+

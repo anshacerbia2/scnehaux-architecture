@@ -212,3 +212,4 @@ Deviations from any rule in this standard (new Tier-3 aliases, partial schema ex
 1. A documented project ADR approved by the Architecture Review Board (ARB).
 2. The ARB must respond within **5 business days** of ADR submission.
 3. Approved waivers have a maximum validity of **365 days** before mandatory re-evaluation.
+

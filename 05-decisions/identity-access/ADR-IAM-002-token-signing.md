@@ -36,7 +36,7 @@ By selecting `ES256` for internal microservices, we shrink headers by 30-40%. Ov
 
 ### Why a Verification Window?
 
-When a key is rotated, any client holding a token signed by the old key will instantly experience authorization failures if the old public key is immediately dropped from the JWKS. By keeping the old key in a `Retiring` state for the maximum token lifespan, we achieve seamless key transitions with zero downtime or false-positive security logouts.
+When a key is rotated, any client holding a token signed by the old key will instantly experience authorization failures if the old public key is immediately dropped from the JWKS. By keeping the old key in a `Retiring` state for the maximum token lifespan, we achieve automated key transitions with zero downtime or false-positive security logouts.
 
 ---
 
@@ -49,7 +49,7 @@ We officially establish **Algorithmic Duality** and a **Four-State Key Lifecycle
 Token signing is divided based on integration context:
 
 1.  **Internal Ecosystem & Mobile Clients**: We standardize on **`ES256`** (ECDSA P-256) to optimize payload size, CPU signing speed, and edge bandwidth utilization.
-2.  **Public OIDC & B2B Federation**: We standardize on **`RS256`** (RSA 2048-bit) to guarantee maximum interoperability and seamless B2B onboarding.
+2.  **Public OIDC & B2B Federation**: We standardize on **`RS256`** (RSA 2048-bit) to guarantee maximum interoperability and frictionless B2B onboarding.
 3.  **Dual-Algorithm JWKS**: The enterprise JWKS endpoint (`/.well-known/jwks.json`) must dynamically advertise both active RSA and ECDSA public verification keys, mapped to distinct Key IDs (`kid`).
 
 ### 4.2 Four-State Key Lifecycle State Machine
@@ -83,7 +83,7 @@ To guarantee trust continuity during rotation, signing keys transition through a
 
 ### Tradeoffs
 
-- We trade minor complexity in the verifier library and key management for massive bandwidth savings, B2B compatibility, and seamless key rotation.
+- We trade minor complexity in the verifier library and key management for massive bandwidth savings, B2B compatibility, and automated key rotation.
 
 ---
 
@@ -117,7 +117,7 @@ copy(sigBytes[64-len(sBytes):64], sBytes)
 
 - [Identity Platform Domain Strategy (PAD-001)](../../03-domain/identity-platform/identity-platform.pad.md)
 - [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
-- [Epoch-Based Session Management Decision (ADR-E004)](../../04-decisions/ADR-E004-epoch-based-session-management.md)
+- [ADR-IAM-001 (Epoch Sessions)](./ADR-IAM-001-epoch-session.md) - Relies on fast verification to bypass database hits.
 
 ### Compliance Status
 
@@ -142,3 +142,4 @@ None.
 - **Why Rejected**: Completely unacceptable user experience and high operational instability.
 
 ---
+

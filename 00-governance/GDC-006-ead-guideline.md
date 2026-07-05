@@ -162,3 +162,4 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **Markdown Artifacts vs. Traditional EA Tools**
    - _Why rejected_: Traditional EA tools (e.g., Sparx Enterprise Architect) create a massive disconnect between Enterprise Architects and software engineers, locking capability models in proprietary formats.
    - _The Trade-Off_: We sacrifice strict formal modeling languages (like ArchiMate) and auto-generated dependency matrices. In exchange, we force Enterprise Architecture to live in the same Git repositories as the code, ensuring visibility, democratized access, and CI/CD validation.
+

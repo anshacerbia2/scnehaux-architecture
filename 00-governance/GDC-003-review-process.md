@@ -38,7 +38,7 @@ Reviewers must evaluate the target document against the following 10 parameters.
 | 7 | **Trade-Offs** | Documents the _Alternatives Considered_ (why other patterns were rejected) and the conscious technical compromises made. | Pass / Fail / N/A |  |
 | 8 | **Risk & Graceful Degradation** | Blast Radius and SPOFs are mapped. **Must define how the system degrades gracefully under failure.** | Pass / Fail / N/A |  |
 | 9 | **TDD Lifecycle & Fates** | Ensures the _Ephemeral TDD Matrix_ is executed (Class B folded to SAD; Class A archived to `historical/` only if matching strict forensic/incident filters). | Pass / Fail / N/A |  |
-| 10 | **Governance & Namespace Hygiene** | Adheres strictly to structural templates. All files must conform to scalable federated namespaces (e.g. `ADR-SCNX-IAM-GO-SECURITY-003`). | Pass / Fail / N/A |  |
+| 10 | **Governance & Namespace Hygiene** | Adheres strictly to structural templates. All files must conform to scalable federated namespaces (e.g. `ADR-IAM-001`). | Pass / Fail / N/A |  |
 
 ---
 
@@ -181,3 +181,4 @@ In accordance with the Quality Rubric (Trade-Offs), the ARB explicitly documents
 1. **Asynchronous Git PRs vs. Synchronous ARB Meetings**
    - _Why rejected_: Synchronous committee meetings bottleneck engineering velocity and rely on verbal agreements rather than written contracts.
    - _The Trade-Off_: We lose the high-bandwidth face-to-face debate of traditional architecture boards. In exchange, we gain an asynchronous, globally scalable, and fully auditable review process where the Git commit history is the absolute source of truth.
+

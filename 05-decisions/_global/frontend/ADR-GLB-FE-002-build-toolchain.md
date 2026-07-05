@@ -32,7 +32,7 @@ Following the standardization of React as our foundational rendering engine ([AD
 - **Developer Velocity**: CI/CD pipelines and local Hot Module Replacement (HMR) times must be aggressively optimized to sub-second thresholds to eliminate idle waiting.
 - **Architectural Flexibility**: The enterprise requires a bundler capable of native Module Federation (for complex MFE orchestrations) alongside an ultra-fast, lightweight bundler (for isolated apps and UI libraries).
 - **Unified CI/CD Pipeline**: DevOps requires a narrowed set of standardized build toolchains to enforce security scanning, caching, and deployment consistency.
-- **Ecosystem Interoperability**: The chosen toolchains must seamlessly compile React, process modern CSS, and integrate with our zero-runtime CSS architecture.
+- **Ecosystem Interoperability**: The chosen toolchains must transparently compile React, process modern CSS, and integrate with our zero-runtime CSS architecture.
 
 ## 5. Decision
 
@@ -81,3 +81,4 @@ None.
 
 - **Webpack**: Rejected. Compilation speeds are unacceptably slow for enterprise-scale codebases, degrading Developer Experience (DX) and inflating CI/CD compute costs.
 - **Parcel**: Rejected. Its zero-config nature is too opaque for enterprise applications that often require highly specific, low-level build interventions and custom security plugins.
+

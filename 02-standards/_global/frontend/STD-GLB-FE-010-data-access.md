@@ -90,3 +90,4 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 
 - **AST Linting**: CI/CD pipelines must enforce AST-based linting rules (e.g., `no-restricted-globals`) to flag and block the usage of raw `fetch` or `XMLHttpRequest` outside of the authorized `core/network` infrastructure directory.
 - **Waiver Protocol**: Deviations from this standard (such as integrating legacy non-compliant libraries) must be documented in a local project ADR. The Architecture Review Board (ARB) must respond with a review decision within **5 business days** of the ADR submission.
+

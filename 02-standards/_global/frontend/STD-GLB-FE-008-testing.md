@@ -99,3 +99,4 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 - **CI/CD Quality Gates**: Build pipelines must enforce minimum test coverage thresholds. PRs dropping coverage below the established baseline must be blocked automatically.
 - **Quarantine Protocol**: CI pipelines must implement a quarantine mechanism for flaky tests. Tests failing intermittently must be automatically skipped in the main branch to prevent deployment blockages and must generate an immediate high-priority repair ticket.
 - **Waiver Protocol**: Deviations from testing standards must be documented in a local project ADR. The Architecture Review Board (ARB) must respond with a review decision within **5 business days** of the ADR submission.
+

@@ -293,7 +293,7 @@ Contract-driven, event-default integration was chosen against rejected alternati
 | **Synchronous request/response as the default** | Couples the availability of every domain in a call chain; one slow domain degrades all callers | Eventual consistency and the complexity of asynchronous reasoning (idempotency, ordering) |
 | **Central ESB with a canonical enterprise data model** | A shared model becomes a change-coordination bottleneck owned by no domain; the ESB is a SPOF and a monolith | Some translation logic is duplicated at domain edges rather than centralized |
 | **Consumer-owned or shared contracts** | Ambiguous change authority produces coordination deadlock and finger-pointing | Providers must design for consumer needs deliberately (Customer/Supplier discipline) |
-| **Point-to-point event subscriptions** (no central broker) | An O(n²) mesh of couplings with no durable, replayable, governed backbone | A shared Event Broker dependency that must itself be highly available |
+| **Point-to-point event subscriptions** (no central broker) | An O(n²) mesh of couplings with no durable, replayable, governed backbone | A shared Event Broker dependency that must itself be engineered for 99.99% availability |
 
 ---
 
@@ -393,3 +393,4 @@ Integration evolves by adding contracts and patterns while preserving backward c
 - OAuth 2.1 / OpenID Connect
 - RFC 9457 Problem Details for HTTP APIs
 - Building Event-Driven Microservices — Adam Bellemare
+

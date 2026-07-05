@@ -392,3 +392,4 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 - **TypeScript Strictness**: All React projects must compile under `strict: true` with `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` enabled. Type assertions (`as`) must be minimized and justified with inline comments.
 - **Telemetry Integration**: Error Boundaries must automatically capture unhandled component errors and transmit them to the centralized logging endpoint complete with tenant and transaction contexts.
 - **Waiver Protocol**: Deviations from this standard (such as integrating legacy non-compliant libraries or suppressing lint rules) must be documented in a local project ADR. The Architecture Review Board (ARB) must respond with a review decision within **5 business days** of the ADR submission.
+

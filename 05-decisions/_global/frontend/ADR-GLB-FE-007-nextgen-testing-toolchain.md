@@ -68,3 +68,4 @@ None.
 - **Cypress**: Rejected. Its synchronous-like command queue, lack of native cross-tab support, and difficulty handling modern third-party OAuth popups make it insufficient for complex B2B portal integrations.
 - **Jest**: Rejected. The heavy startup overhead and poor native ESM support make it incompatible with our high-velocity Vite-based development pipelines.
 - **Selenium**: Rejected. Too slow, overly verbose, and lacks the modern developer ergonomics and tracing capabilities provided by Playwright.
+

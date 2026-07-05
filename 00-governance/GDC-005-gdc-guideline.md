@@ -181,3 +181,4 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **Self-Referential Linter Rules vs Hardcoded Engine Logic**
    - _Why rejected_: Writing specific logic in the main engine `engine/cli.py` to validate `GDC` files pollutes the global execution engine with domain-specific concerns.
    - _The Trade-Off_: We accept the cognitive overhead of creating a specific `engine/validators/domains/gdc_validator.py` module and a `schemas/gdc.schema.json` to validate the files that define the rules themselves. In exchange, the global linter engine remains perfectly domain-agnostic, treating `GDC` files identically to `SAD` or `PAD` files during execution.
+

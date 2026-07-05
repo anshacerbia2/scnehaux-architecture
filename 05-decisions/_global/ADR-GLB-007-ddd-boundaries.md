@@ -74,16 +74,16 @@ We officially establish Domain-Driven Design (DDD) aggregate constraints and ass
 
 ### Operational
 
-- Codified in the Enterprise Domain Modeling Standard (`STD-E018`) and the Data Classification Standard (`STD-E017`).
+- Codified in the Enterprise Domain Modeling Standard (`STD-GLB-008`) and the Data Classification Standard (`STD-GLB-006`).
 - Entity relations between Bounded Contexts must be modeled strictly using aggregate IDs (foreign keys) rather than object reference schemas.
 
 ## 7. Compliance Impact
 
 ### Related Standards
 
-- Enterprise Domain Modeling Standard (STD-E018)
-- Enterprise Data Classification, Governance & Retention Standard (STD-E017)
-- Enterprise Database & Persistence Strategy Standard (STD-E002)
+- Enterprise Domain Modeling Standard (STD-GLB-008)
+- Enterprise Data Classification, Governance & Retention Standard (STD-GLB-006)
+- Enterprise Database & Persistence Strategy Standard (STD-GLB-002)
 
 ### Compliance Status
 
@@ -106,3 +106,4 @@ None.
 - **Pros**: Ensures instant ACID consistency across multiple tables in a single write operation.
 - **Cons**: Increases lock durations, causes transaction deadlocks under high load, and tightly couples aggregate lifecycles.
 - **Why Rejected**: Prevents horizontal scaling of database write operations and causes performance degradation during concurrent updates.
+

@@ -16,7 +16,7 @@ doc_meta:
 
 ---
 
-## 1. Context & Scope
+## 1. Purpose
 
 **Capability Realized.** This system realizes the administrative-interface aspect of the Enterprise Identity & Access capability defined in [identity-platform.pad.md](../../03-domain/identity-platform/identity-platform.pad.md) (PAD-001).
 
@@ -221,3 +221,4 @@ The IAM Dashboard is deployed as a stateless, client-rendered SPA.
 ## 12. Compatibility Strategy
 
 - Graceful degradation for clients without JavaScript is not a requirement for this internal admin dashboard.
+

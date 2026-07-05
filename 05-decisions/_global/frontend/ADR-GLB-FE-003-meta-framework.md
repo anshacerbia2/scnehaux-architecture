@@ -79,3 +79,4 @@ None.
 
 - **Remix**: Rejected. While possessing excellent Web Standards adherence, the external talent pool, ecosystem maturity, and native support for React Server Components (RSC) currently favor Next.js at an enterprise scale.
 - **Nuxt**: Rejected. Incompatible with the foundational mandate to standardize exclusively on the React ecosystem.
+

@@ -99,7 +99,7 @@ doc_meta:
 
 | Metadata Field      | Type    | Description / Purpose                                            |
 | ------------------- | ------- | ---------------------------------------------------------------- |
-| `id`                | String  | Unique identifier (e.g., `TDD-001`).                             |
+| `id`                | String  | Unique identifier (e.g., `STD-GLB-FE-008`).                             |
 | `title`             | String  | Descriptive title of the document.                               |
 | `owner`             | String  | Lead Owner (e.g., Software Engineer).                            |
 | `version`           | String  | Must comply with Semantic Versioning (e.g., 1.0.0).              |
@@ -169,3 +169,4 @@ In accordance with the Quality Rubric (Trade-Offs), the ARB explicitly documents
 1. **The Ephemeral TDD Matrix vs. Permanent TDD Archives**
    - _Why rejected_: Archiving every component-level design forever leads to thousands of obsolete files. When a new engineer joins, they cannot distinguish between active architecture and legacy spikes.
    - _The Trade-Off_: We intentionally destroy (delete) historical design context for Class B/C implementations once they merge to main. In exchange, we radically reduce search latency and ensure that only high-level abstractions (PADs/SADs) and foundational shifts (Class A TDDs) are permanently maintained.
+

@@ -110,3 +110,4 @@ You MUST follow the declarative reconciliation workflow. The granular, step-by-s
 > [!WARNING]
 >
 > **Exception Protocol**: If you must deviate from a paved road without permanently modifying the global rules, you must submit an ADR explaining the rationale, the risk mitigation, and receive explicit approval from the ARB.
+

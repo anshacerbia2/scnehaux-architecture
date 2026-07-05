@@ -82,3 +82,4 @@ None. All frontend security rules apply unconditionally. Deviations require form
 
 - **Linting Rules**: ESLint configurations must prohibit direct, unscoped access to `window.sessionStorage` and `window.localStorage`.
 - **Integration Testing**: E2E testing pipelines (e.g., Playwright) must include explicit "Tenant Isolation" suites that simulate logging into Tenant A, switching to Tenant B, and verifying that no data from Tenant A renders on the screen.
+

@@ -23,7 +23,7 @@ doc_meta:
 
 This document defines the domain architecture, capabilities, and boundaries for the Identity Platform.
 
-## 2. Context & Scope
+## 2. Enterprise Position
 
 **Purpose.** The Identity & Access Management (IAM) platform is the enterprise **Root of Trust**. It centralizes authentication, federation, session lifecycle, and tenant governance so that no downstream domain re-implements identity.
 
@@ -137,3 +137,4 @@ These are the **capability's promises** (quantified targets). The mechanisms tha
 - **IAM Dashboard SPA**: [scnehaux-iam-dashboard.sad.md](../../04-system/scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) (SAD-002)
 
 **Capability governance.** A change to the core JWT schema or to the trust boundary constitutes a Major version bump. Release mechanics (canary rollout, CI/CD security gates, deployment cadence) are realization concerns defined in the fulfilling SADs, not here.
+

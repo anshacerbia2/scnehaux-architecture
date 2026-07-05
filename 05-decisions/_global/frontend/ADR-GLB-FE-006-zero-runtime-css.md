@@ -69,3 +69,4 @@ None.
 - **Runtime CSS-in-JS (Styled Components / Emotion)**: Rejected. The performance penalty of parsing ASTs in the browser during render is too high for enterprise dashboards.
 - **Global BEM (Sass/SCSS)**: Rejected. Lacks the type-safety and colocation benefits required by modern React development, inevitably leading to dead code.
 - **CSS Modules**: Rejected as the primary global mechanism because it lacks the strict token constraint enforcement provided by typed compiler macros.
+

@@ -138,7 +138,7 @@ func (h *BoundedHasher) Hash(ctx context.Context, password string) (string, erro
 ### Related Standards
 
 - [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
-- Enterprise Security Standard (STD-E003)
+- Enterprise Security Standard (STD-GLB-FE-010)
 
 ### Compliance Status
 
@@ -163,3 +163,4 @@ None.
 - **Why Rejected**: Damages UX and leads to hard server crashes.
 
 ---
+

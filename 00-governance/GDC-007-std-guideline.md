@@ -29,7 +29,7 @@ The `02-standards` directory is the authoritative collection of mandatory rules,
 ### 2.1 Specificity & Opinionation
 
 - **Specificity Policy**: Standards (STDs) are **not** meant to be agnostic. They exist to enforce strict, concrete, and opinionated technical baselines. If a policy is purely abstract, it belongs in an Enterprise Architecture Document (EAD) as a Principle.
-- **Global Standards (`STD-GLB*`)**: Define enterprise-wide technical constraints (e.g., universal API payloads, central logging schemas). While they may start as high-level abstract policies, once a specific technology becomes an enterprise baseline (e.g., via an ADR), global STDs must aggressively mandate its usage.
+- **Global Standards (STD-GLB prefix)**: Define enterprise-wide technical constraints (e.g., universal API payloads, central logging schemas). While they may start as high-level abstract policies, once a specific technology becomes an enterprise baseline (e.g., via an ADR), global STDs must aggressively mandate its usage.
 - **Domain & Local Standards**: Must be fiercely technology-specific and framework-opinionated. They map global requirements directly to concrete code implementations (e.g., "Use React 18", "Use Prisma" in the `ui-platform` repo).
 
 ### 2.2 The Schema Architecture
@@ -185,9 +185,9 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 To prevent rigid compliance grids from stifling innovation, every enterprise standard must declare a maturity phase in its `status` field.
 
-> **Authoritative Source**: The canonical definitions of the four maturity phases (Assessed, Trial, Adopted, Hold), including their adoption requirements, deviation policies, and sunset procedures, are defined and maintained in **[GDC-005 — Technology Lifecycle & Standards Governance](./GDC-005-tech-lifecycle.md)**.
+> **Authoritative Source**: The canonical definitions of the four maturity phases (Assessed, Trial, Adopted, Hold), including their adoption requirements, deviation policies, and sunset procedures, are defined and maintained in **[GDC-004 — Technology Lifecycle & Standards Governance](./GDC-004-tech-lifecycle.md)**.
 
-All STD artifacts must declare one of the four phases defined in GDC-005 in their `status` metadata field.
+All STD artifacts must declare one of the four phases defined in GDC-004 in their `status` metadata field.
 
 #### 2.4.2 The Living Specification Principle (Mutability & Versioning)
 
@@ -209,3 +209,4 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **Living Mutability vs. Immutable Standard Versions**
    - _Why rejected_: Storing every past version of a standard as a separate immutable file creates a "graveyard" of artifacts, leading to engineer confusion about which standard is currently active.
    - _The Trade-Off_: We lose out-of-the-box visibility into historical rules. In exchange, we guarantee that the `02-standards/` folder is always the definitive "Current State of Truth." Historical context is preserved in Git, while structural pivots are managed via Immutable ADRs.
+

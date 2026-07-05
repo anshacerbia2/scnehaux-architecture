@@ -16,7 +16,7 @@ doc_meta:
 
 ---
 
-## 1. Context & Scope
+## 1. Purpose
 
 **Capability Realized.** This system realizes the logical UI Platform capability defined in [scnehaux-ui-platform.pad.md](../../03-domain/scnehaux-ui-platform/scnehaux-ui-platform.pad.md) (PAD-002). It is the concrete physical styling compiler and component infrastructure for that capability.
 
@@ -102,7 +102,7 @@ The `@scnx/system` package ships a dedicated **Base Layer** to equalize default 
 | TDD | Scope |
 | :-- | :-- |
 | `TDD-SCNX-UI-JS-001` | Build-Time Extraction Pipeline (Panda + Sass + tsup, dual ESM/CJS, `"use client"` restoration, packaging). |
-| `TDD-SCNX-UI-JS-002` | Polymorphic Headless Primitives (`@scnx/core-ui` — `Slot`/`asChild`, `as`-prop, primitive + compound inventory, `data-slot` contract). |
+| `STD-UIP-ENG-001` | Polymorphic Headless Primitives (`@scnx/core-ui` — `Slot`/`asChild`, `as`-prop, primitive + compound inventory, `data-slot` contract). |
 | `TDD-SCNX-UI-JS-003` | Semantic Token Dictionary & OKLCH Reference (3-tier engine, `generate-scheme-matrix`, validator, `--ds-*` contract). |
 | `TDD-SCNX-UI-JS-004` | Design System Components (`@scnx/system` atoms/layouts/organisms; SCSS-class vs Panda-recipe styling). |
 | `TDD-SCNX-UI-JS-005` | Theme Transitions & Context Engine (`ScnxThemeProvider`, Transition OFSM, Disclosure registry). |
@@ -318,3 +318,4 @@ stateDiagram-v2
 
 - The design system adheres to Semantic Versioning (SemVer).
 - Breaking changes require a major version bump and a migration guide.
+

@@ -128,3 +128,4 @@ None. All event-driven architecture rules apply unconditionally. Deviations requ
 1. **Schema Registry Validation**: Build validation pipelines must check event models against the centralized schema registry. Schema modifications that break backward compatibility rules must block the build.
 2. **Consumer Group Audit**: All services running consumer groups must register their offsets and lagging metrics under the enterprise observability stack.
 3. **Exception Waivers**: Deviations from these event-driven architecture requirements require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.
+

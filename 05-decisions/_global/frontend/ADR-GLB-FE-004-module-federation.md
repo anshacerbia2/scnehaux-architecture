@@ -68,3 +68,4 @@ None.
 - **Iframes**: Rejected. They cause severe accessibility issues, trap focus/modals, hinder SEO, and make sharing state extremely cumbersome and insecure.
 - **Single-SPA**: Rejected. Requires invasive wrappers around every application and enforces a heavy, centralized orchestration layer.
 - **Nginx Route Redirection**: Rejected. Redirecting forces a full page reload, destroying the SPA feel and resetting client state.
+

@@ -22,7 +22,7 @@ doc_meta:
 
 This document defines the domain architecture, capabilities, and boundaries for the UI Platform.
 
-## 2. Context (Why this domain exists)
+## 2. Enterprise Position
 
 **Purpose.** The Scnehaux UI Platform is the enterprise **Visual Root of Trust** — a shared presentation foundation that enforces visual consistency, strict styling isolation, and accessible interaction semantics across both standalone applications and federated micro-frontends. It eliminates brand fragmentation and lets a single primitive-layer (rendering or bundle-size) improvement propagate across the entire ecosystem.
 
@@ -124,3 +124,4 @@ These are the capability's quantified promises; the mechanisms that achieve them
 - **Consuming surfaces** (not owned, integrate the contract): the IAM Dashboard standalone SPA and the ERP federated host shell.
 
 **Capability governance.** A change to the core `$system` token contract or the trust boundary constitutes a Major version bump. Release mechanics (visual-regression gates, bundle-size checks, NPM publication) are realization concerns defined in the fulfilling SAD, not here.
+

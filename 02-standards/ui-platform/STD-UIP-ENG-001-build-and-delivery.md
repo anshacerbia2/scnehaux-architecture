@@ -23,7 +23,7 @@ This standard governs the quality, payload, and delivery constraints for all pac
 - **Fail-Fast**: The pipeline must fail as early as possible on style, lint, or type errors before running expensive test suites.
 - **Immutable Artifacts**: Built UI bundles are immutable. We deploy the same binary/bundle through all environments.
 
-## 3. Standard Policies
+## 3. Normative Rules
 
 ### 3.1 Payload Budget & Performance
 
@@ -51,3 +51,4 @@ To support modern Module Federation consumers while maintaining legacy fallback 
 ## 4. Enforcement & Compliance
 
 These standards are enforced directly by CI/CD pipelines (Quality Gates). Any PR that breaches the 12KB budget or fails Visual Regression will be **Hard Blocked** from merging. Temporary waivers must be escalated to the Architecture Review Board (ARB) via an Architecture Decision Record (ADR).
+
