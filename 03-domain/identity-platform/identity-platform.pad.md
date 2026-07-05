@@ -3,13 +3,13 @@ doc_meta:
   id: PAD-001
   title: Enterprise Identity & Access Platform Architecture
   owner: Enterprise Security Architect
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: restricted
   governed_by: [GDC-000]
   realizes_capability: EAD-001
   review_cycle_days: 180
-  last_reviewed: "2026-05-18"
+  last_reviewed: '2026-05-18'
   fulfilled_by:
     - SAD-001
     - SAD-002
@@ -19,7 +19,11 @@ doc_meta:
 
 ---
 
-## 1. Context & Scope
+## 1. Purpose
+
+This document defines the domain architecture, capabilities, and boundaries for the Identity Platform.
+
+## 2. Context & Scope
 
 **Purpose.** The Identity & Access Management (IAM) platform is the enterprise **Root of Trust**. It centralizes authentication, federation, session lifecycle, and tenant governance so that no downstream domain re-implements identity.
 
@@ -29,17 +33,17 @@ doc_meta:
 - Propagate identity to all downstream domains in a cryptographically verifiable, stateless way.
 - Provide O(1) session revocation and key rotation without downstream coordination.
 
-**Non-Goals.** *(explicit boundaries — what this platform deliberately does NOT own)*
+**Non-Goals.** _(explicit boundaries — what this platform deliberately does NOT own)_
 
 - **Fine-Grained Access Control (FGAC)**: local RBAC/ABAC, per-resource permissions, and business-rule authorization remain owned by each consuming domain (HRIS, Finance).
 - **User / profile / HR records**: the platform holds identity and credentials, not employment, org-structure, or business-profile data.
 - **Per-domain business audit**: downstream domains own the audit trail of their own business actions.
 
-*(Draft — confirm these are the intended exclusions.)*
+_(Draft — confirm these are the intended exclusions.)_
 
 **Stakeholders.** Enterprise Security Architect (owner), CISO (accountable), Application & Infrastructure teams (consulted), all Engineering (informed). Full RACI in §7.
 
-## 2. Business Capability
+## 3. Business Capability
 
 The platform provides six centralized capabilities:
 
@@ -54,7 +58,7 @@ The platform provides six centralized capabilities:
 
 **Capability Maturity.** Tier-0 foundational capability — mature, load-bearing, and depended upon by every other domain in the ecosystem.
 
-## 3. Domain Model
+## 4. Domain Model
 
 **Bounded Contexts.** The capability decomposes into four logical contexts, independent of any implementation:
 
@@ -78,9 +82,9 @@ graph TD
     IAM -->|Session Revocation Events| EventBus
 ```
 
-**Domain Events.** The platform publishes identity-lifecycle events to the NATS event bus for downstream consumption — notably **SessionRevoked** (drives downstream session-cache invalidation) and tenant-lifecycle events. *(Draft — confirm the authoritative event catalog.)*
+**Domain Events.** The platform publishes identity-lifecycle events to the NATS event bus for downstream consumption — notably **SessionRevoked** (drives downstream session-cache invalidation) and tenant-lifecycle events. _(Draft — confirm the authoritative event catalog.)_
 
-## 4. Trust & Data Boundaries
+## 5. Trust & Data Boundaries
 
 The identity platform enforces the absolute boundary of trust for the enterprise:
 
@@ -90,7 +94,7 @@ The identity platform enforces the absolute boundary of trust for the enterprise
 - **Data Classification**: The platform processes **Restricted / PII** data (credentials, emails, profile metadata). All data must be encrypted at rest and in transit (TLS 1.3).
 - **Compliance**: Handling of Restricted/PII data aligns with the enterprise Data Classification and data-protection obligations; downstream consumers inherit these constraints through the identity context.
 
-## 5. Integration Contracts
+## 6. Integration Contracts
 
 All downstream domains (e.g., HRIS, Finance) must integrate with the IAM platform following these strict interface guidelines:
 
@@ -101,16 +105,16 @@ All downstream domains (e.g., HRIS, Finance) must integrate with the IAM platfor
 - **Dependencies**: The API Gateway (edge), an external KMS (signing material), and the NATS event bus; the platform has no synchronous dependency on any business domain.
 - **Token Schema Claims**:
 
-    ```json
-    {
-      "sub": "usr_94f83a",
-      "tid": "ten_10293b",
-      "epc": 12,
-      "x_scnx_ent": ["iam.tenant.write"]
-    }
-    ```
+  ```json
+  {
+    "sub": "usr_94f83a",
+    "tid": "ten_10293b",
+    "epc": 12,
+    "x_scnx_ent": ["iam.tenant.write"]
+  }
+  ```
 
-## 6. Capability NFR Targets
+## 7. Capability NFR Targets
 
 These are the **capability's promises** (quantified targets). The mechanisms that achieve them live in the fulfilling SADs.
 

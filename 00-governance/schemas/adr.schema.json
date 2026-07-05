@@ -4,7 +4,7 @@
   "title": "Architecture Decision Record (ADR) Validation Rules",
   "type": "object",
   "config": {
-    "target_doc": "GDC-011-adr-guideline.md"
+    "target_doc": "GDC-010-adr-guideline.md"
   },
   "allOf": [
     {
@@ -61,17 +61,29 @@
               "title": "Exception Information",
               "type": "object",
               "properties": {
-                "approved_by": { "type": "string" },
-                "expiry_date": { "type": "string" },
-                "risk_classification": { "type": "string" },
-                "exception_reason": { "type": "string" }
+                "approved_by": {
+                  "type": "string"
+                },
+                "expiry_date": {
+                  "type": "string"
+                },
+                "risk_classification": {
+                  "type": "string"
+                },
+                "exception_reason": {
+                  "type": "string"
+                }
               }
             }
           },
           "allOf": [
             {
               "if": {
-                "properties": { "adr_type": { "const": "exception" } }
+                "properties": {
+                  "adr_type": {
+                    "const": "exception"
+                  }
+                }
               },
               "then": {
                 "required": ["exception_info"],

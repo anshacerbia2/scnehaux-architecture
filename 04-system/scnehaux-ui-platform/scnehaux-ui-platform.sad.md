@@ -3,12 +3,12 @@ doc_meta:
   id: SAD-003
   title: Scnehaux UI Platform Software Architecture (SAD)
   owner: Principal UI/UX Architect
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
-  last_reviewed: "2026-05-19"
+  last_reviewed: '2026-05-19'
   parent_pad: PAD-002
 ---
 
@@ -33,6 +33,7 @@ It provides the physical visual foundation consumed by all frontend portals acro
 **Assumptions.** Consumers use the supported bundlers (Vite/Rspack) and wrap entry roots with the platform's namespace classes.
 
 ### 1.1 Architectural Principles
+
 The platform inherits and enforces the [Enterprise Frontend Performance and Rendering Standard](../../02-standards/_global/frontend/STD-GLB-FE-002-performance.md) across all layers:
 
 1. **Zero Layout Thrashing (60FPS Render Guarantee)**: Synchronous geometry queries during high-frequency cycles are prohibited; dynamic layout adjustments are deferred and batched via `requestAnimationFrame`.
@@ -74,16 +75,21 @@ graph TD
 ```
 
 ### 2.1 Physical Package Boundaries
+
 - **`@scnx/system` (`packages/design-system`)**: The visual core. Declares raw core primitives (Tier-1), global semantic theme contracts (Tier-2), and compiles them to CSS Custom Properties. Orchestrates build-time configuration for static layout compilers.
 - **`@scnx/core-ui` (`packages/core-ui`)**: The component library of style-agnostic, accessible, polymorphic React primitives (`<Box>`, `<Flex>`, `<Grid>`, `<Text>`). Relies 100% on `@scnx/system` for styling; decoupled from any vendor CSS framework.
 
 ### 2.2 Zero-Runtime Build Pipeline
+
 The platform rejects runtime CSS-in-JS injection, using a dual build-time engine:
+
 1. **Panda CSS AST Scanner**: Scans downstream JS/TS source at compile time, extracting utility token classes from markup into static atomic CSS rules.
 2. **Sass Preprocessor**: Orchestrates global static structures, layout grids, and theme contracts (`_core-token.scss`, `_default-token.scss`), outputting a consolidated optimized CSS bundle.
 
 ### 2.3 Base Layer & Reset Isolation
+
 The `@scnx/system` package ships a dedicated **Base Layer** to equalize default browser rendering before styling:
+
 1. **Normalization & Reset**: `_normalize.scss` equalizes cross-viewport inconsistencies; `_reset.scss` cleans native element properties; `_base.scss`/`_typography.scss` define global defaults.
 2. **Cascade Layer Isolation**: All reset rules are wrapped in native CSS `@layer reset` / `@layer base`, with an explicit precedence order (`@layer reset, base, tokens, recipes, utilities;`) so base rules can never override tokens or utilities.
 
@@ -94,7 +100,7 @@ The `@scnx/system` package ships a dedicated **Base Layer** to equalize default 
 <!-- lint_disable: inline_reference_missing (reason: Table contains illustrative TDD references) -->
 
 | TDD | Scope |
-| :--- | :--- |
+| :-- | :-- |
 | `TDD-SCNX-UI-JS-001` | Build-Time Extraction Pipeline (Panda + Sass + tsup, dual ESM/CJS, `"use client"` restoration, packaging). |
 | `TDD-SCNX-UI-JS-002` | Polymorphic Headless Primitives (`@scnx/core-ui` — `Slot`/`asChild`, `as`-prop, primitive + compound inventory, `data-slot` contract). |
 | `TDD-SCNX-UI-JS-003` | Semantic Token Dictionary & OKLCH Reference (3-tier engine, `generate-scheme-matrix`, validator, `--ds-*` contract). |
@@ -112,6 +118,7 @@ The `@scnx/system` package ships a dedicated **Base Layer** to equalize default 
 ## 3. Runtime Flows
 
 ### 3.1 Build-Time Compilation & Static Style Extraction
+
 How raw SCSS variables and React primitive markup compile to a zero-runtime static CSS bundle:
 
 ```mermaid
@@ -134,6 +141,7 @@ sequenceDiagram
 ```
 
 ### 3.2 Transition & Overlay Frame Sanitization
+
 Ensures dynamic overlays/modals/transitions execute cleanly without visual queue piling or flickering:
 
 ```mermaid
@@ -153,6 +161,7 @@ sequenceDiagram
 ```
 
 ### 3.3 Theme Context Mutation
+
 State transition when a user swaps global themes (Light↔Dark, Tenant A↔B), bypassing heavy React trees for sub-50ms execution:
 
 ```mermaid
@@ -226,11 +235,11 @@ graph TD
 ## 7. Resilience & Failure Modes
 
 - **Missing CSS Variables Fallback (Graceful Degradation)**: For environments with restricted stylesheet imports, Sass maps are pre-compiled into static fallback utility classes, allowing layout systems to degrade gracefully without breaking structural functionality.
-  - *Blast Radius*: **Single Client Render** — degrades gracefully to a fallback layout without affecting other users or backend services.
+  - _Blast Radius_: **Single Client Render** — degrades gracefully to a fallback layout without affecting other users or backend services.
 - **Cumulative Layout Shift (CLS) Mitigation**: Async components are matched with strict width/height sizing from Tier-1 primitives, rendering structured skeletons immediately to keep CLS under `0.1`.
-  - *Blast Radius*: **Component Level** — only the affected async component remains in a skeleton state; the rest of the page stays interactive.
+  - _Blast Radius_: **Component Level** — only the affected async component remains in a skeleton state; the rest of the page stays interactive.
 - **Momentum Reversal Interruption**: An interrupted transition purges the active animation handle, recalculates elapsed transform coordinates, and gracefully reverses without resetting the layout.
-  - *Blast Radius*: **Single User Interaction** — confined to the specific overlay state machine.
+  - _Blast Radius_: **Single User Interaction** — confined to the specific overlay state machine.
 
 ---
 
@@ -285,21 +294,27 @@ stateDiagram-v2
 ## 10. Trade-offs & Alternatives
 
 ### 10.1 Runtime CSS-in-JS
-- *Rejected*: Runtime style injection adds per-render execution overhead and conflicts with strict CSP. A zero-runtime build-time extraction pipeline was chosen instead.
+
+- _Rejected_: Runtime style injection adds per-render execution overhead and conflicts with strict CSP. A zero-runtime build-time extraction pipeline was chosen instead.
 
 ### 10.2 Dynamic `as` Prop Pattern
-- *Rejected*: Pushing the `as` prop downwards complicates strict type-checking and ref-forwarding in polymorphic trees. *Accepted trade-off*: We utilize a highly-optimized `<Slot>` engine (`asChild`) strictly at the `@scnx/core-ui` level, accepting minor cloning overhead in exchange for superior composition API ergonomics.
+
+- _Rejected_: Pushing the `as` prop downwards complicates strict type-checking and ref-forwarding in polymorphic trees. _Accepted trade-off_: We utilize a highly-optimized `<Slot>` engine (`asChild`) strictly at the `@scnx/core-ui` level, accepting minor cloning overhead in exchange for superior composition API ergonomics.
 
 ### 10.3 External CSS Frameworks / Component Libraries
-- *Rejected*: Vendor frameworks (Tailwind config sprawl, MUI runtime) compromise brand consistency and bundle budget; the platform owns its token engine and headless primitives.
+
+- _Rejected_: Vendor frameworks (Tailwind config sprawl, MUI runtime) compromise brand consistency and bundle budget; the platform owns its token engine and headless primitives.
 
 ### 10.4 Single Monolithic Package vs Two-Package Split
-- *Rejected (monolith)*: A single package would couple token data to component markup. *Accepted trade-off*: a two-package split (`@scnx/system` + `@scnx/core-ui`) adds release coordination cost in exchange for clean token/markup separation and independent versioning.
+
+- _Rejected (monolith)_: A single package would couple token data to component markup. _Accepted trade-off_: a two-package split (`@scnx/system` + `@scnx/core-ui`) adds release coordination cost in exchange for clean token/markup separation and independent versioning.
 
 ## 11. Assumptions
+
 - Consuming applications use a modern bundler capable of tree-shaking ESM modules.
 - Server-side rendering (SSR) environments support React 19 / RSC architectures.
 
 ## 12. Compatibility Strategy
+
 - The design system adheres to Semantic Versioning (SemVer).
 - Breaking changes require a major version bump and a migration guide.

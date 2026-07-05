@@ -3,12 +3,12 @@ doc_meta:
   id: SAD-001
   title: Scnehaux IAM Software Architecture (SAD)
   owner: Principal IAM Architect
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: restricted
   governed_by: [GDC-000]
   review_cycle_days: 180
-  last_reviewed: "2026-05-18"
+  last_reviewed: '2026-05-18'
   parent_pad: PAD-001
 ---
 
@@ -71,6 +71,7 @@ graph TD
 ```
 
 ### 2.1 Architectural Boundary and Segregation
+
 - **Interface Layer**: An HTTP server (`go-chi`) for REST endpoints and a gRPC server for low-latency inter-service validations (the concrete API surface is documented in §5).
 - **Internal CQRS (Level 1)**: Commands and Queries are strictly segregated at the application layer into separate packages (`command/` and `query/`).
   - **Commands**: Orchestrate state changes, interact with Domain Aggregates, and emit Outbox Events.
@@ -78,7 +79,9 @@ graph TD
 - **Core Module**: Business logic domains are separated cleanly into packages (`internal/auth`, `internal/tenant`, `internal/token`). Interaction between modules must pass through well-defined internal APIs.
 
 ### 2.2 Modular Monolith Structure & Topologies
+
 To enforce structural integrity and compile-time boundaries, Scnehaux IAM employs a strict package topology:
+
 ```text
 scnehaux-auth/
 ├── cmd/server/                  # main.go, manual DI, graceful shutdown
@@ -110,6 +113,7 @@ scnehaux-auth/
 ```
 
 **Compiler-enforced dependency rules**:
+
 ```text
 identity   → no upstream dependency (foundation)
 tenant     → no upstream dependency (foundation)
@@ -121,12 +125,13 @@ policy     → may depend on identity/application, tenant/application
 audit      → depends on nobody (write-only sink)
 ratelimit  → depends on nobody (standalone)
 ```
+
 No module may import another module's `infrastructure/` or `domain/` repository types directly.
 
 ### 2.3 Technology Baseline
 
 | Area | Choice | Rationale |
-| :--- | :--- | :--- |
+| :-- | :-- | :-- |
 | **Language** | Go 1.25 | Concurrency, static typing, single-binary deployment. |
 | **HTTP Router** | Chi | Idiomatic `net/http`, clean middleware, stdlib-compatible. |
 | **SQL Engine** | SQLC | Type-safe code generation from raw SQL. No ORM. |
@@ -138,14 +143,15 @@ No module may import another module's `infrastructure/` or `domain/` repository 
 | **ID Generation** | UUIDv7 | Time-sortable, no index fragmentation. |
 | **Password Hash** | Argon2id + Semaphore Guard | Memory=64MB, time=3, threads=4. Concurrency-isolated globally at `Runtime.NumCPU() - 1` using a Weighted Semaphore. Enforces fast-shedding 429 backpressure and context-cancellation (**ADR-IAM-003**). |
 | **MFA (TOTP)** | `pquerna/otp` | RFC 6238 compliant. |
-| **MFA (WebAuthn)**| `go-webauthn/webauthn` | FIDO2 / Passkey. |
-| **KMS / Token Keys**| AWS KMS / Vault Transit | Envelope encryption decryption of signing identity. Standardizes on Algorithmic Duality (internal ES256, external RS256) and a 4-state key lifecycle (Active, Retiring, Retired, Purged) (**ADR-IAM-002**). Fallback ephemeral software signer for local development. |
+| **MFA (WebAuthn)** | `go-webauthn/webauthn` | FIDO2 / Passkey. |
+| **KMS / Token Keys** | AWS KMS / Vault Transit | Envelope encryption decryption of signing identity. Standardizes on Algorithmic Duality (internal ES256, external RS256) and a 4-state key lifecycle (Active, Retiring, Retired, Purged) (**ADR-IAM-002**). Fallback ephemeral software signer for local development. |
 | **Outbox Engine** | Polling & pglogrepl | Stage 1 (Pragmatic Default): Polling with `SKIP LOCKED` and partition purges. Stage 2 (Scale Optimization): WAL logical replication with `pglogrepl` (**ADR-GLB-003**). |
 | **CI Security** | gosec + gitleaks | SAST and secret scanning. |
 
 ## 3. Runtime Flows
 
 ### 3.1 Client Authentication & Token Issuance
+
 This sequence shows a standard OIDC credential exchange. It uses **KMS-backed Envelope Encryption** where active keys are decrypted once at startup/rotation and cached in secure RAM, allowing local sub-millisecond dual-algorithm token signing (`ES256` internal, `RS256` external) under global concurrency constraints:
 
 ```mermaid
@@ -175,6 +181,7 @@ sequenceDiagram
 ```
 
 ### 3.2 Outbox Event Propagation Pipeline
+
 Propagation of domain events asynchronously via the `auth_outbox` table, modelling both the **Stage 1 Polling Dispatcher** and **Stage 2 CDC Logical Replication** flows:
 
 ```mermaid
@@ -214,6 +221,7 @@ sequenceDiagram
 ```
 
 ### 3.3 Refresh Token Theft Detection & Rotation
+
 Prevents token replay by rotating refresh tokens while ensuring reliability via a **10-second Cryptographic Rotation Grace Period** (mitigating mobile dropped-connection retries):
 
 ```mermaid
@@ -256,15 +264,15 @@ sequenceDiagram
 - **Caching**: Redis serves the rate-limit sliding window and session/rotation state. On Redis failure the system falls back to verifying sessions directly against PostgreSQL (read-replicas).
 - **Storage / Keys**: UUIDv7 primary keys (time-sortable, low index fragmentation). Signing keys are never persisted in plaintext — only KMS-wrapped (see §5/§6).
 - **Data Classification**: Restricted / PII (credentials, emails, profile metadata), encrypted at rest and in transit (TLS 1.3); tenant-scoped via Row-Level Security (§6).
-- *Physical table/column DDL and ERDs live in the downstream TDD, not here.*
+- _Physical table/column DDL and ERDs live in the downstream TDD, not here._
 
 ## 5. Integration
 
 - **Inbound API (Published surface)**: REST (`go-chi`) for OIDC/OAuth2 and management endpoints; gRPC for low-latency inter-service token validation. The public key set is **Published** at the JWKS endpoint (`/.well-known/jwks.json`), advertising active and retiring keys for rotation-safe verification.
 - **Consumed Dependencies**: External KMS/Vault (startup/rotation key decryption only — never on the hot path); no synchronous business-domain calls.
 - **Outbound Async Events (Published)**: Domain events propagate via a **Two-Stage Evolutionary Outbox** (**ADR-GLB-003**):
-  - *Stage 1 (Pragmatic Default)*: Background workers poll the outbox using `SELECT FOR UPDATE SKIP LOCKED`, deleting processed rows in bulk via daily/weekly partitions to eliminate WAL autovacuum bloat.
-  - *Stage 2 (Scale Optimization)*: Direct WAL streaming via logical replication / change data capture (`pglogrepl`) to **NATS JetStream**.
+  - _Stage 1 (Pragmatic Default)_: Background workers poll the outbox using `SELECT FOR UPDATE SKIP LOCKED`, deleting processed rows in bulk via daily/weekly partitions to eliminate WAL autovacuum bloat.
+  - _Stage 2 (Scale Optimization)_: Direct WAL streaming via logical replication / change data capture (`pglogrepl`) to **NATS JetStream**.
 - **Event Consumers**: Downstream audit and email subscribers consume `json.RawMessage` events; delivery is at-least-once with idempotent handlers.
 
 ## 6. Security
@@ -274,11 +282,11 @@ sequenceDiagram
 - **Authorization & Schema Isolation**: Database modular boundaries are strictly enforced; direct cross-schema joins are forbidden; all access passes through clean package interfaces.
 - **Encryption & KMS Memory Key Security**: ECDSA/RSA private keys decrypted at startup are held in secure heap references, protected by IAM boundaries, and cleared from swap/RAM via explicit memory wiping.
 - **Row-Level Security (RLS)**: PostgreSQL tables are protected by tenant RLS policies:
-    ```sql
-    ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
-    CREATE POLICY tenant_isolation_policy ON sessions
-      USING (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
-    ```
+  ```sql
+  ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY tenant_isolation_policy ON sessions
+    USING (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
+  ```
 - **Secrets**: No secrets in source; envconfig 12-factor injection; gitleaks in CI.
 - **Audit**: Hash-chained, append-only audit log in an isolated schema.
 - **Anti-Brute Force**: Redis sliding-window rate limiter (max `5 failed login attempts per minute per IP`).
@@ -287,26 +295,26 @@ sequenceDiagram
 
 ## 7. Resilience & Failure Modes
 
--   **PostgreSQL Outage (Database Failure)**:
-    -   *Impact*: All authentication writes and active transactional flows fail.
-    -   *Blast Radius*: **Entire Platform Authentication Outage**. Existing sessions remain valid (JWTs/Redis), but no new logins or mutations.
-    -   *Handling (Graceful Degradation)*: The health probe immediately reports `unhealthy`, removing the instance from the load balancer. The system fails-closed to prevent unauthorized sessions.
--   **Redis Cache Outage**:
-    -   *Impact*: Refresh Token Rotation (RTR) validations fail.
-    -   *Blast Radius*: **Performance Degradation & Refresh Failure**. Active sessions survive; token refresh becomes bottlenecked.
-    -   *Handling (Graceful Degradation)*: Degrades gracefully, falling back to verifying active sessions directly against PostgreSQL via read-replicas to prevent primary exhaustion.
--   **Outbox Dispatcher Failure (Stage 1 / Stage 2)**:
-    -   *Impact*: Asynchronous event propagation is paused.
-    -   *Blast Radius*: **Delayed Event Delivery**. Synchronous user flows continue; downstream audit/email are delayed.
-    -   *Handling*: Stage 1 keeps unsent events in `auth_outbox`, resuming via `SKIP LOCKED` on restart. Stage 2 preserves events in the WAL replication slot, resuming from the last acknowledged LSN. Both ensure zero data loss.
--   **KMS/Vault Startup Decryption Failure**:
-    -   *Impact*: Application bootstrap crashes in production.
-    -   *Blast Radius*: **Deployment Blocker**. New instances fail to start; existing instances serve traffic using cached keys.
-    -   *Handling*: Local dev falls back to an ephemeral P-256 software signer; production/staging logs a fatal error and halts startup (fail-fast) to prevent weak-key signing, triggering SRE alerts.
--   **KMS/Vault Key Rotation Failure**:
-    -   *Impact*: Retires the active key but cannot decrypt the new private key.
-    -   *Blast Radius*: **Future Security Degradation**. Current tokens remain valid; rotation to a new key boundary fails.
-    -   *Handling*: Falls back to the previous key for the remaining 7-day retirement window, firing a P1 alert for manual reconciliation.
+- **PostgreSQL Outage (Database Failure)**:
+  - _Impact_: All authentication writes and active transactional flows fail.
+  - _Blast Radius_: **Entire Platform Authentication Outage**. Existing sessions remain valid (JWTs/Redis), but no new logins or mutations.
+  - _Handling (Graceful Degradation)_: The health probe immediately reports `unhealthy`, removing the instance from the load balancer. The system fails-closed to prevent unauthorized sessions.
+- **Redis Cache Outage**:
+  - _Impact_: Refresh Token Rotation (RTR) validations fail.
+  - _Blast Radius_: **Performance Degradation & Refresh Failure**. Active sessions survive; token refresh becomes bottlenecked.
+  - _Handling (Graceful Degradation)_: Degrades gracefully, falling back to verifying active sessions directly against PostgreSQL via read-replicas to prevent primary exhaustion.
+- **Outbox Dispatcher Failure (Stage 1 / Stage 2)**:
+  - _Impact_: Asynchronous event propagation is paused.
+  - _Blast Radius_: **Delayed Event Delivery**. Synchronous user flows continue; downstream audit/email are delayed.
+  - _Handling_: Stage 1 keeps unsent events in `auth_outbox`, resuming via `SKIP LOCKED` on restart. Stage 2 preserves events in the WAL replication slot, resuming from the last acknowledged LSN. Both ensure zero data loss.
+- **KMS/Vault Startup Decryption Failure**:
+  - _Impact_: Application bootstrap crashes in production.
+  - _Blast Radius_: **Deployment Blocker**. New instances fail to start; existing instances serve traffic using cached keys.
+  - _Handling_: Local dev falls back to an ephemeral P-256 software signer; production/staging logs a fatal error and halts startup (fail-fast) to prevent weak-key signing, triggering SRE alerts.
+- **KMS/Vault Key Rotation Failure**:
+  - _Impact_: Retires the active key but cannot decrypt the new private key.
+  - _Blast Radius_: **Future Security Degradation**. Current tokens remain valid; rotation to a new key boundary fails.
+  - _Handling_: Falls back to the previous key for the remaining 7-day retirement window, firing a P1 alert for manual reconciliation.
 
 ## 8. Observability & Operations
 
@@ -328,28 +336,36 @@ Scnehaux IAM is deployed as a cloud-native, stateless containerized service:
 ## 10. Trade-offs & Alternatives
 
 ### 10.1 Active GORM/Hibernate reflection ORM
-- *Rejected*: Injects slow reflect-based execution, query-plan opacity, and bypasses database-level RLS policies, complicating security audits.
+
+- _Rejected_: Injects slow reflect-based execution, query-plan opacity, and bypasses database-level RLS policies, complicating security audits.
 
 ### 10.2 Direct App-Layer / Broker-In-Transaction publishing
-- *Rejected*: Direct external broker dispatches during SQL transactions introduce "dual-write" consistency concerns and connection exhaustion under broker network spikes.
+
+- _Rejected_: Direct external broker dispatches during SQL transactions introduce "dual-write" consistency concerns and connection exhaustion under broker network spikes.
 
 ### 10.3 Pure Outbox Polling Without Concurrency Protections or Partitioning
-- *Rejected*: Polling without `SKIP LOCKED` causes heavy row locks; without partitioning it leads to massive autovacuum write amplification.
-- *Accepted trade-off (Stage 1)*: A concurrency-protected polling outbox using `SKIP LOCKED` + partition truncation — accepting polling latency as deliberate technical debt until Stage 2 CDC.
+
+- _Rejected_: Polling without `SKIP LOCKED` causes heavy row locks; without partitioning it leads to massive autovacuum write amplification.
+- _Accepted trade-off (Stage 1)_: A concurrency-protected polling outbox using `SKIP LOCKED` + partition truncation — accepting polling latency as deliberate technical debt until Stage 2 CDC.
 
 ### 10.4 Direct Synchronous KMS Key API signing
-- *Rejected*: Synchronous Cloud KMS/Vault calls on every login add an unacceptable 15-50ms latency penalty and rate-limit risk under peak traffic.
+
+- _Rejected_: Synchronous Cloud KMS/Vault calls on every login add an unacceptable 15-50ms latency penalty and rate-limit risk under peak traffic.
 
 ### 10.5 Microservices split
-- *Rejected*: Substantial RPC overhead, DevOps complexity, and distributed-transaction costs for small teams; revisit at scale.
+
+- _Rejected_: Substantial RPC overhead, DevOps complexity, and distributed-transaction costs for small teams; revisit at scale.
 
 ### 10.6 Database-Per-Tenant isolation
-- *Rejected*: Unviable infrastructure footprint and migration complexity for thousands of concurrent small tenants; RLS chosen instead.
+
+- _Rejected_: Unviable infrastructure footprint and migration complexity for thousands of concurrent small tenants; RLS chosen instead.
 
 ## 11. Assumptions
+
 - Hardware scaling (vertical/horizontal) is handled transparently by the managed Kubernetes cluster.
 - The PostgreSQL managed instance handles connection pooling at the PaaS level or via pgBouncer.
 
 ## 12. Compatibility Strategy
+
 - The API is strictly versioned via URL path (`/v1`, `/v2`).
 - Deprecations require a 6-month notice period.

@@ -24,17 +24,16 @@
 # 2. GOVERNANCE ENFORCEMENT ENGINE (Tooling)
 # ----------------------------------------------------------------------------
 /.github/workflows/                @scnehaux/tooling-team @scnehaux/arb-team
-/scripts/                          @scnehaux/tooling-team
-/validators/                       @scnehaux/tooling-team
-/linter.py                         @scnehaux/tooling-team
+/06-fitness-function/              @scnehaux/tooling-team
 /requirements.txt                  @scnehaux/tooling-team
+/pyproject.toml                    @scnehaux/tooling-team @scnehaux/arb-team
 
 # ----------------------------------------------------------------------------
 # 3. ENTERPRISE ARCHITECTURE (The Constitution)
 # ----------------------------------------------------------------------------
 /00-governance/                    @scnehaux/arb-team
 /01-enterprise/                    @scnehaux/arb-team
-/00-governance/rules/              @scnehaux/arb-team @scnehaux/tooling-team
+/00-governance/schemas/            @scnehaux/arb-team @scnehaux/tooling-team
 
 # ----------------------------------------------------------------------------
 # 4. STANDARDS BASELINE (STD)
@@ -53,13 +52,13 @@
 /05-decisions/ui-platform/         @scnehaux/ui-platform-team
 
 # ----------------------------------------------------------------------------
-# 6. DOMAIN & APPLICATION DECENTRALIZATION (PAD & SAD)
+# 6. DOMAIN & SYSTEM DECENTRALIZATION (PAD & SAD)
 # ----------------------------------------------------------------------------
 # Explicit Domain Overrides (Identity)
-/03-platform/identity-platform/    @scnehaux/iam-core-team
-/04-application/scnehaux-iam/      @scnehaux/iam-core-team
-/04-application/scnehaux-iam-dashboard/ @scnehaux/iam-core-team
+/03-domain/identity-platform/         @scnehaux/iam-core-team
+/04-system/scnehaux-iam/              @scnehaux/iam-core-team
+/04-system/scnehaux-iam-dashboard/    @scnehaux/iam-core-team
 
 # Explicit Domain Overrides (UI Platform)
-/03-platform/scnehaux-ui-platform/    @scnehaux/ui-platform-team
-/04-application/scnehaux-ui-platform/ @scnehaux/ui-platform-team
+/03-domain/scnehaux-ui-platform/      @scnehaux/ui-platform-team
+/04-system/scnehaux-ui-platform/      @scnehaux/ui-platform-team

@@ -39,5 +39,5 @@ jobs:
         run: pip install .scnehaux-governance
 
       - name: Execute Governance Engine
-        run: python .scnehaux-governance/linter.py --target ${{ inputs.target_dir }}
+        run: PYTHONPATH=.scnehaux-governance/06-fitness-function python .scnehaux-governance/06-fitness-function/engine/cli.py --target ${{ inputs.target_dir }}
 

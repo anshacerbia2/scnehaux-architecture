@@ -2,15 +2,14 @@
 
 ## Philosophy
 
-Architecture is not a representation of source code. Architecture is a
-representation of enterprise intent.
+Architecture is not a representation of source code. Architecture is a representation of enterprise intent.
 
--   Vision before implementation.
--   Capability before product.
--   Product before system.
--   System before code.
--   Code before repository.
--   Repository before deployment.
+- Vision before implementation.
+- Capability before product.
+- Product before system.
+- System before code.
+- Code before repository.
+- Repository before deployment.
 
 ## Proposed Hierarchy
 
@@ -36,19 +35,15 @@ representation of enterprise intent.
 
 Add a capability layer before BDAT to define what the enterprise owns.
 
-Suggested Level-1 capabilities: - Core Platform - Identity & Trust -
-Business Products - Shared Platform Services - Intelligence Platform -
-Developer Ecosystem - Marketplace & Commerce
+Suggested Level-1 capabilities: - Core Platform - Identity & Trust - Business Products - Shared Platform Services - Intelligence Platform - Developer Ecosystem - Marketplace & Commerce
 
 ### 2. BDAT
 
-Capability precedes Business, Data, Application and Technology
-Architecture.
+Capability precedes Business, Data, Application and Technology Architecture.
 
 ### 3. Platform Architecture
 
-Separate cross-product capabilities such as: - Tenant - Identity -
-Workflow - Eventing - Notification - Search - Observability - AI
+Separate cross-product capabilities such as: - Tenant - Identity - Workflow - Eventing - Notification - Search - Observability - AI
 
 ### 4. Product Architecture (PAD)
 
@@ -90,5 +85,4 @@ Implementation artifacts only.
 
 ## Guiding Principle
 
-Repositories are consequences of architecture---not the other way
-around.
+Repositories are consequences of architecture---not the other way around.

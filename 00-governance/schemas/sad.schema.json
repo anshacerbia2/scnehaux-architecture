@@ -4,7 +4,7 @@
   "title": "System Architecture Document (SAD) Validation Policies",
   "type": "object",
   "config": {
-    "target_doc": "GDC-010-sad-guideline.md"
+    "target_doc": "GDC-009-sad-guideline.md"
   },
   "allOf": [
     {
@@ -21,9 +21,7 @@
     "metadata_policies": {
       "title": "Metadata Policies",
       "description": "Policies for the YAML Frontmatter (doc_meta)",
-      "required": [
-        "doc_meta"
-      ],
+      "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
@@ -44,20 +42,12 @@
             "status": {
               "title": "Allowed Statuses",
               "type": "string",
-              "enum": [
-                "proposed",
-                "approved",
-                "deprecated"
-              ]
+              "enum": ["proposed", "approved", "deprecated"]
             },
             "classification": {
               "title": "Allowed Classifications",
               "type": "string",
-              "enum": [
-                "public",
-                "internal",
-                "restricted"
-              ]
+              "enum": ["public", "internal", "restricted"]
             },
             "id": {
               "title": "Document ID",
@@ -69,37 +59,25 @@
             },
             "governed_by": {
               "title": "Governed By",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "owner": {
               "title": "Owner",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "version": {
               "title": "Version",
-              "type": [
-                "string",
-                "number"
-              ]
+              "type": ["string", "number"]
             },
             "parent_pad": {
               "title": "Parent PAD",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
@@ -151,22 +129,19 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*Objective[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Objective\\b"
             },
             {
-              "pattern": "[\\s\\S]*Constraint[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Constraint\\b"
             },
             {
-              "pattern": "[\\s\\S]*Capability[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Capability\\b"
             },
             {
-              "pattern": "[\\s\\S]*System Context[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)System Context\\b"
             }
           ],
-          "recommended": [
-            "Requirement",
-            "Assumption"
-          ],
+          "recommended": ["Requirement", "Assumption"],
           "x-titles": {
             "required": "Context & Scope (Required)",
             "recommended": "Context & Scope (Recommended)"
@@ -174,30 +149,21 @@
         },
         "Architecture Model": {
           "type": "string",
-          "recommended": [
-            "Container"
-          ],
+          "recommended": ["Container"],
           "x-titles": {
             "recommended": "System Architecture (Recommended)"
           }
         },
         "Data Flow": {
           "type": "string",
-          "recommended": [
-            "Sequence"
-          ],
+          "recommended": ["Sequence"],
           "x-titles": {
             "recommended": "Runtime Flows (Recommended)"
           }
         },
         "Integration Contract": {
           "type": "string",
-          "recommended": [
-            "API",
-            "Event",
-            "Consumed",
-            "Published"
-          ],
+          "recommended": ["API", "Event", "Consumed", "Published"],
           "x-titles": {
             "recommended": "Integration (Recommended)"
           }
@@ -219,16 +185,13 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*CI/CD[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)CI/CD\\b"
             },
             {
-              "pattern": "[\\s\\S]*Release[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Release\\b"
             }
           ],
-          "recommended": [
-            "Environment",
-            "Infrastructure"
-          ],
+          "recommended": ["Environment", "Infrastructure"],
           "x-titles": {
             "recommended": "Deployment (Recommended)"
           }
@@ -237,7 +200,7 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*Rejected[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Rejected\\b"
             }
           ]
         },

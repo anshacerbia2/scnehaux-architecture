@@ -15,7 +15,7 @@ doc_meta:
 
 ## 1. Context & Scope
 
-In accordance with the **[Circular Governance (Metaprogramming)](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims)**, the Governance framework must subject itself to the exact same rigorous validation criteria it imposes on downstream architectures. 
+In accordance with the **[Circular Governance (Metaprogramming)](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims)**, the Governance framework must subject itself to the exact same rigorous validation criteria it imposes on downstream architectures.
 
 As the foundational policies of the ecosystem, this artifact defines the deterministic boundaries governing **Governance Document Contracts (GDC)** themselves. This includes absolute compliance with the structural metadata schemas, taxonomic naming conventions, markdown body architecture, and lifecycle states required to pass the automated CI/CD Fitness Functions.
 
@@ -28,10 +28,8 @@ As the foundational policies of the ecosystem, this artifact defines the determi
 In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-fitness-functions.md)**, this meta-domain physically executes the **[Policy-as-Code](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims)** and **[Strict Separation of Concerns (SoC)](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims)** maxims through a **Fractal Triad** of automated governance (Policy, Schemas and Validators). The following machine-readable schema acts as the absolute source of truth, programmatically evaluating every GDC artifact to guarantee absolute compliance with the required metadata taxonomy, deterministic markdown structures, and the presence of critical semantic definitions:
 
 > [!WARNING]
-> **DO NOT EDIT THIS TABLE MANUALLY.**
-> This table is automatically generated from the JSON Schema (`schemas/gdc.schema.json`).
-> If you need to update a rule, modify the schema file and run:
-> `python 06-fitness-function/generators/generate_rules_doc.py`
+>
+> **DO NOT EDIT THIS TABLE MANUALLY.** This table is automatically generated from the JSON Schema (`schemas/gdc.schema.json`). If you need to update a rule, modify the schema file and run: `python 06-fitness-function/generators/generate_rules_doc.py`
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
@@ -41,11 +39,6 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 | **Metadata Policies** | Required Fields | <ul><li>id (string)</li><li>title (string)</li><li>governed_by (string &#124; array[string])</li><li>owner (string &#124; array[string])</li><li>version (string &#124; number)</li><li>status (string)</li><li>classification (string)</li><li>review_cycle_days (integer)</li><li>last_reviewed (string)</li></ul> |
 | **Metadata Policies** | Allowed Statuses | <ul><li>approved</li><li>draft</li></ul> |
 | **Metadata Policies** | Allowed Classifications | <ul><li>public</li><li>internal</li><li>restricted</li><li>confidential</li></ul> |
-| **Structural Policies** | Required Sections | <ul><li>Context & Scope</li><li>Policy Framework</li></ul> |
-| **Structural Policies** | Recommended Sections | <ul><li>Enforcement Mechanism</li><li>Enforcement Mechanism & Rule Reconciliation</li><li>Severity & Exceptions</li><li>Document Types (Glossary of Truth)</li><li>Document Lifecycle & State Management</li><li>Linter Execution Flow (CI/CD Automated Gate)</li><li>Compliance & Enforcement</li><li>The Git Workflow & Access Control</li><li>The Reconciliation Flow (Adding or Modifying Rules)</li><li>Directory Structure & Taxonomy</li><li>Directory Structure & Naming Conventions</li><li>Document Template Schema (Metadata Frontmatter)</li><li>Document Section Semantics</li><li>Metadata Schema Properties</li><li>Semantic Definitions</li><li>Allowed Lifecycle Statuses</li><li>Allowed Classifications</li><li>Semantic Versioning Classification</li><li>Appendix: Architectural Clarifications & Trade-Offs</li><li>Appendix: Architectural Trade-Offs</li></ul> |
-| **Content Quality Policies** | Policy Framework (Required Keywords for GDC Guideline) | <ul><li>Semantic Definitions</li></ul> |
-| **Content Quality Policies** | Semantic Definitions (Required Sub Sections) | <ul><li>Naming Conventions</li><li>Taxonomy</li><li>Directory Structure</li><li>Artifact Section</li><li>Metadata Schema Properties</li></ul> |
-| **Content Quality Policies** | Metadata Schema Properties (Required Sub Sections) | <ul><li>Allowed Lifecycle Statuses</li><li>Allowed Classifications</li><li>Semantic Versioning Classification</li></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -55,12 +48,12 @@ The Linter Ruleset above strictly enforces the syntax and allowed values. This s
 
 #### 2.3.1 Naming Conventions
 
-The filename must strictly adhere to the `gdc_pattern` regex: `^GDC-\d{3}-[a-z0-9-]+\.md$`.
-If a GDC is acting as a downstream guideline, its name must end with `-guideline.md`.
+The filename must strictly adhere to the `gdc_pattern` regex: `^GDC-\d{3}-[a-z0-9-]+\.md$`. If a GDC is acting as a downstream guideline, its name must end with `-guideline.md`.
 
 #### 2.3.2 Taxonomy
 
 All Governance Document Contracts (GDC) must be placed strictly in the root of the `00-governance/` directory. To maintain the "Fractal Triad" of automated governance (Policy, Rules, and Schemas), supplementary technical enforcement assets must be categorized into their respective subdirectories:
+
 - `schemas/`: Contains the declarative JSON Schema definitions (`*.schema.json`) that act as the Single Source of Truth (SSOT) for metadata and structural requirements.
 - `schemas/`: Contains the JSON Schema definitions (`*.schema.json`) that strictly validate the content and qualitative constraints of downstream architectural artifacts.
 - `validators/`: Contains the executable Python engines that enforce complex dynamic logic not expressible in static schemas.
@@ -79,21 +72,21 @@ scnehaux-architecture/
 
 #### 2.3.4 Metadata Schema Properties
 
-| Metadata Field | Type | Description / Purpose |
-|---|---|---|
-| `id` | String | Unique identifier (e.g., `GDC-000`). |
-| `title` | String | Descriptive title of the artifact. |
-| `owner` | String | Lead Owner (e.g., Architecture Authority). |
-| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
-| `status` | Enum | The current lifecycle state (Refers to Allowed Lifecycle Statuses). |
-| `classification` | Enum | The data sensitivity (Refers to Classification Semantics below). |
-| `review_cycle_days` | Integer | The frequency in days for required review. |
-| `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
+| Metadata Field      | Type    | Description / Purpose                                               |
+| ------------------- | ------- | ------------------------------------------------------------------- |
+| `id`                | String  | Unique identifier (e.g., `GDC-000`).                                |
+| `title`             | String  | Descriptive title of the artifact.                                  |
+| `owner`             | String  | Lead Owner (e.g., Architecture Authority).                          |
+| `version`           | String  | Must comply with Semantic Versioning (e.g., 1.0.0).                 |
+| `status`            | Enum    | The current lifecycle state (Refers to Allowed Lifecycle Statuses). |
+| `classification`    | Enum    | The data sensitivity (Refers to Classification Semantics below).    |
+| `review_cycle_days` | Integer | The frequency in days for required review.                          |
+| `last_reviewed`     | Date    | The date of the last formal review (YYYY-MM-DD).                    |
 
 ##### Allowed Lifecycle Statuses
 
 | Status | Meaning / Lifecycle Stage |
-|---|---|
+| --- | --- |
 | `draft` | The artifact is currently being written or reviewed and is not yet enforceable. Exempt from linter scoring. |
 | `approved` | The artifact has been formally reviewed and approved by the Architecture Authority. Its policies are now active and enforceable. |
 
@@ -101,19 +94,19 @@ scnehaux-architecture/
 
 While the exact string values are enforced by the CI Linter, their semantic meanings are:
 
-| Classification | Meaning / Data Sensitivity |
-|---|---|
-| `public` | Available to anyone. |
-| `internal` | Restricted to company employees. |
-| `restricted` | Restricted to specific teams or roles. |
+| Classification | Meaning / Data Sensitivity                                              |
+| -------------- | ----------------------------------------------------------------------- |
+| `public`       | Available to anyone.                                                    |
+| `internal`     | Restricted to company employees.                                        |
+| `restricted`   | Restricted to specific teams or roles.                                  |
 | `confidential` | Highly sensitive information restricted to a strict need-to-know basis. |
 
 ##### Semantic Versioning Classification
 
-| Version | Trigger / Architectural Change |
-|---|---|
-| **Major (2.0.0)** | Breaking rule changes, introducing new strict policies. |
-| **Minor (1.1.0)** | Adding new optional guidelines or non-breaking constraints. |
+| Version           | Trigger / Architectural Change                                |
+| ----------------- | ------------------------------------------------------------- |
+| **Major (2.0.0)** | Breaking rule changes, introducing new strict policies.       |
+| **Minor (1.1.0)** | Adding new optional guidelines or non-breaking constraints.   |
 | **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
 
 #### 2.3.5 Artifact Section
@@ -121,7 +114,7 @@ While the exact string values are enforced by the CI Linter, their semantic mean
 The linter enforces the presence of these sections. Their semantic purposes are:
 
 | Section Name | Purpose / Content Requirement |
-|---|---|
+| --- | --- |
 | **Context & Scope** | Defines the boundaries, objectives, and scope of the governance policy. |
 | **Policy Framework** | Documents the core guidelines, philosophies, schemas, or models being established. |
 | **Enforcement Mechanism** | (Optional) Redefine ONLY if the artifact has domain-specific linter rules. |
@@ -175,7 +168,7 @@ Failure to follow this reconciliation flow will result in Documentation Drift an
 In addition to the global structural enforcement defined in `GDC-001`, GDC artifacts are strictly governed by the following domain-specific linter components:
 
 | Linter Component | File | Enforcement Logic |
-| :--- | :--- | :--- |
+| :-- | :-- | :-- |
 | **Domain Schema** | `schemas/gdc.schema.json` | Specific `review_cycle_days`, strict metadata, and policy structure. |
 | **Python Engine** | `engine/validators/domains/gdc_validator.py` | **Taxonomy**: Validates `allowed_statuses` and `allowed_classifications` ensuring proper baseline governance. |
 
@@ -186,5 +179,5 @@ In addition to the global structural enforcement defined in `GDC-001`, GDC artif
 In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority explicitly documents the compromises of this GDC Guideline:
 
 1. **Self-Referential Linter Rules vs Hardcoded Engine Logic**
-   - *Why rejected*: Writing specific logic in the main engine `engine/cli.py` to validate `GDC` files pollutes the global execution engine with domain-specific concerns.
-   - *The Trade-Off*: We accept the cognitive overhead of creating a specific `engine/validators/domains/gdc_validator.py` module and a `schemas/gdc.schema.json` to validate the files that define the rules themselves. In exchange, the global linter engine remains perfectly domain-agnostic, treating `GDC` files identically to `SAD` or `PAD` files during execution.
+   - _Why rejected_: Writing specific logic in the main engine `engine/cli.py` to validate `GDC` files pollutes the global execution engine with domain-specific concerns.
+   - _The Trade-Off_: We accept the cognitive overhead of creating a specific `engine/validators/domains/gdc_validator.py` module and a `schemas/gdc.schema.json` to validate the files that define the rules themselves. In exchange, the global linter engine remains perfectly domain-agnostic, treating `GDC` files identically to `SAD` or `PAD` files during execution.

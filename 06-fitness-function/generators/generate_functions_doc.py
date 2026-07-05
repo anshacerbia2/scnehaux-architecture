@@ -1,125 +1,333 @@
 import os
-import sys
 import ast
 import re
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
-ENGINE_DIR = os.path.join(PROJECT_ROOT, 'engine')
+FITNESS_DIR = os.path.dirname(SCRIPT_DIR)
+ENGINE_DIR = os.path.join(FITNESS_DIR, "engine")
+GENERATORS_DIR = os.path.join(FITNESS_DIR, "generators")
+SCRIPTS_DIR = os.path.join(FITNESS_DIR, "scripts")
+
 
 def extract_functions(filepath):
-    with open(filepath, 'r', encoding='utf-8') as f:
+    """
+    Parse a Python file using the `ast` module to extract all function and class method definitions.
+    Captures the docstring and line number.
+    """
+    with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
-        
+
     tree = ast.parse(content)
     functions = []
-    
+
     for node in tree.body:
         if isinstance(node, ast.FunctionDef):
-            # Only document functions that sound like validators
-            if node.name.startswith('_validate_') or node.name == 'validate_type_specific':
+            if not node.name.startswith("__"):
                 docstring = ast.get_docstring(node)
                 if docstring:
-                    # Clean up docstring
-                    desc = " ".join(line.strip() for line in docstring.split("\n") if line.strip())
+                    desc = " ".join(
+                        line.strip() for line in docstring.split("\n") if line.strip()
+                    )
                 else:
                     desc = "*(No docstring provided)*"
-                    
-                functions.append({
-                    'name': node.name,
-                    'description': desc,
-                    'line': node.lineno
-                })
+
+                functions.append(
+                    {"name": node.name, "description": desc, "line": node.lineno}
+                )
         elif isinstance(node, ast.ClassDef):
             for item in node.body:
                 if isinstance(item, ast.FunctionDef):
-                    if item.name.startswith('_validate_') or item.name == 'validate_type_specific':
+                    if not item.name.startswith("__"):
                         docstring = ast.get_docstring(item)
                         if docstring:
-                            desc = " ".join(line.strip() for line in docstring.split("\n") if line.strip())
+                            desc = " ".join(
+                                line.strip()
+                                for line in docstring.split("\n")
+                                if line.strip()
+                            )
                         else:
                             desc = "*(No docstring provided)*"
-                        functions.append({
-                            'name': f"{node.name}.{item.name}",
-                            'description': desc,
-                            'line': item.lineno
-                        })
-    return sorted(functions, key=lambda x: x['name'])
+                        functions.append(
+                            {
+                                "name": f"{node.name}.{item.name}",
+                                "description": desc,
+                                "line": item.lineno,
+                            }
+                        )
+    return sorted(functions, key=lambda x: x["name"])
+
 
 def generate_markdown_table(all_funcs):
+    """
+    Format the extracted function metadata into a structured Markdown table.
+    Groups functions by their parent Python module (file path) for clarity.
+    """
     if not all_funcs:
         return "*No validation functions documented yet.*"
-        
-    lines = [
-        "| Module / Function | Description |",
-        "| :--- | :--- |"
-    ]
-    
-    for module, funcs in all_funcs.items():
+
+    lines = ["## List of functions\n"]
+
+    # Sort modules alphabetically
+    for module in sorted(all_funcs.keys()):
+        funcs = all_funcs[module]
         if not funcs:
             continue
+
+        lines.append(f"### `{module}`\n")
+        lines.append("| Function | Description |")
+        lines.append("| :--- | :--- |")
+
         for f in funcs:
-            name = f['name']
-            desc = f['description']
-            # Escape pipes just in case
-            desc = desc.replace('|', '\\|')
-            lines.append(f"| `{module}` <br> **{name}** | {desc} |")
-            
-    return "\n".join(lines)
+            name = f["name"]
+            desc = f["description"]
+            desc = desc.replace("|", "\\|")
+            lines.append(f"| **{name}** | {desc} |")
+        lines.append("")
+
+    return "\n".join(lines).strip()
+
 
 def inject_to_markdown(md_path, table_str):
+    """
+    Inject the generated Markdown table into the target file, replacing whatever content
+    exists between the `AUTO-GENERATED-FUNCTIONS` start and end marker tags.
+    """
     if not os.path.exists(md_path):
         print(f"File not found: {md_path}")
         return False
-        
-    with open(md_path, 'r', encoding='utf-8') as f:
+
+    with open(md_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    pattern = r'(<!-- AUTO-GENERATED-FUNCTIONS:START -->)(.*?)(<!-- AUTO-GENERATED-FUNCTIONS:END -->)'
-    
+    pattern = r"(<!-- AUTO-GENERATED-FUNCTIONS:START -->)(.*?)(<!-- AUTO-GENERATED-FUNCTIONS:END -->)"
+
     if not re.search(pattern, content, flags=re.DOTALL):
         print(f"Skipping {md_path} (No placeholder found)")
         return False
-    
+
     def replacer(match):
-        return f"{match.group(1)}\n{table_str}\n{match.group(3)}"
-    
+        return f"{match.group(1)}\n\n{table_str}\n\n{match.group(3)}"
+
     new_content = re.sub(pattern, replacer, content, flags=re.DOTALL)
-    
-    with open(md_path, 'w', encoding='utf-8') as f:
+
+    with open(md_path, "w", encoding="utf-8") as f:
         f.write(new_content)
-        
+
     return True
 
-def main():
-    target_md = os.path.join(os.path.dirname(PROJECT_ROOT), '00-governance', 'GDC-001-fitness-functions.md')
-    
-    modules_to_scan = [
-        ('core/global_validations.py', os.path.join(ENGINE_DIR, 'core', 'global_validations.py')),
-        ('validators/domains/adr_validator.py', os.path.join(ENGINE_DIR, 'validators', 'domains', 'adr_validator.py')),
-        ('validators/domains/sad_validator.py', os.path.join(ENGINE_DIR, 'validators', 'domains', 'sad_validator.py')),
-        ('validators/domains/pad_validator.py', os.path.join(ENGINE_DIR, 'validators', 'domains', 'pad_validator.py')),
-        ('validators/domains/ead_validator.py', os.path.join(ENGINE_DIR, 'validators', 'domains', 'ead_validator.py')),
-        ('validators/domains/std_validator.py', os.path.join(ENGINE_DIR, 'validators', 'domains', 'std_validator.py')),
-        ('validators/domains/tdd_validator.py', os.path.join(ENGINE_DIR, 'validators', 'domains', 'tdd_validator.py')),
-        ('validators/domains/gdc_validator.py', os.path.join(ENGINE_DIR, 'validators', 'domains', 'gdc_validator.py')),
-    ]
-    
+
+def update_directory_index(scan_dir):
+    """
+    Crawl a specific sub-ecosystem directory (e.g. `engine` or `generators`), extract all
+    Python function documentation within it, and inject the results into its local `INDEX.md`.
+    """
+    index_md = os.path.join(scan_dir, "INDEX.md")
+    if not os.path.exists(index_md):
+        return
+
     all_funcs = {}
-    
-    for mod_name, path in modules_to_scan:
-        if os.path.exists(path):
-            funcs = extract_functions(path)
-            if funcs:
-                all_funcs[mod_name] = funcs
-                
+
+    for root, dirs, files in os.walk(scan_dir):
+        # Allow walking into tests for the tests directory itself, but exclude caches
+        dirs[:] = [
+            d
+            for d in dirs
+            if d not in ["__pycache__", ".pytest_cache"] and not d.startswith(".")
+        ]
+
+        for file in files:
+            if file.endswith(".py") and not file.startswith("__"):
+                path = os.path.join(root, file)
+                rel_path = os.path.relpath(path, FITNESS_DIR).replace("\\", "/")
+
+                funcs = extract_functions(path)
+                if funcs:
+                    all_funcs[rel_path] = funcs
+
     table_str = generate_markdown_table(all_funcs)
-    
-    if inject_to_markdown(target_md, table_str):
-        print(f"[OK] Injected python function documentation into {target_md}")
-    else:
-        print("[FAIL] Failed to inject documentation.")
-        sys.exit(1)
+
+    if inject_to_markdown(index_md, table_str):
+        print(f"[OK] Injected python function documentation into {index_md}")
+
+
+def generate_cli_flowchart():
+    """
+    Scan engine/cli.py for special inline comments starting with `# @flow:`
+    and compile them into a Mermaid flowchart injected into engine/INDEX.md.
+    """
+    cli_path = os.path.join(ENGINE_DIR, "cli.py")
+    index_md = os.path.join(ENGINE_DIR, "INDEX.md")
+
+    if not os.path.exists(cli_path) or not os.path.exists(index_md):
+        return
+
+    with open(cli_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    flow_lines = []
+    for line in content.split("\n"):
+        match = re.search(r"#\s*@flow:\s*(.*)", line)
+        if match:
+            flow_lines.append(f"    {match.group(1).strip()}")
+
+    if not flow_lines:
+        return
+
+    table_str = "```mermaid\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+
+    with open(index_md, "r", encoding="utf-8") as f:
+        md_content = f.read()
+
+    pattern = r"(<!-- AUTO-GENERATED-CLI-FLOW:START -->)(.*?)(<!-- AUTO-GENERATED-CLI-FLOW:END -->)"
+    if not re.search(pattern, md_content, flags=re.DOTALL):
+        print(f"Skipping cli flowchart (No placeholder found in {index_md})")
+        return
+
+    def replacer(m):
+        return f"{m.group(1)}\n\n{table_str}\n\n{m.group(3)}"
+
+    new_content = re.sub(pattern, replacer, md_content, flags=re.DOTALL)
+
+    with open(index_md, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+    print(f"[OK] Injected CLI flowchart into {index_md}")
+
+
+def generate_validator_flowchart():
+    """
+    Scan engine/validators/base.py for special inline comments starting with `# @flow-validator:`
+    and compile them into a Mermaid flowchart injected into engine/INDEX.md.
+    """
+    validators_dir = os.path.join(ENGINE_DIR, "validators")
+    index_md = os.path.join(ENGINE_DIR, "INDEX.md")
+
+    if not os.path.exists(validators_dir) or not os.path.exists(index_md):
+        return
+
+    flow_lines = []
+    files_to_scan = ["base.py", "global_rules.py"]
+    for file_name in files_to_scan:
+        file_path = os.path.join(validators_dir, file_name)
+        if not os.path.exists(file_path):
+            continue
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        for line in content.split("\n"):
+            match = re.search(r"#\s*@flow-validator:\s*(.*)", line)
+            if match:
+                flow_lines.append(f"    {match.group(1).strip()}")
+
+    if not flow_lines:
+        return
+
+    table_str = "```mermaid\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+
+    with open(index_md, "r", encoding="utf-8") as f:
+        md_content = f.read()
+
+    pattern = r"(<!-- AUTO-GENERATED-VALIDATOR-FLOW:START -->)(.*?)(<!-- AUTO-GENERATED-VALIDATOR-FLOW:END -->)"
+    if not re.search(pattern, md_content, flags=re.DOTALL):
+        print(f"Skipping validator flowchart (No placeholder found in {index_md})")
+        return
+
+    def replacer(m):
+        return f"{m.group(1)}\n\n{table_str}\n\n{m.group(3)}"
+
+    new_content = re.sub(pattern, replacer, md_content, flags=re.DOTALL)
+
+    with open(index_md, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+    print(f"[OK] Injected Validator flowchart into {index_md}")
+
+
+def generate_domain_flowcharts():
+    """
+    Scan engine/validators/domains/*_validator.py for special inline comments starting with `# @flow-domain:`
+    and compile them into isolated Mermaid flowcharts injected into engine/INDEX.md.
+    """
+    domains_dir = os.path.join(ENGINE_DIR, "validators", "domains")
+    index_md = os.path.join(ENGINE_DIR, "INDEX.md")
+
+    if not os.path.exists(domains_dir) or not os.path.exists(index_md):
+        return
+
+    domain_sections = []
+
+    # Custom sort order defined by architecture hierarchy
+    order = ["gdc", "ead", "pad", "sad", "tdd", "adr", "std"]
+
+    def get_order(filename):
+        prefix = filename.split("_")[0].lower()
+        return order.index(prefix) if prefix in order else 999
+
+    # Sort files according to the custom hierarchy
+    files = sorted(
+        [f for f in os.listdir(domains_dir) if f.endswith("_validator.py")],
+        key=get_order,
+    )
+
+    for file_name in files:
+        file_path = os.path.join(domains_dir, file_name)
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        flow_lines = []
+        for line in content.split("\n"):
+            match = re.search(r"#\s*@flow-domain:\s*(.*)", line)
+            if match:
+                flow_lines.append(f"    {match.group(1).strip()}")
+
+        if flow_lines:
+            doc_type = file_name.split("_")[0].upper()
+            section = f"### {doc_type} Validator (`{file_name}`)\n"
+            section += "```mermaid\ngraph LR\n" + "\n".join(flow_lines) + "\n```\n"
+            domain_sections.append(section)
+
+    if not domain_sections:
+        return
+
+    full_str = "\n".join(domain_sections)
+
+    with open(index_md, "r", encoding="utf-8") as f:
+        md_content = f.read()
+
+    pattern = r"(<!-- AUTO-GENERATED-DOMAIN-FLOWS:START -->)(.*?)(<!-- AUTO-GENERATED-DOMAIN-FLOWS:END -->)"
+    if not re.search(pattern, md_content, flags=re.DOTALL):
+        print(f"Skipping domain flowcharts (No placeholder found in {index_md})")
+        return
+
+    def replacer(m):
+        return f"{m.group(1)}\n\n{full_str}\n{m.group(3)}"
+
+    new_content = re.sub(pattern, replacer, md_content, flags=re.DOTALL)
+
+    with open(index_md, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+    print(f"[OK] Injected Domain flowcharts into {index_md}")
+
+
+def main():
+    """
+    Main execution flow. Iterates through the core sub-ecosystems (engine, generators,
+    scripts, tests) and updates their respective INDEX.md files.
+    """
+    generate_cli_flowchart()
+    generate_validator_flowchart()
+    generate_domain_flowcharts()
+
+    dirs_to_update = [
+        os.path.join(FITNESS_DIR, "engine"),
+        os.path.join(FITNESS_DIR, "generators"),
+        os.path.join(FITNESS_DIR, "scripts"),
+        os.path.join(FITNESS_DIR, "tests"),
+    ]
+
+    for d in dirs_to_update:
+        update_directory_index(d)
+
 
 if __name__ == "__main__":
     main()

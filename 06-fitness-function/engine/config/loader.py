@@ -4,6 +4,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
+
 def deep_update(d: dict, u: dict) -> dict:
     """
     Recursively merge two dictionaries.
@@ -20,13 +21,14 @@ def deep_update(d: dict, u: dict) -> dict:
             d[k] = v
     return d
 
+
 def load_schema(schema_path: str) -> dict:
     """
     Load and parse a JSON schema file.
     Terminates the program if the file cannot be found.
     """
     try:
-        with open(schema_path, 'r', encoding='utf-8') as f:
+        with open(schema_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         logger.critical("Schema file '%s' not found.", schema_path)

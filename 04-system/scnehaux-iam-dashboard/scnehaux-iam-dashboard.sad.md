@@ -3,12 +3,12 @@ doc_meta:
   id: SAD-002
   title: Scnehaux IAM Dashboard Software Architecture (SAD)
   owner: Principal Frontend Architect
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: restricted
   governed_by: [GDC-000]
   review_cycle_days: 180
-  last_reviewed: "2026-05-18"
+  last_reviewed: '2026-05-18'
   parent_pad: PAD-001
 ---
 
@@ -77,6 +77,7 @@ graph TD
 ```
 
 ### 2.1 Architectural Boundaries
+
 - **Core Infrastructure (`core/`)**: Non-business mechanics — token lifecycle, HTTP interception, multi-tenant resolution, policy evaluation. Knows nothing about React components or domain logic.
 - **Domain Logic (`domain/`)**: Framework-agnostic TypeScript modules defining IAM bounded contexts (identity, access, organization) with strict Value Objects (e.g., `UserId`, `Email`).
 - **Feature UI (`features/`)**: React implementations. Strictly imports from `domain/` and `core/`. No cross-feature dependencies.
@@ -85,6 +86,7 @@ graph TD
 ## 3. Runtime Flows
 
 ### 3.1 Tenant Resolution & Provider Bootstrap
+
 Ensures cross-tenant data leakage is structurally impossible before rendering any feature.
 
 ```mermaid
@@ -104,6 +106,7 @@ sequenceDiagram
 ```
 
 ### 3.2 Authentication State Recovery Flow
+
 Arbitrates browser lifecycle events to maintain session integrity.
 
 ```mermaid
@@ -125,6 +128,7 @@ sequenceDiagram
 ```
 
 ### 3.3 Policy Engine RBAC Evaluation
+
 Evaluates permissions synchronously on the client using embedded JWT claims.
 
 ```mermaid
@@ -169,11 +173,11 @@ This is a client-rendered SPA with no server-side datastore.
 ## 7. Resilience & Failure Modes
 
 - **Token Refresh Race Conditions**: Handled via a Token Refresh Mutex; prevents duplicate refresh requests from triggering backend theft-detection.
-  - *Blast Radius*: **Single Client Session** — prevents accidental session invalidation for the current user.
+  - _Blast Radius_: **Single Client Session** — prevents accidental session invalidation for the current user.
 - **API Gateway Degradation**: HTTP interceptors automatically retry idempotent operations using exponential backoff.
-  - *Blast Radius*: **Temporary Degraded UX** — actions may take longer, but the application remains usable.
+  - _Blast Radius_: **Temporary Degraded UX** — actions may take longer, but the application remains usable.
 - **Cross-Tenant Contamination**: Prevented structurally by purging the `QueryClient` cache on tenant switch (graceful degradation to a clean state).
-  - *Blast Radius*: **Cross-Tenant Data Leak** — mitigated immediately upon tenant context switch.
+  - _Blast Radius_: **Cross-Tenant Data Leak** — mitigated immediately upon tenant context switch.
 
 ## 8. Observability & Operations
 
@@ -194,20 +198,26 @@ The IAM Dashboard is deployed as a stateless, client-rendered SPA.
 ## 10. Trade-offs & Alternatives
 
 ### 10.1 Server-Side Rendering (SSR / Edge)
-- *Rejected (deferred)*: Client-rendered SPA chosen for operational simplicity and authentication isolation. SSR/Edge rendering is intentionally deferred and may be revisited via a future ADR.
+
+- _Rejected (deferred)_: Client-rendered SPA chosen for operational simplicity and authentication isolation. SSR/Edge rendering is intentionally deferred and may be revisited via a future ADR.
 
 ### 10.2 Module Federation Runtime Shell
-- *Rejected*: The dashboard is deliberately excluded from the federated runtime to preserve its security perimeter and prevent contamination from less-privileged applications.
+
+- _Rejected_: The dashboard is deliberately excluded from the federated runtime to preserve its security perimeter and prevent contamination from less-privileged applications.
 
 ### 10.3 Rspack / Webpack Build
-- *Rejected*: With no federation requirement, Vite keeps the build pipeline lightweight (< 15 lines of config); Rspack's module-federation tooling would be unnecessary overhead. *Accepted trade-off*: a future move to a standalone repo accepts a low-friction Vite migration cost.
+
+- _Rejected_: With no federation requirement, Vite keeps the build pipeline lightweight (< 15 lines of config); Rspack's module-federation tooling would be unnecessary overhead. _Accepted trade-off_: a future move to a standalone repo accepts a low-friction Vite migration cost.
 
 ### 10.4 External Component Libraries (Radix / MUI)
-- *Rejected*: Prohibited to enforce enterprise brand consistency and minimize bundle payload; the dashboard consumes only `@scnx/core-ui`.
+
+- _Rejected_: Prohibited to enforce enterprise brand consistency and minimize bundle payload; the dashboard consumes only `@scnx/core-ui`.
 
 ## 11. Assumptions
+
 - Modern evergreen browsers are supported (ES2022 target).
 - Authentication state is managed via secure, HttpOnly cookies established by the IAM platform.
 
 ## 12. Compatibility Strategy
+
 - Graceful degradation for clients without JavaScript is not a requirement for this internal admin dashboard.

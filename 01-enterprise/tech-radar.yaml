@@ -1,22 +1,122 @@
+# tech-radar.yaml — Enterprise Technology Radar
+# Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
+# Owner: Architecture Authority
+# Last updated: 2026-07-06
+
 technology_radar:
   adopt:
-    - postgresql
-    - react
-    - golang
-    - kubernetes
-    - aws
+    - name: postgresql
+      category: database
+      date_adopted: 2025-01-15
+      owner: Architecture Authority
+      rationale_adr: null # Foundational — predates ADR framework
+
+    - name: react
+      category: frontend-framework
+      date_adopted: 2025-03-01
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-001
+
+    - name: golang
+      category: backend-language
+      date_adopted: 2025-01-15
+      owner: Architecture Authority
+      rationale_adr: null
+
+    - name: kubernetes
+      category: orchestration
+      date_adopted: 2025-01-15
+      owner: Platform Team
+      rationale_adr: null
+
+    - name: aws
+      category: cloud-provider
+      date_adopted: 2025-01-15
+      owner: Architecture Authority
+      rationale_adr: null
+
   trial:
-    - rust
-    - surrealdb
-    - oklch
+    - name: rust
+      category: systems-language
+      date_entered: 2026-03-01
+      owner: Platform Team
+      rationale_adr: null
+      trial_end_date: 2026-09-01
+
+    - name: surrealdb
+      category: database
+      date_entered: 2026-04-01
+      owner: AI Team
+      rationale_adr: null
+      trial_end_date: 2026-10-01
+
+    - name: oklch
+      category: color-space
+      date_entered: 2026-02-01
+      owner: UI Platform Team
+      rationale_adr: ADR-UIP-TKN-002
+
   assess:
-    - wasm
-    - bun
-    - module-federation
+    - name: wasm
+      category: runtime
+      date_entered: 2026-05-01
+      owner: Platform Team
+
+    - name: bun
+      category: javascript-runtime
+      date_entered: 2026-06-01
+      owner: UI Platform Team
+
+    - name: module-federation
+      category: frontend-architecture
+      date_entered: 2026-01-15
+      owner: UI Platform Team
+
   hold:
-    - angularjs
-    - jquery
-    - oracle-db
-    - svn
-    - cvs
-    - memcached
+    - name: angularjs
+      category: frontend-framework
+      date_hold: 2025-06-01
+      sunset_date: 2025-12-01
+      successor: react
+      migration_guide: STD-GLB-002
+      owner: Architecture Authority
+
+    - name: jquery
+      category: frontend-library
+      date_hold: 2025-06-01
+      sunset_date: 2025-12-01
+      successor: react
+      migration_guide: STD-GLB-002
+      owner: Architecture Authority
+
+    - name: oracle-db
+      category: database
+      date_hold: 2025-03-01
+      sunset_date: 2025-09-01
+      successor: postgresql
+      migration_guide: null
+      owner: Architecture Authority
+
+    - name: svn
+      category: version-control
+      date_hold: 2025-01-15
+      sunset_date: 2025-07-15
+      successor: git
+      migration_guide: null
+      owner: Architecture Authority
+
+    - name: cvs
+      category: version-control
+      date_hold: 2025-01-15
+      sunset_date: 2025-07-15
+      successor: git
+      migration_guide: null
+      owner: Architecture Authority
+
+    - name: memcached
+      category: caching
+      date_hold: 2026-01-01
+      sunset_date: 2026-07-01
+      successor: redis
+      migration_guide: null
+      owner: Platform Team

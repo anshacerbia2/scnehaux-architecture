@@ -4,7 +4,7 @@
   "title": "Standard Operating Procedure (STD) Validation Rules",
   "type": "object",
   "config": {
-    "target_doc": "GDC-008-std-guideline.md"
+    "target_doc": "GDC-007-std-guideline.md"
   },
   "allOf": [
     {

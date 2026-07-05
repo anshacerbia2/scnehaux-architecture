@@ -32,32 +32,38 @@ jobs:
           cache: "pip"
 
       - name: Install Package and Dependencies
-        run: pip install -e .[dev]
+        run: pip install -c constraints.txt -e .[dev]
 
-      - name: Run Validator Tests & Coverage Enforcer (>=94%)
-        run: python -m pytest --cov=validators --cov=linter --cov-fail-under=94 --cov-report=term-missing
+      - name: Enforce Compliance Gate (fail-fast)
+        run: make lint
 
-      - name: Verify Rules-Doc Sync (SSOT reconciliation)
+      - name: Run Validator Tests & Coverage Enforcer (>=95%)
+        run: make test
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify Code and Documentation Formatting
         run: |
-          python 06-fitness-function/generators/generate_rules_doc.py
-          git diff --exit-code 00-governance/GDC-002-compliance-engine.md || (echo "GDC-002 is out of sync with linting-rules.yaml. Run 06-fitness-function/generators/generate_rules_doc.py locally and commit the result." && exit 1)
+          make lint-code
+          make lint-docs-format
 
-      - name: Verify ADR Index Sync
+      - name: Verify Generators Sync (SSOT reconciliation)
         run: |
-          python 06-fitness-function/generators/generate_adr_index.py
-          git diff --exit-code 05-decisions/INDEX.md || (echo "ADR INDEX is out of sync. Run 06-fitness-function/generators/generate_adr_index.py locally and commit." && exit 1)
-
-      - name: Verify PAD/SAD Index Sync
-        run: |
-          python 06-fitness-function/generators/generate_pad_sad_index.py
-          git diff --exit-code 03-platform/INDEX.md 04-application/INDEX.md || (echo "PAD/SAD INDEX is out of sync. Run 06-fitness-function/generators/generate_pad_sad_index.py locally and commit." && exit 1)
+          make generate-docs
+          git diff --exit-code || (echo "Generators are out of sync. Run 'make generate-docs' locally and commit the result." && exit 1)
 
       - name: Verify Waiver Expirations
-        run: python 06-fitness-function/scripts/waiver-expiry-check.py
+        run: make check-waivers
+
+      - name: Validate CODEOWNERS paths
+        run: python 06-fitness-function/scripts/codeowners-validator.py
 
       - name: Generate SARIF report
         if: always()
-        run: python linter.py --format sarif > linter.sarif
+        run: make lint-sarif
         continue-on-error: true
 
       - name: Upload SARIF to code scanning
@@ -67,6 +73,5 @@ jobs:
           sarif_file: linter.sarif
         continue-on-error: true
 
-      - name: Enforce Compliance Gate (authoritative)
-        run: python linter.py --format text
+
 

@@ -4,7 +4,7 @@
   "title": "Technical Design Document (TDD) Validation Policies",
   "type": "object",
   "config": {
-    "target_doc": "GDC-012-tdd-guideline.md"
+    "target_doc": "GDC-011-tdd-guideline.md"
   },
   "allOf": [
     {
@@ -21,9 +21,7 @@
     "metadata_policies": {
       "title": "Metadata Policies",
       "description": "Policies for the YAML Frontmatter (doc_meta)",
-      "required": [
-        "doc_meta"
-      ],
+      "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
@@ -43,20 +41,12 @@
             "status": {
               "title": "Allowed Statuses",
               "type": "string",
-              "enum": [
-                "proposed",
-                "approved",
-                "deprecated"
-              ]
+              "enum": ["proposed", "approved", "deprecated"]
             },
             "classification": {
               "title": "Allowed Classifications",
               "type": "string",
-              "enum": [
-                "public",
-                "internal",
-                "restricted"
-              ]
+              "enum": ["public", "internal", "restricted"]
             },
             "id": {
               "title": "Document ID",
@@ -68,20 +58,14 @@
             },
             "owner": {
               "title": "Owner",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "version": {
               "title": "Version",
-              "type": [
-                "string",
-                "number"
-              ]
+              "type": ["string", "number"]
             },
             "review_cycle_days": {
               "title": "Review Cycle (Days)",

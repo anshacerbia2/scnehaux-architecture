@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-002
   title: Scnehaux UI Platform Architecture
   owner: Principal UI/UX Architect
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: restricted
   governed_by: [GDC-000]
@@ -18,7 +18,11 @@ doc_meta:
 
 ---
 
-## 1. Context & Scope
+## 1. Purpose
+
+This document defines the domain architecture, capabilities, and boundaries for the UI Platform.
+
+## 2. Context (Why this domain exists)
 
 **Purpose.** The Scnehaux UI Platform is the enterprise **Visual Root of Trust** — a shared presentation foundation that enforces visual consistency, strict styling isolation, and accessible interaction semantics across both standalone applications and federated micro-frontends. It eliminates brand fragmentation and lets a single primitive-layer (rendering or bundle-size) improvement propagate across the entire ecosystem.
 
@@ -28,17 +32,17 @@ doc_meta:
 - Guarantee zero visual contamination across applications and brands.
 - Guarantee accessibility (WCAG) semantics at the primitive layer, inherited by all consumers.
 
-**Non-Goals.** *(explicit boundaries — what this platform deliberately does NOT own)*
+**Non-Goals.** _(explicit boundaries — what this platform deliberately does NOT own)_
 
 - **Application / business logic**: the platform owns presentation, not domain behavior or business data.
 - **Per-product screens & visual identity**: product-specific compositions consume the platform; they are not defined here.
 - **Arbitrary third-party theming**: white-labeling is bounded by the partial-contract invariant (§5), not an open runtime theming engine.
 
-*(Draft — confirm these are the intended exclusions.)*
+_(Draft — confirm these are the intended exclusions.)_
 
 **Stakeholders.** Principal UI/UX Architect (owner); Frontend Architects, Application teams, Product Owners, and the ARB. Full RACI in §7.
 
-## 2. Business Capability
+## 3. Domain Capabilitiesy
 
 The platform provides a unified **3-Layer Visual Engine** capability:
 
@@ -48,9 +52,9 @@ The platform provides a unified **3-Layer Visual Engine** capability:
 
 **Capability Maturity.** Tier-1 shared platform — mature and adopted as the mandatory presentation foundation across all enterprise frontends.
 
-## 3. Domain Model
+## 5. Domain EventsModel
 
-**Bounded Contexts.** The capability decomposes into three logical layers, each a distinct context independent of any implementation:
+**## 4. Bounded Context Maps.** The capability decomposes into three logical layers, each a distinct context independent of any implementation:
 
 - **Primitive / Headless** — interaction and accessibility semantics.
 - **Design Tokens** — the design API (Core / Semantic / Component tiers).
@@ -67,7 +71,7 @@ graph TD
     AppRemote -->|Module Federation Shared Styles| Web
 ```
 
-The token architecture is grouped in isolation to guarantee zero visual contamination:
+The token## 6. Architecture Rules (Domain-Specific)n isolation to guarantee zero visual contamination:
 
 ```text
 [Tier 1: Core Primitives] -> [Tier 2: Global Semantic Contract] -> [Tier 3: Component Token]
@@ -99,7 +103,7 @@ Downstream applications and component systems (e.g., `scnehaux-iam-dashboard`, `
 - **Taxonomy & Naming Convention**: [ADR-UIP-TKN-003](../../05-decisions/ui-platform/design-tokens/ADR-UIP-TKN-003-token-taxonomy-and-naming-convention.md).
 - **Token Consumption Governance**: [STD-UIP-TKN-002](../../02-standards/ui-platform/design-tokens/STD-UIP-TKN-002-consumption-governance.md).
 
-## 6. Capability NFR Targets
+## 7. Traceability NFR Targets
 
 These are the capability's quantified promises; the mechanisms that achieve them live in the fulfilling SAD.
 

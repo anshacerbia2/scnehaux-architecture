@@ -22,7 +22,6 @@ It applies to all persistent datastores, caching layers, log targets, analytical
 
 ---
 
-
 ## 2. Design Principles
 
 Data ownership must be explicit and domain-bounded. Each domain retains exclusive write authority over its data. Cross-domain data access must pass through published integration contracts, never direct database queries.
@@ -34,7 +33,7 @@ Data ownership must be explicit and domain-bounded. Each domain retains exclusiv
 To safeguard sensitive information, all application data fields must map to one of four classification tiers:
 
 | Tier | Classification | Description & Examples | Encryption Requirement |
-| :--- | :--- | :--- | :--- |
+| :-- | :-- | :-- | :-- |
 | **Tier 1** | **Restricted PII** | Passwords, private keys, national IDs, payroll details. | Column-level envelope encryption at rest. |
 | **Tier 2** | **Identifiable PII** | Full name, email address, physical address, phone number. | Standard database encryption at rest. |
 | **Tier 3** | **Internal Data** | Tenant internal configs, system logs, business workflows. | Standard database encryption at rest. |
@@ -69,10 +68,10 @@ Applications must support the legal right of users to be forgotten.
 Disaster recovery plans must commit to defined data recovery limits.
 
 - **Recovery Point Objective (RPO)**:
-  - *Tier 1 & 2 Datastores*: RPO must not exceed `3600s` (1 hour). High-availability replication must maintain real-time copies.
-  - *Internal Config Datastores*: RPO must not exceed `86400s` (24 hours).
+  - _Tier 1 & 2 Datastores_: RPO must not exceed `3600s` (1 hour). High-availability replication must maintain real-time copies.
+  - _Internal Config Datastores_: RPO must not exceed `86400s` (24 hours).
 - **Recovery Time Objective (RTO)**:
-  - *Primary Portal Access*: RTO must not exceed `14400s` (4 hours) for full service restoration after a catastrophic site failure.
+  - _Primary Portal Access_: RTO must not exceed `14400s` (4 hours) for full service restoration after a catastrophic site failure.
 - **Testing Cadence**: Backup restore drills must execute automatically once every `90 days` to verify image and script integrity.
 
 ---
@@ -82,7 +81,9 @@ Disaster recovery plans must commit to defined data recovery limits.
 To prevent data quality degradation and logical domain leakage in large-scale multi-domain environments, all corporate and tenant data elements must map to a designated Domain Data Owner:
 
 #### Owner Responsibilities
+
 Domain Data Owners are accountable for the lifecycle of their domain data, specifically:
+
 - **Access Control Approval**: Approving all access permission grants and API consumer integrations targeting the domain.
 - **Schema Modification Sign-off**: Reviewing and approving all database schema updates or event contract modifications.
 - **Retention & Purge Verification**: Conducting quarterly verification checks that data retention and GDPR purge operations conform to standard rules.
@@ -93,14 +94,13 @@ Domain Data Owners are accountable for the lifecycle of their domain data, speci
 All data schemas, tables, and attributes must align to this domain ownership matrix:
 
 | Domain | Data Scope Examples | Domain Data Owner |
-| :--- | :--- | :--- |
+| :-- | :-- | :-- |
 | **Identity & Access Management (IAM)** | User credentials, multi-factor auth states, OAuth tokens, authorization policies. | Security & IAM Engineering Team |
 | **Core Human Resources (HR)** | Employee records, organizational hierarchies, contracts, onboarding workflows. | Core HR Systems Team |
 | **Payroll & Compensation** | Bank account details, salary structures, tax filings, payroll transactions. | Payroll Engineering Team |
 | **Time & Attendance** | Time-clock records, check-in locations, leave requests, overtime approvals. | Workforce Operations Team |
 
 ---
-
 
 ## 4. Exceptions
 

@@ -4,7 +4,7 @@
   "title": "Enterprise Architecture Document (EAD) Validation Policies",
   "type": "object",
   "config": {
-    "target_doc": "GDC-007-ead-guideline.md"
+    "target_doc": "GDC-006-ead-guideline.md"
   },
   "allOf": [
     {
@@ -21,9 +21,7 @@
     "metadata_policies": {
       "title": "Metadata Policies",
       "description": "Policies for the YAML Frontmatter (doc_meta)",
-      "required": [
-        "doc_meta"
-      ],
+      "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
@@ -43,24 +41,17 @@
             "status": {
               "title": "Allowed Statuses",
               "type": "string",
-              "enum": [
-                "proposed",
-                "approved",
-                "deprecated"
-              ]
+              "enum": ["proposed", "approved", "deprecated"]
             },
             "classification": {
               "title": "Allowed Classifications",
               "type": "string",
-              "enum": [
-                "public",
-                "internal",
-                "restricted"
-              ]
+              "enum": ["public", "internal", "restricted"]
             },
             "id": {
               "title": "Document ID",
-              "type": "string"
+              "type": "string",
+              "pattern": "^EAD-\\d{3}$"
             },
             "title": {
               "title": "Document Title",
@@ -68,30 +59,21 @@
             },
             "governed_by": {
               "title": "Governed By",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "owner": {
               "title": "Owner",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "version": {
               "title": "Version",
-              "type": [
-                "string",
-                "number"
-              ]
+              "type": ["string", "number"]
             },
             "review_cycle_days": {
               "title": "Review Cycle (Days)",
@@ -113,113 +95,21 @@
         "Purpose",
         "Scope",
         "Enterprise Context",
+        "Architectural Drivers & Lessons",
         "Architecture Model",
         "Principles & Rules",
+        "Alternatives Considered",
+        "Single Points of Failure & Graceful Degradation",
         "Ownership",
         "Dependencies",
         "Traceability"
       ],
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "doc_meta": {
-                "properties": {
-                  "id": {
-                    "const": "EAD-001"
-                  }
-                }
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "Vision",
-              "Mission",
-              "Strategic Objectives",
-              "Business Capability Map",
-              "Value Stream",
-              "Operating Model",
-              "Team Topology Principles",
-              "Stakeholder"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "doc_meta": {
-                "properties": {
-                  "id": {
-                    "const": "EAD-002"
-                  }
-                }
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "Enterprise Data Principles",
-              "Master Data",
-              "Data Ownership",
-              "Data Classification",
-              "Data Governance",
-              "Data Lifecycle",
-              "Data Flow Landscape"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "doc_meta": {
-                "properties": {
-                  "id": {
-                    "const": "EAD-003"
-                  }
-                }
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "Application Portfolio",
-              "Application Interaction",
-              "Application Classification",
-              "Build vs Buy",
-              "Enterprise Integration Strategy"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "doc_meta": {
-                "properties": {
-                  "id": {
-                    "const": "EAD-004"
-                  }
-                }
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "Cloud Strategy",
-              "Security Principles",
-              "Observability Principles",
-              "Platform Strategy",
-              "Technology Principles",
-              "Technology Radar"
-            ]
-          }
-        }
-      ],
       "recommended": [
-        "Risks & Constraints",
+        "Assumptions",
+        "Constraints",
+        "Risks",
         "Future Direction",
-        "References",
-        "Glossary"
+        "References"
       ],
       "x-titles": {
         "required": "Required Sections",
@@ -229,7 +119,146 @@
     "content_policies": {
       "title": "Content Quality Policies",
       "description": "Policies for required and recommended keywords inside specific Markdown sections",
-      "properties": {}
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "doc_meta": { "properties": { "id": { "const": "EAD-001" } } }
+            }
+          },
+          "then": {
+            "properties": {
+              "Architecture Model": {
+                "allOf": [
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Macro Capability Map" },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Domain Ownership Matrix"
+                  },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Strategic Domain Classification"
+                  },
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Capability Evolution" }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_meta": { "properties": { "id": { "const": "EAD-002" } } }
+            }
+          },
+          "then": {
+            "properties": {
+              "Architecture Model": {
+                "allOf": [
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Global System Landscape"
+                  },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Platform vs Product Topology"
+                  },
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?System Dependency" },
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?External Ecosystem" }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_meta": { "properties": { "id": { "const": "EAD-003" } } }
+            }
+          },
+          "then": {
+            "properties": {
+              "Architecture Model": {
+                "allOf": [
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Data Ownership" },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Transactional & Analytical Boundary"
+                  },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Data Movement Strategy"
+                  },
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Data Governance" }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_meta": { "properties": { "id": { "const": "EAD-004" } } }
+            }
+          },
+          "then": {
+            "properties": {
+              "Architecture Model": {
+                "allOf": [
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Enterprise Context Map"
+                  },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Communication Strategy"
+                  },
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Contract Governance" },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Gateway & Broker Topology"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_meta": { "properties": { "id": { "const": "EAD-005" } } }
+            }
+          },
+          "then": {
+            "properties": {
+              "Architecture Model": {
+                "allOf": [
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Platform Topology" },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Internal Developer Platform Strategy"
+                  },
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Runtime Strategy" },
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Operational Model" }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_meta": { "properties": { "id": { "const": "EAD-006" } } }
+            }
+          },
+          "then": {
+            "properties": {
+              "Architecture Model": {
+                "allOf": [
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Zero Trust Boundary" },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Enterprise IAM Strategy"
+                  },
+                  {
+                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Security Control Architecture"
+                  },
+                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Data Protection" }
+                ]
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

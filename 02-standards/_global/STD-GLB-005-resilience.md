@@ -16,12 +16,11 @@ doc_meta:
 
 ## 1. Objective & Scope
 
-This standard establishes the mandatory patterns and thresholds for enforcing resilience and handling cascading failures across all backend microservices, data layers, and network interfaces within the Scnehaux enterprise. 
+This standard establishes the mandatory patterns and thresholds for enforcing resilience and handling cascading failures across all backend microservices, data layers, and network interfaces within the Scnehaux enterprise.
 
 It covers circuit breaking, service timeouts, bulkhead isolation, and retry execution strategies, ensuring service availability remains within SLA commitments.
 
 ---
-
 
 ## 2. Design Principles
 
@@ -68,8 +67,7 @@ Services must segment resources to isolate failures to a single downstream depen
 Retrying failed operations must implement random delays to prevent retry storms (thundering herd problem).
 
 - **Retry Applicability**: Retries are permitted only for transient failures (HTTP 502, 503, 504, or network socket timeouts). Retries are prohibited for validation errors (HTTP 4xx) or authentication failures.
-- **Delays (Backoff)**: Retries must use exponential backoff:
-  $$T_i = \min(T_{\max}, T_{\text{initial}} \times 2^i) + \text{random\_jitter}$$
+- **Delays (Backoff)**: Retries must use exponential backoff: $$T_i = \min(T_{\max}, T_{\text{initial}} \times 2^i) + \text{random\_jitter}$$
   - $T_{\text{initial}}$ must be at least `100ms`.
   - $T_{\max}$ must be capped at `3000ms`.
   - Jitter must add a random variance of `0` to `50%` of the delay step.
@@ -82,9 +80,9 @@ Retrying failed operations must implement random delays to prevent retry storms 
 To prevent service collapse under load spike conditions, services must implement active load shedding by rejecting low-priority requests when host resource limits are breached:
 
 - **Shedding Thresholds**: Load shedding must activate automatically if any of the following host metrics are breached:
-  - *CPU Utilization*: Host CPU utilization exceeds `85%` for longer than `10 consecutive seconds`.
-  - *Memory Pressure*: Container memory utilization exceeds `90%` of its allocated cgroup limit.
-  - *Request Queue Length*: The pending request buffer queue length exceeds `500 requests`.
+  - _CPU Utilization_: Host CPU utilization exceeds `85%` for longer than `10 consecutive seconds`.
+  - _Memory Pressure_: Container memory utilization exceeds `90%` of its allocated cgroup limit.
+  - _Request Queue Length_: The pending request buffer queue length exceeds `500 requests`.
 - **Request Priority Classification**: Ingress requests must carry or resolve a priority header class:
   - **Priority 1 (System-Critical)**: Token verification, session authentication, transactional writes, database ledger entries.
   - **Priority 2 (Standard Operations)**: Core user interactions, read queries, configuration checks.
@@ -96,7 +94,6 @@ To prevent service collapse under load spike conditions, services must implement
 - **Rejection Behavior**: Shed requests must return an HTTP `503 Service Unavailable` or `429 Too Many Requests` status, accompanied by a `Retry-After` header indicating a cooldown window of `10 seconds`.
 
 ---
-
 
 ## 4. Exceptions
 

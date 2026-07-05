@@ -1,6 +1,5 @@
 __pycache__/
 *.stackdump
-.vscode/
 *.zip
 *.pyc
 .antigravity*

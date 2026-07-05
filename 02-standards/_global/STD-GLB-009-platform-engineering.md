@@ -16,12 +16,11 @@ doc_meta:
 
 ## 1. Objective & Scope
 
-This standard defines the mandatory architectures, self-service interfaces, Golden Path templates, and integration contracts for the Internal Developer Platform (IDP) within the Scnehaux enterprise. 
+This standard defines the mandatory architectures, self-service interfaces, Golden Path templates, and integration contracts for the Internal Developer Platform (IDP) within the Scnehaux enterprise.
 
 It covers Developer Portals, resource provisioning mechanisms, service catalogs, and infrastructure orchestration APIs. These rules ensure consistency, eliminate setup toil, and enforce security policies at the platform layer.
 
 ---
-
 
 ## 2. Design Principles
 
@@ -35,9 +34,9 @@ To coordinate software discovery and developer onboarding:
 
 - **Centralized Software Catalog**: Every production service, micro-frontend, library, and data pipeline must register a `catalog-info.yaml` file in its root directory. Services that are not cataloged are blocked from deployment.
 - **Service Catalog Metadata**: The registration metadata must declare:
-  - *Identity*: Service name, description, and unique system namespace.
-  - *Ownership*: The designated engineering group and primary domain (e.g. `payroll-team`).
-  - *Context*: API definitions (OpenAPI/AsyncAPI) and runtime dependencies.
+  - _Identity_: Service name, description, and unique system namespace.
+  - _Ownership_: The designated engineering group and primary domain (e.g. `payroll-team`).
+  - _Context_: API definitions (OpenAPI/AsyncAPI) and runtime dependencies.
 - **Lifecycle Indicators**: Services must list their operational lifecycle state (Experimental, Production, or Deprecated) within the catalog.
 
 ---
@@ -48,9 +47,9 @@ Platform engineering must provide standardized software templates ("Golden Paths
 
 - **Unified Template Registries**: Teams creating new services must use the platform portal's software templates. Creating services from scratch or manual copy-pasting is prohibited.
 - **Service Boilerplate Standards**:
-  - *Directory Layout*: Repository structures must follow the standardized structure (e.g. `/cmd`, `/internal`, `/pkg` for Go services).
-  - *Baseline Integrations*: Templates must include pre-configured OpenTelemetry libraries, Prometheus `/metrics` endpoints, and JSON logger middlewares.
-  - *CI/CD Configuration*: Service initializations must generate standard GitHub Actions or GitLab CI files containing active linter checks, test stages, and dependency-auditing steps.
+  - _Directory Layout_: Repository structures must follow the standardized structure (e.g. `/cmd`, `/internal`, `/pkg` for Go services).
+  - _Baseline Integrations_: Templates must include pre-configured OpenTelemetry libraries, Prometheus `/metrics` endpoints, and JSON logger middlewares.
+  - _CI/CD Configuration_: Service initializations must generate standard GitHub Actions or GitLab CI files containing active linter checks, test stages, and dependency-auditing steps.
 
 ---
 
@@ -73,7 +72,6 @@ To decouple infrastructure requests from manual operations support tickets:
 - **Audit Logging**: Every platform engineering provision, catalog modification, or state change must emit a structured audit log stored in the immutable security archive.
 
 ---
-
 
 ## 4. Exceptions
 

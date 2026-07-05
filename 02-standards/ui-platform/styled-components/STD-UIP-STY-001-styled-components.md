@@ -36,6 +36,7 @@ The styling and compilation engine adheres to four core principles to ensure ren
 ### Zero-Runtime Compilation
 
 All styling engines deployed within the UI platform (such as static CSS-in-JS engines or Sass/SCSS compilers) must compile styles statically during the application build phase.
+
 - **Prohibition of Runtime CSS-in-JS**: Using styling libraries that perform runtime style injection or dynamic evaluation in the React render path (such as legacy runtime CSS-in-JS libraries) is prohibited on performance-sensitive paths.
 - **Atomic Extraction**: Styling rules must compile down to atomic static CSS class strings.
 
@@ -44,6 +45,7 @@ All styling engines deployed within the UI platform (such as static CSS-in-JS en
 ### Style Encapsulation in Federated Environments
 
 To prevent visual layout conflicts when multiple micro-frontends share the same browser DOM environment:
+
 - **Global Selector Prohibition**: Micro-frontends and shared component libraries are prohibited from using global CSS selectors. Style boundaries must use local CSS Modules or unique class prefixes.
 - **Prefix Isolation**: CSS class names must be prefixed uniquely based on the domain boundary:
   - Core design system: `scnx-` prefix.
@@ -58,7 +60,6 @@ To prevent visual layout conflicts when multiple micro-frontends share the same 
 - **Bundle Size Checks**: Build processes must track styling output bundles to prevent layout CSS bloat.
 
 ---
-
 
 ## 4. Exceptions
 

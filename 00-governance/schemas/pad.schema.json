@@ -4,7 +4,7 @@
   "title": "Product Architecture Document (PAD) Validation Policies",
   "type": "object",
   "config": {
-    "target_doc": "GDC-009-pad-guideline.md"
+    "target_doc": "GDC-008-pad-guideline.md"
   },
   "allOf": [
     {
@@ -21,9 +21,7 @@
     "metadata_policies": {
       "title": "Metadata Policies",
       "description": "Policies for the YAML Frontmatter (doc_meta)",
-      "required": [
-        "doc_meta"
-      ],
+      "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
@@ -45,20 +43,12 @@
             "status": {
               "title": "Allowed Statuses",
               "type": "string",
-              "enum": [
-                "proposed",
-                "approved",
-                "deprecated"
-              ]
+              "enum": ["proposed", "approved", "deprecated"]
             },
             "classification": {
               "title": "Allowed Classifications",
               "type": "string",
-              "enum": [
-                "public",
-                "internal",
-                "restricted"
-              ]
+              "enum": ["public", "internal", "restricted"]
             },
             "id": {
               "title": "Document ID",
@@ -70,47 +60,32 @@
             },
             "governed_by": {
               "title": "Governed By",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "owner": {
               "title": "Owner",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "version": {
               "title": "Version",
-              "type": [
-                "string",
-                "number"
-              ]
+              "type": ["string", "number"]
             },
             "realizes_capability": {
               "title": "Realizes Capability",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "fulfilled_by": {
               "title": "Fulfilled By",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
@@ -144,11 +119,7 @@
         "Ownership & Governance",
         "Traceability"
       ],
-      "recommended": [
-        "Known Constraints",
-        "Product Evolution",
-        "References"
-      ],
+      "recommended": ["Known Constraints", "Product Evolution", "References"],
       "x-titles": {
         "required": "Required Sections",
         "recommended": "Recommended Sections"
@@ -162,10 +133,10 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*Capability[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Capability\\b"
             },
             {
-              "pattern": "[\\s\\S]*Maturity[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Maturity\\b"
             }
           ],
           "x-titles": {
@@ -176,18 +147,16 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*Trust[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Trust\\b"
             },
             {
-              "pattern": "[\\s\\S]*Data[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Data\\b"
             },
             {
-              "pattern": "[\\s\\S]*Compliance[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Compliance\\b"
             }
           ],
-          "recommended": [
-            "Identity"
-          ],
+          "recommended": ["Identity"],
           "x-titles": {
             "required": "Trust & Data Boundaries (Required)",
             "recommended": "Trust & Data Boundaries (Recommended)"
@@ -197,16 +166,16 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*Purpose[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Purpose\\b"
             },
             {
-              "pattern": "[\\s\\S]*Goals[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Goals\\b"
             },
             {
-              "pattern": "[\\s\\S]*Non-Goal[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Non-Goal\\b"
             },
             {
-              "pattern": "[\\s\\S]*Stakeholder[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Stakeholder\\b"
             }
           ],
           "x-titles": {
@@ -217,15 +186,13 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*Bounded Context[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Bounded Context\\b"
             },
             {
-              "pattern": "[\\s\\S]*Context Mapping[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Context Mapping\\b"
             }
           ],
-          "recommended": [
-            "Domain Event"
-          ],
+          "recommended": ["Domain Event"],
           "x-titles": {
             "required": "Domain Model (Required)",
             "recommended": "Domain Model (Recommended)"
@@ -235,10 +202,10 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*Owner[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Owner\\b"
             },
             {
-              "pattern": "[\\s\\S]*fulfilled_by[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)fulfilled_by\\b"
             }
           ],
           "x-titles": {
@@ -249,20 +216,16 @@
           "type": "string",
           "allOf": [
             {
-              "pattern": "[\\s\\S]*API[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)API\\b"
             },
             {
-              "pattern": "[\\s\\S]*Consumer[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Consumer\\b"
             },
             {
-              "pattern": "[\\s\\S]*Dependencies[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Dependencies\\b"
             }
           ],
-          "recommended": [
-            "Event",
-            "Provider",
-            "External"
-          ],
+          "recommended": ["Event", "Provider", "External"],
           "x-titles": {
             "required": "Integration Contracts (Required)",
             "recommended": "Integration Contracts (Recommended)"

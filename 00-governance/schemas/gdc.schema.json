@@ -4,7 +4,7 @@
   "title": "Governance & Decision Control (GDC) Validation Policies",
   "type": "object",
   "config": {
-    "target_doc": "GDC-006-gdc-guideline.md"
+    "target_doc": "GDC-005-gdc-guideline.md"
   },
   "allOf": [
     {
@@ -21,9 +21,7 @@
     "metadata_policies": {
       "title": "Metadata Policies",
       "description": "Policies for the YAML Frontmatter (doc_meta)",
-      "required": [
-        "doc_meta"
-      ],
+      "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
@@ -50,48 +48,31 @@
             },
             "governed_by": {
               "title": "Governed By",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "owner": {
               "title": "Owner",
-              "type": [
-                "string",
-                "array"
-              ],
+              "type": ["string", "array"],
               "items": {
                 "type": "string"
               }
             },
             "version": {
               "title": "Version",
-              "type": [
-                "string",
-                "number"
-              ]
+              "type": ["string", "number"]
             },
             "status": {
               "title": "Allowed Statuses",
               "type": "string",
-              "enum": [
-                "approved",
-                "draft"
-              ]
+              "enum": ["approved", "draft"]
             },
             "classification": {
               "title": "Allowed Classifications",
               "type": "string",
-              "enum": [
-                "public",
-                "internal",
-                "restricted",
-                "confidential"
-              ]
+              "enum": ["public", "internal", "restricted", "confidential"]
             },
             "review_cycle_days": {
               "title": "Review Cycle (Days)",
@@ -109,10 +90,7 @@
     "section_policies": {
       "title": "Section Policies",
       "description": "Policies for required and recommended sections in the Markdown body",
-      "required": [
-        "Context & Scope",
-        "Policy Framework"
-      ],
+      "required": ["Context & Scope", "Policy Framework"],
       "recommended": [
         "Enforcement Mechanism",
         "Enforcement Mechanism & Rule Reconciliation",
@@ -141,25 +119,26 @@
       "description": "Policies for required and recommended keywords inside specific Markdown sections",
       "properties": {
         "Policy Framework": {
-          "type": "string",
-          "x-titles": {
-            "required": "Policy Framework (Required Keywords for GDC Guideline)"
-          },
-          "if": {
-            "properties": {
-              "filename": {
-                "pattern": ".*-guideline\\.md$"
-              }
-            }
-          },
-          "then": {
+          "type": "string"
+        }
+      },
+      "if": {
+        "properties": {
+          "filename": {
+            "pattern": ".*-guideline\\.md$"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "Policy Framework": {
             "allOf": [
               {
-                "pattern": "[\\s\\S]*Semantic Definitions[\\s\\S]*"
+                "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Semantic Definitions\\b"
               }
             ],
             "if": {
-              "pattern": "[\\s\\S]*Semantic Definitions[\\s\\S]*"
+              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Semantic Definitions\\b"
             },
             "then": {
               "x-titles": {
@@ -167,20 +146,23 @@
               },
               "allOf": [
                 {
-                  "pattern": "[\\s\\S]*Naming Conventions[\\s\\S]*"
+                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Naming Conventions\\b"
                 },
                 {
-                  "pattern": "[\\s\\S]*Taxonomy[\\s\\S]*"
+                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Taxonomy\\b"
                 },
                 {
-                  "pattern": "[\\s\\S]*Directory Structure[\\s\\S]*"
+                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Directory Structure\\b"
                 },
                 {
-                  "pattern": "[\\s\\S]*Artifact Section[\\s\\S]*"
+                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Metadata Schema Properties\\b"
+                },
+                {
+                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Artifact Section\\b"
                 }
               ],
               "if": {
-                "pattern": "[\\s\\S]*Metadata Schema Properties[\\s\\S]*"
+                "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Metadata Schema Properties\\b"
               },
               "then": {
                 "x-titles": {
@@ -188,13 +170,13 @@
                 },
                 "allOf": [
                   {
-                    "pattern": "[\\s\\S]*Allowed Lifecycle Statuses[\\s\\S]*"
+                    "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Allowed Lifecycle Statuses\\b"
                   },
                   {
-                    "pattern": "[\\s\\S]*Allowed Classifications[\\s\\S]*"
+                    "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Allowed Classifications\\b"
                   },
                   {
-                    "pattern": "[\\s\\S]*Semantic Versioning Classification[\\s\\S]*"
+                    "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Semantic Versioning Classification\\b"
                   }
                 ]
               }

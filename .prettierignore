@@ -1,0 +1,18 @@
+# Virtual environments and caches
+__pycache__/
+.venv/
+env/
+.pytest_cache/
+.ruff_cache/
+
+# Coverage and build outputs
+htmlcov/
+scnehaux_linter.egg-info/
+build/
+dist/
+
+# Git and GitHub
+.git/
+
+# Ignore old/scratch files
+scratch_*.py

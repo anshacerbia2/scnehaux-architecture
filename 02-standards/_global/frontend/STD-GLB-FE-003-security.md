@@ -22,7 +22,6 @@ The scope of this standard applies to all client-side storage, outbound API comm
 
 ---
 
-
 ## 2. Design Principles
 
 Frontend security is defense-in-depth: strict Content Security Policies, input sanitization at the boundary, and secure credential storage are non-negotiable. Client-side code must never trust user input or expose sensitive tokens in client state.
@@ -74,7 +73,6 @@ All SPAs must be served with the following hardened HTTP security headers:
 - **XSS Prevention**: Direct DOM manipulation and `dangerouslySetInnerHTML` are prohibited unless wrapping a strictly validated Markdown sanitizer (e.g., DOMPurify).
 
 ---
-
 
 ## 4. Exceptions
 

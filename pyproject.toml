@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scnehaux-linter"
-version = "1.2.0"
+version = "1.3.0"
 description = "Scnehaux Architecture Documentation Governance Linter"
 license = "MIT"
 requires-python = ">=3.11"
@@ -20,14 +20,28 @@ dev = [
     "pytest-cov==7.1.0",
 ]
 
+# The engine package physically lives under 06-fitness-function/ (a directory whose
+# name is not a valid Python identifier), so setuptools cannot auto-discover it.
+# Point discovery at that directory explicitly so `pip install` exposes `engine`.
+[tool.setuptools.packages.find]
+where = ["06-fitness-function"]
+include = ["engine*"]
+
+# Canonical entrypoint. `python linter.py` never existed; the Master Fitness
+# Function is engine.cli:main, exposed as the `scnehaux-lint` console script.
+[project.scripts]
+scnehaux-lint = "engine.cli:main"
+
 [tool.pytest.ini_options]
 testpaths = ["06-fitness-function/tests"]
-pythonpath = ["06-fitness-function/engine"]
-addopts = "--cov=engine --cov-fail-under=90 --cov-report=term-missing"
-
-[tool.coverage.run]
-source = ["engine"]
-omit = ["validators/tests/*"]
+# Must be the package ROOT (parent of `engine`), matching production imports
+# (`from engine.parsing...`). Pointing at .../engine masked crawler.py's broken
+# `from parsing...` import — tests were green while the real CLI was dead.
+pythonpath = ["06-fitness-function"]
+addopts = "--cov=engine --cov-fail-under=95 --cov-report=term-missing"
 
 [tool.pyright]
-extraPaths = ["06-fitness-function", "06-fitness-function/engine"]
+extraPaths = ["06-fitness-function"]
+
+[tool.ruff.lint.per-file-ignores]
+"06-fitness-function/tests/**/*.py" = ["E402"]

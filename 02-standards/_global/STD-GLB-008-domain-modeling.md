@@ -16,12 +16,11 @@ doc_meta:
 
 ## 1. Objective & Scope
 
-This standard establishes the mandatory patterns, structural constraints, and lifecycle rules for modeling domain logic across all applications within the Scnehaux enterprise. 
+This standard establishes the mandatory patterns, structural constraints, and lifecycle rules for modeling domain logic across all applications within the Scnehaux enterprise.
 
 It defines Bounded Context boundaries, Aggregate invariants, entity separation, Value Object properties, and transactional boundaries. These rules prevent domain pollution, enforce logical segregation, and ensure that data mutations remain consistent.
 
 ---
-
 
 ## 2. Design Principles
 
@@ -36,8 +35,8 @@ To prevent logical domain leakage and facilitate clean service boundaries:
 - **Strict Bounded Context Alignment**: Every microservice or module within a Modular Monolith must correspond to exactly one Bounded Context (e.g. Identity, Core HR, Payroll, Time & Attendance).
 - **Ubiquitous Language Enforcement**: Domain models, database schema columns, API request fields, and code variables must utilize the naming conventions defined in the domain dictionary. Alternate synonyms or colloquial translations are prohibited.
 - **Upstream/Downstream Integration Patterns**:
-  - *Anti-Corruption Layer (ACL)*: A downstream context consuming data from an legacy external system must translate incoming payloads using a dedicated ACL module. The downstream domain logic must never reference external schemas directly.
-  - *Shared Kernel Restrictions*: Shared kernels are restricted strictly to utility libraries (e.g. date formatters, encryption utils). Shared core domain entities across different Bounded Contexts are prohibited.
+  - _Anti-Corruption Layer (ACL)_: A downstream context consuming data from an legacy external system must translate incoming payloads using a dedicated ACL module. The downstream domain logic must never reference external schemas directly.
+  - _Shared Kernel Restrictions_: Shared kernels are restricted strictly to utility libraries (e.g. date formatters, encryption utils). Shared core domain entities across different Bounded Contexts are prohibited.
 
 ---
 
@@ -57,7 +56,7 @@ To enforce domain integrity and prevent transaction deadlocks under load, servic
 
 1.  **IAM Domain Consistency Mapping**:
     - **User Aggregate Boundary**: Encompasses the `User` root entity, `Credential` records (e.g. password hashes), and `Session` metadata. Mutating these records in a single database transaction block is permitted.
-    - **Isolation Constraint**: The User aggregate transaction must not modify the state of the `Tenant`, `Role`, or `Permission` aggregates. 
+    - **Isolation Constraint**: The User aggregate transaction must not modify the state of the `Tenant`, `Role`, or `Permission` aggregates.
     - **Cross-Aggregate Association**: Users associate with Roles and Tenants strictly via identifier references (`RoleID`, `TenantID`). Modifying User roles must change only the identifier reference stored in the User aggregate.
 2.  **State Synchronization Rules**:
     - **Tenant Deactivation Flow**: If a Tenant state changes to inactive, the Tenant aggregate must not update User login statuses in the database. Instead, the Tenant aggregate publishes a `TenantDeactivatedEvent`. The Identity service handles this event asynchronously to invalidate associated User sessions in the background.
@@ -82,7 +81,6 @@ Domain models must protect business rules (invariants) actively at memory bounda
 - **Domain Services Scope**: Business logic that does not naturally belong to a single Aggregate (e.g., executing cross-aggregate payroll checks) must be isolated within a Domain Service. Domain Services must be stateless and must not maintain internal operational variables.
 
 ---
-
 
 ## 4. Exceptions
 

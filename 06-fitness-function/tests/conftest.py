@@ -5,17 +5,8 @@ Provides a proper `make_validator()` factory that calls `BaseValidator.__init__(
 correctly, ensuring lint_disable parsing, rejected_disables, and rel_path computation
 are exercised — matching production execution paths.
 """
-import os
-import json
-from engine.validators.registry import get_validator
+
 from engine.validators.base import BaseValidator
-from engine.validators.domains.adr_validator import ADRValidator
-from engine.validators.domains.sad_validator import SADValidator
-from engine.validators.domains.pad_validator import PADValidator
-from engine.validators.domains.ead_validator import EADValidator
-from engine.validators.domains.std_validator import STDValidator
-from engine.validators.domains.tdd_validator import TDDValidator
-from engine.validators.domains.gdc_validator import GDCValidator
 
 
 def make_validator(
@@ -36,7 +27,7 @@ def make_validator(
     if doc_meta is None:
         doc_meta = {}
     if rules is None:
-        rules = {'rules': {}, 'severity_levels': {}}
+        rules = {"rules": {}, "severity_levels": {}}
     if all_doc_ids is None:
         all_doc_ids = set()
     if all_doc_metadata is None:

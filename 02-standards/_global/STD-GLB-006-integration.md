@@ -16,12 +16,11 @@ doc_meta:
 
 ## 1. Objective & Scope
 
-This standard defines the mandatory integration communication patterns, API Gateway routing policies, egress network filters, third-party webhook verifications, and event ingestion boundaries across the Scnehaux enterprise. 
+This standard defines the mandatory integration communication patterns, API Gateway routing policies, egress network filters, third-party webhook verifications, and event ingestion boundaries across the Scnehaux enterprise.
 
 It applies to all synchronous service-to-service REST/gRPC APIs, asynchronous event brokers, ingress controllers, and external gateway interfaces.
 
 ---
-
 
 ## 2. Design Principles
 
@@ -34,11 +33,11 @@ Inter-service integration must enforce strict contract boundaries. Services comm
 To prevent cascading service failures and tightly coupled dependencies:
 
 - **Orchestration vs. Choreography Boundaries**:
-  - *Choreography (Default Event-Driven)*: Cross-domain coordination must utilize event-driven choreography. Services publish events to the broker, and downstream services react independently (e.g. `payroll-service` consuming `EmploymentTerminatedEvent`).
-  - *Orchestration (Saga Pattern)*: Complex multi-step transactions requiring synchronous control loops (e.g., identity provisioning across active systems) must use a centralized orchestrator service. The orchestrator must manage state, call downstream APIs, and execute compensating transactions if a step fails.
+  - _Choreography (Default Event-Driven)_: Cross-domain coordination must utilize event-driven choreography. Services publish events to the broker, and downstream services react independently (e.g. `payroll-service` consuming `EmploymentTerminatedEvent`).
+  - _Orchestration (Saga Pattern)_: Complex multi-step transactions requiring synchronous control loops (e.g., identity provisioning across active systems) must use a centralized orchestrator service. The orchestrator must manage state, call downstream APIs, and execute compensating transactions if a step fails.
 - **Service-to-Service Invariants**:
-  - *No Circular Dependencies*: Service-to-service call graphs must be acyclic. Circular call patterns (Service A calling Service B, which calls Service A) are strictly prohibited.
-  - *Transport Standard*: Synchronous internal calls must utilize type-safe **gRPC** protocols over HTTP/2. REST/JSON is restricted to public client-to-service ingress paths.
+  - _No Circular Dependencies_: Service-to-service call graphs must be acyclic. Circular call patterns (Service A calling Service B, which calls Service A) are strictly prohibited.
+  - _Transport Standard_: Synchronous internal calls must utilize type-safe **gRPC** protocols over HTTP/2. REST/JSON is restricted to public client-to-service ingress paths.
 
 ---
 
@@ -49,9 +48,9 @@ All external traffic must traverse the enterprise API Gateway (e.g., Kong, Envoy
 - **TLS Termination**: The gateway must terminate incoming TLS traffic using secure certificates (TLS 1.3 minimum). Communication from the gateway to internal services must run over encrypted private VPC channels.
 - **Cross-Origin Resource Sharing (CORS)**: The gateway must enforce strict CORS policies. Wildcard origins (`*`) are prohibited; allowed origins must explicitly match designated corporate sub-domains.
 - **Rate-Limiting Policy**: The gateway must enforce rate-limiting tiers based on client tier configurations:
-  - *Enterprise Clients*: Maximum 100 requests per second (RPS) per IP.
-  - *Standard Clients*: Maximum 20 requests per second (RPS) per IP.
-  - *Unauthenticated Public Endpoints*: Maximum 5 requests per second (RPS) per IP.
+  - _Enterprise Clients_: Maximum 100 requests per second (RPS) per IP.
+  - _Standard Clients_: Maximum 20 requests per second (RPS) per IP.
+  - _Unauthenticated Public Endpoints_: Maximum 5 requests per second (RPS) per IP.
 - **Header Injection**: The gateway must inject correlation metadata into every ingress request, including `X-Request-ID` and `X-Correlation-ID`. These headers must propagate throughout the downstream service chain.
 
 ---
@@ -62,8 +61,8 @@ Integrating with external vendors (e.g. Stripe, external HR software, email prov
 
 - **Egress Proxy Routing**: Outbound calls to external third-party APIs must route through a designated egress proxy. The proxy must enforce domain whitelisting, audit log request metadata, and decrypt outbound payloads using system keys.
 - **Incoming Webhook Verification**: Services accepting incoming webhooks must validate the sender identity:
-  - *Signature Verification*: Webhooks must verify cryptographic signatures (e.g., HMAC-SHA256) using shared signing keys. Payloads lacking valid signatures must be rejected.
-  - *Replay Attack Prevention*: Webhook handlers must validate the request timestamp. Requests older than `300 seconds` (5 minutes) must be discarded.
+  - _Signature Verification_: Webhooks must verify cryptographic signatures (e.g., HMAC-SHA256) using shared signing keys. Payloads lacking valid signatures must be rejected.
+  - _Replay Attack Prevention_: Webhook handlers must validate the request timestamp. Requests older than `300 seconds` (5 minutes) must be discarded.
 
 ---
 
@@ -73,7 +72,6 @@ Integrating with external vendors (e.g. Stripe, external HR software, email prov
 - **Ingestion Queue Sizing**: Ingestion endpoints must throttle input traffic using buffering queues to prevent publisher spikes from degrading downstream consumer databases.
 
 ---
-
 
 ## 4. Exceptions
 

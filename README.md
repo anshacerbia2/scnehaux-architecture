@@ -36,53 +36,55 @@ This repository contains architecture artifacts only. It does not contain implem
 This repository synthesizes the core concepts and mental models of industry-standard frameworks (C4 Model, TOGAF, arc42, AWS Well-Architected) into a custom, context-aware execution model to ensure scalability and clarity.
 
 > [!IMPORTANT]
+>
 > **Architecture Scope Limit:** This repository strictly houses **High-Level System Design (C1 Context & C2 Container levels)**. We do not document internal application components (C3) or source code (C4) here. Low-level Technical Design Documents (TDD) must reside locally in their specific code repositories to maintain strict _Docs-as-Code_ proximity and prevent documentation rot.
 
 ### 00-governance / GDC (The Constitutional Hub)
 
-The central nervous system of the architecture. It contains the fundamental laws, the automated CI/CD engine (`linter.py`), and the qualitative human rubrics that govern all other documents in the ecosystem.
+The central nervous system of the architecture. It contains the fundamental laws, the automated CI/CD engine (`06-fitness-function/engine/cli.py`), and the qualitative human rubrics that govern all other documents in the ecosystem.
 
 - **The Constitution**: [GDC-000 — Documentation Governance Policy](./00-governance/GDC-000-governance-policy.md)
-- **The Automated Engine**: [GDC-002 — Compliance Engine](./00-governance/GDC-002-compliance-engine.md)
-- **The Human Rubric**: [GDC-003 — Quality Rubric](./00-governance/GDC-003-quality-rubric.md)
-- **The Review Process**: [GDC-004 — Review Process](./00-governance/GDC-004-review-process.md)
-- **Guideline**: [GDC-006 — Governance Document Contract (GDC) Guideline](./00-governance/GDC-006-gdc-guideline.md)
+- **The Automated Engine**: [GDC-001 — Fitness Functions & Compliance Engine](./00-governance/GDC-001-fitness-functions.md)
+- **The Human Rubric**: [GDC-002 — Quality Rubric](./00-governance/GDC-002-quality-rubric.md)
+- **The Review Process**: [GDC-003 — Review Process](./00-governance/GDC-003-review-process.md)
+- **Technology Lifecycle**: [GDC-004 — Tech Lifecycle](./00-governance/GDC-004-tech-lifecycle.md)
+- **Guideline**: [GDC-005 — Governance Document Contract (GDC) Guideline](./00-governance/GDC-005-gdc-guideline.md)
 
 ### 01-enterprise / EAD (The Strategic Layer - C1 Context)
 
 Defines the global "City Map" and the enterprise-wide macro directives (Business, Data, Application, Technology).
 
-- **Guideline**: [GDC-007 — Enterprise Architecture Description (EAD) Guideline](./00-governance/GDC-007-ead-guideline.md)
+- **Guideline**: [GDC-006 — Enterprise Architecture Description (EAD) Guideline](./00-governance/GDC-006-ead-guideline.md)
 
 ### 02-standards / STD (The Guardrail & Baseline Layer)
 
 Mandatory granular policies that establish the architecture baseline and supplement EAD paved roads. This layer sets the minimum technical bar for quality, security, and operational excellence (e.g., API Design guidelines, database isolation rules).
 
-- **Guideline**: [GDC-008 — Enterprise Standard (STD) Guideline](./00-governance/GDC-008-std-guideline.md)
+- **Guideline**: [GDC-007 — Enterprise Standard (STD) Guideline](./00-governance/GDC-007-std-guideline.md)
 
 ### 03-domain / PAD (Logical Domain - C2 Context)
 
 Defines the logical business capabilities, bounded contexts, system trust contracts, and strategic positioning of a business domain (e.g., `identity`, `finance`).
 
-- **Guideline**: [GDC-009 — Product Architecture Document (PAD) Guideline](./00-governance/GDC-009-pad-guideline.md)
+- **Guideline**: [GDC-008 — Product Architecture Document (PAD) Guideline](./00-governance/GDC-008-pad-guideline.md)
 
 ### 04-system / SAD (Physical System - C2 Context)
 
 Defines the physical deployment topology, container boundaries, runtime execution flows, failure modes, observability, and concrete systems fulfilling the PAD.
 
-- **Guideline**: [GDC-010 — System Architecture Document (SAD) Guideline](./00-governance/GDC-010-sad-guideline.md)
+- **Guideline**: [GDC-009 — System Architecture Document (SAD) Guideline](./00-governance/GDC-009-sad-guideline.md)
 
 ### 05-decisions / ADR (The Rationale Layer)
 
 The immutable history of "Why". This layer captures foundational architectural decisions, tracks implementation rationale, resolves conflicts, and serves as the formal escape hatch for paved road exceptions.
 
-- **Guideline**: [GDC-011 — Architecture Decision Record (ADR) Guideline](./00-governance/GDC-011-adr-guideline.md)
+- **Guideline**: [GDC-010 — Architecture Decision Record (ADR) Guideline](./00-governance/GDC-010-adr-guideline.md)
 
 ### Local Implementation (C3 Context)
 
 Defines the component-level blueprints built downstream.
 
-- **Guideline**: [GDC-012 — Technical Design Document (TDD) Guideline](./00-governance/GDC-012-tdd-guideline.md)
+- **Guideline**: [GDC-011 — Technical Design Document (TDD) Guideline](./00-governance/GDC-011-tdd-guideline.md)
 
 ---
 
@@ -92,41 +94,41 @@ To ensure seamless "Shift-Left" validation, install the pre-commit hook. This wi
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+make install
 
 # Install the native git hook (Run this once)
-python scripts/install-hooks.py
+make install-hooks
 ```
 
 You can also execute the automated compliance engine locally to scan the repository manually:
 
 ```bash
 # Run locally for human-readable output
-python linter.py
+make lint
 ```
 
 To ensure the linter engine itself remains robust, execute the high-coverage test suite:
 
 ```bash
 # Run the Linter Engine Test Suite (FAANG Standard: >=95% coverage)
-pytest --cov=validators validators/tests/
+make test
 ```
 
 For CI/CD pipeline integration, the engine supports a structured machine-readable format:
 
 ```bash
-python linter.py --format json
+scnehaux-lint --format json
 ```
 
 ### What the Linter Enforces
 
-Our automated compliance engine (`linter.py`) aggressively verifies **Governance Quality** and **Architecture Quality**, including:
+Our automated compliance engine (`06-fitness-function/engine/cli.py`) aggressively verifies **Governance Quality** and **Architecture Quality**, including:
 
 - **Taxonomy & Metadata**: Naming conventions, YAML schema validity, and cross-reference traceability.
 - **Structural Compliance**: Mandatory design sections, minimum content length, and link rot prevention.
 - **Content Quality**: Prohibition of vague vocabulary, mandatory quantifiable metrics, and temporal waiver expiration.
 
-For the exhaustive list of automated rules, see **[GDC-002 — Compliance Engine](./00-governance/GDC-002-compliance-engine.md)**.
+For the exhaustive list of automated rules, see **[GDC-001 — Fitness Functions & Compliance Engine](./00-governance/GDC-001-fitness-functions.md)**.
 
 ---
 

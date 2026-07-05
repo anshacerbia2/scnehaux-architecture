@@ -16,12 +16,11 @@ doc_meta:
 
 ## 1. Objective & Scope
 
-This standard establishes the mandatory message structures, publishing mechanisms, delivery guarantees, consumer retry behaviors, and schema evolution models for all asynchronous messaging systems within the Scnehaux enterprise. 
+This standard establishes the mandatory message structures, publishing mechanisms, delivery guarantees, consumer retry behaviors, and schema evolution models for all asynchronous messaging systems within the Scnehaux enterprise.
 
 It applies to all publish-subscribe configurations, message queue integrations, and event streaming architectures utilizing Apache Kafka, RabbitMQ, or equivalent brokers.
 
 ---
-
 
 ## 2. Design Principles
 
@@ -101,9 +100,9 @@ To prevent downstream consumer failures during schema changes, services must adh
 
 - **Default Compatibility Mode**: Event schemas must support **Backward Compatibility** by default. Consumers running older code versions must be able to parse payloads emitted by newer publishers.
 - **Backward-Compatible Schema Changes**:
-  - *Field Additions*: Permitted. New fields must be optional or have a default value.
-  - *Field Deletions*: Prohibited. Fields must be marked as deprecated first and cannot be removed until all consumer systems have migrated off them.
-  - *Field Type Modifications*: Prohibited. Data types of existing attributes must not be altered (e.g., converting an integer ID to a string UUID).
+  - _Field Additions_: Permitted. New fields must be optional or have a default value.
+  - _Field Deletions_: Prohibited. Fields must be marked as deprecated first and cannot be removed until all consumer systems have migrated off them.
+  - _Field Type Modifications_: Prohibited. Data types of existing attributes must not be altered (e.g., converting an integer ID to a string UUID).
 - **Major Version Promotion**:
   - When breaking schema modifications are required, the event must be published under a new major version namespace.
   - The version indicator must be embedded directly in the event type identifier (e.g., promoting `com.scnehaux.iam.user.created` to `com.scnehaux.iam.user.created.v2`).
@@ -119,7 +118,6 @@ To prevent downstream consumer failures during schema changes, services must adh
 - **Centralized Schema Registry**: Every event schema must be registered in the enterprise Schema Registry. The registry must validate every schema check-in for backward compatibility before permitting compilation.
 
 ---
-
 
 ## 4. Exceptions
 
