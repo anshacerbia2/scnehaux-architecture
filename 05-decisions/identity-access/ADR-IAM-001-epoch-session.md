@@ -130,4 +130,3 @@ None.
 - **Pros**: Hardest security boundary; instant revocation on any reuse.
 - **Cons**: Extremely high rate of false-positive session terminations on mobile clients due to network package retries.
 - **Why Rejected**: Severely damages UX and increases customer support tickets for random logouts.
-

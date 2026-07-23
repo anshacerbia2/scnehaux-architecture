@@ -3,50 +3,64 @@ doc_meta:
   id: SAD-003
   title: Scnehaux UI Platform Software Architecture (SAD)
   owner: Principal UI/UX Architect
-  version: 1.0.1
+  version: 1.0.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: '2026-05-19'
-  parent_pad: PAD-002
+  parent_pad: PAD-PLT-003
+  technologies:
+    - name: react
+      type: framework
 ---
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
 ---
 
-## 1. Purpose
+## 1. Purpose & Scope
 
-## Scope
+This document outlines the software architecture for the Scnehaux UI Platform. **Capability Realized**: This system realizes the logical UI Platform capability defined in [scnehaux-ui-platform.pad.md](../../03-domain/PAD-PLT-003-scnehaux-ui-platform/PAD-PLT-003-scnehaux-ui-platform.pad.md) (PAD-PLT-002). It is the concrete physical styling compiler and component infrastructure for that capability.
 
+### Objective
 
-**Capability Realized.** This system realizes the logical UI Platform capability defined in [scnehaux-ui-platform.pad.md](../../03-domain/scnehaux-ui-platform/scnehaux-ui-platform.pad.md) (PAD-002). It is the concrete physical styling compiler and component infrastructure for that capability.
+Deliver a single, brand-consistent, accessible visual foundation with zero-runtime styling overhead, propagating a single primitive-layer improvement across all portals.
 
-It provides the physical visual foundation consumed by all frontend portals across the monorepo — including the [Scnehaux IAM Dashboard (SAD-002)](../scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) and the federated ERP Portal. It is developed as isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
+### Constraint
 
-**System Context (C1).** A set of build-time packages (`@scnx/system`, `@scnx/core-ui`) consumed by downstream portals via pnpm workspace (local) or the private NPM registry (production), with shared scoping under Module Federation. It has no runtime backend and serves only static, compiled CSS/JS assets.
+Zero-runtime styling only (no runtime CSS-in-JS); all styles resolve to design tokens; React must resolve to a singleton under Module Federation; the compressed token bundle is hard-capped.
 
-**Objectives.** Deliver a single, brand-consistent, accessible visual foundation with zero-runtime styling overhead, propagating a single primitive-layer improvement across all portals.
+### Capability
 
-**Constraints.** Zero-runtime styling only (no runtime CSS-in-JS); all styles resolve to design tokens; React must resolve to a singleton under Module Federation; the compressed token bundle is hard-capped.
+Design system, component infrastructure, frontend architecture.
+
+**System Context:** A set of build-time packages (`@scnx/system`, `@scnx/core-ui`) consumed by downstream portals via pnpm workspace (local) or the private NPM registry (production), with shared scoping under Module Federation. It has no runtime backend and serves only static, compiled CSS/JS assets.
 
 **Requirements.** Headless accessible primitives, a 3-tier token engine, multi-theme support, and a build-time extraction pipeline.
 
 **Assumptions.** Consumers use the supported bundlers (Vite/Rspack) and wrap entry roots with the platform's namespace classes.
 
-### 1.1 Architectural Principles
+## 2. Enterprise Traceability
 
-The platform inherits and enforces the [Enterprise Frontend Performance and Rendering Standard](../../02-standards/_global/frontend/STD-GLB-FE-002-performance.md) across all layers:
+### Realizes
+
+This system realizes its parent capability.
+
+### 2.1 Architectural Principles
+
+The platform inherits and enforces the [Enterprise Frontend Performance and Rendering Standard](../../02-standards/_global/STD-GLB-FE-002-performance.md) across all layers:
 
 1. **Zero Layout Thrashing (60FPS Render Guarantee)**: Synchronous geometry queries during high-frequency cycles are prohibited; dynamic layout adjustments are deferred and batched via `requestAnimationFrame`.
 2. **Polymorphic Rendering Safety**: The `asChild` composition pattern via the native `<Slot>` proxy is the approved polymorphism engine. However, its usage is strictly restricted to `@scnx/core-ui` layer-1 layout primitives to prevent unchecked mapping/cloning overhead in downstream feature code. Dynamic `as` prop injection is deprecated.
 3. **Compound & Headless UI Separation**: Logic, state, and event orchestration hooks are separated from visual markup; headless engines remain blind to HTML wrappers.
 4. **Token-Strict Styling**: Styling definitions must resolve to established design tokens — no hardcoded properties or raw layout declarations.
 
----
+## 3. Solution Context
 
-## 2. Solution Architecture
+It provides the physical visual foundation consumed by all frontend portals across the monorepo — including the [Scnehaux IAM Dashboard (SAD-002)](../scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) and the federated ERP Portal. It is developed as isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
+
+## 4. Architecture Model
 
 The platform is structured into two physical package containers, married by a build-time Zero-Runtime styling extraction pipeline:
 
@@ -114,11 +128,11 @@ The `@scnx/system` package ships a dedicated **Base Layer** to equalize default 
 
 - **`@scnx/core-ui` structural layer**: headless primitives (`Box`/`Flex`/`Grid`/`Text`/`Heading`/`List`/`Divider`/`Button`) plus stateful compounds (`accordion`, `collapsible`, `disclosure`, `navigation`, `navigation-bar`, `sidebar`, `table-of-contents`, `edge-layout`, `floating-layout`, `transition`). Behavior/ARIA only; styling delegated.
 - **`@scnx/system` styled layer**: organized atomic-design as **atoms / layouts / organisms**, each wrapping a headless primitive and styled by one of two zero-runtime strategies — **SCSS class + `data-variant`** (skinned atoms, e.g. `Button`) or **Panda recipe** (structural layouts, e.g. `Flex`). Dependency direction is strictly `@scnx/system → @scnx/core-ui`.
-- **Theme families**: the always-on **`default`** baseline (light + dark) plus a partial-override brand theme **`achromatic`** (primary→neutral remap), validated against a partial-subset contract — the physical realization of the Cascading Multi-Theme Invariant (PAD-002 §5).
+- **Theme families**: the always-on **`default`** baseline (light + dark) plus a partial-override brand theme **`achromatic`** (primary→neutral remap), validated against a partial-subset contract — the physical realization of the Cascading Multi-Theme Invariant (PAD-PLT-002 §5).
 
 ---
 
-## 3. Runtime Flows
+## 5. State & Data Architecture
 
 ### 3.1 Build-Time Compilation & Static Style Extraction
 
@@ -184,7 +198,7 @@ sequenceDiagram
 
 ---
 
-## 4. Data Architecture
+### 5.1 Data Architecture Details
 
 The platform has no runtime datastore; its "data" is the design-token dictionary, resolved at build time.
 
@@ -195,7 +209,7 @@ The platform has no runtime datastore; its "data" is the design-token dictionary
 
 ---
 
-## 5. Integration
+## 6. Integration Contracts
 
 - **Published API (packages)**: `@scnx/system` (token API as CSS custom properties + Sass maps) and `@scnx/core-ui` (polymorphic React primitives) are **Published** to the private NPM registry.
 - **Consumed by**: Downstream portals (IAM Dashboard SAD-002, ERP host + remotes) via pnpm workspace (local) or NPM (production).
@@ -227,7 +241,7 @@ graph TD
 
 ---
 
-## 6. Security
+## 7. Security & Trust Boundary
 
 - **Strict Content-Security-Policy (CSP)**: The presentation layer prevents inline style injections (`style-src 'unsafe-inline'`). All compiled utilities load via static assets linked to build-time hashes, or via trusted stylesheet nonces.
 - **Polymorphic ARIA Accessibility Core**: Accessible behaviors are built directly into the polymorphic Layer-1 primitives of `@scnx/core-ui` (focus-trapping in modal overlays, ARIA state bindings, keyboard navigation), guaranteeing WCAG 2.2 AA compliance at the visual root of trust.
@@ -235,7 +249,13 @@ graph TD
 
 ---
 
-## 7. Resilience & Failure Modes
+## 8. NFR
+
+### 8.1 Resilience & Failure Modes
+
+#### Blast Radius
+
+See below for component-specific blast radius analysis.
 
 - **Missing CSS Variables Fallback (Graceful Degradation)**: For environments with restricted stylesheet imports, Sass maps are pre-compiled into static fallback utility classes, allowing layout systems to degrade gracefully without breaking structural functionality.
   - _Blast Radius_: **Single Client Render** — degrades gracefully to a fallback layout without affecting other users or backend services.
@@ -246,7 +266,7 @@ graph TD
 
 ---
 
-## 8. Observability & Operations
+### 8.2 Observability & Operations
 
 - **Performance Benchmarks (SLI)**: CLS ≤ `0.1`; Interaction-to-Next-Paint (INP) ≤ `200ms`; P95 layout-reflow paint ≤ `100ms`; gzip CSS bundle hard-capped at `12KB`.
 - **Monitoring / Tracing**: Bundle-size and visual-regression metrics are tracked per release; consumer-side render telemetry correlates by component tag and theme state.
@@ -255,7 +275,11 @@ graph TD
 
 ---
 
-## 9. Deployment & Source Code Management
+## 9. Deployment Strategy
+
+### CI/CD
+
+Standard GitLab CI pipeline. & Source Code Management
 
 The platform packages are developed within the monorepo and integrated into downstream applications via workspace linkages, then published for production.
 
@@ -294,9 +318,11 @@ stateDiagram-v2
 
 ---
 
-## 10. Trade-offs & Alternatives
+## 10. Architecture Decisions
 
-### 10.1 Runtime CSS-in-JS
+### Rejected
+
+#### 10.1 Runtime CSS-in-JS
 
 - _Rejected_: Runtime style injection adds per-render execution overhead and conflicts with strict CSP. A zero-runtime build-time extraction pipeline was chosen instead.
 
@@ -322,4 +348,16 @@ stateDiagram-v2
 - The design system adheres to Semantic Versioning (SemVer).
 - Breaking changes require a major version bump and a migration guide.
 
+Standard GitLab CI pipeline enforcing linting, testing, visual regression, and bundle size limits.
 
+Packages are published to the private NPM registry via Semantic Release.
+
+99.99% uptime
+
+### Performance
+
+Sub-second latency.
+
+### Security
+
+Strict RBAC.

@@ -108,26 +108,26 @@ graph TD
 
 The diagram shows representative transactional stores. The invariant is exhaustive: **every domain in the EAD-001 Ownership Matrix maps to exactly one operational store, or is explicitly stateless.** The complete ownership assignment:
 
-| Domain | Operational Store | Notes |
-| :-- | :-- | :-- |
-| Identity | Identity DB | Credentials, sessions, policy |
-| Workspace | Workspace DB | Tenant, org, membership |
-| Workflow | Workflow DB | Process/instance state |
-| Notification | Notification DB | Delivery state, templates |
-| Integration | Integration DB | Connector config, mapping state |
-| Audit | Audit Ledger | Append-only, tamper-evident |
-| AI | AI Store + Vector Index | Embeddings, retrieval index |
-| Document | Document Store | Blobs + metadata |
-| Billing | Billing DB | Subscription, metering, invoices |
-| HCM | HCM DB | Human capital records |
-| ERP | ERP DB | Resource-planning records |
-| CRM | CRM DB | Customer records |
-| ITSM | ITSM DB | Tickets, service records |
-| Procurement | Procurement DB | Sourcing, purchase orders |
-| Project Management | PM DB | Projects, portfolios |
-| CMS | CMS DB | Content entities |
-| LMS | LMS DB | Courses, enrollments |
-| UI Platform | _none — stateless_ | Design-system assets are build-time artifacts, not operational data |
+| Domain             | Operational Store       | Notes                                                               |
+| :----------------- | :---------------------- | :------------------------------------------------------------------ |
+| Identity           | Identity DB             | Credentials, sessions, consent grants, OAuth clients                |
+| Workspace          | Workspace DB            | Tenant, org, membership                                             |
+| Workflow           | Workflow DB             | Process/instance state                                              |
+| Notification       | Notification DB         | Delivery state, templates                                           |
+| Integration        | Integration DB          | Connector config, mapping state                                     |
+| Audit              | Audit Ledger            | Append-only, tamper-evident                                         |
+| AI                 | AI Store + Vector Index | Embeddings, retrieval index                                         |
+| Document           | Document Store          | Blobs + metadata                                                    |
+| Billing            | Billing DB              | Subscription, metering, invoices                                    |
+| HCM                | HCM DB                  | Human capital records                                               |
+| ERP                | ERP DB                  | Resource-planning records                                           |
+| CRM                | CRM DB                  | Customer records                                                    |
+| ITSM               | ITSM DB                 | Tickets, service records                                            |
+| Procurement        | Procurement DB          | Sourcing, purchase orders                                           |
+| Project Management | PM DB                   | Projects, portfolios                                                |
+| CMS                | CMS DB                  | Content entities                                                    |
+| LMS                | LMS DB                  | Courses, enrollments                                                |
+| UI Platform        | _none — stateless_      | Design-system assets are build-time artifacts, not operational data |
 
 No two rows share a store; the single stateless domain (UI Platform) owns no operational data, so the map remains MECE.
 
@@ -157,10 +157,10 @@ flowchart LR
     style STREAM fill:#dd6b20,stroke:#c05621,color:#fff
 ```
 
-| Layer | Optimized For | Access Pattern |
-| :-- | :-- | :-- |
-| Transactional (OLTP) | Correctness, low-latency writes, domain isolation | Owning domain only |
-| Analytical (OLAP) | Cross-domain read, aggregation, ML | Read-only, replicated |
+| Layer                | Optimized For                                     | Access Pattern        |
+| :------------------- | :------------------------------------------------ | :-------------------- |
+| Transactional (OLTP) | Correctness, low-latency writes, domain isolation | Owning domain only    |
+| Analytical (OLAP)    | Cross-domain read, aggregation, ML                | Read-only, replicated |
 
 **Boundary rules:**
 
@@ -224,6 +224,7 @@ flowchart TD
 Each principle is paired with a machine-verifiable or audit-verifiable **fitness function**, upholding the GDC-000 maxim that a rule without an enforcement mechanism is only a suggestion.
 
 ### 6.1. Domain-Owned Data
+
 Each business domain owns and governs its operational data.
 
 - **Rationale:** Data ownership is the physical proof of a bounded context; shared data dissolves the boundary.
@@ -288,13 +289,13 @@ The transactional/analytical separation is the core degradation guarantee: an an
 
 ## 9. Ownership
 
-| Responsibility | Accountable | Consulted |
-| :-- | :-- | :-- |
-| Enterprise data governance (this artifact) | Architecture Authority | Data Platform Team, Security Team |
-| Domain transactional data | Domain Teams | Architecture Authority |
-| Analytical estate (lake, warehouse, products) | Data Platform Team | Domain Teams |
-| Data classification and compliance | Security & Governance | Architecture Authority, Legal |
-| Data catalog and lineage | Data Platform Team | Domain Teams |
+| Responsibility                                | Accountable            | Consulted                         |
+| :-------------------------------------------- | :--------------------- | :-------------------------------- |
+| Enterprise data governance (this artifact)    | Architecture Authority | Data Platform Team, Security Team |
+| Domain transactional data                     | Domain Teams           | Architecture Authority            |
+| Analytical estate (lake, warehouse, products) | Data Platform Team     | Domain Teams                      |
+| Data classification and compliance            | Security & Governance  | Architecture Authority, Legal     |
+| Data catalog and lineage                      | Data Platform Team     | Domain Teams                      |
 
 ---
 
@@ -365,4 +366,3 @@ The data topology evolves by adding domain-owned datasets and governed data prod
 - Enterprise Integration Patterns — Gregor Hohpe
 - Change Data Capture (CDC) patterns
 - Event-Driven Architecture
-

@@ -106,4 +106,3 @@ None.
 - **Pros**: Requires low configuration effort to implement globally at the API Gateway.
 - **Cons**: Rejects incoming requests indiscriminately. Critical authentication check calls are dropped at the same rate as background analytical exports.
 - **Why Rejected**: Drops high-priority customer transactions during spikes, causing business disruption.
-

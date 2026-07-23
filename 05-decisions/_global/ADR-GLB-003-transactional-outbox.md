@@ -160,4 +160,3 @@ None.
 - **Why Rejected**: Unacceptable risk of state inconsistencies in core transactional domains.
 
 ---
-

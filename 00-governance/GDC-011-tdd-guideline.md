@@ -38,7 +38,7 @@ scnehaux-ui-platform/                # (Project Repository)
 
 ### 2.2 The Schema Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-fitness-functions.md)**, the TDD specification is strictly governed by the following domain-specific linter schemas:
+In addition to the global structural enforcement defined in **[GDC-001](GDC-001-fitness-functions.md)**, the TDD specification is strictly governed by the following domain-specific linter schemas:
 
 > [!WARNING]
 >
@@ -48,10 +48,9 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata Policies** | Metadata Policies | <ul><li>doc_meta (object)</li></ul> |
-| **Metadata Policies** | Required Fields | <ul><li>id (string)</li><li>title (string)</li><li>owner (string &#124; array[string])</li><li>version (string &#124; number)</li><li>status (string)</li><li>classification (string)</li><li>parent_sad</li><li>review_cycle_days (integer)</li><li>last_reviewed (string)</li></ul> |
-| **Metadata Policies** | Allowed Statuses | <ul><li>proposed</li><li>approved</li><li>deprecated</li></ul> |
-| **Metadata Policies** | Allowed Classifications | <ul><li>public</li><li>internal</li><li>restricted</li></ul> |
+| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
+| **Section Rules** | Required Sections | <ul><li>Purpose</li><li>Scope</li><li>Technical Context</li><li>Component Design</li><li>Data Model</li><li>API / Interface</li><li>Algorithms / Logic</li><li>Configuration</li><li>Testing Strategy</li><li>Traceability</li></ul> |
+| **Section Rules** | Recommended Sections | <ul><li>Performance Notes</li><li>Security Notes</li><li>Operational Notes</li></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -64,13 +63,13 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 1. **Hold Technology Enforcement**: The automated linter will execute a Hard Block (Exit 1) on any TDD document that implements a technology currently marked as `Hold` in its respective lifecycle phase.
 2. **Traceability**: The linter ensures that a `parent_sad` attribute exists in the TDD metadata, preventing isolated or "orphan" components.
-3. **Remote Execution (Security Constraint)**: Downstream project repositories must not maintain local copies of the linter. Local CI/CD pipelines must invoke the central linter remotely. See **[GDC-001: Architecture Fitness Functions](./GDC-001-fitness-functions.md)** for detailed setup instructions.
+3. **Remote Execution (Security Constraint)**: Downstream project repositories must not maintain local copies of the linter. Local CI/CD pipelines must invoke the central linter remotely. See **[GDC-001: Architecture Fitness Functions](GDC-001-fitness-functions.md)** for detailed setup instructions.
 
 ### 2.3 Semantic Definitions
 
 #### 2.3.1 Naming Conventions
 
-The filename must strictly adhere to the `tdd_pattern` regex: `^TDD-[a-z0-9-]+-[a-z0-9-]+-\d{3}[A-Z]*-[a-z0-9-]+\.md$`.
+The filename must strictly adhere to the regex: `^TDD-[a-z0-9-]+-[a-z0-9-]+-\d{3}[A-Z]*-[a-z0-9-]+\.md$`.
 
 #### 2.3.2 Taxonomy
 
@@ -99,7 +98,7 @@ doc_meta:
 
 | Metadata Field      | Type    | Description / Purpose                                            |
 | ------------------- | ------- | ---------------------------------------------------------------- |
-| `id`                | String  | Unique identifier (e.g., `STD-GLB-FE-008`).                             |
+| `id`                | String  | Unique identifier (e.g., `STD-GLB-FE-008`).                      |
 | `title`             | String  | Descriptive title of the document.                               |
 | `owner`             | String  | Lead Owner (e.g., Software Engineer).                            |
 | `version`           | String  | Must comply with Semantic Versioning (e.g., 1.0.0).              |
@@ -157,7 +156,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 TDDs are ephemeral. Their lifecycle must follow the **Ephemeral TDD Matrix**:
 
 - **Class A (Strategic Transition)**: Designs governing core architectural shifts, major security FSMs, or schema migrations. Once fully implemented in production, their metadata `status` is transitioned to `deprecated` and the physical file is moved to `docs/02-designs/historical/` to serve as a permanent forensic audit trail.
-- **Class B (Component & Feature Detail)**: Standard feature implementation layouts. Folded into the parent SAD and the physical TDD file is deleted once verified in production.
+- **Class B (Component & Feature Detail)**: Standard feature implementation layouts. The final API contract is moved to the Source Code (e.g., OpenAPI/Swagger) and the physical TDD file is deleted once verified in production. They must **never** be folded into the SAD to prevent C3 detail pollution in C2 documents.
 - **Class C (Exploratory & Spike)**: Prototype or exploratory designs. Deleted immediately after the Pull Request merges.
 
 ---
@@ -169,4 +168,3 @@ In accordance with the Quality Rubric (Trade-Offs), the ARB explicitly documents
 1. **The Ephemeral TDD Matrix vs. Permanent TDD Archives**
    - _Why rejected_: Archiving every component-level design forever leads to thousands of obsolete files. When a new engineer joins, they cannot distinguish between active architecture and legacy spikes.
    - _The Trade-Off_: We intentionally destroy (delete) historical design context for Class B/C implementations once they merge to main. In exchange, we radically reduce search latency and ensure that only high-level abstractions (PADs/SADs) and foundational shifts (Class A TDDs) are permanently maintained.
-

@@ -1,12 +1,14 @@
+import os
+import subprocess
+import builtins
+from unittest.mock import mock_open
 from engine.auditors.git_auditor import audit_version_bump, _resolve_base_ref
 
 
-def test_audit_version_bump_and_resolve_ref(monkeypatch):
-    import subprocess
-    import os
-    import builtins
-    from unittest.mock import mock_open
+from engine.config.severity import SeverityRule
 
+
+def test_audit_version_bump_and_resolve_ref(monkeypatch):
     class MockProcess:
         def __init__(self, stdout, returncode):
             self.stdout = stdout
@@ -106,13 +108,14 @@ def test_audit_version_bump_and_resolve_ref(monkeypatch):
         return orig_abspath(p)
 
     monkeypatch.setattr(os.path, "abspath", mock_abspath)
+    monkeypatch.setattr(os.path, "relpath", lambda path, start: os.path.basename(path))
 
-    sev = {"structural_integrity_violation": "CRITICAL"}
+    sev = {r: "CRITICAL" for r in SeverityRule}
     findings = audit_version_bump(meta, sev)
 
-    # Only ADR-BUMP-FAIL should trigger a finding
+    # Only ADR-BUMP-FAIL should trigger a finding (if the feature were enabled)
     assert len(findings) == 1
-    assert "Version bump required" in findings[0][1]
+    assert "ADR-BUMP-FAIL" in findings[0][1]
 
     # Test fallback to HEAD when subprocess fails
     def mock_run_fail(cmd, *args, **kwargs):

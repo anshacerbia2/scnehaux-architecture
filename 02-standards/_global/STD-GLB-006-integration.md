@@ -82,4 +82,3 @@ None. All integration pattern rules apply unconditionally. Deviations require fo
 1. **Gateway configuration Audits**: CI pipelines must audit API Gateway routing specifications (`gateway.yaml` or equivalent declarations) to verify that no internal service endpoints bypass rate-limiting policies or authentication checks.
 2. **Egress Firewall Rules**: Automated infrastructure scanners must verify that private subnet egress firewall rules permit outbound network access only to white-listed domains.
 3. **Exception Waivers**: Deviations from these integration patterns require an approved ADR signed by the Enterprise Security Board and the Principal Software Architect.
-

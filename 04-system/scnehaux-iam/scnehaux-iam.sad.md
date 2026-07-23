@@ -3,39 +3,52 @@ doc_meta:
   id: SAD-001
   title: Scnehaux IAM Software Architecture (SAD)
   owner: Principal IAM Architect
-  version: 1.0.1
+  version: 1.0.0
   status: approved
   classification: restricted
   governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: '2026-05-18'
-  parent_pad: PAD-001
+  parent_pad: PAD-PLT-001
+  technologies:
+    - name: postgresql
+      type: database
+    - name: golang
+      type: language
+    - name: kubernetes
+      type: orchestration
+    - name: aws
+      type: cloud-provider
 ---
 
 # Scnehaux IAM Software Architecture (SAD-001)
 
 ---
 
-## 1. Purpose
+## 1. Purpose & Scope
 
-## Scope
+This document outlines the software architecture for the Scnehaux IAM system. **Capability Realized**: This system realizes the Identity Platform capability defined in [identity-platform.pad.md](../../03-domain/PAD-PLT-001-identity-platform/PAD-PLT-001-identity-platform.pad.md) (PAD-PLT-001). It is the concrete physical execution unit for that logical capability.
 
+### 1.1. Context & Objectives
 
-**Capability Realized.** This system realizes the Enterprise Identity & Access capability defined in [identity-platform.pad.md](../../03-domain/identity-platform/identity-platform.pad.md) (PAD-001). It is the concrete physical execution unit for that logical capability.
+- **Objective:** Deliver the identity capability as a low-latency, horizontally scalable service with strong tenant isolation enforcement and O(1) session revocation.
+- **System Context:** IAM sits behind the API Gateway at the enterprise trust edge. It operates as the **Unified Identity Provider** and **OAuth 2.0 Authorization Server**, serving both the internal Scnehaux Cloud Service and the external third-party ecosystem. It depends on PostgreSQL (tenant/session state, OAuth client registry), Redis (rate limiting and cache), and an external KMS (cryptographic data-key decryption), and publishes domain events to the NATS event bus. Internal business domains never call IAM synchronously per request — they verify JWTs locally against the published JWKS.
+- **Capability:** Identity management, authentication, OAuth 2.0 delegation & scope authorization, token lifecycle management, and platform administration (local RBAC).
+- **Requirement:** OIDC/OAuth2 brokering, MFA (TOTP + WebAuthn), refresh-token rotation, multi-tenant isolation enforcement, user consent management, third-party client registration, and an immutable audit trail.
+- **Constraint:** Single deployable Go binary (modular monolith); PostgreSQL and Redis are the only datastores; no synchronous third-party calls on the login hot path; cryptographic signing via external KMS.
+- **Assumption:** Downstream domains validate tokens locally; the gateway terminates external TLS and forwards mTLS; KMS is reachable at startup/rotation.
+
+## 2. Enterprise Traceability
+
+### Realizes
+
+This system realizes its parent capability (PAD-PLT-001).
+
+## 3. Solution Context
 
 Scnehaux IAM is architected as a **Modular Monolith** in **Golang** to deliver high-performance authentication with low operational complexity.
 
-**System Context (C1).** IAM sits behind the API Gateway at the enterprise trust edge. It depends on PostgreSQL (tenant/session state), Redis (rate limiting and cache), and an external KMS (cryptographic data-key decryption), and it publishes domain events to the NATS event bus. Business domains never call IAM synchronously per request — they verify JWTs locally against the published JWKS.
-
-**Objectives.** Deliver the identity capability as a low-latency, horizontally scalable service with strong tenant isolation and O(1) session revocation.
-
-**Constraints.** Single deployable Go binary (modular monolith, not microservices); PostgreSQL and Redis are the only datastores; no synchronous third-party calls on the login hot path; cryptographic signing via external KMS.
-
-**Requirements.** OIDC/OAuth2 brokering, MFA (TOTP + WebAuthn), refresh-token rotation, multi-tenant isolation, and an immutable audit trail.
-
-**Assumptions.** Downstream domains validate tokens locally; the gateway terminates TLS and forwards mTLS; KMS is reachable at startup/rotation.
-
-## 2. System Architecture
+## 4. Architecture Model
 
 The application is structured into isolated vertical domain slices coordinated strictly via an event-driven outbox, maintaining clear boundaries inside a single compile unit (a strict separation between synchronous user actions and asynchronous side effects). Container- and system-level structure is described here (C2); component- and class-level design (C3) lives in the downstream TDD.
 
@@ -107,7 +120,8 @@ scnehaux-auth/
 │   ├── identity/                # Identity Module (foundation)
 │   ├── token/                   # JWT local signing, JWK rotation
 │   ├── session/                 # Refresh token lifecycle & grace period checking
-│   ├── client/                  # OAuth2 client registry
+│   ├── client/                  # OAuth2 client registry & Third-Party Management
+│   ├── consent/                 # User Consent Grants & Scope Delegation
 │   ├── federation/              # OIDC, PKCE, JIT provisioning
 │   ├── mfa/                     # TOTP, WebAuthn, backup codes
 │   ├── audit/                   # Hash-chained, append-only
@@ -151,7 +165,7 @@ No module may import another module's `infrastructure/` or `domain/` repository 
 | **Outbox Engine** | Polling & pglogrepl | Stage 1 (Pragmatic Default): Polling with `SKIP LOCKED` and partition purges. Stage 2 (Scale Optimization): WAL logical replication with `pglogrepl` (**ADR-GLB-003**). |
 | **CI Security** | gosec + gitleaks | SAST and secret scanning. |
 
-## 3. Runtime Flows
+## 5. State & Data Architecture
 
 ### 3.1 Client Authentication & Token Issuance
 
@@ -260,7 +274,7 @@ sequenceDiagram
     IAM-->>Attacker: 401 Unauthorized
 ```
 
-## 4. Data Architecture
+### 5.1 Data Architecture Details
 
 - **Engine & Access**: PostgreSQL 16 accessed exclusively via **SQLC** type-safe generated queries (no ORM, avoiding reflection and query-plan opacity). Declarative migrations via **Atlas**.
 - **Schema Boundaries**: Domain tables are isolated into separate logical PostgreSQL schemas (e.g., `iam_schema`, `audit_schema`) to prevent cross-module table joins and preserve domain purity. Direct cross-schema joins are forbidden.
@@ -269,16 +283,16 @@ sequenceDiagram
 - **Data Classification**: Restricted / PII (credentials, emails, profile metadata), encrypted at rest and in transit (TLS 1.3); tenant-scoped via Row-Level Security (§6).
 - _Physical table/column DDL and ERDs live in the downstream TDD, not here._
 
-## 5. Integration
+## 6. Integration Contracts
 
-- **Inbound API (Published surface)**: REST (`go-chi`) for OIDC/OAuth2 and management endpoints; gRPC for low-latency inter-service token validation. The public key set is **Published** at the JWKS endpoint (`/.well-known/jwks.json`), advertising active and retiring keys for rotation-safe verification.
+- **Inbound API (Published surface)**: REST (`go-chi`) for OIDC/OAuth2 and management endpoints; gRPC for low-latency inter-service token validation. IAM acts as the **OIDC Identity Provider (IdP)**. The public key set is **Published** at the JWKS endpoint (`/.well-known/jwks.json`), advertising active and retiring keys for rotation-safe verification (Physical realization of Cryptographic Trust).
 - **Consumed Dependencies**: External KMS/Vault (startup/rotation key decryption only — never on the hot path); no synchronous business-domain calls.
-- **Outbound Async Events (Published)**: Domain events propagate via a **Two-Stage Evolutionary Outbox** (**ADR-GLB-003**):
+- **Outbound Async Events (Published)**: Domain events propagate via a **Data Flow** (**ADR-GLB-003**):
   - _Stage 1 (Pragmatic Default)_: Background workers poll the outbox using `SELECT FOR UPDATE SKIP LOCKED`, deleting processed rows in bulk via daily/weekly partitions to eliminate WAL autovacuum bloat.
   - _Stage 2 (Scale Optimization)_: Direct WAL streaming via logical replication / change data capture (`pglogrepl`) to **NATS JetStream**.
 - **Event Consumers**: Downstream audit and email subscribers consume `json.RawMessage` events; delivery is at-least-once with idempotent handlers.
 
-## 6. Security
+## 7. Security & Trust Boundary
 
 - **Zero Silent Failure**: All errors in security paths are logged with stack traces and surfaced via custom errors to prevent information disclosure.
 - **Authentication & Credential Hardening (Argon2id Semaphore Guard)**: Passwords are hashed with Argon2id (`Memory=64MB, Iterations=3, Parallelism=4`), globally bounded by a Process-Level Weighted Semaphore capped at `Runtime.NumCPU() - 1` to prevent CPU-exhaustion DoS (**ADR-IAM-003**). Fast-shedding backpressure rejects saturated requests (HTTP 429); context cancellation terminates aborted connections.
@@ -296,7 +310,13 @@ sequenceDiagram
 - **Constant-Time Comparisons**: `subtle.ConstantTimeCompare` on all cryptographic verify routines.
 - **Entropy Source**: `crypto/rand` exclusively; `math/rand` prohibited.
 
-## 7. Resilience & Failure Modes
+## 8. NFR
+
+### 8.1 Resilience & Failure Modes
+
+#### Blast Radius
+
+See below for component-specific blast radius analysis.
 
 - **PostgreSQL Outage (Database Failure)**:
   - _Impact_: All authentication writes and active transactional flows fail.
@@ -319,26 +339,28 @@ sequenceDiagram
   - _Blast Radius_: **Future Security Degradation**. Current tokens remain valid; rotation to a new key boundary fails.
   - _Handling_: Falls back to the previous key for the remaining 7-day retirement window, firing a P1 alert for manual reconciliation.
 
-## 8. Observability & Operations
+### 8.2 Observability & Operations
 
-- **Metrics (SLI baseline)**: Prometheus RED metrics at `/metrics` — `auth_login_total{tenant_id, status}`, `auth_token_issued_total{type}`, `auth_cdc_replication_lag_bytes`, `auth_ratelimit_rejected_total{route}`, `http_request_duration_seconds` / `db_query_duration_seconds`. These SLIs back the availability and latency SLOs of PAD-001.
+- **Metrics (SLI baseline)**: Prometheus RED metrics at `/metrics` — `auth_login_total{tenant_id, status}`, `auth_token_issued_total{type}`, `auth_cdc_replication_lag_bytes`, `auth_ratelimit_rejected_total{route}`, `http_request_duration_seconds` / `db_query_duration_seconds`. These SLIs back the availability and latency SLOs of PAD-PLT-001.
 - **Distributed Tracing**: OpenTelemetry on every DB query, internal module invocation, and KMS startup call; `trace_id` propagated to WAL spans and outbox event headers.
 - **Logging**: Structured JSON to `STDOUT` with mandatory context (`trace_id`, `span_id`, `tenant_id`, `actor_id`).
 - **Alerting**: Abnormal error spikes in authentication pipelines page SRE (S1); KMS rotation failures fire P1.
 - **Runbook**: Standard operational runbooks cover database failover, KMS reconciliation, and outbox backlog drain.
 
-## 9. Deployment
+## 9. Deployment Strategy
 
 Scnehaux IAM is deployed as a cloud-native, stateless containerized service:
 
-- **Environment / Runtime**: Kubernetes (K8s) across multiple availability zones.
+- **Environment / Runtime**: Kubernetes (K8s) across multiple availability zones using ArgoCD for GitOps deployment.
 - **Horizontal Auto-Scaling**: CPU-based HPA targeting `80% CPU Utilization`, scaling replicas from `3 to 10 instances` dynamically.
 - **Infrastructure (Data tier)**: PostgreSQL with one primary writer and two read-replicas. Reads (e.g., JWKS lookups) route to replicas; writes (e.g., session generation) target the primary.
-- **CI/CD & Release**: SAST/secret scanning (gosec + gitleaks) gate deployment; canary rollout is mandatory for any change to the authentication flow.
+- **CI/CD & Release**: Standard GitLab CI pipeline enforcing linting, testing, and container builds. SAST/secret scanning (gosec + gitleaks) gate deployment; canary rollout is mandatory for any change to the authentication flow.
 
-## 10. Trade-offs & Alternatives
+## 10. Architecture Decisions
 
-### 10.1 Active GORM/Hibernate reflection ORM
+### Rejected
+
+#### 10.1 Active GORM/Hibernate reflection ORM
 
 - _Rejected_: Injects slow reflect-based execution, query-plan opacity, and bypasses database-level RLS policies, complicating security audits.
 
@@ -372,5 +394,3 @@ Scnehaux IAM is deployed as a cloud-native, stateless containerized service:
 
 - The API is strictly versioned via URL path (`/v1`, `/v2`).
 - Deprecations require a 6-month notice period.
-
-

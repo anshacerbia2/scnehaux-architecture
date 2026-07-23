@@ -6,51 +6,52 @@
   "config": {
     "target_doc": "GDC-007-std-guideline.md"
   },
+  "properties": {
+    "filename": {
+      "type": "string",
+      "pattern": "^STD-[A-Z]+-[A-Z]+-\\d{3}-[a-z0-9-]+\\.md$"
+    }
+  },
   "allOf": [
     {
-      "$ref": "#/definitions/metadata_policies"
+      "$ref": "#/definitions/metadata_rules"
     },
     {
-      "$ref": "#/definitions/section_policies"
+      "$ref": "#/definitions/section_rules"
     },
     {
-      "$ref": "#/definitions/content_policies"
+      "$ref": "#/definitions/content_rules"
     }
   ],
   "definitions": {
-    "metadata_policies": {
-      "title": "Metadata Policies",
+    "metadata_rules": {
+      "title": "Metadata Rules",
       "description": "Rules for the YAML Frontmatter (doc_meta)",
       "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
-          "type": "object",
-          "required": [
-            "id",
-            "title",
-            "owner",
-            "version",
-            "status",
-            "classification"
-          ],
-          "properties": {
-            "status": {
-              "title": "Allowed Statuses",
-              "type": "string",
-              "enum": ["adopted", "trial", "assessed", "hold"]
+          "allOf": [
+            {
+              "$ref": "https://scnehaux.com/codex/gov/guidelines/schemas/base.schema.json#/definitions/common_metadata_fields"
             },
-            "classification": {
-              "title": "Allowed Classifications",
-              "type": "string",
-              "enum": ["public", "internal", "restricted"]
+            {
+              "type": "object",
+              "required": ["owner", "version", "classification"],
+              "properties": {
+                "status": {
+                  "title": "Allowed Statuses",
+                  "type": "string",
+                  "enum": ["adopted", "trial", "assessed", "hold"]
+                }
+              }
             }
-          }
+          ]
         }
       }
     },
-    "section_policies": {
-      "title": "Section Policies",
+    "section_rules": {
+      "title": "Section Rules",
       "description": "Rules for required and recommended sections in the Markdown body",
       "required": [
         "Objective & Scope",
@@ -65,8 +66,8 @@
         "recommended": "Recommended Sections"
       }
     },
-    "content_policies": {
-      "title": "Content Quality Policies",
+    "content_rules": {
+      "title": "Content Quality Rules",
       "description": "Rules for required and recommended keywords inside specific Markdown sections",
       "properties": {
         "Exceptions": {

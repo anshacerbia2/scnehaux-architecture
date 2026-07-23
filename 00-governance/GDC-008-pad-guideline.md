@@ -3,7 +3,7 @@ doc_meta:
   id: GDC-008
   title: Product Architecture Document (PAD) Guideline
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: public
   governed_by: [GDC-000]
@@ -15,7 +15,7 @@ doc_meta:
 
 ## 1. Context & Scope
 
-PADs represent the C2 Domain Architecture layer of the C4 metamodel, defining the logical domain capabilities, bounded contexts, trust boundaries, and strategic positioning of a business domain (e.g., `identity`, `ui-platform`, `hris`, `finance`).
+PADs represent the C1 System Context / Domain Architecture layer of the C4 metamodel, defining the logical domain capabilities, bounded contexts, trust boundaries, and strategic positioning of a business domain (e.g., `identity`, `ui-platform`, `hris`, `finance`).
 
 PADs establish the "What". They serve as the design-time single source of truth (SSOT) for domain-level contracts. A single logical domain capability (PAD) governs one or more physical software containers (SADs) in a strict 1-to-N mapping. They establish conceptual integration rules (such as trust boundaries and SLA targets) _before_ physical systems are built. While concrete API specifications are delegated downstream via Web Developer Portals, the PAD remains the stable, logical anchor.
 
@@ -28,14 +28,14 @@ PADs establish the "What". They serve as the design-time single source of truth 
 **Position on the three governing dimensions:**
 
 - **Stability / half-life — 10+ years (one-way door).** The longest-lived C2 artifact. To stay durable it must remain thin — capability, boundaries, contracts, NFR promises — and exclude implementation detail.
-- **Abstraction — C2 logical.** Bounded contexts and contracts only; never containers, deployment, or technology choices (those are the SAD).
+- **Abstraction — C1 logical.** Bounded contexts and contracts only; never physical containers, deployment, or technology choices (those are the SAD).
 - **Ownership — one stream-aligned domain team.**
 
 **Litmus test (PAD vs SAD):** _"Does this fact survive a complete technology rewrite?"_ If yes → PAD. If it would change when you swap technology or topology → SAD.
 
 **Stability guardrail:** a PAD boundary is drawn by **bounded-context (capability) cohesion**, not by commercial or marketing packaging. Re-bundling products does not merge PADs — PADs follow domains, which keeps the 10-year horizon credible.
 
-**Traceability:** a PAD fulfills one or more EAD capabilities (upward) and is realized by one or more SADs via `fulfilled_by` (downward, 1-to-N).
+**Traceability:** a PAD fulfills one or more EAD capabilities (upward). Physical realization is mapped bottom-up, where SADs declare their parent PAD, preventing the PAD from needing constant updates.
 
 ---
 
@@ -48,7 +48,7 @@ PADs establish the "What". They serve as the design-time single source of truth 
 
 ### 2.2 The Schema Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-fitness-functions.md)**, the PAD specification is strictly governed by the following domain-specific linter schemas:
+In addition to the global structural enforcement defined in **[GDC-001](GDC-001-fitness-functions.md)**, the PAD specification is strictly governed by the following domain-specific linter schemas:
 
 > [!WARNING]
 >
@@ -58,14 +58,16 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata Policies** | Metadata Policies | <ul><li>doc_meta (object)</li></ul> |
-| **Metadata Policies** | Required Fields | <ul><li>id (string)</li><li>title (string)</li><li>governed_by (string &#124; array[string])</li><li>owner (string &#124; array[string])</li><li>version (string &#124; number)</li><li>status (string)</li><li>classification (string)</li><li>realizes_capability (string &#124; array[string])</li><li>fulfilled_by (string &#124; array[string])</li><li>review_cycle_days (integer)</li><li>last_reviewed (string)</li></ul> |
-| **Metadata Policies** | Allowed Statuses | <ul><li>proposed</li><li>approved</li><li>deprecated</li></ul> |
-| **Metadata Policies** | Allowed Classifications | <ul><li>public</li><li>internal</li><li>restricted</li></ul> |
-| **Content Quality Policies** | Trust & Data Boundaries (Recommended) | <ul><li>Identity</li></ul> |
-| **Content Quality Policies** | Domain Model (Recommended) | <ul><li>Domain Event</li></ul> |
-| **Content Quality Policies** | Integration Contracts (Recommended) | <ul><li>Event</li><li>Provider</li><li>External</li></ul> |
-| **Content Quality Policies** | NFR Derivatives (Recommended) | <ul><li>SLA</li><li>SLO</li><li>Availability</li><li>Scalability</li><li>Compliance</li><li>Data Privacy</li><li>RTO</li><li>RPO</li><li>Budget</li></ul> |
+| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
+| **Section Rules** | Required Sections | <ul><li>Purpose & Scope</li><li>Enterprise Traceability</li><li>Domain & Context Model</li><li>Integration Contracts</li><li>Trust & Data Boundaries</li><li>Capability NFR</li><li>Ownership & Governance</li></ul> |
+| **Section Rules** | Recommended Sections | <ul><li>Assumptions & Constraints</li><li>Architectural Decisions</li><li>Evolution</li><li>References</li></ul> |
+| **Content Quality Rules** | Purpose & Scope (Required Concepts) | <ul><li>Out Of Scope</li></ul> |
+| **Content Quality Rules** | Enterprise Traceability (Required Concepts) | <ul><li>Realizes</li><li>Relationships</li><li>Consumed By</li></ul> |
+| **Content Quality Rules** | Domain & Context Model (Required Concepts) | <ul><li>Bounded Context</li><li>Ubiquitous Language</li></ul> |
+| **Content Quality Rules** | Integration Contracts (Required Concepts) | <ul><li>Integration Provided</li><li>Integration Consumed</li></ul> |
+| **Content Quality Rules** | Trust & Data Boundaries (Required Concepts) | <ul><li>Trust Boundary</li><li>Identity Access</li><li>Data Classification</li></ul> |
+| **Content Quality Rules** | Capability NFR (Recommended Derivatives) | <ul><li>SLA</li><li>SLO</li><li>RTO</li><li>RPO</li><li>Availability</li><li>Scalability</li><li>Peak Load</li><li>Concurrency</li><li>Compliance</li><li>Data Privacy</li><li>Data Residency</li><li>Audit</li><li>Usability</li><li>Accessibility</li><li>Interoperability</li><li>Cost Target</li></ul> |
+| **Content Quality Rules** | Ownership & Governance (Required Concepts) | <ul><li>Team Ownership</li><li>Realizing Systems</li></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -82,7 +84,7 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 #### 2.3.1 Naming Conventions
 
-The filename must strictly adhere to the `pad_pattern` regex: `^[a-z0-9-]+\.pad\.md$`.
+The filename must strictly adhere to the regex: `^[a-z0-9-]+\.pad\.md$`.
 
 #### 2.3.2 Taxonomy
 
@@ -108,29 +110,26 @@ Every PAD must begin with a YAML frontmatter block containing these fields:
 
 ```yaml
 doc_meta:
-  id: PAD-XXX # Domain capability ID
+  id: PAD-PLT-XXX # Domain capability ID
   title: [Capability Title] # Descriptive title of the Domain Capability
   owner: [Domain Team/Role] # Authoritative team owner
   version: 1.0.0 # Semantic versioning format
   status: approved # proposed | approved | deprecated
   classification: public # public | internal | restricted
-  fulfilled_by: # List of physical SAD IDs fulfilling this domain capability
-    - SAD-XXX
   review_cycle_days: 180 # Review cycle period
   last_reviewed: YYYY-MM-DD # Last audit date
 ```
 
-| Metadata Field | Type | Description / Purpose |
-| --- | --- | --- |
-| `id` | String | Unique identifier (e.g., `PAD-001`). |
-| `title` | String | Descriptive title of the artifact. |
-| `owner` | String | Lead Owner (e.g., Domain Architect). |
-| `version` | String | Must comply with Semantic Versioning (e.g., 1.0.0). |
-| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
-| `classification` | Enum | The data sensitivity (must match Allowed Classifications below). |
-| `fulfilled_by` | List[String] | Array of child SAD IDs that fulfill this domain architecture (e.g., `[SAD-001]`). |
-| `review_cycle_days` | Integer | The frequency in days for required review. |
-| `last_reviewed` | Date | The date of the last formal review (YYYY-MM-DD). |
+| Metadata Field      | Type    | Description / Purpose                                            |
+| ------------------- | ------- | ---------------------------------------------------------------- |
+| `id`                | String  | Unique identifier (e.g., `PAD-PLT-001`).                         |
+| `title`             | String  | Descriptive title of the artifact.                               |
+| `owner`             | String  | Lead Owner (e.g., Domain Architect).                             |
+| `version`           | String  | Must comply with Semantic Versioning (e.g., 1.0.0).              |
+| `status`            | Enum    | The current lifecycle state (must match Allowed Statuses below). |
+| `classification`    | Enum    | The data sensitivity (must match Allowed Classifications below). |
+| `review_cycle_days` | Integer | The frequency in days for required review.                       |
+| `last_reviewed`     | Date    | The date of the last formal review (YYYY-MM-DD).                 |
 
 ##### Allowed Lifecycle Statuses
 
@@ -154,7 +153,7 @@ doc_meta:
 | --- | --- |
 | **Major (2.0.0)** | Redesigning the boundary, shifting significant logical responsibilities to another domain, or breaking integration contracts (e.g., API rewrites). |
 | **Minor (1.1.0)** | Adding a new subsystem or capability without breaking existing integrations. |
-| **Patch (1.0.1)** | Editorial updates, formatting, mapping a new `fulfilled_by` SAD ID, fixing dead links. |
+| **Patch (1.0.1)** | Editorial updates, formatting, fixing dead links. |
 
 #### 2.3.5 Artifact Section
 
@@ -162,15 +161,17 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 | Section Name | Objective | Requirement |
 | --- | --- | --- |
-| **Context & Scope** | Define the boundaries, goals, non-goals, and stakeholders of this capability. | Must explicitly outline the purpose and target audience. |
-| **Business Capability** | Define the business value, bounded context, and macro-level features that define this domain capability. Focus on logical boundaries. | Must remain technology-agnostic. Focus on logical boundaries rather than libraries or infrastructure. |
-| **Domain Model** | Establish the bounded contexts, context mapping, and primary domain events. | Must define the conceptual models and context mappings. |
-| **Trust & Data Boundaries** | Map the isolation levels, identity propagation, compliance, and tenant separation models. | Must detail how user contexts traverse boundaries and state compliance levels. |
-| **Integration Contracts** | Specify strict API boundaries, event publishing, and external dependencies. | Must define retry envelopes, API endpoints, and event payloads. |
-| **Capability NFR Targets** | Explicit, quantifiable Non-Functional Requirements (NFR) targets. | Must quantify metrics (e.g., "99.99% Availability", "Scalability up to 5000 TPS"). |
-| **Ownership & Realizing Systems** | Map the logical capability to the physical systems (SADs) that fulfill it. | Must explicitly document the authoritative owner and list the `fulfilled_by` physical systems. |
-| **Assumptions _(Optional)_** | Document any external dependencies or business assumptions. | Must list business, external, or operational assumptions the design relies upon. |
-| **Alternatives Considered _(Optional)_** | Document technical alternatives evaluated and their trade-offs. | Must list rejected technologies/designs and the rationale for rejection. |
+| **Purpose & Scope** | Define the boundaries, goals, and non-goals of this capability. | Must explicitly outline what is **Out of Scope** to prevent feature creep. |
+| **Enterprise Traceability** | Map the logical capability to the Enterprise Architecture Document (EAD). | Must declare what it **Realizes**, what it **Depends On**, and what is **Referenced By** it. |
+| **Domain & Context Model** | Establish the bounded contexts, conceptual models, and business logic. | Must define the **Bounded Context** and **Ubiquitous Language**. _Domain Policies_ (e.g. Retry Policy, MFA Policy) are highly recommended here. |
+| **Integration Contracts** | Specify strict logical API boundaries and event publishing. | Must define the capabilities that are **Provided** and **Consumed**. |
+| **Trust & Data Boundaries** | Map the isolation levels, identity propagation, and tenant separation models. | Must detail the **Trust Boundary**, **Identity & Access** logic, and **Data Classification**. |
+| **Capability NFR** | Explicit, quantifiable Non-Functional Requirements (NFR) targets. | Must quantify metrics focusing on business SLAs, RTO, RPO, and Auditability (Operational Excellence belongs in SAD). |
+| **Ownership & Governance** | Map the logical capability to the physical systems (SADs) that fulfill it. | Must explicitly document **Team Ownership** and list the **Realizing Systems**. |
+| **Assumptions & Constraints _(Optional)_** | Document any external dependencies or business assumptions. | Must list business, external, or operational constraints the design relies upon. |
+| **Architectural Decisions _(Optional)_** | Document architectural decisions made within the domain. | Can summarize local decisions or link out to full ADRs for complex cross-domain decisions. |
+| **Evolution _(Optional)_** | Describe the future architectural trajectory (not a timeline roadmap). | Explains how the architecture intends to evolve long-term (e.g., migrating from REST to Event-Driven). |
+| **References _(Optional)_** | Additional context or external documents. | List any relevant documentation, standard guidelines, or upstream mandates. |
 
 ### 2.4 Lifecycle & Audit
 
@@ -185,4 +186,3 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **C1/C2 Separation (PAD vs. SAD) vs. Unified Architecture Artifacts**
    - _Why rejected_: A unified artifact containing both logical capabilities and physical servers rapidly decays. When physical servers scale or database engines change, the logical boundary artifact requires constant, unnecessary updates.
    - _The Trade-Off_: We accept the cognitive overhead of maintaining two separate but linked artifacts (PAD for logical, SAD for physical). In exchange, we gain highly stable logical contracts (PADs) that do not break when physical infrastructure topologies mutate.
-

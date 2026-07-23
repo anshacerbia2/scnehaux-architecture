@@ -5,6 +5,35 @@ from typing import Optional, Union, Any
 from markdown_it import MarkdownIt
 
 
+def parse_frontmatter(content: str) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+    """
+    Extract and parse the YAML frontmatter block from the beginning of a markdown document.
+
+    <pre>Args:
+        - content (str): The raw markdown file content.
+
+    Returns:
+        tuple: (doc_meta, error_msg)
+            - doc_meta (dict | None): Parsed metadata dictionary, or None if missing/invalid.
+            - error_msg (str | None): Fallback error string if parsing fails, otherwise None.
+
+    Raises:
+        None: Exceptions are safely caught and returned as `error_msg` to prevent hard crashes during linting.
+    </pre>
+    """
+    frontmatter_match = re.search(r"^---\s+(.*?)\s+---", content, re.DOTALL)
+    if not frontmatter_match:
+        return None, "Missing YAML frontmatter."
+    try:
+        frontmatter_data = yaml.safe_load(frontmatter_match.group(1))
+        if frontmatter_data and isinstance(frontmatter_data.get("doc_meta"), dict):
+            return frontmatter_data["doc_meta"], None
+        else:
+            return None, "YAML frontmatter is missing 'doc_meta' block, or it is empty."
+    except Exception as e:
+        return None, f"Failed to parse YAML frontmatter: {e}"
+
+
 def parse_date(
     date_val: Union[datetime.datetime, datetime.date, str, None],
 ) -> Optional[datetime.date]:
@@ -160,7 +189,7 @@ def extract_sections_normalized(content: str) -> dict[str, str]:
 
     This is the canonical source of section identity for JSON-Schema validation:
     schemas declare required/recommended sections by their Title-Case, unnumbered
-    name, and `content_policies` run `pattern` checks against the section's text.
+    name, and `content_rules` run `pattern` checks against the section's text.
     (`extract_section_contents` lowercases the key and keeps the numeric prefix, so
     it can neither satisfy a `required` match nor feed content patterns.)
     """
@@ -203,24 +232,6 @@ def extract_sections_normalized(content: str) -> dict[str, str]:
         sections[current_section] = "\n".join(lines[last_section_start:]).strip()
 
     return sections
-
-
-def parse_frontmatter(content: str) -> tuple[Optional[dict[str, Any]], Optional[str]]:
-    """
-    Extract and parse the YAML frontmatter block from the beginning of a markdown document.
-    Returns a tuple containing the `doc_meta` dictionary and an optional error message if parsing fails.
-    """
-    frontmatter_match = re.search(r"^---\s+(.*?)\s+---", content, re.DOTALL)
-    if not frontmatter_match:
-        return None, "Missing YAML frontmatter."
-    try:
-        frontmatter_data = yaml.safe_load(frontmatter_match.group(1))
-        if frontmatter_data and "doc_meta" in frontmatter_data:
-            return frontmatter_data["doc_meta"], None
-        else:
-            return None, "YAML frontmatter is missing 'doc_meta' block."
-    except Exception as e:
-        return None, f"Failed to parse YAML frontmatter: {e}"
 
 
 def strip_code_fences(content: str) -> str:

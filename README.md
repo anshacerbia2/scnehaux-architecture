@@ -43,48 +43,48 @@ This repository synthesizes the core concepts and mental models of industry-stan
 
 The central nervous system of the architecture. It contains the fundamental laws, the automated CI/CD engine (`06-fitness-function/engine/cli.py`), and the qualitative human rubrics that govern all other documents in the ecosystem.
 
-- **The Constitution**: [GDC-000 — Documentation Governance Policy](./00-governance/GDC-000-governance-policy.md)
-- **The Automated Engine**: [GDC-001 — Fitness Functions & Compliance Engine](./00-governance/GDC-001-fitness-functions.md)
-- **The Human Rubric**: [GDC-002 — Quality Rubric](./00-governance/GDC-002-quality-rubric.md)
-- **The Review Process**: [GDC-003 — Review Process](./00-governance/GDC-003-review-process.md)
-- **Technology Lifecycle**: [GDC-004 — Tech Lifecycle](./00-governance/GDC-004-tech-lifecycle.md)
-- **Guideline**: [GDC-005 — Governance Document Contract (GDC) Guideline](./00-governance/GDC-005-gdc-guideline.md)
+- **The Constitution**: [GDC-000 — Documentation Governance Policy](00-governance\GDC-000-governance-policy.md)
+- **The Automated Engine**: [GDC-001 — Fitness Functions & Compliance Engine](00-governance\GDC-001-fitness-functions.md)
+- **The Human Rubric**: [GDC-002 — Quality Rubric](00-governance\GDC-002-quality-rubric.md)
+- **The Review Process**: [GDC-003 — Review Process](00-governance\GDC-003-review-process.md)
+- **Technology Lifecycle**: [GDC-004 — Tech Lifecycle](00-governance\GDC-004-tech-lifecycle.md)
+- **Guideline**: [GDC-005 — Governance Document Contract (GDC) Guideline](00-governance\GDC-005-gdc-guideline.md)
 
 ### 01-enterprise / EAD (The Strategic Layer - C1 Context)
 
 Defines the global "City Map" and the enterprise-wide macro directives (Business, Data, Application, Technology).
 
-- **Guideline**: [GDC-006 — Enterprise Architecture Description (EAD) Guideline](./00-governance/GDC-006-ead-guideline.md)
+- **Guideline**: [GDC-006 — Enterprise Architecture Description (EAD) Guideline](00-governance\GDC-006-ead-guideline.md)
 
 ### 02-standards / STD (The Guardrail & Baseline Layer)
 
 Mandatory granular policies that establish the architecture baseline and supplement EAD paved roads. This layer sets the minimum technical bar for quality, security, and operational excellence (e.g., API Design guidelines, database isolation rules).
 
-- **Guideline**: [GDC-007 — Enterprise Standard (STD) Guideline](./00-governance/GDC-007-std-guideline.md)
+- **Guideline**: [GDC-007 — Enterprise Standard (STD) Guideline](00-governance\GDC-007-std-guideline.md)
 
 ### 03-domain / PAD (Logical Domain - C2 Context)
 
 Defines the logical business capabilities, bounded contexts, system trust contracts, and strategic positioning of a business domain (e.g., `identity`, `finance`).
 
-- **Guideline**: [GDC-008 — Product Architecture Document (PAD) Guideline](./00-governance/GDC-008-pad-guideline.md)
+- **Guideline**: [GDC-008 — Product Architecture Document (PAD) Guideline](00-governance\GDC-008-pad-guideline.md)
 
 ### 04-system / SAD (Physical System - C2 Context)
 
 Defines the physical deployment topology, container boundaries, runtime execution flows, failure modes, observability, and concrete systems fulfilling the PAD.
 
-- **Guideline**: [GDC-009 — System Architecture Document (SAD) Guideline](./00-governance/GDC-009-sad-guideline.md)
+- **Guideline**: [GDC-009 — System Architecture Document (SAD) Guideline](00-governance\GDC-009-sad-guideline.md)
 
 ### 05-decisions / ADR (The Rationale Layer)
 
 The immutable history of "Why". This layer captures foundational architectural decisions, tracks implementation rationale, resolves conflicts, and serves as the formal escape hatch for paved road exceptions.
 
-- **Guideline**: [GDC-010 — Architecture Decision Record (ADR) Guideline](./00-governance/GDC-010-adr-guideline.md)
+- **Guideline**: [GDC-010 — Architecture Decision Record (ADR) Guideline](00-governance\GDC-010-adr-guideline.md)
 
 ### Local Implementation (C3 Context)
 
 Defines the component-level blueprints built downstream.
 
-- **Guideline**: [GDC-011 — Technical Design Document (TDD) Guideline](./00-governance/GDC-011-tdd-guideline.md)
+- **Guideline**: [GDC-011 — Technical Design Document (TDD) Guideline](00-governance\GDC-011-tdd-guideline.md)
 
 ---
 
@@ -128,13 +128,13 @@ Our automated compliance engine (`06-fitness-function/engine/cli.py`) aggressive
 - **Structural Compliance**: Mandatory design sections, minimum content length, and link rot prevention.
 - **Content Quality**: Prohibition of vague vocabulary, mandatory quantifiable metrics, and temporal waiver expiration.
 
-For the exhaustive list of automated rules, see **[GDC-001 — Fitness Functions & Compliance Engine](./00-governance/GDC-001-fitness-functions.md)**.
+For the exhaustive list of automated rules, see **[GDC-001 — Fitness Functions & Compliance Engine](00-governance\GDC-001-fitness-functions.md)**.
 
 ---
 
 ## How to Contribute & Modify Rules
 
-Please read **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the definitive workflows on how to:
+Please read **[CONTRIBUTING.md](CONTRIBUTING.md)** for the definitive workflows on how to:
 
 1. **Author Architecture Documents** (PAD, SAD, ADR, etc.)
 2. **Modify Governance Rules** (The 4-step Docs-as-Code reconciliation flow)
@@ -142,4 +142,3 @@ Please read **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the definitive workflow
 ---
 
 This repository represents the current architectural baseline.
-

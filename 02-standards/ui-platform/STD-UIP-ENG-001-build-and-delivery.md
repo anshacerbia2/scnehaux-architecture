@@ -50,9 +50,8 @@ To support modern Module Federation consumers while maintaining legacy fallback 
 
 ## 4. Exceptions
 
-None.
+There are currently no authorized exceptions to the UI Platform Build & Delivery Standards. All components must strictly comply with these constraints.
 
 ## 5. Enforcement Mechanism
 
-These standards are enforced directly by CI/CD pipelines (Quality Gates). Any PR that breaches the 12KB budget or fails Visual Regression will be **Hard Blocked** from merging. Temporary waivers must be escalated to the Architecture Review Board (ARB) via an Architecture Decision Record (ADR).
-
+These standards are enforced directly by CI/CD pipelines (Quality Gates). Any PR that breaches the 12KB budget or fails Visual Regression will be **Hard Blocked** from merging.

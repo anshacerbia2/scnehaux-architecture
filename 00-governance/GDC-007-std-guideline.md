@@ -11,6 +11,8 @@ doc_meta:
   last_reviewed: 2026-05-29
 ---
 
+<!-- lint_disable: inline_reference_missing (reason: standard docs) -->
+
 # Enterprise Standards (STD) Guideline
 
 ## 1. Context & Scope
@@ -29,12 +31,12 @@ The `02-standards` directory is the authoritative collection of mandatory rules,
 ### 2.1 Specificity & Opinionation
 
 - **Specificity Policy**: Standards (STDs) are **not** meant to be agnostic. They exist to enforce strict, concrete, and opinionated technical baselines. If a policy is purely abstract, it belongs in an Enterprise Architecture Document (EAD) as a Principle.
-- **Global Standards (STD-GLB prefix)**: Define enterprise-wide technical constraints (e.g., universal API payloads, central logging schemas). While they may start as high-level abstract policies, once a specific technology becomes an enterprise baseline (e.g., via an ADR), global STDs must aggressively mandate its usage.
+- **Global Standards**: Define enterprise-wide technical constraints (e.g., universal API payloads, central logging schemas). While they may start as high-level abstract policies, once a specific technology becomes an enterprise baseline (e.g., via an ADR), global STDs must aggressively mandate its usage.
 - **Domain & Local Standards**: Must be fiercely technology-specific and framework-opinionated. They map global requirements directly to concrete code implementations (e.g., "Use React 18", "Use Prisma" in the `ui-platform` repo).
 
 ### 2.2 The Schema Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-fitness-functions.md)**, the STD specification is strictly governed by the following domain-specific linter schemas:
+In addition to the global structural enforcement defined in **[GDC-001](GDC-001-fitness-functions.md)**, the STD specification is strictly governed by the following domain-specific linter schemas:
 
 > [!WARNING]
 >
@@ -44,11 +46,10 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata Policies** | Metadata Policies | <ul><li>doc_meta (object)</li></ul> |
-| **Metadata Policies** | Required Fields | <ul><li>id</li><li>title</li><li>owner</li><li>version</li><li>status (string)</li><li>classification (string)</li></ul> |
-| **Metadata Policies** | Allowed Statuses | <ul><li>adopted</li><li>trial</li><li>assessed</li><li>hold</li></ul> |
-| **Metadata Policies** | Allowed Classifications | <ul><li>public</li><li>internal</li><li>restricted</li></ul> |
-| **Content Quality Policies** | Exceptions (Prohibited) | <ul><li>waiver</li><li>ADR</li><li>ARB</li><li>Approval Requirements</li></ul> |
+| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
+| **Section Rules** | Required Sections | <ul><li>Objective & Scope</li><li>Design Principles</li><li>Normative Rules</li><li>Exceptions</li><li>Enforcement Mechanism</li></ul> |
+| **Section Rules** | Recommended Sections | <ul></ul> |
+| **Content Quality Rules** | Exceptions (Prohibited) | <ul><li>waiver</li><li>ADR</li><li>ARB</li><li>Approval Requirements</li></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -185,7 +186,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 To prevent rigid compliance grids from stifling innovation, every enterprise standard must declare a maturity phase in its `status` field.
 
-> **Authoritative Source**: The canonical definitions of the four maturity phases (Assessed, Trial, Adopted, Hold), including their adoption requirements, deviation policies, and sunset procedures, are defined and maintained in **[GDC-004 — Technology Lifecycle & Standards Governance](./GDC-004-tech-lifecycle.md)**.
+> **Authoritative Source**: The canonical definitions of the four maturity phases (Assessed, Trial, Adopted, Hold), including their adoption requirements, deviation policies, and sunset procedures, are defined and maintained in **[GDC-004 — Technology Lifecycle & Standards Governance](GDC-004-tech-lifecycle.md)**.
 
 All STD artifacts must declare one of the four phases defined in GDC-004 in their `status` metadata field.
 
@@ -209,4 +210,3 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **Living Mutability vs. Immutable Standard Versions**
    - _Why rejected_: Storing every past version of a standard as a separate immutable file creates a "graveyard" of artifacts, leading to engineer confusion about which standard is currently active.
    - _The Trade-Off_: We lose out-of-the-box visibility into historical rules. In exchange, we guarantee that the `02-standards/` folder is always the definitive "Current State of Truth." Historical context is preserved in Git, while structural pivots are managed via Immutable ADRs.
-

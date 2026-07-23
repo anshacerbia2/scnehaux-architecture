@@ -1,96 +1,70 @@
 {
   "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/ead.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Enterprise Architecture Document (EAD) Validation Policies",
+  "title": "Enterprise Architecture Document (EAD) Validation Rules",
   "type": "object",
   "config": {
     "target_doc": "GDC-006-ead-guideline.md"
   },
+  "properties": {
+    "filename": {
+      "type": "string",
+      "pattern": "^EAD-\\d{3}-[a-z0-9-]+\\.md$"
+    }
+  },
   "allOf": [
     {
-      "$ref": "#/definitions/metadata_policies"
+      "$ref": "#/definitions/metadata_rules"
     },
     {
-      "$ref": "#/definitions/section_policies"
+      "$ref": "#/definitions/section_rules"
     },
     {
-      "$ref": "#/definitions/content_policies"
+      "$ref": "#/definitions/content_rules"
     }
   ],
   "definitions": {
-    "metadata_policies": {
-      "title": "Metadata Policies",
-      "description": "Policies for the YAML Frontmatter (doc_meta)",
+    "metadata_rules": {
+      "title": "Metadata Rules",
+      "description": "Rules for the YAML Frontmatter (doc_meta)",
       "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
-          "type": "object",
-          "required": [
-            "id",
-            "title",
-            "governed_by",
-            "owner",
-            "version",
-            "status",
-            "classification",
-            "review_cycle_days",
-            "last_reviewed"
-          ],
-          "properties": {
-            "status": {
-              "title": "Allowed Statuses",
-              "type": "string",
-              "enum": ["proposed", "approved", "deprecated"]
+          "allOf": [
+            {
+              "$ref": "https://scnehaux.com/codex/gov/guidelines/schemas/base.schema.json#/definitions/common_metadata_fields"
             },
-            "classification": {
-              "title": "Allowed Classifications",
-              "type": "string",
-              "enum": ["public", "internal", "restricted"]
-            },
-            "id": {
-              "title": "Document ID",
-              "type": "string",
-              "pattern": "^EAD-\\d{3}$"
-            },
-            "title": {
-              "title": "Document Title",
-              "type": "string"
-            },
-            "governed_by": {
-              "title": "Governed By",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
+            {
+              "type": "object",
+              "required": [
+                "owner",
+                "version",
+                "classification",
+                "review_cycle_days",
+                "last_reviewed",
+                "governed_by"
+              ],
+              "properties": {
+                "id": {
+                  "title": "Document ID",
+                  "type": "string",
+                  "pattern": "^EAD-\\d{3}$"
+                },
+                "governed_by": {
+                  "title": "Governed By",
+                  "type": ["string", "array"],
+                  "items": { "type": "string" }
+                }
               }
-            },
-            "owner": {
-              "title": "Owner",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
-              }
-            },
-            "version": {
-              "title": "Version",
-              "type": ["string", "number"]
-            },
-            "review_cycle_days": {
-              "title": "Review Cycle (Days)",
-              "type": "integer"
-            },
-            "last_reviewed": {
-              "title": "Last Reviewed Date",
-              "type": "string",
-              "format": "date"
             }
-          }
+          ]
         }
       }
     },
-    "section_policies": {
-      "title": "Section Policies",
-      "description": "Policies for required and recommended sections in the Markdown body",
+    "section_rules": {
+      "title": "Section Rules",
+      "description": "Rules for required and recommended sections in the Markdown body",
       "required": [
         "Purpose",
         "Scope",
@@ -116,9 +90,9 @@
         "recommended": "Recommended Sections"
       }
     },
-    "content_policies": {
-      "title": "Content Quality Policies",
-      "description": "Policies for required and recommended keywords inside specific Markdown sections",
+    "content_rules": {
+      "title": "Content Quality Rules",
+      "description": "Rules for required and recommended keywords inside specific Markdown sections",
       "allOf": [
         {
           "if": {
@@ -129,15 +103,11 @@
           "then": {
             "properties": {
               "Architecture Model": {
-                "allOf": [
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Macro Capability Map" },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Domain Ownership Matrix"
-                  },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Strategic Domain Classification"
-                  },
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Capability Evolution" }
+                "required_subsections": [
+                  "Macro Capability Map",
+                  "Domain Ownership Matrix",
+                  "Strategic Domain Classification",
+                  "Capability Evolution"
                 ]
               }
             }
@@ -152,15 +122,11 @@
           "then": {
             "properties": {
               "Architecture Model": {
-                "allOf": [
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Global System Landscape"
-                  },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Platform vs Product Topology"
-                  },
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?System Dependency" },
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?External Ecosystem" }
+                "required_subsections": [
+                  "Global System Landscape",
+                  "Platform vs Product Topology",
+                  "System Dependency",
+                  "External Ecosystem"
                 ]
               }
             }
@@ -175,15 +141,11 @@
           "then": {
             "properties": {
               "Architecture Model": {
-                "allOf": [
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Data Ownership" },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Transactional & Analytical Boundary"
-                  },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Data Movement Strategy"
-                  },
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Data Governance" }
+                "required_subsections": [
+                  "Data Ownership",
+                  "Transactional & Analytical Boundary",
+                  "Data Movement Strategy",
+                  "Data Governance"
                 ]
               }
             }
@@ -198,17 +160,11 @@
           "then": {
             "properties": {
               "Architecture Model": {
-                "allOf": [
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Enterprise Context Map"
-                  },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Communication Strategy"
-                  },
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Contract Governance" },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Gateway & Broker Topology"
-                  }
+                "required_subsections": [
+                  "Enterprise Context Map",
+                  "Communication Strategy",
+                  "Contract Governance",
+                  "Gateway & Broker Topology"
                 ]
               }
             }
@@ -223,13 +179,11 @@
           "then": {
             "properties": {
               "Architecture Model": {
-                "allOf": [
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Platform Topology" },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Internal Developer Platform Strategy"
-                  },
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Runtime Strategy" },
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Operational Model" }
+                "required_subsections": [
+                  "Platform Topology",
+                  "Internal Developer Platform Strategy",
+                  "Runtime Strategy",
+                  "Operational Model"
                 ]
               }
             }
@@ -244,15 +198,11 @@
           "then": {
             "properties": {
               "Architecture Model": {
-                "allOf": [
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Zero Trust Boundary" },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Enterprise IAM Strategy"
-                  },
-                  {
-                    "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Security Control Architecture"
-                  },
-                  { "pattern": "###\\s+(?:[\\d\\.]+\\s+)?Data Protection" }
+                "required_subsections": [
+                  "Zero Trust Boundary",
+                  "Enterprise IAM Strategy",
+                  "Security Control Architecture",
+                  "Data Protection"
                 ]
               }
             }

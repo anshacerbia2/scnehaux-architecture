@@ -55,4 +55,3 @@ _(Leave blank if this is a standard Peer Review)_
 -
 
 **Required Revisions before Approval:** 1. 2.
-

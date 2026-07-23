@@ -14,6 +14,16 @@ def extract_functions(filepath):
     Parse a Python file using the `ast` module to extract all function and class method definitions.
     Captures the docstring and line number.
     """
+
+    def format_docstring(doc):
+        # Convert leading spaces to &nbsp; to prevent HTML from collapsing indentation in the table
+        lines = []
+        for line in doc.split("\n"):
+            stripped = line.lstrip(" ")
+            indent = len(line) - len(stripped)
+            lines.append("&nbsp;" * indent + stripped)
+        return "<br>".join(lines)
+
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -25,9 +35,7 @@ def extract_functions(filepath):
             if not node.name.startswith("__"):
                 docstring = ast.get_docstring(node)
                 if docstring:
-                    desc = " ".join(
-                        line.strip() for line in docstring.split("\n") if line.strip()
-                    )
+                    desc = format_docstring(docstring)
                 else:
                     desc = "*(No docstring provided)*"
 
@@ -40,11 +48,7 @@ def extract_functions(filepath):
                     if not item.name.startswith("__"):
                         docstring = ast.get_docstring(item)
                         if docstring:
-                            desc = " ".join(
-                                line.strip()
-                                for line in docstring.split("\n")
-                                if line.strip()
-                            )
+                            desc = format_docstring(docstring)
                         else:
                             desc = "*(No docstring provided)*"
                         functions.append(
@@ -54,7 +58,7 @@ def extract_functions(filepath):
                                 "line": item.lineno,
                             }
                         )
-    return sorted(functions, key=lambda x: x["name"])
+    return sorted(functions, key=lambda x: x["line"])
 
 
 def generate_markdown_table(all_funcs):
@@ -102,7 +106,7 @@ def inject_to_markdown(md_path, table_str):
     pattern = r"(<!-- AUTO-GENERATED-FUNCTIONS:START -->)(.*?)(<!-- AUTO-GENERATED-FUNCTIONS:END -->)"
 
     if not re.search(pattern, content, flags=re.DOTALL):
-        print(f"Skipping {md_path} (No placeholder found)")
+        print(f"[SKIP] {md_path} -> No placeholder found")
         return False
 
     def replacer(match):
@@ -173,14 +177,15 @@ def generate_cli_flowchart():
     if not flow_lines:
         return
 
-    table_str = "```mermaid\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+    theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
+    table_str = f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
 
     with open(index_md, "r", encoding="utf-8") as f:
         md_content = f.read()
 
     pattern = r"(<!-- AUTO-GENERATED-CLI-FLOW:START -->)(.*?)(<!-- AUTO-GENERATED-CLI-FLOW:END -->)"
     if not re.search(pattern, md_content, flags=re.DOTALL):
-        print(f"Skipping cli flowchart (No placeholder found in {index_md})")
+        print(f"[SKIP] CLI flowchart -> No placeholder found in {index_md}")
         return
 
     def replacer(m):
@@ -221,14 +226,15 @@ def generate_validator_flowchart():
     if not flow_lines:
         return
 
-    table_str = "```mermaid\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+    theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
+    table_str = f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
 
     with open(index_md, "r", encoding="utf-8") as f:
         md_content = f.read()
 
     pattern = r"(<!-- AUTO-GENERATED-VALIDATOR-FLOW:START -->)(.*?)(<!-- AUTO-GENERATED-VALIDATOR-FLOW:END -->)"
     if not re.search(pattern, md_content, flags=re.DOTALL):
-        print(f"Skipping validator flowchart (No placeholder found in {index_md})")
+        print(f"[SKIP] Validator flowchart -> No placeholder found in {index_md}")
         return
 
     def replacer(m):
@@ -282,7 +288,8 @@ def generate_domain_flowcharts():
         if flow_lines:
             doc_type = file_name.split("_")[0].upper()
             section = f"### {doc_type} Validator (`{file_name}`)\n"
-            section += "```mermaid\ngraph LR\n" + "\n".join(flow_lines) + "\n```\n"
+            theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
+            section += f"```mermaid\n{theme_config}\ngraph LR\n" + "\n".join(flow_lines) + "\n```\n"
             domain_sections.append(section)
 
     if not domain_sections:
@@ -295,7 +302,7 @@ def generate_domain_flowcharts():
 
     pattern = r"(<!-- AUTO-GENERATED-DOMAIN-FLOWS:START -->)(.*?)(<!-- AUTO-GENERATED-DOMAIN-FLOWS:END -->)"
     if not re.search(pattern, md_content, flags=re.DOTALL):
-        print(f"Skipping domain flowcharts (No placeholder found in {index_md})")
+        print(f"[SKIP] Domain flowcharts -> No placeholder found in {index_md}")
         return
 
     def replacer(m):

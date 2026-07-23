@@ -3,7 +3,7 @@ doc_meta:
   id: GDC-001
   title: Architecture Fitness Functions & Compliance Engine
   owner: Architecture Authority
-  version: 2.0.0
+  version: 1.0.0
   status: approved
   classification: public
   governed_by: [GDC-000]
@@ -25,27 +25,33 @@ By transforming human-readable principles into mathematically verifiable constra
 
 ### 1.2 The Automation Scope & Domain Boundaries
 
-To fulfill the Constitution (GDC-000), we divide the automation scope of the Master Fitness Function into three definitive architectural perimeters. This list serves as the **strict foundational boundary** for any developer contributing to the `engine` codebase. Any new validation rule MUST fall into one of these physical domains:
+To fulfill the Constitution (GDC-000), we divide the automation scope of the Master Fitness Function into five definitive architectural perimeters (The 5 Pillars). This list serves as the **strict foundational boundary** for any developer contributing to the `engine` codebase. Any new validation rule MUST fall into one of these conceptual domains:
 
-1. **The Metadata Domain (YAML Frontmatter)** All rules that validate the `doc_meta` schema. This domain guarantees the identity and administrative governance of the artifact.
-   - **Ontology & Identity**: Enforces unique architectural IDs, semantic versioning, and explicit status transitions. _[Non-Leakage Policy](./GDC-000-governance-policy.md#21-the-boundary-constraints-non-leakage-policy)_
-   - **Meta-Governance**: Validates the `governed_by` field to guarantee the artifact explicitly declares its governing guideline. _[Circular Governance](./GDC-000-governance-policy.md#28-the-metaprogramming-principle-circular-governance)_
-   - **Ownership & Access Control**: Verifies the `owner` field maps to authorized entities (ARB/Squads). _[Architecture Authority](./GDC-000-governance-policy.md#211-the-architecture-authority)_
-   - **Temporal Governance**: Uses the system clock against dates in metadata to expire exception waivers and technology deprecation periods. _[Waivers](./GDC-000-governance-policy.md#210-architecture-exceptions-waivers) & [Grandfathering](./GDC-000-governance-policy.md#29-legacy-systems--transition-grandfathering)_
-   - **Traceability & Lineage (The C4 DAG)**: Automates detection of circular references, strict parent attachments (`parent_sad`, `parent_pad`), and orphaned artifacts to ensure the "Line of Sight". _[Contractual Lineage](./GDC-000-governance-policy.md#23-contractual-lineage-the-c4-dag)_
+1. **Topology & Identity Domain (Graph & Lineage)**
+   Focuses on the identity of the artifact and how it connects to the ecosystem (C4 DAG). This ensures the architecture graph remains unbroken and non-overlapping.
+   - **Ontology & Identity**: Enforces unique architectural IDs, preventing duplicates and floating nodes. _[Non-Leakage Policy](./GDC-000-governance-policy.md#21-the-boundary-constraints-non-leakage-policy)_
+   - **Traceability & Lineage**: Automates detection of circular references, missing parent attachments, and broken lineages. _[Contractual Lineage](./GDC-000-governance-policy.md#23-contractual-lineage-the-c4-dag)_
 
-2. **The Structural & Content Domain (Markdown AST)** All rules that parse the actual Markdown body to enforce structural integrity and architectural mapping.
-   - **NFR Taxonomy Enforcement**: Enforces that all non-functional requirements are categorically mapped to the AWS Well-Architected Framework pillars. _[NFR Taxonomy](./GDC-000-governance-policy.md#24-non-functional-requirements-nfr-taxonomy)_
+2. **Structural Compliance Domain (Shape & Completeness)**
+   Focuses on the physical shape and required completeness of the artifact, regardless of its subjective text content.
+   - **Schema & Metadata Integrity**: Ensures the artifact is well-formed against its JSON/YAML schema and has complete frontmatter.
+   - **Document Structure**: Enforces the existence of mandatory sections and their correct order.
 
-   <!-- lint_disable_start: vague_claim -->
-   - **Structural Integrity & Content Quality**: Enforces mandatory sections and eradicates subjective terminology (e.g., "blazingly fast"). _[The Quality Framework](./GDC-000-governance-policy.md#27-the-quality-framework)_
+3. **Semantic & Quality Domain (Meaning & Language)**
+   Focuses on the editorial quality and semantic clarity of the architectural content.
+   - **NFR Taxonomy Enforcement**: Enforces that non-functional requirements map strictly to AWS Well-Architected Framework pillars. _[NFR Taxonomy](./GDC-000-governance-policy.md#24-non-functional-requirements-nfr-taxonomy)_
+   - **Clarity & Objectivity**: Eradicates subjective terminology (e.g., "blazingly fast") and enforces clear, unambiguous claims. _[The Quality Framework](./GDC-000-governance-policy.md#27-the-quality-framework)_
 
-   <!-- lint_disable_end: vague_claim -->
+4. **Lifecycle & Environment Domain (Time, Space, & State)**
+   Focuses on the artifact's status in time, its physical location, and its CI/CD lifecycle state.
+   - **Temporal Governance**: Uses the system clock against dates to expire exception waivers and enforce review cycles. _[Waivers](./GDC-000-governance-policy.md#210-architecture-exceptions-waivers)_
+   - **Spatial Governance**: Enforces correct file naming and repository placement.
+   - **Immutability Lock**: Requires explicit semantic version bumps for any modifications. _[Artifact Lifecycle & Versioning](./GDC-000-governance-policy.md#25-artifact-lifecycle--versioning)_
 
-3. **The Lifecycle & Execution Domain (Git & CI/CD Environment)** All rules that execute outside the file itself, utilizing the environment to enforce state changes and execution delegation.
-   - **Immutability Lock**: Utilizes Git history audits to lock approved documents into an immutable state, requiring explicit semantic version bumps for any modifications. _[Artifact Lifecycle & Versioning](./GDC-000-governance-policy.md#25-artifact-lifecycle--versioning)_
-   - **Federated Execution Delegation**: The engine dynamically defers and merges domain-specific validations from local guidelines instead of hardcoding them. _[The Fractal Boundary](./GDC-000-governance-policy.md#22-the-fractal-boundary-physical-vs-logical-decentralization)_
-   - **Execution Enforcement**: Ensures that the Master Fitness Function is strictly embedded as a blocking PR check. _[Policy-as-Code](./GDC-000-governance-policy.md#26-policy-as-code)_
+5. **Architecture Constraints Domain (Hard Technical Limits)**
+   Focuses on enforcing absolute enterprise technical decisions and security boundaries.
+   - **Technology Boundaries**: Enforces enterprise-wide constraints against deprecated or unsafe tools.
+   - **Security Boundaries**: Detects explicit violations of network and data isolation rules.
 
 ### 1.3 The Fractal Implementation Strategy
 
@@ -55,7 +61,7 @@ At runtime, the Master Fitness Function bootstraps a foundational global root po
 
 For example, if validating an SAD, it dynamically merges the global root with the SAD Triad:
 
-1. **Guideline**: [`GDC-009-sad-guideline.md`](./GDC-009-sad-guideline.md)
+1. **Guideline**: [`GDC-009-sad-guideline.md`](GDC-009-sad-guideline.md)
 2. **Schema**: `schemas/sad.schema.json`
 3. **Validator**: `engine/validators/domains/sad_validator.py`
 
@@ -82,11 +88,15 @@ scnehaux-architecture/
 │       ├── engine/              # (Core automated execution logic)
 │       │   ├── INDEX.md
 │       │   ├── auditors/         # (External environment validators)
+│       │   │   ├── dependency_scanner.py
 │       │   │   ├── git_auditor.py
-│       │   │   └── graph_auditor.py
+│       │   │   ├── graph_auditor.py
+│       │   │   └── waiver_auditor.py
 │       │   ├── cli.py            # (The Master Fitness Function Entrypoint)
 │       │   ├── config/           # (Engine configuration & environment variables)
-│       │   │   └── loader.py
+│       │   │   ├── constants.py
+│       │   │   ├── loader.py
+│       │   │   └── severity.py
 │       │   ├── fs/               # (File system utilities & workspace traversal)
 │       │   │   └── crawler.py
 │       │   ├── parsing/          # (Data extraction from raw files)
@@ -104,7 +114,10 @@ scnehaux-architecture/
 │       │       │   ├── std_validator.py
 │       │       │   └── tdd_validator.py
 │       │       ├── global_rules.py # (Foundational Python rules for all documents)
-│       │       └── registry.py
+│       │       ├── metadata_rules.py
+│       │       ├── registry.py
+│       │       ├── schema_extensions.py
+│       │       └── structure_rules.py
 │       ├── generators/          # (Dynamic docs and topography autobuilders)
 │       │   ├── INDEX.md
 │       │   ├── generate_adr_index.py
@@ -129,32 +142,38 @@ scnehaux-architecture/
 │       └── tests/               # (High-coverage pytest suite)
 │           ├── INDEX.md
 │           ├── conftest.py
-│           └── engine/          # (Core automated execution logic)
-│               ├── auditors/    # (External environment validators)
-│               │   ├── test_git_auditor.py
-│               │   └── test_graph_auditor.py
-│               ├── config/      # (Engine configuration & environment variables)
-│               │   └── test_loader.py
-│               ├── fs/          # (File system utilities & workspace traversal)
-│               │   ├── test_crawler.py
-│               │   └── test_crawler_coverage.py
-│               ├── parsing/     # (Data extraction from raw files)
-│               │   └── test_markdown_ast.py
-│               ├── reporting/   # (CLI output formatting & CI/CD error logs)
-│               ├── test_cli.py
-│               └── validators/  # (The core policy sandbox)
-│                   ├── domains/ # (Federated domain-specific triad scripts)
-│                   │   ├── test_adr_validator.py
-│                   │   ├── test_all_domains.py
-│                   │   ├── test_ead_validator.py
-│                   │   ├── test_gdc_validator.py
-│                   │   ├── test_pad_validator.py
-│                   │   ├── test_sad_validator.py
-│                   │   ├── test_std_validator.py
-│                   │   └── test_tdd_validator.py
-│                   ├── test_base.py
-│                   ├── test_global_rules.py
-│                   └── test_registry.py
+│           ├── engine/          # (Core automated execution logic)
+│           │   ├── auditors/     # (External environment validators)
+│           │   │   ├── test_dependency_scanner.py
+│           │   │   ├── test_git_auditor.py
+│           │   │   ├── test_graph_auditor.py
+│           │   │   └── test_waiver_auditor.py
+│           │   ├── config/       # (Engine configuration & environment variables)
+│           │   │   └── test_loader.py
+│           │   ├── fs/           # (File system utilities & workspace traversal)
+│           │   │   └── test_crawler.py
+│           │   ├── parsing/      # (Data extraction from raw files)
+│           │   │   └── test_markdown_ast.py
+│           │   ├── reporting/    # (CLI output formatting & CI/CD error logs)
+│           │   ├── test_cli.py
+│           │   ├── test_cli_extra.py
+│           │   └── validators/   # (The core policy sandbox)
+│           │       ├── domains/  # (Federated domain-specific triad scripts)
+│           │       │   ├── test_adr_validator.py
+│           │       │   ├── test_all_domains.py
+│           │       │   ├── test_ead_validator.py
+│           │       │   ├── test_gdc_validator.py
+│           │       │   ├── test_pad_validator.py
+│           │       │   ├── test_sad_validator.py
+│           │       │   ├── test_std_validator.py
+│           │       │   └── test_tdd_validator.py
+│           │       ├── test_base.py
+│           │       ├── test_global_rules.py
+│           │       ├── test_metadata_rules.py
+│           │       ├── test_registry.py
+│           │       ├── test_schema_extensions.py
+│           │       └── test_structure_rules.py
+│           └── test_manual.sad.md
 ```
 <!-- END_ENGINE_TOPOGRAPHY -->
 
@@ -182,7 +201,7 @@ The engine evaluates JSON Schema configuration files mapped by Document Type.
 | Document Type | Ruleset File | Scope / Responsibilities |
 | :-- | :-- | :-- |
 | **Global Baseline** | `schemas/base.schema.json` | The universal parent. Enforces generic syntax, minimum word counts, banned vocabulary, and overarching layout structures. |
-| **Domain-Specific Rulesets** | `schemas/[doc_type].schema.json` | To adhere to the Open-Closed Principle, domain-specific JSON schemas are documented exclusively within their respective guidelines:<br>• [GDC](./GDC-005-gdc-guideline.md)<br>• [EAD](./GDC-006-ead-guideline.md)<br>• [STD](./GDC-007-std-guideline.md)<br>• [PAD](./GDC-008-pad-guideline.md)<br>• [SAD](./GDC-009-sad-guideline.md)<br>• [ADR](./GDC-010-adr-guideline.md)<br>• [TDD](./GDC-011-tdd-guideline.md) |
+| **Domain-Specific Rulesets** | `schemas/[doc_type].schema.json` | To adhere to the Open-Closed Principle, domain-specific JSON schemas are documented exclusively within their respective guidelines:<br>• [GDC](GDC-005-gdc-guideline.md)<br>• [EAD](GDC-006-ead-guideline.md)<br>• [STD](GDC-007-std-guideline.md)<br>• [PAD](GDC-008-pad-guideline.md)<br>• [SAD](GDC-009-sad-guideline.md)<br>• [ADR](GDC-010-adr-guideline.md)<br>• [TDD](GDC-011-tdd-guideline.md) |
 
 #### 2.3.1 Global Baseline Rules (`schemas/base.schema.json`)
 
@@ -192,28 +211,96 @@ The global baseline applies universally to all architecture documents across the
 >
 > **DO NOT EDIT THIS TABLE MANUALLY.** This table is automatically generated from the JSON Schema (`schemas/base.schema.json`). If you need to update a rule, modify the schema file and run: `python 06-fitness-function/generators/generate_rules_doc.py`
 
+<!-- lint_disable_start: prohibited_word -->
 <!-- AUTO-GENERATED-RULES:START -->
 
 | Rule Category      | Parameter                | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | :----------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Structure** | Min Content Length Chars | `50` |
-| **Content** | Prohibited Words | <ul><li>`maybe`</li><li>`probably`</li><li>`should consider`</li><li>`TBD`</li><li>`coming soon`</li><li>`and so on`</li><li>`seamless`</li><li>`seamlessly`</li><li>`obviously`</li><li>`blazingly`</li><li>`trivially`</li></ul> |
-| **Content** | Ambiguity Check | **Pattern**: `\b(highly\|very\|extremely\|super\|incredibly)\s+(scalable\|fast\|secure\|reliable\|available\|performant\|robust\|efficient)\b`<br>**Message**: `Vague claim detected. Must be quantified with metrics.` |
-| **Governance** | Version Format | `semver` |
-| **Quantification** | Aws Waf Pillars | <ul><li>`Operational Excellence`</li><li>`Security`</li><li>`Reliability`</li><li>`Performance Efficiency`</li><li>`Cost Optimization`</li><li>`Sustainability`</li></ul> |
+| **Structure Rules** | Artifact Directories | **Gdc**: `00-governance`<br>**Ead**: `01-enterprise`<br>**Std**: `02-standards`<br>**Pad**: `03-domain`<br>**Sad**: `04-system`<br>**Adr**: `05-decisions`<br>**Tdd**: `docs/designs` |
+| **Structure Rules** | Ignored Files | **Exact Matches**: <ul><li>`readme.md`</li><li>`index.md`</li><li>`contributing.md`</li><li>`changelog.md`</li><li>`maturity.md`</li><li>`traceability.md`</li><li>`temp.md`</li><li>`scnehaux_enterprise_architecture_refinement.md`</li></ul><br>**Patterns**: <ul><li>`\.copy\.md$`</li><li>`\.template\.md$`</li><li>`-template\.md$`</li><li>`[\\/]templates[\\/]`</li></ul> |
+| **Structure Rules** | Max Directory Depth | `3` |
+| **Content Rules** | Exempt Statuses | <ul><li>`draft`</li></ul> |
+| **Content Rules** | Max Review Age Days | **Value**: `365`<br>**Error Message**: `Document review age of {age_days} days exceeds limit of {limit} days.` |
+| **Content Rules** | Min Content Length Chars | **Value**: `50`<br>**Error Message**: `Section '{section_name}' content length ({length} chars) is below minimum of {min_length} chars.` |
+| **Content Rules** | Prohibited Words | **Patterns**: <ul><li>`\bmaybe\b`</li><li>`\bprobably\b`</li><li>`\bshould consider\b`</li><li>`\bTBD\b`</li><li>`\bcoming soon\b`</li><li>`\band so on\b`</li><li>`\bseamless(?:ly)?\b`</li><li>`\bobviously\b`</li><li>`\bblazingly\b`</li><li>`\btrivially\b`</li></ul><br>**Error Message**: `Prohibited boilerplate or hesitant word detected. Use definitive, professional language.` |
+| **Content Rules** | Ambiguity Rules | **Patterns**: <ul><li>`\b(highly\|very\|extremely\|super\|incredibly)\s+(scalable\|fast\|secure\|reliable\|available\|performant\|robust\|efficient)\b`</li></ul><br>**Error Message**: `Vague claim detected. Must be quantified with metrics.` |
+| **Severity Levels** | 0. Engine Execution Domain (System Fatality) | **Unreadable Artifact**: `CRITICAL`<br>**Corrupt Frontmatter**: `CRITICAL`<br>**Unknown Document Type**: `CRITICAL`<br>**Missing Validator**: `CRITICAL`<br>**Missing Domain Schema**: `CRITICAL` |
+| **Severity Levels** | 1. Topology & Identity Domain (Graph & Lineage) | **Circular Dependency**: `CRITICAL`<br>**Cross Reference Missing**: `ERROR`<br>**Duplicate Id**: `CRITICAL`<br>**Inline Reference Missing**: `WARNING`<br>**Orphan Document**: `ERROR`<br>**Traceability Violation**: `ERROR`<br>**Broken Internal Link**: `ERROR` |
+| **Severity Levels** | 2. Structural Compliance Domain (Shape & Completeness) | **Missing Metadata**: `ERROR`<br>**Missing Required Subsection**: `ERROR`<br>**Missing Section**: `ERROR`<br>**Missing Section Keyword**: `ERROR`<br>**Schema Validation Failed**: `CRITICAL`<br>**Subsection Order Violation**: `WARNING` |
+| **Severity Levels** | 3. Semantic & Quality Domain (Meaning & Language) | **Ambiguity Rules**: `WARNING`<br>**Nfr Taxonomy Violation**: `ERROR`<br>**Prohibited Words**: `ERROR`<br>**Structural Integrity Violation**: `CRITICAL`<br>**Stylistic Deviation**: `WARNING`<br>**Vague Claim In Nfr**: `ERROR` |
+| **Severity Levels** | 4. Lifecycle & Environment Domain (Time, Space, & State) | **Compliance Filename Match**: `ERROR`<br>**Compliance Macro Directory**: `ERROR`<br>**Draft Status Violation**: `WARNING`<br>**Exception Expired**: `ERROR`<br>**Exempt Document Skipped**: `INFO`<br>**Review Age Violation**: `WARNING`<br>**Version Bump Required**: `ERROR` |
+| **Severity Levels** | 5. Architecture Constraints Domain (Hard Technical Limits) | **Operational Stability Violation**: `ERROR`<br>**Prohibited Technology Violation**: `ERROR`<br>**Security Isolation Violation**: `CRITICAL`<br>**Technology Hold Violation**: `CRITICAL`<br>**Unapproved Technology**: `ERROR` |
+| **Governance** | Blocking Severities | `['CRITICAL', 'ERROR']` |
 
 ### Severity Levels
 
-| Error Code                        | Severity (CI Action) |
-| :-------------------------------- | :------------------- |
-| `vague_claim_in_nfr` | **ERROR** |
-| `security_isolation_violation` | **CRITICAL** |
-| `structural_integrity_violation` | **CRITICAL** |
-| `technology_hold_violation` | **CRITICAL** |
-| `operational_stability_violation` | **ERROR** |
+#### 0. Engine Execution Domain (System Fatality)
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `unreadable_artifact` | **CRITICAL** |
+| `corrupt_frontmatter` | **CRITICAL** |
+| `unknown_document_type` | **CRITICAL** |
+| `missing_validator` | **CRITICAL** |
+| `missing_domain_schema` | **CRITICAL** |
+
+#### 1. Topology & Identity Domain (Graph & Lineage)
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `circular_dependency` | **CRITICAL** |
+| `cross_reference_missing` | **ERROR** |
+| `duplicate_id` | **CRITICAL** |
+| `inline_reference_missing` | **WARNING** |
+| `orphan_document` | **ERROR** |
+| `traceability_violation` | **ERROR** |
+| `broken_internal_link` | **ERROR** |
+
+#### 2. Structural Compliance Domain (Shape & Completeness)
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
 | `missing_metadata` | **ERROR** |
+| `missing_required_subsection` | **ERROR** |
+| `missing_section` | **ERROR** |
+| `missing_section_keyword` | **ERROR** |
+| `schema_validation_failed` | **CRITICAL** |
+| `subsection_order_violation` | **WARNING** |
+
+#### 3. Semantic & Quality Domain (Meaning & Language)
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `ambiguity_rules` | **WARNING** |
+| `nfr_taxonomy_violation` | **ERROR** |
+| `prohibited_words` | **ERROR** |
+| `structural_integrity_violation` | **CRITICAL** |
+| `stylistic_deviation` | **WARNING** |
+| `vague_claim_in_nfr` | **ERROR** |
+
+#### 4. Lifecycle & Environment Domain (Time, Space, & State)
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `compliance_filename_match` | **ERROR** |
+| `compliance_macro_directory` | **ERROR** |
+| `draft_status_violation` | **WARNING** |
+| `exception_expired` | **ERROR** |
+| `exempt_document_skipped` | **INFO** |
+| `review_age_violation` | **WARNING** |
+| `version_bump_required` | **ERROR** |
+
+#### 5. Architecture Constraints Domain (Hard Technical Limits)
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `operational_stability_violation` | **ERROR** |
+| `prohibited_technology_violation` | **ERROR** |
+| `security_isolation_violation` | **CRITICAL** |
+| `technology_hold_violation` | **CRITICAL** |
+| `unapproved_technology` | **ERROR** |
+
+
+| Rule Category | Parameter | Enforcement / Value |
+| :--- | :--- | :--- |
+| **Common Metadata Fields** | Common Metadata Fields | <ul><li>id (string)</li><li>title (string)</li><li>status (string)</li></ul> |
 
 <!-- AUTO-GENERATED-RULES:END -->
+<!-- lint_disable_end: prohibited_word -->
 
 #### 2.3.2 The Universal Schema Generator
 
@@ -258,13 +345,13 @@ The abstract parent class. Executes the merged JSON schema, handles global error
 
 To adhere to the Open-Closed Principle, domain-specific Python logic (the `validate_type_specific` implementation) is documented exclusively within their respective guidelines:
 
-- [GDC](./GDC-005-gdc-guideline.md) (`engine/validators/domains/gdc_validator.py`)
-- [EAD](./GDC-006-ead-guideline.md) (`engine/validators/domains/ead_validator.py`)
-- [STD](./GDC-007-std-guideline.md) (`engine/validators/domains/std_validator.py`)
-- [PAD](./GDC-008-pad-guideline.md) (`engine/validators/domains/pad_validator.py`)
-- [SAD](./GDC-009-sad-guideline.md) (`engine/validators/domains/sad_validator.py`)
-- [ADR](./GDC-010-adr-guideline.md) (`engine/validators/domains/adr_validator.py`)
-- [TDD](./GDC-011-tdd-guideline.md) (`engine/validators/domains/tdd_validator.py`)
+- [GDC](GDC-005-gdc-guideline.md) (`engine/validators/domains/gdc_validator.py`)
+- [EAD](GDC-006-ead-guideline.md) (`engine/validators/domains/ead_validator.py`)
+- [STD](GDC-007-std-guideline.md) (`engine/validators/domains/std_validator.py`)
+- [PAD](GDC-008-pad-guideline.md) (`engine/validators/domains/pad_validator.py`)
+- [SAD](GDC-009-sad-guideline.md) (`engine/validators/domains/sad_validator.py`)
+- [ADR](GDC-010-adr-guideline.md) (`engine/validators/domains/adr_validator.py`)
+- [TDD](GDC-011-tdd-guideline.md) (`engine/validators/domains/tdd_validator.py`)
 
 #### 2.4.3 Core Framework Dependencies
 
@@ -308,21 +395,21 @@ Once an architectural decision (such as an ADR) reaches the `approved` status, i
 
 ## 3. Technology Lifecycle Governance
 
-The compliance engine enforces the enterprise **Technology Radar** (`tech-radar.yaml`) and **Standards Maturity Model**. The authoritative policies — maturity phases, sunset strategy, applicability criteria, and exception waiver procedures — are defined and maintained in **[GDC-004 — Technology Lifecycle & Standards Governance](./GDC-004-tech-lifecycle.md)**.
+The compliance engine enforces the enterprise **Technology Radar** (`tech-radar.yaml`) and **Standards Maturity Model**. The authoritative policies — maturity phases, sunset strategy, applicability criteria, and exception waiver procedures — are defined and maintained in **[GDC-004 — Technology Lifecycle & Standards Governance](GDC-004-tech-lifecycle.md)**.
 
 This section documents only the **automated enforcement mechanics** that GDC-001 provides to execute those policies:
 
 ### 3.1 Automated Hold Enforcement
 
-The linter automatically rejects any Pull Request containing references to technologies that have reached the `Hold` phase and exceeded their grace window. This triggers a `technology_hold_violation` at `CRITICAL` severity, producing a Hard CI Block (Exit 1). The 3-Stage Sunset Strategy (recommendation → grace window → hard block) is defined in [GDC-004 §2.2](./GDC-004-tech-lifecycle.md).
+The linter automatically rejects any Pull Request containing references to technologies that have reached the `Hold` phase and exceeded their grace window. This triggers a `technology_hold_violation` at `CRITICAL` severity, producing a Hard CI Block (Exit 1). The 3-Stage Sunset Strategy (recommendation → grace window → hard block) is defined in [GDC-004 §2.2](GDC-004-tech-lifecycle.md).
 
 ### 3.2 Automated Waiver Expiration
 
-The CI engine performs temporal validation on Exception ADRs. If an `accepted` waiver ADR reaches its `expiry_date`, the linter triggers a Hard CI Block with an `exception_expired` ERROR. The procedural resolution paths (resolve debt, evolve standard, or renew waiver) are defined in [GDC-004 §4.2](./GDC-004-tech-lifecycle.md) and [GDC-010 §2.4.3](./GDC-010-adr-guideline.md).
+The CI engine performs temporal validation on Exception ADRs. If an `accepted` waiver ADR reaches its `expiry_date`, the linter triggers a Hard CI Block with an `exception_expired` ERROR. The procedural resolution paths (resolve debt, evolve standard, or renew waiver) are defined in [GDC-004 §4.2](GDC-004-tech-lifecycle.md) and [GDC-010 §2.4.3](GDC-010-adr-guideline.md).
 
 ## 4. Severity & Exception Waivers
 
-The authoritative definitions for applicability criteria and the exception waiver procedure are maintained in **[GDC-004 §4](./GDC-004-tech-lifecycle.md)**. The approval authority matrix, time-bound review commitments, and auditing rules live there as the single source of truth.
+The authoritative definitions for applicability criteria and the exception waiver procedure are maintained in **[GDC-004 §4](GDC-004-tech-lifecycle.md)**. The approval authority matrix, time-bound review commitments, and auditing rules live there as the single source of truth.
 
 GDC-001's role is enforcement: the engine validates waiver metadata (`approved_by`, `expiry_date`, `risk_classification`) against the schema defined in `schemas/adr.schema.json` and executes the temporal checks described in §3.2 above.
 
@@ -461,7 +548,16 @@ sequenceDiagram
 3. **Domain-Specific Lifecycle Enforcement**: The CI pipeline executes lifecycle and temporal logic as explicitly defined in downstream domain guidelines (e.g., executing exception mechanisms as delegated by GDC-010).
 4. **Distributed Enforcement (Remote Execution)**: Downstream project repositories (containing C3/C4 artifacts) MUST NOT maintain their own copies of `engine/cli.py`. To ensure strict, untamperable governance, local CI/CD pipelines must validate documents by remotely executing the central linter.
 
-### 6.1 Downstream Integration (Remote Execution)
+### 6.1 Execution Boundary & Path Sterilization (Fail-Closed Security)
+
+To prevent Path Traversal vulnerabilities and ensure absolute validation integrity, the Master Fitness Function implements strict execution boundaries:
+
+1. **CWD Anchoring (`TARGET_REPO_ROOT`)**: The execution root is strictly defined by the Current Working Directory (CWD). The linter will automatically reject execution if the CWD is not a valid repository root (lacking a `.git` marker).
+2. **Path Boundary Enforcement**: Any target path explicitly provided to the linter (e.g., via CLI arguments) MUST resolve within the `TARGET_REPO_ROOT`. Attempts to traverse outside the repository (e.g., using `..` or targeting a different drive volume) will trigger an immediate **Hard Crash (`sys.exit(1)`)**.
+3. **Directory Sterilization**: When traversing the repository, the crawler strictly sterilizes the filesystem tree. It will aggressively prune any directories that do not explicitly match the `artifact_directories` schema defined in `base.schema.json`.
+4. **Fail-Closed Execution**: The linter is strictly a "Fail-Closed" security system. Boundary violations DO NOT result in skipped files with a passing (`0`) exit code. All violations result in a fatal `CRITICAL` error to prevent unvalidated files from silently bypassing CI/CD checks.
+
+### 6.2 Downstream Integration (Remote Execution)
 
 To prevent security vulnerabilities and local tampering, downstream repositories (e.g., `scnehaux-ui-platform`) must remotely invoke this Compliance Engine during their CI/CD runs.
 
@@ -472,6 +568,16 @@ jobs:
   architecture-lint:
     uses: scnehaux/scnehaux-architecture/.github/workflows/linter.yml@main
 ```
+
+> [!TIP] **Testing Linter Upgrades in Downstream Repositories** By default, the workflow executes the linter script from the `main` branch. If you are developing a new linter rule in a branch (e.g., `feature/strict-nfr`) inside the governance repository and need to test it against your downstream application code, you must override the `governance_ref` input:
+>
+> ```yaml
+> jobs:
+>   architecture-lint:
+>     uses: scnehaux/scnehaux-architecture/.github/workflows/linter.yml@feature/strict-nfr
+>     with:
+>       governance_ref: 'feature/strict-nfr'
+> ```
 
 **Option B: Centralized Docker Image** Execute the immutable, centrally-published linter image against your local directory:
 
@@ -491,4 +597,3 @@ In accordance with the Quality Rubric (Trade-Offs parameter), the ARB explicitly
 2. **180-Day Sunset Grace Period vs. Immediate Deprecation**
    - _Why rejected_: Immediate deprecation halts all product delivery, forcing teams into unplanned emergency migrations and jeopardizing business roadmaps.
    - _The Trade-Off_: We consciously accept the security and maintenance risk of running obsolete technology for up to 180 days. In exchange, we provide engineering teams a predictable, humane runway to schedule their technical debt payoff without halting feature velocity.
-

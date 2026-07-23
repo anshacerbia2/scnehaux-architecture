@@ -1,9 +1,22 @@
 from engine.validators.base import BaseValidator
+from engine.config.severity import SeverityRule
+
+
+def _mock_rules():
+    return {"severity_levels": {r.value: "ERROR" for r in SeverityRule}}
 
 
 def test_base_validator_lint_disable():
     content = "<!-- lint_disable: missing_metadata, prohibited_word -->\nSome content"
-    validator = BaseValidator("dummy.md", content, {}, {}, {}, set(), {})
+    validator = BaseValidator(
+        "dummy.md",
+        content,
+        {},
+        {"severity_levels": {"missing_metadata": "ERROR", "prohibited_word": "ERROR"}},
+        {},
+        set(),
+        {},
+    )
     assert "missing_metadata" in validator.disabled_rules
     assert "prohibited_word" in validator.disabled_rules
 
@@ -76,7 +89,10 @@ def test_base_validator_lint_disable_undocumented_has_none_reason():
 
 
 def test_base_validator_lint_disable_cannot_silence_critical():
-    rules = {"severity_levels": {"structural_integrity_violation": "CRITICAL"}}
+    rules = {
+        "severity_levels": {"structural_integrity_violation": "CRITICAL"},
+        "blocking_severities": ["CRITICAL", "ERROR"],
+    }
     content = "<!-- lint_disable: structural_integrity_violation -->"
     v = BaseValidator("x.md", content, {}, rules, {}, set(), {})
     v.add_error("structural_integrity_violation", "sections out of order")
@@ -107,21 +123,27 @@ def test_schema_validation_enum():
             }
         },
     }
-    v = BaseValidator("test.md", "content", {"status": "draft"}, {}, schema, set(), {})
+    v = BaseValidator(
+        "test.md", "content", {"status": "draft"}, _mock_rules(), schema, set(), {}
+    )
     v.validate()
     assert any("Schema validation failed at doc_meta" in e[1] for e in v.errors)
 
 
 def test_schema_validation_pattern():
     schema = {"type": "object", "properties": {"Context": {"pattern": "^[a-z]+$"}}}
-    v = BaseValidator("test.md", "## Context\n\n123", {}, {}, schema, set(), {})
+    v = BaseValidator(
+        "test.md", "## Context\n\n123", {}, _mock_rules(), schema, set(), {}
+    )
     v.validate()
     assert any("expected pattern" in e[1] for e in v.errors)
 
 
 def test_schema_validation_other():
     schema = {"type": "object", "properties": {"doc_meta": {"type": "string"}}}
-    v = BaseValidator("test.md", "content", {"status": "draft"}, {}, schema, set(), {})
+    v = BaseValidator(
+        "test.md", "content", {"status": "draft"}, _mock_rules(), schema, set(), {}
+    )
     v.validate()
     assert any("type" in e[1] or "Schema validation failed" in e[1] for e in v.errors)
 
@@ -134,7 +156,7 @@ def test_convert_dates():
         "test.md",
         "content",
         {"d": datetime.date(2023, 1, 1), "l": [datetime.date(2023, 1, 2)]},
-        {},
+        _mock_rules(),
         schema,
         set(),
         {},

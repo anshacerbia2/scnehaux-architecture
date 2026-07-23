@@ -148,14 +148,14 @@ flowchart LR
     style Broker fill:#805ad5,stroke:#553c9a,color:#fff
 ```
 
-| Interaction | Preferred Pattern | Rationale & Target |
-| :-- | :-- | :-- |
-| User request (read/command) | REST / GraphQL via gateway | Synchronous; cross-domain P99 ≤ 300 ms |
-| Cross-domain command | REST (synchronous) | Only when a response is required on the critical path |
-| Business notification | Event (asynchronous) | Decouples availability; at-least-once delivery |
-| Data synchronization | Event / CDC | Eventually consistent; conforms to EAD-003 |
-| Long-running process | Workflow Platform | Orchestrated, durable, resumable |
-| External partner | API Gateway + Integration ACL | Vendor isolated behind Anti-Corruption Layer |
+| Interaction                 | Preferred Pattern             | Rationale & Target                                    |
+| :-------------------------- | :---------------------------- | :---------------------------------------------------- |
+| User request (read/command) | REST / GraphQL via gateway    | Synchronous; cross-domain P99 ≤ 300 ms                |
+| Cross-domain command        | REST (synchronous)            | Only when a response is required on the critical path |
+| Business notification       | Event (asynchronous)          | Decouples availability; at-least-once delivery        |
+| Data synchronization        | Event / CDC                   | Eventually consistent; conforms to EAD-003            |
+| Long-running process        | Workflow Platform             | Orchestrated, durable, resumable                      |
+| External partner            | API Gateway + Integration ACL | Vendor isolated behind Anti-Corruption Layer          |
 
 **Communication rules:**
 
@@ -189,14 +189,14 @@ graph TD
 
 **Enterprise contract standards:**
 
-| Contract Type | Mandated Standard |
-| :-- | :-- |
-| REST API | OpenAPI 3.1 |
-| Event | AsyncAPI 3.0 |
-| Authentication | OAuth 2.1 / OpenID Connect |
-| Authorization | JWT claims validated at the edge |
-| Error model | RFC 9457 Problem Details |
-| Deprecation window | ≥ 2 consumer release cycles or 90 days, whichever is longer |
+| Contract Type          | Mandated Standard                                           |
+| :--------------------- | :---------------------------------------------------------- |
+| REST API               | OpenAPI 3.1                                                 |
+| Event                  | AsyncAPI 3.0                                                |
+| Authentication         | OAuth 2.1 / OpenID Connect                                  |
+| Identity Authorization | JWT claims validated at the edge                            |
+| Error model            | RFC 9457 Problem Details                                    |
+| Deprecation window     | ≥ 2 consumer release cycles or 90 days, whichever is longer |
 
 ### 5.4. Gateway & Broker Topology
 
@@ -313,14 +313,14 @@ Synchronous cross-domain calls carry a mandatory timeout, retry-with-backoff, an
 
 ## 9. Ownership
 
-| Responsibility | Accountable | Consulted |
-| :-- | :-- | :-- |
+| Responsibility                                      | Accountable            | Consulted                      |
+| :-------------------------------------------------- | :--------------------- | :----------------------------- |
 | Enterprise integration architecture (this artifact) | Architecture Authority | Integration Team, Domain Leads |
-| API governance and standards | Integration Team | Architecture Authority |
-| Event governance and the broker | Integration Team | Platform Engineering |
-| Provider contracts | Provider Domain | Consumer Domains |
-| Consumer conformance | Consumer Domain | Provider Domain |
-| External vendor mediation | Integration Team | Security Team |
+| API governance and standards                        | Integration Team       | Architecture Authority         |
+| Event governance and the broker                     | Integration Team       | Platform Engineering           |
+| Provider contracts                                  | Provider Domain        | Consumer Domains               |
+| Consumer conformance                                | Consumer Domain        | Provider Domain                |
+| External vendor mediation                           | Integration Team       | Security Team                  |
 
 ---
 
@@ -393,4 +393,3 @@ Integration evolves by adding contracts and patterns while preserving backward c
 - OAuth 2.1 / OpenID Connect
 - RFC 9457 Problem Details for HTTP APIs
 - Building Event-Driven Microservices — Adam Bellemare
-

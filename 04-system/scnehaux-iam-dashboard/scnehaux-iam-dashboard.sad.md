@@ -3,39 +3,55 @@ doc_meta:
   id: SAD-002
   title: Scnehaux IAM Dashboard Software Architecture (SAD)
   owner: Principal Frontend Architect
-  version: 1.0.1
+  version: 1.0.0
   status: approved
   classification: restricted
   governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: '2026-05-18'
-  parent_pad: PAD-001
+  parent_pad: PAD-PLT-001
+  technologies:
+    - name: react
+      type: framework
 ---
 
 # Scnehaux IAM Dashboard Software Architecture (SAD-002)
 
 ---
 
-## 1. Purpose
+## 1. Purpose & Scope
 
-## Scope
+This document outlines the software architecture for the Scnehaux IAM Dashboard.
 
+### Objective
 
-**Capability Realized.** This system realizes the administrative-interface aspect of the Enterprise Identity & Access capability defined in [identity-platform.pad.md](../../03-domain/identity-platform/identity-platform.pad.md) (PAD-001).
+Provide a secure, tenant-isolated administrative console for identity operations, with cross-tenant data leakage made structurally impossible.
 
-The Scnehaux IAM Dashboard is the concrete frontend application serving as the administrative interface for the platform. It is architected as a standalone Single Page Application (SPA) for maximum isolation, operational simplicity, and strict boundary separation from other business-capability frontends. It consumes the enterprise design system packages (`@scnx/system` and `@scnx/core-ui`) with zero external primitive component libraries.
+### Constraint
 
-**System Context (C1).** A browser SPA behind the API Gateway; it consumes the IAM backend (SAD-001) over REST and renders with the enterprise design system. It holds no server-side state.
+Standalone client-rendered SPA (no SSR); intentionally excluded from the Module Federation runtime; consumes only `@scnx/system` / `@scnx/core-ui` (no external component libraries).
 
-**Objectives.** Provide a secure, tenant-isolated administrative console for identity operations, with cross-tenant data leakage made structurally impossible.
+### Capability
 
-**Constraints.** Standalone client-rendered SPA (no SSR); intentionally excluded from the Module Federation runtime; consumes only `@scnx/system` / `@scnx/core-ui` (no external component libraries).
+Administrative-interface access control.
+
+**System Context:** A browser SPA behind the API Gateway; it consumes the IAM backend (SAD-001) over REST and renders with the enterprise design system. It holds no server-side state.
 
 **Requirements.** Tenant bootstrap, client-side RBAC gating from JWT claims, resilient token-refresh, and strict browser hardening.
 
 **Assumptions.** The IAM backend issues and rotates tokens; the gateway forwards the `Scnehaux-Account` header; the design system packages are available via workspace or NPM.
 
-## 2. Solution Architecture
+## 2. Enterprise Traceability
+
+### Realizes
+
+This system realizes the administrative-interface aspect of the Identity Platform capability defined in [identity-platform.pad.md](../../03-domain/PAD-PLT-001-identity-platform/PAD-PLT-001-identity-platform.pad.md) (PAD-PLT-001).
+
+## 3. Solution Context
+
+The Scnehaux IAM Dashboard is the concrete frontend application serving as the administrative interface for the platform. It is architected as a standalone Single Page Application (SPA) for maximum isolation, operational simplicity, and strict boundary separation from other business-capability frontends. It consumes the enterprise design system packages (`@scnx/system` and `@scnx/core-ui`) with zero external primitive component libraries.
+
+## 4. Architecture Model
 
 The application adopts a strict 4-layer dependency flow (Clean Architecture) so that core multi-tenancy and security logic remain entirely framework-agnostic.
 
@@ -85,6 +101,10 @@ graph TD
 - **Domain Logic (`domain/`)**: Framework-agnostic TypeScript modules defining IAM bounded contexts (identity, access, organization) with strict Value Objects (e.g., `UserId`, `Email`).
 - **Feature UI (`features/`)**: React implementations. Strictly imports from `domain/` and `core/`. No cross-feature dependencies.
 - **Design System Isolation**: The UI relies 100% on `@scnx/system` (tokens/styling) and `@scnx/core-ui` (primitives); external component libraries (Radix, MUI) are prohibited to enforce brand consistency and minimize bundle payload.
+
+## 5. State & Data Architecture
+
+The standard REST flow provides the communication pathway between the frontend components and backend services. Data is serialized to JSON and transported over TLS 1.3 to ensure confidentiality and integrity during transit.
 
 ## 3. Runtime Flows
 
@@ -151,7 +171,7 @@ sequenceDiagram
     UI->>UI: Render / Hide Element
 ```
 
-## 4. Data Architecture
+### 5.1 Data Architecture Details
 
 This is a client-rendered SPA with no server-side datastore.
 
@@ -160,20 +180,26 @@ This is a client-rendered SPA with no server-side datastore.
 - **Caching**: An in-memory `QueryClient` cache keyed per tenant (purged on tenant switch), plus a capacity-bounded LRU cache for authorization decisions.
 - **Data Classification**: Holds short-lived access/refresh tokens and JWT claims client-side (Restricted); no PII is persisted beyond the active session.
 
-## 5. Integration
+## 6. Integration Contracts
 
 - **Consumed API**: The IAM backend (SAD-001) over REST, attaching the `Scnehaux-Account` tenant header; access tokens are verified against locally-cached JWT claims.
 - **Published API**: None — the dashboard is a pure consumer and exposes no API.
 - **Events (Producer/Consumer)**: None — no event-bus participation; all interaction is synchronous request/response.
 
-## 6. Security
+## 7. Security & Trust Boundary
 
 - **Tenant-Scoped Storage Keys**: `sessionStorage` keys are prefixed with the active tenant ID to prevent origin-shared contamination.
 - **LRU-Bounded Policy Cache**: Client-side authorization decisions are cached in a capacity-bounded LRU cache to prevent unbounded memory growth in long-running SOC sessions.
 - **Browser Defenses**: Enforces a strict `Content-Security-Policy` (`default-src 'none'`), `X-Frame-Options: DENY`, and sanitizes all user-generated content prior to rendering to prevent XSS.
 - **Authorization**: All privileged UI is gated by the client-side Policy Engine evaluating `x_scnx_ent` claims; the client gate is advisory only — the backend remains the authoritative enforcement point.
 
-## 7. Resilience & Failure Modes
+## 8. NFR
+
+### 8.1 Resilience & Failure Modes
+
+#### Blast Radius
+
+See below for component-specific blast radius analysis.
 
 - **Token Refresh Race Conditions**: Handled via a Token Refresh Mutex; prevents duplicate refresh requests from triggering backend theft-detection.
   - _Blast Radius_: **Single Client Session** — prevents accidental session invalidation for the current user.
@@ -182,21 +208,31 @@ This is a client-rendered SPA with no server-side datastore.
 - **Cross-Tenant Contamination**: Prevented structurally by purging the `QueryClient` cache on tenant switch (graceful degradation to a clean state).
   - _Blast Radius_: **Cross-Tenant Data Leak** — mitigated immediately upon tenant context switch.
 
-## 8. Observability & Operations
+### 8.2 Observability & Operations
 
 - **Web Vitals (SLI)**: Must adhere to enterprise targets (LCP ≤ 2.5s, FID ≤ 100ms, CLS ≤ 0.1).
-- **Performance Standards Compliance**: The codebase must comply with the [Enterprise Frontend Performance and Rendering Standard](../../02-standards/_global/frontend/STD-GLB-FE-002-performance.md) to guarantee frame-rate stability and prevent memory leaks.
+- **Performance Standards Compliance**: The codebase must comply with the [Enterprise Frontend Performance and Rendering Standard](../../02-standards/_global/STD-GLB-FE-002-performance.md) to guarantee frame-rate stability and prevent memory leaks.
 - **Logging / Errors**: Unhandled promise rejections and React Error Boundary fallbacks are aggregated to the centralized sink (e.g., Sentry) with `tenantId` and `traceId` context.
 - **Tracing**: OpenTelemetry browser tracing on critical paths (initial load, authentication handshakes) to correlate client latency with backend spans.
 - **Alerting / Runbook**: Client-error spikes alert the frontend on-call; the runbook covers cache-purge and forced-logout procedures.
 
-## 9. Deployment
+## 9. Deployment Strategy
+
+### CI/CD
+
+Standard GitLab CI pipeline.
 
 The IAM Dashboard is deployed as a stateless, client-rendered SPA.
 
 - **Environment / Infrastructure**: Delivered via a global CDN (e.g., AWS CloudFront / S3) as static assets.
 - **Micro-Frontend Exclusivity**: Intentionally excluded from the standard Module Federation runtime shell to preserve its security perimeter and prevent runtime contamination from less-privileged applications.
 - **CI/CD & Release**: Built with **Vite** (no federation requirement, so a lightweight pipeline); released as immutable, hash-versioned static bundles.
+
+## 10. Architecture Decisions
+
+### Rejected
+
+Server-Side Rendering (SSR) was evaluated but ultimately rejected because the application is fully authenticated and does not require search engine indexing (SEO).
 
 ## 10. Trade-offs & Alternatives
 
@@ -224,5 +260,3 @@ The IAM Dashboard is deployed as a stateless, client-rendered SPA.
 ## 12. Compatibility Strategy
 
 - Graceful degradation for clients without JavaScript is not a requirement for this internal admin dashboard.
-
-

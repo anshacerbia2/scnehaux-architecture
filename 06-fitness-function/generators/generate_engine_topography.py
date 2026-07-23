@@ -98,7 +98,7 @@ def update_document():
 
     with open(TARGET_FILE, "w", encoding="utf-8") as f:
         f.write(new_content)
-    print("Successfully generated live Topography and injected into GDC-001!")
+    print("[OK] Generated Engine Topography -> GDC-001-fitness-functions.md")
 
 
 if __name__ == "__main__":

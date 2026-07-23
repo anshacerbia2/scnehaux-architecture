@@ -91,4 +91,3 @@ None. All domain modeling constraints apply universally. Deviations require form
 1. **Static Analysis AST Inspections**: Build verification checks must run AST parsers to flag public field setter methods inside Aggregate files.
 2. **Architecture Review Audits**: Pull requests introducing cross-aggregate database mutations in a single transaction block must trigger security and architectural reviews.
 3. **Exception Waivers**: Deviations from these domain modeling parameters require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.
-

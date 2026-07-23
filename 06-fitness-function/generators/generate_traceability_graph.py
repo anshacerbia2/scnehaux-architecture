@@ -44,41 +44,49 @@ def generate_graph():
                 "governed_by": meta.get("governed_by", []),
             }
 
-    print("```mermaid")
-    print("graph TD")
-    print("    %% EAD Layer")
+    out = []
+    out.append("```mermaid\n%%{init: {'theme': 'neutral'}}%%")
+    out.append("graph LR")
+    out.append("    %% EAD Layer")
     for d in docs.values():
         if d["type"] == "EAD":
-            print(f"    {d['id']}[{d['id']}]:::ead")
+            out.append(f"    {d['id']}[{d['id']}]:::ead")
 
-    print("    %% PAD Layer")
+    out.append("    %% PAD Layer")
     for d in docs.values():
         if d["type"] == "PAD":
-            print(f"    {d['id']}[{d['id']}]:::pad")
+            out.append(f"    {d['id']}[{d['id']}]:::pad")
             parent = d.get("realizes_capability")
             if parent:
                 if isinstance(parent, list):
                     for p in parent:
-                        print(f"    {d['id']} -.realizes.-> {p}")
+                        out.append(f"    {d['id']} -.realizes.-> {p}")
                 else:
-                    print(f"    {d['id']} -.realizes.-> {parent}")
+                    out.append(f"    {d['id']} -.realizes.-> {parent}")
 
-    print("    %% SAD Layer")
+    out.append("    %% SAD Layer")
     for d in docs.values():
         if d["type"] == "SAD":
-            print(f"    {d['id']}[{d['id']}]:::sad")
+            out.append(f"    {d['id']}[{d['id']}]:::sad")
             parent = d.get("parent_pad")
             if parent:
                 if isinstance(parent, list):
                     for p in parent:
-                        print(f"    {d['id']} --> {p}")
+                        out.append(f"    {d['id']} --> {p}")
                 else:
-                    print(f"    {d['id']} --> {parent}")
+                    out.append(f"    {d['id']} --> {parent}")
 
-    print("    classDef ead fill:#059669,stroke:#047857,color:#fff")
-    print("    classDef pad fill:#2563eb,stroke:#1d4ed8,color:#fff")
-    print("    classDef sad fill:#7c3aed,stroke:#6d28d9,color:#fff")
-    print("```")
+    out.append("    classDef ead fill:#059669,stroke:#047857,color:#fff")
+    out.append("    classDef pad fill:#2563eb,stroke:#1d4ed8,color:#fff")
+    out.append("    classDef sad fill:#7c3aed,stroke:#6d28d9,color:#fff")
+    out.append("```")
+
+    output_path = os.path.join(base_dir, "03-domain", "TRACEABILITY.md")
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("# Architecture Traceability Graph\n\n")
+        f.write("\n".join(out) + "\n")
+
+    print(f"[OK] Generated Traceability Graph -> {output_path}")
 
 
 if __name__ == "__main__":

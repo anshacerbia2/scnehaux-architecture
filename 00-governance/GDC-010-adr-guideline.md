@@ -37,7 +37,7 @@ Every ADR must declare its `adr_type` to clarify the intent of the decision. The
 
 ### 2.2 The Schema Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-fitness-functions.md)**, the ADR specification is strictly governed by the following domain-specific linter schemas:
+In addition to the global structural enforcement defined in **[GDC-001](GDC-001-fitness-functions.md)**, the ADR specification is strictly governed by the following domain-specific linter schemas:
 
 > [!WARNING]
 >
@@ -47,11 +47,10 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata Policies** | Metadata Policies | <ul><li>doc_meta (object)</li></ul> |
-| **Metadata Policies** | Required Fields | <ul><li>id</li><li>title</li><li>adr_type (string)</li><li>status (string)</li><li>created</li><li>created_by</li></ul> |
-| **Metadata Policies** | Allowed Statuses | <ul><li>proposed</li><li>accepted</li><li>rejected</li><li>superseded</li><li>deprecated</li></ul> |
-| **Metadata Policies** | Allowed Types | <ul><li>foundational</li><li>implementation</li><li>exception</li><li>conflict_resolution</li><li>replacement</li></ul> |
-| **Metadata Policies** | exception_info Required Fields | <ul><li>approved_by</li><li>expiry_date</li><li>risk_classification</li><li>exception_reason</li></ul> |
+| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
+| **Metadata Rules** | exception_info Required Fields | <ul><li>approved_by</li><li>expiry_date</li><li>risk_classification</li><li>exception_reason</li></ul> |
+| **Section Rules** | Required Sections | <ul><li>Title</li><li>Status</li><li>Context</li><li>Decision Drivers</li><li>Decision</li><li>Consequences</li><li>Compliance Impact</li><li>Alternatives Considered</li></ul> |
+| **Section Rules** | Recommended Sections | <ul></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -203,7 +202,6 @@ When an Exception ADR reaches its `expiry_date`, the CI pipeline will block the 
 
 In accordance with the Quality Rubric (Trade-Offs), the ARB explicitly documents the compromises of this ADR Guideline:
 
-1. **Decentralized Markdown ADRs vs. Centralized Database Tooling**
-   - _Why rejected_: Storing architectural decisions in a centralized system (like Jira or a custom DB) disconnects the decision from the exact commit state of the source code it governs.
-   - _The Trade-Off_: We lose robust querying capabilities (e.g., "Show me all ADRs related to React"). In exchange, ADRs live and die alongside the codebase, ensuring that checking out an old branch inherently checks out the architectural context of that exact point in time.
-
+1. **Centralized Markdown ADRs vs. Local Codebase Co-location**
+   - _Why rejected_: Distributing ADRs into local project repositories (`docs/adr/`) makes it impossible for the Architecture Review Board (ARB) to have a real-time, global view of all architectural decisions across the enterprise. It also enables teams to secretly bypass governance.
+   - _The Trade-Off_: We lose the "Git Time-Travel" benefit (where checking out an old branch in a product repo inherently brings the old ADR). In exchange, we gain Absolute Visibility and strict ARB control by forcing all ADRs into the centralized Root Architecture Repository.

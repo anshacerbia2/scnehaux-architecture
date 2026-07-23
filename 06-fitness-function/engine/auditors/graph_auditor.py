@@ -9,6 +9,8 @@ Self-references (e.g. GDC-000 declaring `governed_by: [GDC-000]`, the constituti
 governing itself) are intentional and are NOT treated as cycles.
 """
 
+from engine.config.severity import SeverityRule
+
 # Hardcoded list of metadata fields that represent an upward dependency in the DAG
 UPWARD_EDGE_FIELDS = ("realizes_capability", "parent_pad", "parent_sad", "governed_by")
 
@@ -105,7 +107,7 @@ def audit_duplicate_ids(
     """
     findings = []
     for dup_id, paths in sorted(duplicate_ids.items()):
-        sev = severity_levels.get("duplicate_id", "ERROR")
+        sev = severity_levels[SeverityRule.DUPLICATE_ID]
         findings.append(
             (
                 sev,
@@ -126,7 +128,7 @@ def audit_hierarchy_tiers(
     ADR & STD -> EAD or PAD.
     """
     findings = []
-    sev = severity_levels.get("structural_integrity_violation", "CRITICAL")
+    sev = severity_levels[SeverityRule.STRUCTURAL_INTEGRITY_VIOLATION]
 
     for doc_id, meta in all_doc_metadata.items():
         if not isinstance(meta, dict):
@@ -210,7 +212,7 @@ def audit_orphans(
         list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples for orphaned nodes.
     """
     findings = []
-    sev = severity_levels.get("traceability_violation", "ERROR")
+    sev = severity_levels[SeverityRule.TRACEABILITY_VIOLATION]
 
     for doc_id, meta in all_doc_metadata.items():
         if not isinstance(meta, dict):

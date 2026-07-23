@@ -71,7 +71,7 @@ def generate_index():
     with open(index_path, "w", encoding="utf-8") as f:
         f.write("\n".join(index_content) + "\n")
 
-    print(f"Generated ADR Index at {index_path} with {len(adrs)} records.")
+    print(f"[OK] Generated ADR Index ({len(adrs)} records) -> {index_path}")
 
 
 if __name__ == "__main__":

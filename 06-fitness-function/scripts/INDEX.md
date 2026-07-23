@@ -14,21 +14,20 @@ This index documents the internal functions and classes of the CI/CD scripts.
 
 | Function | Description |
 | :--- | :--- |
+| **parse_codeowners** | Extract (line_number, path) tuples from CODEOWNERS, ignoring comments<br>and the global wildcard (*) rule. |
+| **resolve_path** | Check if a CODEOWNERS path pattern resolves to an existing file or<br>directory. Strips the leading slash (CODEOWNERS paths are repo-relative). |
 | **main** | *(No docstring provided)* |
-| **parse_codeowners** | Extract (line_number, path) tuples from CODEOWNERS, ignoring comments and the global wildcard (*) rule. |
-| **resolve_path** | Check if a CODEOWNERS path pattern resolves to an existing file or directory. Strips the leading slash (CODEOWNERS paths are repo-relative). |
 
 ### `scripts/install-hooks.py`
 
 | Function | Description |
 | :--- | :--- |
-| **install_hook** | Install a Git pre-commit hook that enforces Scnehaux Architecture Governance rules. Detects the host OS and injects the appropriate shell script (PowerShell for Windows, Bash for Unix). |
+| **install_hook** | Install a Git pre-commit hook that enforces Scnehaux Architecture Governance rules.<br>Detects the host OS and injects the appropriate shell script (PowerShell for Windows, Bash for Unix). |
 
 ### `scripts/waiver-expiry-check.py`
 
 | Function | Description |
 | :--- | :--- |
-| **check_waiver_expiry** | Scan all accepted ADR Exceptions (waivers) for expiration against their declared `expiry_date`. Returns exit code 1 if any waivers have expired, breaking the CI/CD pipeline. |
+| **check_waiver_expiry** | Scan all accepted ADR Exceptions (waivers) for expiration against their declared `expiry_date`.<br>Returns exit code 1 if any waivers have expired, breaking the CI/CD pipeline. |
 
 <!-- AUTO-GENERATED-FUNCTIONS:END -->
-

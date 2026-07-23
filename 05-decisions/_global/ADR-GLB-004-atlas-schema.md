@@ -105,4 +105,3 @@ None.
 - **Pros**: Direct control over exact commands run by the DBA.
 - **Cons**: Extremely error-prone, untraceable, and leads to massive environment drift (production database states diverging from dev).
 - **Why Rejected**: Unacceptable risk of production downtime due to human error.
-

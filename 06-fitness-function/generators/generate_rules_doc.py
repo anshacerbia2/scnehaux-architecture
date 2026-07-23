@@ -7,6 +7,10 @@ import argparse
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
+ENGINE_DIR = os.path.join(PROJECT_ROOT, "06-fitness-function")
+sys.path.append(ENGINE_DIR)
+
+
 SCHEMAS_DIR = os.path.join(PROJECT_ROOT, "00-governance", "schemas")
 DOCS_DIR = os.path.join(PROJECT_ROOT, "00-governance")
 
@@ -56,13 +60,13 @@ def format_enum(prop_def):
     return ""
 
 
-def generate_from_x_engine_config(data):
+def generate_from_x_global_config(data):
     """
-    Generate a markdown table from the custom `x-engine-config` block used in
-    the global schema (gdc.schema.json). This outlines fundamental repository rules.
+    Generate a markdown table from the custom `global_rules` block used in
+    the global schema (base.schema.json). This outlines fundamental repository rules.
     """
-    x_config = data.get("x-engine-config", {})
-    rules = x_config.get("rules", {})
+    x_config = data.get("x-global-config", {})
+    rules = x_config
     severity = x_config.get("severity_levels", {})
 
     if not rules and not severity:
@@ -119,17 +123,20 @@ def generate_from_x_engine_config(data):
                 val_str = "`" + str(params).replace("|", "\\|") + "`"
                 lines.append(f"| **{cat_name}** | {param_name} | {val_str} |")
 
-    if severity:
+    severity_levels = x_config.get("severity_levels", {})
+    if severity_levels:
         if rules:
             lines.extend(["", "### Severity Levels", ""])
-        lines.extend(
-            [
-                "| Error Code                        | Severity (CI Action) |",
-                "| :-------------------------------- | :------------------- |",
-            ]
-        )
-        for code, level in severity.items():
-            lines.append(f"| `{code}` | **{level}** |")
+        
+        for group_name, group_codes in severity_levels.items():
+            lines.extend([
+                f"#### {group_name}",
+                "| Error Code | Severity (CI Action) |",
+                "| :--- | :--- |"
+            ])
+            for code, level in group_codes.items():
+                lines.append(f"| `{code}` | **{level}** |")
+            lines.append("")
 
     return "\n".join(lines)
 
@@ -215,7 +222,7 @@ def generate_from_json_schema(data):
                                                 f"| **{category_name}** | {req_title} | {val_str} |"
                                             )
 
-        elif "Structural" in category_name:
+        elif "Structural" in category_name or "Section" in category_name:
             x_titles = def_val.get("x-titles", {})
             for list_type in ["required", "recommended"]:
                 if list_type in def_val:
@@ -253,6 +260,7 @@ def generate_from_json_schema(data):
                     default_title_rec,
                     default_title_proh,
                     condition_text="",
+                    target_prop=None,
                 ):
                     groups = {"required": {}, "recommended": {}, "prohibited": {}}
                     if not isinstance(node, dict):
@@ -263,19 +271,13 @@ def generate_from_json_schema(data):
                     t_rec = x_titles.get("recommended", default_title_rec)
                     t_proh = x_titles.get("prohibited_keywords", default_title_proh)
 
-                    if "pattern" in node:
-                        match = re.search(
-                            r"\[\\\\s\\\\S\]\\\*(.*?)\[\\\\s\\\\S\]\\\*",
-                            node["pattern"],
-                        )
-                        if not match:
-                            match = re.search(
-                                r"\[\\s\\S\]\*(.*?)\[\\s\\S\]\*", node["pattern"]
-                            )
-                        if match:
+                    if "required_subsections" in node and isinstance(
+                        node["required_subsections"], list
+                    ):
+                        for concept in node["required_subsections"]:
                             groups["required"].setdefault(
                                 t_req + condition_text, []
-                            ).append(match.group(1))
+                            ).append(concept)
 
                     if "recommended" in node and isinstance(node["recommended"], list):
                         for k in node["recommended"]:
@@ -292,6 +294,13 @@ def generate_from_json_schema(data):
                             ).append(k)
 
                     child_nodes = []
+                    if (
+                        target_prop
+                        and "properties" in node
+                        and target_prop in node["properties"]
+                    ):
+                        child_nodes.append(node["properties"][target_prop])
+
                     if "allOf" in node and isinstance(node["allOf"], list):
                         child_nodes.extend(node["allOf"])
                     if "if" in node:
@@ -301,7 +310,7 @@ def generate_from_json_schema(data):
 
                     for child in child_nodes:
                         child_groups = extract_rows(
-                            child, t_req, t_rec, t_proh, condition_text
+                            child, t_req, t_rec, t_proh, condition_text, target_prop
                         )
                         for g_type in groups:
                             for title, kws in child_groups[g_type].items():
@@ -310,10 +319,11 @@ def generate_from_json_schema(data):
 
                 for prop_name, prop_val in def_val["properties"].items():
                     groups = extract_rows(
-                        prop_val,
+                        def_val,
                         prop_name + " (Required)",
                         prop_name + " (Recommended)",
                         prop_name + " (Prohibited)",
+                        target_prop=prop_name,
                     )
                     for g_type, titles in groups.items():
                         for title, kws in titles.items():
@@ -336,10 +346,12 @@ def generate_markdown_table(data):
     Dispatcher to route schema data to the appropriate Markdown table generator
     based on whether it's a global config or a standard JSON schema.
     """
-    if "x-engine-config" in data:
-        return generate_from_x_engine_config(data)
-    else:
-        return generate_from_json_schema(data)
+    lines = []
+    if "x-global-config" in data:
+        lines.append(generate_from_x_global_config(data))
+    if "definitions" in data:
+        lines.append(generate_from_json_schema(data))
+    return "\n\n".join(lines).strip()
 
 
 def current_block(md_path):
@@ -402,6 +414,13 @@ def inject_to_markdown(md_path, table_str):
     return True
 
 
+def get_target_doc_name(json_data: dict) -> str:
+    """Helper to extract the target document name from schema config"""
+    if "config" in json_data and "target_doc" in json_data["config"]:
+        return json_data["config"]["target_doc"]
+    return ""
+
+
 def process(check=False):
     """
     Iterate over all schemas in `00-governance/schemas` and update their respective
@@ -419,12 +438,7 @@ def process(check=False):
             if not json_data:
                 continue
 
-            if "x-engine-config" in json_data:
-                md_file = (
-                    json_data["x-engine-config"].get("config", {}).get("target_doc")
-                )
-            else:
-                md_file = json_data.get("config", {}).get("target_doc")
+            md_file = get_target_doc_name(json_data)
 
             if not md_file:
                 print(f"[SKIP] {schema_file} has no config.target_doc declared.")
@@ -455,8 +469,6 @@ def process(check=False):
         except Exception as e:
             print(f"Error processing {schema_file}: {e}")
 
-    if not check:
-        print(f"\nGenerator finished. Successfully injected {success_count} files.")
     return drift
 
 

@@ -10,7 +10,6 @@ Exit codes:
     1 — One or more stale paths detected.
 """
 
-import re
 import sys
 from pathlib import Path
 
@@ -22,7 +21,9 @@ def parse_codeowners(codeowners_file: Path) -> list[tuple[int, str]]:
     """Extract (line_number, path) tuples from CODEOWNERS, ignoring comments
     and the global wildcard (*) rule."""
     entries: list[tuple[int, str]] = []
-    for line_no, line in enumerate(codeowners_file.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_no, line in enumerate(
+        codeowners_file.read_text(encoding="utf-8").splitlines(), start=1
+    ):
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
@@ -75,13 +76,17 @@ def main() -> int:
         print()
         for line_no, path in stale:
             print(f"  Line {line_no}: {path}")
-            print(f"    → No matching file or directory found at: {REPO_ROOT / path.lstrip('/')}")
+            print(
+                f"    → No matching file or directory found at: {REPO_ROOT / path.lstrip('/')}"
+            )
             print()
         print("Fix: Update the paths to match actual directory names.")
         print("See: GDC-003 (Architecture Review Process) for ownership rules.")
         return 1
 
-    print(f"SUCCESS: CODEOWNERS validation passed - all {len(entries)} path rules resolve correctly.")
+    print(
+        f"SUCCESS: CODEOWNERS validation passed - all {len(entries)} path rules resolve correctly."
+    )
     return 0
 
 

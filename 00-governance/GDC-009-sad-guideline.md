@@ -64,7 +64,7 @@ To govern this, Scnehaux utilizes the **Aggregator-Component Pattern**:
 
 ### 2.3 The Schema Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-fitness-functions.md)**, the SAD specification is strictly governed by the following domain-specific linter schemas:
+In addition to the global structural enforcement defined in **[GDC-001](GDC-001-fitness-functions.md)**, the SAD specification is strictly governed by the following domain-specific linter schemas:
 
 > [!WARNING]
 >
@@ -74,17 +74,21 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata Policies** | Metadata Policies | <ul><li>doc_meta (object)</li></ul> |
-| **Metadata Policies** | Required Fields | <ul><li>id (string)</li><li>title (string)</li><li>governed_by (string &#124; array[string])</li><li>owner (string &#124; array[string])</li><li>version (string &#124; number)</li><li>status (string)</li><li>classification (string)</li><li>parent_pad (string &#124; array[string])</li><li>review_cycle_days (integer)</li><li>last_reviewed (string)</li></ul> |
-| **Metadata Policies** | Allowed Statuses | <ul><li>proposed</li><li>approved</li><li>deprecated</li></ul> |
-| **Metadata Policies** | Allowed Classifications | <ul><li>public</li><li>internal</li><li>restricted</li></ul> |
-| **Content Quality Policies** | Context & Scope (Recommended) | <ul><li>Requirement</li><li>Assumption</li></ul> |
-| **Content Quality Policies** | System Architecture (Recommended) | <ul><li>Container</li></ul> |
-| **Content Quality Policies** | Runtime Flows (Recommended) | <ul><li>Sequence</li></ul> |
-| **Content Quality Policies** | Integration (Recommended) | <ul><li>API</li><li>Event</li><li>Consumed</li><li>Published</li></ul> |
-| **Content Quality Policies** | Security (Recommended) | <ul><li>Authentication</li><li>Authorization</li><li>Encryption</li><li>Secrets</li><li>Audit</li></ul> |
-| **Content Quality Policies** | Deployment (Recommended) | <ul><li>Environment</li><li>Infrastructure</li></ul> |
-| **Content Quality Policies** | NFR Derivatives (Recommended) | <ul><li>Latency</li><li>Throughput</li><li>RPS</li><li>Scalability</li><li>Caching</li><li>Observability</li><li>Telemetry</li><li>Alerting</li><li>Runbook</li><li>Circuit Breaker</li><li>Retry</li><li>Timeout</li><li>Resilience</li><li>Failover</li></ul> |
+| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
+| **Section Rules** | Required Sections | <ul><li>Purpose & Scope</li><li>Enterprise Traceability</li><li>Solution Context</li><li>Architecture Model</li><li>State & Data Architecture</li><li>Integration Contracts</li><li>Security & Trust Boundary</li><li>NFR</li><li>Deployment Strategy</li><li>Architecture Decisions</li></ul> |
+| **Section Rules** | Recommended Sections | <ul><li>Assumptions</li><li>Compatibility Strategy</li><li>Migration Strategy</li><li>Alternatives</li></ul> |
+| **Content Quality Rules** | Context & Scope (Required) | <ul><li>Objective</li><li>Constraint</li><li>Capability</li></ul> |
+| **Content Quality Rules** | Context & Scope (Recommended) | <ul><li>Requirement</li><li>Assumption</li></ul> |
+| **Content Quality Rules** | Solution Context (Recommended) | <ul><li>System Context</li><li>External</li><li>Internal</li></ul> |
+| **Content Quality Rules** | Architecture Model (Recommended Concepts) | <ul><li>Container</li><li>Component</li><li>Sequence</li><li>Runtime Flow</li><li>Event Flow</li></ul> |
+| **Content Quality Rules** | State & Data Architecture (Recommended Concepts) | <ul><li>Storage</li><li>Cache</li><li>Schema</li><li>Stateless</li></ul> |
+| **Content Quality Rules** | Integration Contracts (Recommended Concepts) | <ul><li>API</li><li>Event</li><li>Consumed</li><li>Published</li></ul> |
+| **Content Quality Rules** | Security & Trust Boundary (Recommended Concepts) | <ul><li>Authentication</li><li>Authorization</li><li>Encryption</li><li>Secrets</li><li>Audit</li></ul> |
+| **Content Quality Rules** | Deployment Strategy (Required) | <ul><li>CI/CD</li></ul> |
+| **Content Quality Rules** | Deployment Strategy (Recommended Concepts) | <ul><li>Environment</li><li>Infrastructure</li></ul> |
+| **Content Quality Rules** | Architecture Decisions (Required) | <ul><li>Rejected</li></ul> |
+| **Content Quality Rules** | NFR (Required) | <ul><li>Blast Radius</li></ul> |
+| **Content Quality Rules** | NFR Derivatives (Recommended) | <ul><li>Latency</li><li>Throughput</li><li>RPS</li><li>Scalability</li><li>Caching</li><li>Observability</li><li>Telemetry</li><li>Alerting</li><li>Runbook</li><li>Circuit Breaker</li><li>Retry</li><li>Timeout</li><li>Failover</li></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -140,7 +144,7 @@ doc_meta:
   version: 1.0.0 # Semantic versioning format
   status: approved # proposed | approved | deprecated
   classification: internal # public | internal | restricted
-  parent_pad: PAD-XXX # Referencing the Parent Domain Capability PAD ID
+  parent_pad: PAD-PLT-XXX # Referencing the Parent Domain Capability PAD ID
   review_cycle_days: 180 # Review cycle period
   last_reviewed: YYYY-MM-DD # Last audit date
 ```
@@ -153,7 +157,7 @@ doc_meta:
 | `version`           | String  | Must comply with Semantic Versioning (e.g., 1.0.0).              |
 | `status`            | Enum    | The current lifecycle state (must match Allowed Statuses below). |
 | `classification`    | Enum    | The data sensitivity (must match Allowed Classifications below). |
-| `parent_pad`        | String  | The parent PAD ID this system fulfills (e.g., `PAD-001`).        |
+| `parent_pad`        | String  | The parent PAD ID this system fulfills (e.g., `PAD-PLT-001`).    |
 | `review_cycle_days` | Integer | The frequency in days for required review.                       |
 | `last_reviewed`     | Date    | The date of the last formal review (YYYY-MM-DD).                 |
 
@@ -204,7 +208,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 All SAD artifacts must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.
 
-**Qualitative Enforcement (Architecture Authority Audit)** _Note: Qualitative scoring is inherited from **[GDC-002 §2 — Scoring Criteria](./GDC-002-quality-rubric.md)**._
+**Qualitative Enforcement (Architecture Authority Audit)** _Note: Qualitative scoring is inherited from **[GDC-002 §2 — Scoring Criteria](GDC-002-quality-rubric.md)**._
 
 SADs have the following custom overriding audit metric:
 
@@ -219,4 +223,3 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **Manual Blast Radius Enforcement vs. Automated Chaos Engineering**
    - _Why rejected_: Fully automated Chaos Engineering requires significant infrastructure maturity and cannot run effectively during the design phase before code is written.
    - _The Trade-Off_: We rely on the architect's manual, theoretical calculation of the "Blast Radius" during the design phase. In exchange, we force engineers to confront and document failure boundaries proactively, preventing SPOFs from entering the codebase in the first place.
-

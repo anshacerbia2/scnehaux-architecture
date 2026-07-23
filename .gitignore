@@ -14,7 +14,10 @@ __pycache__/
 lint_out.txt
 lint_output.txt
 linter_output.txt
+diff_output.txt
+break-glass-audit.log
 
 # Environment & Build
 .env
 *.egg-info/
+htmlcov/

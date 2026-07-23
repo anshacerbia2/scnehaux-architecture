@@ -33,4 +33,3 @@ All notable changes to the Scnehaux Architecture Documentation Governance engine
 ### Added
 
 - Initial Docs-as-Code linting engine.
-

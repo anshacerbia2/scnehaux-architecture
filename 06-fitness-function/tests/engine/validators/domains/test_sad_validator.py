@@ -10,7 +10,7 @@ def _global_rules():
         os.path.join(ROOT, "00-governance", "schemas", "base.schema.json"),
         encoding="utf-8",
     ) as f:
-        return json.load(f).get("x-engine-config", {})
+        return json.load(f).get("x-global-config", {})
 
 
 from engine.validators.domains.sad_validator import SADValidator

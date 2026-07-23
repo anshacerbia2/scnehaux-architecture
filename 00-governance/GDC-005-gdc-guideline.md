@@ -15,17 +15,15 @@ doc_meta:
 
 ## 1. Context & Scope
 
-In accordance with the **[Circular Governance (Metaprogramming)](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims)**, the Governance framework must subject itself to the exact same rigorous validation criteria it imposes on downstream architectures.
+In accordance with the [Circular Governance (Metaprogramming)](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims), the Governance framework must subject itself to the exact same rigorous validation criteria it imposes on downstream architectures.
 
-As the foundational policies of the ecosystem, this artifact defines the deterministic boundaries governing **Governance Document Contracts (GDC)** themselves. This includes absolute compliance with the structural metadata schemas, taxonomic naming conventions, markdown body architecture, and lifecycle states required to pass the automated CI/CD Fitness Functions.
+As the foundational policies of the ecosystem, this artifact defines the deterministic boundaries governing **Governance Document Contracts (GDC)** themselves. This includes absolute compliance with the automation scope and criteria enforced by the Master Fitness Function (see [The Automation Scope & Domain Boundaries](GDC-001-fitness-functions.md#12-the-automation-scope--domain-boundaries)).
 
 ---
 
 ## 2. Policy Framework
 
-### 2.1 The Linter Ruleset (Machine-Readable)
-
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-fitness-functions.md)**, this meta-domain physically executes the **[Policy-as-Code](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims)** and **[Strict Separation of Concerns (SoC)](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims)** maxims through a **Fractal Triad** of automated governance (Policy, Schemas and Validators). The following machine-readable schema acts as the absolute source of truth, programmatically evaluating every GDC artifact to guarantee absolute compliance with the required metadata taxonomy, deterministic markdown structures, and the presence of critical semantic definitions:
+### 2.1 The Schema Architecture
 
 > [!WARNING]
 >
@@ -35,20 +33,20 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata Policies** | Metadata Policies | <ul><li>doc_meta (object)</li></ul> |
-| **Metadata Policies** | Required Fields | <ul><li>id (string)</li><li>title (string)</li><li>governed_by (string &#124; array[string])</li><li>owner (string &#124; array[string])</li><li>version (string &#124; number)</li><li>status (string)</li><li>classification (string)</li><li>review_cycle_days (integer)</li><li>last_reviewed (string)</li></ul> |
-| **Metadata Policies** | Allowed Statuses | <ul><li>approved</li><li>draft</li></ul> |
-| **Metadata Policies** | Allowed Classifications | <ul><li>public</li><li>internal</li><li>restricted</li><li>confidential</li></ul> |
+| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
+| **Section Rules** | Required Sections | <ul><li>Context & Scope</li><li>Policy Framework</li></ul> |
+| **Section Rules** | Recommended Sections | <ul><li>Enforcement Mechanism</li><li>Enforcement Mechanism & Rule Reconciliation</li><li>Severity & Exceptions</li><li>Document Types (Glossary of Truth)</li><li>Document Lifecycle & State Management</li><li>Linter Execution Flow (CI/CD Automated Gate)</li><li>Compliance & Enforcement</li><li>The Git Workflow & Access Control</li><li>The Reconciliation Flow (Adding or Modifying Policies)</li><li>Directory Structure & Taxonomy</li><li>Directory Structure & Naming Conventions</li><li>Document Template Schema (Metadata Frontmatter)</li><li>Document Section Semantics</li><li>Semantic Versioning Classification</li><li>Appendix: Architectural Clarifications & Trade-Offs</li><li>Appendix: Architectural Trade-Offs</li></ul> |
+| **Content Quality Rules** | Policy Framework (Required) | <ul><li>Semantic Definitions</li></ul> |
+| **Content Quality Rules** | Semantic Definitions (Required Sub Sections) | <ul><li>Naming Conventions</li><li>Taxonomy</li><li>Directory Structure</li><li>Metadata Schema Properties</li><li>Artifact Section</li></ul> |
+| **Content Quality Rules** | Metadata Schema Properties (Required Sub Sections) | <ul><li>Allowed Lifecycle Statuses</li><li>Allowed Classifications</li><li>Semantic Versioning Classification</li></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
 ### 2.3 Semantic Definitions
 
-The Linter Ruleset above strictly enforces the syntax and allowed values. This section defines the human-readable semantics and guidelines for those constraints.
-
 #### 2.3.1 Naming Conventions
 
-The filename must strictly adhere to the `gdc_pattern` regex: `^GDC-\d{3}-[a-z0-9-]+\.md$`. If a GDC is acting as a downstream guideline, its name must end with `-guideline.md`.
+The filename must strictly adhere to the regex: `^GDC-\d{3}-[a-z0-9-]+\.md$`. If a GDC is acting as a downstream guideline, its name must end with `-guideline.md`.
 
 #### 2.3.2 Taxonomy
 
@@ -181,4 +179,3 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **Self-Referential Linter Rules vs Hardcoded Engine Logic**
    - _Why rejected_: Writing specific logic in the main engine `engine/cli.py` to validate `GDC` files pollutes the global execution engine with domain-specific concerns.
    - _The Trade-Off_: We accept the cognitive overhead of creating a specific `engine/validators/domains/gdc_validator.py` module and a `schemas/gdc.schema.json` to validate the files that define the rules themselves. In exchange, the global linter engine remains perfectly domain-agnostic, treating `GDC` files identically to `SAD` or `PAD` files during execution.
-

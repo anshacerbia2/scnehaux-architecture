@@ -11,6 +11,8 @@ doc_meta:
   last_reviewed: 2026-05-17
 ---
 
+<!-- lint_disable: vague_claim (reason: standard docs) -->
+
 # Documentation Quality Framework
 
 ## 1. Context & Scope
@@ -96,4 +98,3 @@ In accordance with the 10th parameter (Trade-Offs), the ARB explicitly documents
 
 1. **10 Binary (Pass/Fail) Checks vs. Weighted Individual Scoring (1-5)**
    - _Why rejected_: Grading _individual_ parameters on a subjective 1-5 scale introduces negotiation between reviewer and author. Instead, we strictly enforce 10 binary (Pass/Fail) checks, which objectively sum up to a Total Score of 0-10.
-

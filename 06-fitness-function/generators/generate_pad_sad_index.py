@@ -77,7 +77,7 @@ def generate_index(directory, layer_name):
                     f"| [{d['id']}]({d['link']}) | {d['title']} | {parent} | {d['owner']} | {d['status']} |\n"
                 )
 
-    print(f"Generated {index_path}")
+    print(f"[OK] Generated PAD/SAD Index -> {index_path}")
 
 
 if __name__ == "__main__":

@@ -1,95 +1,65 @@
 {
   "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/gdc.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Governance & Decision Control (GDC) Validation Policies",
+  "title": "Governance & Decision Control (GDC) Validation Rules",
   "type": "object",
   "config": {
     "target_doc": "GDC-005-gdc-guideline.md"
   },
+  "properties": {
+    "filename": {
+      "type": "string",
+      "pattern": "^GDC-\\d{3}-[a-z0-9-]+\\.md$"
+    }
+  },
   "allOf": [
     {
-      "$ref": "#/definitions/metadata_policies"
+      "$ref": "#/definitions/metadata_rules"
     },
     {
-      "$ref": "#/definitions/section_policies"
+      "$ref": "#/definitions/section_rules"
     },
     {
-      "$ref": "#/definitions/content_policies"
+      "$ref": "#/definitions/content_rules"
     }
   ],
   "definitions": {
-    "metadata_policies": {
-      "title": "Metadata Policies",
-      "description": "Policies for the YAML Frontmatter (doc_meta)",
+    "metadata_rules": {
+      "title": "Metadata Rules",
+      "description": "Rules for the YAML Frontmatter (doc_meta)",
       "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
-          "type": "object",
-          "required": [
-            "id",
-            "title",
-            "governed_by",
-            "owner",
-            "version",
-            "status",
-            "classification",
-            "review_cycle_days",
-            "last_reviewed"
-          ],
-          "properties": {
-            "id": {
-              "title": "Document ID",
-              "type": "string"
+          "allOf": [
+            {
+              "$ref": "https://scnehaux.com/codex/gov/guidelines/schemas/base.schema.json#/definitions/common_metadata_fields"
             },
-            "title": {
-              "title": "Document Title",
-              "type": "string"
-            },
-            "governed_by": {
-              "title": "Governed By",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
+            {
+              "type": "object",
+              "required": [
+                "owner",
+                "version",
+                "classification",
+                "review_cycle_days",
+                "last_reviewed",
+                "governed_by"
+              ],
+              "properties": {
+                "governed_by": {
+                  "title": "Governed By",
+                  "type": ["string", "array"],
+                  "items": { "type": "string" }
+                }
               }
-            },
-            "owner": {
-              "title": "Owner",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
-              }
-            },
-            "version": {
-              "title": "Version",
-              "type": ["string", "number"]
-            },
-            "status": {
-              "title": "Allowed Statuses",
-              "type": "string",
-              "enum": ["approved", "draft"]
-            },
-            "classification": {
-              "title": "Allowed Classifications",
-              "type": "string",
-              "enum": ["public", "internal", "restricted", "confidential"]
-            },
-            "review_cycle_days": {
-              "title": "Review Cycle (Days)",
-              "type": "integer"
-            },
-            "last_reviewed": {
-              "title": "Last Reviewed Date",
-              "type": "string",
-              "format": "date"
             }
-          }
+          ]
         }
       }
     },
-    "section_policies": {
-      "title": "Section Policies",
-      "description": "Policies for required and recommended sections in the Markdown body",
+    "section_rules": {
+      "title": "Section Rules",
+      "description": "Rules for required and recommended sections in the Markdown body",
       "required": ["Context & Scope", "Policy Framework"],
       "recommended": [
         "Enforcement Mechanism",
@@ -100,7 +70,7 @@
         "Linter Execution Flow (CI/CD Automated Gate)",
         "Compliance & Enforcement",
         "The Git Workflow & Access Control",
-        "The Reconciliation Flow (Adding or Modifying Rules)",
+        "The Reconciliation Flow (Adding or Modifying Policies)",
         "Directory Structure & Taxonomy",
         "Directory Structure & Naming Conventions",
         "Document Template Schema (Metadata Frontmatter)",
@@ -114,9 +84,9 @@
         "recommended": "Recommended Sections"
       }
     },
-    "content_policies": {
-      "title": "Content Quality Policies",
-      "description": "Policies for required and recommended keywords inside specific Markdown sections",
+    "content_rules": {
+      "title": "Content Quality Rules",
+      "description": "Rules for required and recommended keywords inside specific Markdown sections",
       "properties": {
         "Policy Framework": {
           "type": "string"
@@ -132,11 +102,7 @@
       "then": {
         "properties": {
           "Policy Framework": {
-            "allOf": [
-              {
-                "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Semantic Definitions\\b"
-              }
-            ],
+            "required_subsections": ["Semantic Definitions"],
             "if": {
               "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Semantic Definitions\\b"
             },
@@ -144,22 +110,12 @@
               "x-titles": {
                 "required": "Semantic Definitions (Required Sub Sections)"
               },
-              "allOf": [
-                {
-                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Naming Conventions\\b"
-                },
-                {
-                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Taxonomy\\b"
-                },
-                {
-                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Directory Structure\\b"
-                },
-                {
-                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Metadata Schema Properties\\b"
-                },
-                {
-                  "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Artifact Section\\b"
-                }
+              "required_subsections": [
+                "Naming Conventions",
+                "Taxonomy",
+                "Directory Structure",
+                "Metadata Schema Properties",
+                "Artifact Section"
               ],
               "if": {
                 "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Metadata Schema Properties\\b"
@@ -168,16 +124,10 @@
                 "x-titles": {
                   "required": "Metadata Schema Properties (Required Sub Sections)"
                 },
-                "allOf": [
-                  {
-                    "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Allowed Lifecycle Statuses\\b"
-                  },
-                  {
-                    "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Allowed Classifications\\b"
-                  },
-                  {
-                    "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Semantic Versioning Classification\\b"
-                  }
+                "required_subsections": [
+                  "Allowed Lifecycle Statuses",
+                  "Allowed Classifications",
+                  "Semantic Versioning Classification"
                 ]
               }
             }

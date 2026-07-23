@@ -69,15 +69,15 @@ The capability map exists to serve four enterprise business goals; every classif
 
 Capabilities are not an abstract taxonomy; each realizes a concrete enterprise value stream. This mapping is the "why" a capability is owned at all.
 
-| Value Stream | Primary Capabilities (owning domains) |
-| :-- | :-- |
-| Tenant onboarding & access | Identity, Workspace |
-| Hire-to-Retire | HCM (+ Workflow, Notification, Document) |
-| Order-to-Cash | ERP, Billing (+ Integration, Audit) |
-| Lead-to-Customer | CRM (+ AI, Notification) |
-| Issue-to-Resolution | ITSM (+ Workflow, Notification) |
-| Procure-to-Pay | Procurement, ERP (+ Billing) |
-| Content-to-Consumption | CMS, LMS (+ Document, AI) |
+| Value Stream               | Primary Capabilities (owning domains)    |
+| :------------------------- | :--------------------------------------- |
+| Tenant onboarding & access | Identity, Workspace                      |
+| Hire-to-Retire             | HCM (+ Workflow, Notification, Document) |
+| Order-to-Cash              | ERP, Billing (+ Integration, Audit)      |
+| Lead-to-Customer           | CRM (+ AI, Notification)                 |
+| Issue-to-Resolution        | ITSM (+ Workflow, Notification)          |
+| Procure-to-Pay             | Procurement, ERP (+ Billing)             |
+| Content-to-Consumption     | CMS, LMS (+ Document, AI)                |
 
 ### 4.3. Lessons Incorporated
 
@@ -136,7 +136,7 @@ Every domain declares a single accountable owner, a strategic classification, an
 
 | Domain | Classification | Owning Team | Availability Tier | Core Responsibility |
 | :-- | :-- | :-- | :-- | :-- |
-| Identity Platform | Core Platform | Identity Team | Tier-0 | Authentication, Authorization, IAM, federation |
+| Identity Platform | Core Platform | Identity Team | Tier-0 | IAM, Authentication, OAuth 2.0 Delegation, Public IdP, federation |
 | Workspace Platform | Core Platform | Workspace Team | Tier-0 | Tenant, organization, workspace, membership |
 | UI Platform | Shared Platform | UI Platform Team | Tier-1 | Design system, component and token foundation |
 | Workflow Platform | Shared Platform | Workflow Team | Tier-1 | Business process orchestration and automation |
@@ -207,6 +207,35 @@ flowchart TD
 6. Chartering a new Platform, or promoting a Supporting Business domain to Core, requires Architecture Authority approval via ADR.
 7. Domain ownership follows Conway's Law: the boundary and the owning team are defined together or not at all.
 
+### 5.5. Relationship Semantics
+
+Every cross-domain relationship resolves to exactly one of four types. This vocabulary is authoritative and inherited by every PAD and SAD; downstream documents classify each relationship rather than using the ambiguous term "depends on". **Only a Synchronous Runtime Dependency creates an edge in the acyclic dependency graph of EAD-002.** The asynchronous types are decoupled through the Event Broker, and capability consumption is decoupled through locally-validated artifacts; neither forms a runtime dependency edge.
+
+| Type | Meaning | Creates a dependency edge? |
+| :-- | :-- | :-- |
+| **Synchronous Runtime Dependency** | A blocking request/response the caller cannot complete without the provider responding now (e.g. tenant-context read, synchronous inference). | **Yes** — must remain acyclic |
+| **Asynchronous Event Publication** | The domain publishes domain events to the Broker, carrying their context in the payload (e.g. audit evidence, notification triggers). | No — the publisher depends on the Broker, never on consumers |
+| **Asynchronous Event Subscription** | The domain consumes events from the Broker. | No — the subscriber depends on the Broker, never on the producer |
+| **Platform Capability Consumption** | The domain uses a platform's published capability via locally-validated artifacts (JWT/SPIFFE credential, UI package, cached token), degradable per the EAD-006 cached-validation contract. | No hard edge — degradable via cache |
+
+### 5.6. Enterprise Glossary
+
+Each contested term carries exactly one meaning bound to one owning context. This table is the single source; no PAD may redefine a term or claim a capability outside its row.
+
+| Term | Single Meaning | Owning Context |
+| :-- | :-- | :-- |
+| Tenant | The customer isolation boundary. | Workspace Platform |
+| Organization (Workspace) | The tenant's collaboration/organizational container within a workspace. | Workspace Platform |
+| HR Organization | Departments, positions, and reporting lines of the workforce. | HCM |
+| Membership | Relationship between a member and a workspace/organization. | Workspace Platform |
+| Workflow | A running orchestration instance. | Workflow Platform |
+| Process | The business-flow definition an instance executes. | Workflow Platform |
+| Document / File | A stored binary artifact and its lifecycle/rendering. | Document Platform |
+| Content (published) | Business-managed publishable content. | CMS |
+| Permission | An authorization grant evaluated at access time. | Identity Platform |
+| Entitlement | A commercial capability grant conferred by an active subscription. | Billing Platform |
+| Evidence | An immutable, tamper-evident record of an action. | Audit Platform |
+
 ---
 
 ## 6. Principles & Rules
@@ -268,7 +297,7 @@ The plane/domain model was chosen against rejected alternatives. Each rejection 
 | **Capability co-ownership** for genuinely shared concerns | Shared accountability collapses to none during incidents; change authority becomes ambiguous | A boundary-crossing capability must be _decomposed_ (more upfront modeling) rather than shared |
 | **Buy a COTS suite** (e.g., packaged ERP) for Core Business domains | Core Business is the revenue differentiator; COTS commoditizes the one thing we must own | Build cost and time for Core Business; Generic Platform domains still prefer buy/adopt |
 
-## 13. Appendix: Architectural Trade-Offs & Lessons
+## 7.1. Trade-Offs & Lessons Summary
 
 - **Trade-off Analysis:** We prioritize independent deployability over operational simplicity. This forces domains to own their own cross-domain integration, which is complex, but avoids the systemic failure of a "distributed monolith" where one team's release can destabilize the entire platform.
 - **Learning from Failure:** We accept that initial domain boundaries will be imperfect. Instead of creating a monolithic, "perfect" map, we use the `Capability Evolution` gate (Section 5.4) to adjust boundaries iteratively as the business matures.
@@ -292,13 +321,13 @@ The universal-dependency risk is mitigated, never eliminated: Identity and Works
 
 ## 9. Ownership
 
-| Responsibility | Accountable | Consulted |
-| :-- | :-- | :-- |
-| Enterprise Capability Map (this artifact) | Architecture Authority | Domain Leads, Platform Leads |
-| Platform capability definitions | Platform Teams | Architecture Authority |
-| Business capability definitions | Product Teams | Architecture Authority |
-| Capability placement disputes | Architecture Review Board | Affected Domain Leads |
-| MECE integrity and classification review | Architecture Authority | Enterprise stakeholders |
+| Responsibility                            | Accountable               | Consulted                    |
+| :---------------------------------------- | :------------------------ | :--------------------------- |
+| Enterprise Capability Map (this artifact) | Architecture Authority    | Domain Leads, Platform Leads |
+| Platform capability definitions           | Platform Teams            | Architecture Authority       |
+| Business capability definitions           | Product Teams             | Architecture Authority       |
+| Capability placement disputes             | Architecture Review Board | Affected Domain Leads        |
+| MECE integrity and classification review  | Architecture Authority    | Enterprise stakeholders      |
 
 ---
 
@@ -367,4 +396,3 @@ The capability map evolves by refining domain boundaries as bounded contexts mat
 - Data Mesh — Zhamak Dehghani
 - Platform Engineering: paved-road principles
 - Accelerate — Nicole Forsgren, Jez Humble, Gene Kim (DORA metrics)
-

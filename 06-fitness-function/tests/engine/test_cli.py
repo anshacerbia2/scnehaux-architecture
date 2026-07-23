@@ -2,8 +2,17 @@ import datetime
 import pytest
 import os
 import sys
+from engine.config.severity import SeverityRule
 import importlib.util
-from engine.cli import print_errors, lint_file, build_sarif, SCRIPT_DIR
+from engine.cli import print_errors, lint_file, build_sarif, GOVERNANCE_ROOT
+
+
+@pytest.fixture(autouse=True)
+def setup_test_environment(monkeypatch, tmp_path):
+    # Mock validation so tests running in temp dir don't abort immediately
+    monkeypatch.setattr("engine.cli._validate_execution_root", lambda x: None)
+    # CD into tmp_path so os.getcwd() returns tmp_path, preventing cross-drive relpath ValueErrors
+    monkeypatch.chdir(tmp_path)
 
 
 def _write_md(
@@ -19,25 +28,35 @@ def _write_md(
 
 
 def _global_rules():
-    from engine.cli import load_schema
+    from engine.cli import load_json_schema_file
 
-    path = os.path.join(SCRIPT_DIR, "00-governance", "schemas", "base.schema.json")
-    return load_schema(path).get("x-engine-config", {})
+    path = os.path.join(GOVERNANCE_ROOT, "00-governance", "schemas", "base.schema.json")
+    rules = load_json_schema_file(path).get("x-global-config", {})
+    if "severity_levels" in rules:
+        flat_sev = {}
+        for group, items in rules["severity_levels"].items():
+            flat_sev.update(items)
+        rules["severity_levels"] = flat_sev
+    return rules
 
 
 def test_print_errors():
     errors = [("ERROR", "Bad thing"), ("WARNING", "Not so bad")]
-    errs, is_clean, has_blocking = print_errors("file.md", errors, "text")
+    errs, is_clean, has_blocking = print_errors(
+        "file.md", errors, "text", ("CRITICAL", "ERROR")
+    )
     assert not is_clean
     assert has_blocking
 
     errs2, is_clean2, has_blocking2 = print_errors(
-        "file.md", [("WARNING", "Only warning")], "text"
+        "file.md", [("WARNING", "Only warning")], "text", ("CRITICAL", "ERROR")
     )
     assert not is_clean2
     assert not has_blocking2
 
-    errs3, is_clean3, has_blocking3 = print_errors("file.md", [], "text")
+    errs3, is_clean3, has_blocking3 = print_errors(
+        "file.md", [], "text", ("CRITICAL", "ERROR")
+    )
     assert is_clean3
     assert not has_blocking3
 
@@ -45,51 +64,57 @@ def test_print_errors():
 def test_print_errors_json_format():
     """JSON format returns without printing, preserving error data."""
     errors = [("ERROR", "Bad thing")]
-    errs, is_clean, has_blocking = print_errors("file.md", errors, "json")
+    errs, is_clean, has_blocking = print_errors(
+        "file.md", errors, "json", ("CRITICAL", "ERROR")
+    )
     assert errs == errors
     assert not is_clean
     assert has_blocking
 
     # No errors in JSON mode
-    errs2, is_clean2, has_blocking2 = print_errors("file.md", [], "json")
+    errs2, is_clean2, has_blocking2 = print_errors(
+        "file.md", [], "json", ("CRITICAL", "ERROR")
+    )
     assert is_clean2
     assert not has_blocking2
 
 
 def test_lint_file_draft_skip(tmp_path):
-    """A fresh draft (within max_draft_age_days) should be skipped, not fail."""
+    """A draft within max_draft_age_days must skip structural checks and yield INFO."""
     today = datetime.date.today().isoformat()
-    fm = f"doc_meta:\n  id: SAD-TEST-001\n  status: draft\n  last_reviewed: {today}"
+    fm = f"doc_meta:\n  id: SAD-TEST-001\n  status: draft\n  created_date: {today}"
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, set(), {}, "text")
-    assert is_clean is True
-    assert has_blocking is False
-    assert errs == []
+    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    assert is_clean is False
+    assert errs[0][0] == "INFO"
+    assert "skipped due to exempt status" in errs[0][1]
 
 
 def test_lint_file_draft_expired(tmp_path):
     """A draft older than max_draft_age_days must produce a blocking ERROR."""
     old_date = (datetime.date.today() - datetime.timedelta(days=999)).isoformat()
-    fm = f"doc_meta:\n  id: SAD-TEST-001\n  status: draft\n  last_reviewed: {old_date}"
+    fm = f"doc_meta:\n  id: SAD-TEST-001\n  status: draft\n  created_date: {old_date}"
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
     assert has_blocking is True
-    assert any("exceeds limit" in msg for _, msg in errs)
+    assert any("exceeding limit" in msg for _, msg in errs)
+    assert any(sev == "ERROR" for sev, _ in errs)
 
 
-def test_lint_file_draft_missing_last_reviewed(tmp_path):
-    """A draft without last_reviewed must produce a blocking ERROR."""
+def test_lint_file_draft_missing_created_date(tmp_path):
+    """A draft without created_date must produce a blocking ERROR."""
     fm = "doc_meta:\n  id: SAD-TEST-001\n  status: draft"
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
     assert has_blocking is True
-    assert any("missing 'last_reviewed'" in msg for _, msg in errs)
+    assert any("missing 'created_date'" in msg for _, msg in errs)
+    assert any(sev == "ERROR" for sev, _ in errs)
 
 
 # ---------- lint_file Error Path Tests ----------
@@ -101,7 +126,7 @@ def test_lint_file_unknown_doc_type(tmp_path):
     fpath = _write_md(tmp_path, "ZZZ-999.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
     assert has_blocking is True
     assert any("Unknown doc type" in msg for _, msg in errs)
 
@@ -112,7 +137,7 @@ def test_lint_file_missing_frontmatter(tmp_path):
     fpath.write_text("# No frontmatter here", encoding="utf-8")
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(str(fpath), rules, set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(str(fpath), rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
     assert has_blocking is True
     assert any("frontmatter" in msg.lower() for _, msg in errs)
 
@@ -122,7 +147,7 @@ def test_lint_file_read_error(tmp_path):
     fpath = str(tmp_path / "nonexistent.md")
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
     assert has_blocking is True
     assert any("Failed to read file" in msg for _, msg in errs)
 
@@ -133,7 +158,7 @@ def test_lint_file_json_format(tmp_path):
     fpath = _write_md(tmp_path, "ZZZ-999.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, set(), {}, "json")
+    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "json")
     assert isinstance(errs, list)
     assert has_blocking is True
 
@@ -141,11 +166,11 @@ def test_lint_file_json_format(tmp_path):
 # ---------- Coverage Tests for cli.py ----------
 
 
-def test_load_schema_file_not_found():
-    from engine.cli import load_schema
+def test_load_json_schema_file_not_found():
+    from engine.cli import load_json_schema_file
 
     with pytest.raises(SystemExit) as e:
-        load_schema("non_existent.json")
+        load_json_schema_file("non_existent.json")
     assert e.value.code == 1
 
 
@@ -166,7 +191,7 @@ def test_lint_file_missing_specific_rules(tmp_path, monkeypatch):
     monkeypatch.setattr(os.path, "exists", mock_exists)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
     assert has_blocking is True
     assert any("Missing mandatory domain-specific schema" in msg for _, msg in errs)
 
@@ -199,7 +224,7 @@ def test_main_clean_run(tmp_path, monkeypatch):
         )
 
     monkeypatch.setattr(linter, "lint_file", mock_lint_file)
-    monkeypatch.setattr(linter, "resolve_registry_with_duplicates", mock_resolve)
+    monkeypatch.setattr(linter, "build_metadata_registry", mock_resolve)
 
     with pytest.raises(SystemExit) as e:
         linter.main()
@@ -209,9 +234,11 @@ def test_main_clean_run(tmp_path, monkeypatch):
 def test_main_failing_run(tmp_path, monkeypatch):
     """main() should exit 1 when there are blocking errors."""
     fm = "doc_meta:\n  id: SAD-TEST-001"  # Missing required metadata
-    _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
-
-    monkeypatch.setattr(sys, "argv", ["cli.py", "--target", str(tmp_path)])
+    (tmp_path / "04-system").mkdir()
+    _write_md(tmp_path / "04-system", "SAD-TEST-001.sad.md", fm)
+    monkeypatch.setattr(
+        sys, "argv", ["cli.py", "--target", str(tmp_path / "04-system")]
+    )
 
     with pytest.raises(SystemExit) as e:
         import engine.cli as linter
@@ -223,10 +250,13 @@ def test_main_failing_run(tmp_path, monkeypatch):
 def test_main_json_format(tmp_path, monkeypatch):
     """main() in JSON format."""
     fm = "doc_meta:\n  id: SAD-TEST-001"
-    _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
+    (tmp_path / "04-system").mkdir(exist_ok=True)
+    _write_md(tmp_path / "04-system", "SAD-TEST-001.sad.md", fm)
 
     monkeypatch.setattr(
-        sys, "argv", ["cli.py", "--target", str(tmp_path), "--format", "json"]
+        sys,
+        "argv",
+        ["cli.py", "--target", str(tmp_path / "04-system"), "--format", "json"],
     )
 
     with pytest.raises(SystemExit) as e:
@@ -239,10 +269,13 @@ def test_main_json_format(tmp_path, monkeypatch):
 def test_main_sarif_format(tmp_path, monkeypatch):
     """main() in SARIF format."""
     fm = "doc_meta:\n  id: SAD-TEST-001"
-    _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
+    (tmp_path / "04-system").mkdir(exist_ok=True)
+    _write_md(tmp_path / "04-system", "SAD-TEST-001.sad.md", fm)
 
     monkeypatch.setattr(
-        sys, "argv", ["cli.py", "--target", str(tmp_path), "--format", "sarif"]
+        sys,
+        "argv",
+        ["cli.py", "--target", str(tmp_path / "04-system"), "--format", "sarif"],
     )
 
     with pytest.raises(SystemExit) as e:
@@ -292,7 +325,7 @@ def test_main_with_lint_disable_and_duplicates(tmp_path, monkeypatch):
             {"SAD-TEST-001": ["file1.md", "file2.md"]},
         )
 
-    monkeypatch.setattr(linter, "resolve_registry_with_duplicates", mock_resolve)
+    monkeypatch.setattr(linter, "build_metadata_registry", mock_resolve)
 
     with pytest.raises(SystemExit) as e:
         linter.main()
@@ -308,7 +341,7 @@ def test_build_sarif_maps_levels():
             "errors": [("CRITICAL", "c"), ("ERROR", "e"), ("WARNING", "w")],
         }
     ]
-    doc = build_sarif(results)
+    doc = build_sarif(results, ("CRITICAL", "ERROR"))
     assert doc["version"] == "2.1.0"
     levels = [r["level"] for r in doc["runs"][0]["results"]]
     assert levels.count("error") == 2 and levels.count("warning") == 1
@@ -321,7 +354,7 @@ def test_build_sarif_maps_levels():
 
 
 def test_build_sarif_empty_results():
-    doc = build_sarif([])
+    doc = build_sarif([], ("CRITICAL", "ERROR"))
     assert doc["version"] == "2.1.0"
     assert doc["runs"][0]["results"] == []
 
@@ -355,7 +388,7 @@ def test_lint_file_no_validator(tmp_path, monkeypatch):
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
     monkeypatch.setattr(linter, "get_validator", lambda x: None)
     rules = _global_rules()
-    errs, p, b, di = linter.lint_file(fpath, rules, set(), {}, "text")
+    errs, p, b, di = linter.lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
     assert any("No validator implemented" in msg for _, msg in errs)
 
 
@@ -364,10 +397,11 @@ def test_main_with_file_target(tmp_path, monkeypatch):
     from engine.cli import main
 
     fm = (
-        "doc_meta:\n  id: SAD-TEST-001\n  parent_pad: PAD-TEST-001\n  status: draft\n  last_reviewed: "
+        "doc_meta:\n  id: SAD-TEST-001\n  parent_pad: PAD-TEST-001\n  status: approved\n  last_reviewed: "
         + datetime.date.today().isoformat()
     )
-    fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
+    (tmp_path / "04-system").mkdir(exist_ok=True)
+    fpath = _write_md(tmp_path / "04-system", "SAD-TEST-001.sad.md", fm)
     monkeypatch.setattr(sys, "argv", ["cli.py", "--target", str(fpath)])
 
     # Also test stream reconfigure exception coverage
@@ -396,7 +430,302 @@ def test_lint_file_with_disables_and_warnings(tmp_path):
     from engine.cli import lint_file
 
     rules = _global_rules()
-    errs, p, b, di = lint_file(fpath, rules, set(), {}, "text")
+    errs, p, b, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
     assert "rule1" in di["disabled"]
     assert not di["disabled"]["rule1"]  # no reason
     assert di["disabled"]["rule2"] == "reason"
+
+
+def test_tech_radar_failure(tmp_path, monkeypatch):
+    import sys
+    from engine.cli import main
+
+    fm = "doc_meta:\n  id: SAD-TEST-001"
+    _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
+
+    # Create invalid tech-radar.yaml inside mocked directories
+    (tmp_path / "01-enterprise").mkdir()
+    (tmp_path / "00-governance" / "schemas").mkdir(parents=True)
+
+    radar = tmp_path / "01-enterprise" / "tech-radar.yaml"
+    radar.write_text("invalid_radar: true")
+
+    # We need a valid schema so it attempts to validate and fails
+    schema = tmp_path / "00-governance" / "schemas" / "tech-radar.schema.json"
+    schema.write_text('{"type": "object", "required": ["version"]}')
+
+    # Mock schemas to force failure
+    monkeypatch.setattr(sys, "argv", ["cli.py", "--target", str(tmp_path)])
+    monkeypatch.setattr("engine.cli.GOVERNANCE_ROOT", str(tmp_path))
+    monkeypatch.setattr(
+        "engine.cli.BASE_SCHEMA_PATH", "fake"
+    )  # Just so it doesn't crash on base schema loading
+
+    def mock_load_json(path):
+        return {"x-global-config": {
+                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+                "blocking_severities": ["CRITICAL", "ERROR"]
+            }}
+
+    monkeypatch.setattr("engine.cli.load_json_schema_file", mock_load_json)
+
+    with pytest.raises(SystemExit) as e:
+        main()
+
+    assert e.value.code == 1
+
+
+def test_lint_file_valueerror_relpath(tmp_path, monkeypatch):
+    """Test when os.path.relpath raises ValueError in lint_file."""
+    from engine.cli import lint_file
+
+    fm = "doc_meta:\n  id: SAD-TEST-001"
+    fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
+
+    # Force relpath to raise ValueError
+    import os
+
+    def mock_relpath(path, start=None):
+        raise ValueError("mocked cross-drive error")
+
+    monkeypatch.setattr(os.path, "relpath", mock_relpath)
+
+    rules = _global_rules()
+    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    # Should not crash, just returns normally with whatever errors are found
+    assert isinstance(errs, list)
+
+
+def test_tech_radar_yaml_parse_error(tmp_path, monkeypatch):
+    """Test tech radar parsing exception."""
+    import sys
+    from engine.cli import main
+
+    _write_md(tmp_path, "SAD-TEST-001.sad.md", "doc_meta:\n  id: SAD-TEST-001")
+    (tmp_path / "01-enterprise").mkdir()
+    radar = tmp_path / "01-enterprise" / "tech-radar.yaml"
+    radar.write_text("invalid\n  yaml: : :")
+    schema = tmp_path / "01-enterprise" / "schema.json"
+    schema.write_text("{}")
+
+    monkeypatch.setattr(sys, "argv", ["cli.py", "--target", str(tmp_path)])
+    monkeypatch.setattr("engine.cli.TECH_RADAR_YAML_PATH", str(radar))
+    monkeypatch.setattr("engine.cli.TECH_RADAR_SCHEMA_PATH", str(schema))
+    monkeypatch.setattr("engine.cli.BASE_SCHEMA_PATH", "fake")
+    monkeypatch.setattr(
+        "engine.cli.load_json_schema_file", lambda p: {"x-global-config": {
+                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+                "blocking_severities": ["CRITICAL", "ERROR"]
+            }}
+    )
+
+    with pytest.raises(SystemExit) as e:
+        main()
+    assert e.value.code == 1
+
+
+def test_tech_radar_validation_error_json(tmp_path, monkeypatch):
+    """Test tech radar jsonschema error in JSON mode."""
+    import sys
+    from engine.cli import main
+
+    _write_md(tmp_path, "SAD-TEST-001.sad.md", "doc_meta:\n  id: SAD-TEST-001")
+    (tmp_path / "01-enterprise").mkdir()
+    radar = tmp_path / "01-enterprise" / "tech-radar.yaml"
+    radar.write_text(
+        "version: 1"
+    )  # valid yaml, invalid schema (assuming missing required fields)
+    schema = tmp_path / "01-enterprise" / "schema.json"
+    schema.write_text('{"type": "object", "required": ["missing_field"]}')
+
+    monkeypatch.setattr(
+        sys, "argv", ["cli.py", "--target", str(tmp_path), "--format", "json"]
+    )
+    monkeypatch.setattr("engine.cli.TECH_RADAR_YAML_PATH", str(radar))
+    monkeypatch.setattr("engine.cli.TECH_RADAR_SCHEMA_PATH", str(schema))
+    monkeypatch.setattr("engine.cli.BASE_SCHEMA_PATH", "fake")
+    monkeypatch.setattr(
+        "engine.cli.load_json_schema_file", lambda p: {"x-global-config": {
+                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+                "blocking_severities": ["CRITICAL", "ERROR"]
+            }}
+    )
+
+    with pytest.raises(SystemExit) as e:
+        main()
+    assert e.value.code == 1
+
+
+def test_main_filters(tmp_path, monkeypatch):
+    """Test Filter 2 (README) and Filter 3 (.copy.md)."""
+    import sys
+    from engine.cli import main
+
+    (tmp_path / "README.md").write_text("# Readme")
+    (tmp_path / "test.copy.md").write_text("# Copy")
+
+    monkeypatch.setattr(sys, "argv", ["cli.py", "--target", str(tmp_path)])
+    monkeypatch.setattr("engine.cli.GOVERNANCE_ROOT", str(tmp_path))
+    monkeypatch.setattr("engine.cli.TECH_RADAR_YAML_PATH", "fake")
+    monkeypatch.setattr("engine.cli.BASE_SCHEMA_PATH", "fake")
+    monkeypatch.setattr(
+        "engine.cli.load_json_schema_file",
+        lambda p: {
+            "x-global-config": {
+                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+                "blocking_severities": ["CRITICAL", "ERROR"],
+                "structure_rules": {
+                    "ignored_files": {
+                        "exact_matches": ["readme.md"],
+                        "patterns": [r".*\.copy\.md$"]
+                    }
+                }
+            }
+        },
+    )
+
+    with pytest.raises(SystemExit) as e:
+        main()
+    assert e.value.code == 0
+
+
+def test_main_global_auditors_json(tmp_path, monkeypatch):
+    """Test global auditor errors appending to JSON format output."""
+    import sys
+    import engine.cli as linter
+
+    _write_md(tmp_path, "SAD-TEST-001.sad.md", "doc_meta:\n  id: SAD-TEST-001")
+
+    monkeypatch.setattr(
+        sys, "argv", ["cli.py", "--target", str(tmp_path), "--format", "json"]
+    )
+    monkeypatch.setattr(linter, "TECH_RADAR_YAML_PATH", "fake")
+    monkeypatch.setattr(linter, "BASE_SCHEMA_PATH", "fake")
+    monkeypatch.setattr(
+        linter, "load_json_schema_file", lambda p: {"x-global-config": {
+                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+                "blocking_severities": ["CRITICAL", "ERROR"]
+            }}
+    )
+
+    # Mock lint_file to pass cleanly so global auditors run
+    monkeypatch.setattr(
+        linter,
+        "lint_file",
+        lambda *args, **kwargs: ([], True, False, {"disabled": {}, "rejected": set()}),
+    )
+
+    # Mock auditors to return fake errors
+    monkeypatch.setattr(
+        linter,
+        "audit_circular_dependencies",
+        lambda m, s: [("file.md", "ERROR", "Circular dep error")],
+    )
+    monkeypatch.setattr(
+        linter,
+        "audit_version_bump",
+        lambda m, s: [("ERROR", "Version bump error", "file.md")],
+    )
+    monkeypatch.setattr(
+        linter,
+        "audit_traceability_graph",
+        lambda m: [("structural_integrity_violation", "Traceability error")],
+    )
+    monkeypatch.setattr(
+        linter,
+        "audit_waiver_expirations",
+        lambda m, s: [("file.md", "ERROR", "Waiver error")],
+    )
+    monkeypatch.setattr(
+        linter,
+        "audit_duplicate_ids",
+        lambda d, s: [("ERROR", "Duplicate error", "file.md")],
+    )
+    monkeypatch.setattr(
+        linter, "audit_orphans", lambda m, s: [("ERROR", "Orphan error", "file.md")]
+    )
+    monkeypatch.setattr(
+        linter,
+        "audit_hierarchy_tiers",
+        lambda m, s: [("ERROR", "Hierarchy error", "file.md")],
+    )
+
+    with pytest.raises(SystemExit) as e:
+        linter.main()
+    assert e.value.code == 1
+
+
+def test_main_directory_depth_violation(tmp_path, monkeypatch):
+    """Test max directory depth violation (CRITICAL-11) in cli.py."""
+    import sys
+    import engine.cli as linter
+
+    monkeypatch.chdir(tmp_path)
+
+    # Create a deep directory structure (4 levels deep)
+    deep_dir = tmp_path / "lvl1" / "lvl2" / "lvl3" / "lvl4"
+    deep_dir.mkdir(parents=True)
+    fpath = deep_dir / "SAD-TEST-001.sad.md"
+    fpath.write_text("doc_meta:\n  id: SAD-TEST-001")
+
+    # We must mock os.path.relpath so that it treats tmp_path as '.' to get 4 levels deep
+    import os
+
+    original_relpath = os.path.relpath
+
+    def mock_relpath(path, start=None):
+        if path == str(fpath):
+            return "lvl1/lvl2/lvl3/lvl4/SAD-TEST-001.sad.md".replace("/", os.sep)
+        return original_relpath(path, start)
+
+    monkeypatch.setattr(os.path, "relpath", mock_relpath)
+    monkeypatch.setattr(
+        sys, "argv", ["cli.py", "--target", str(deep_dir), "--format", "json"]
+    )
+    monkeypatch.setattr(linter, "TECH_RADAR_YAML_PATH", "fake")
+    monkeypatch.setattr(linter, "BASE_SCHEMA_PATH", "fake")
+    monkeypatch.setattr(
+        linter, "load_json_schema_file", lambda p: {"x-global-config": {
+                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+                "blocking_severities": ["CRITICAL", "ERROR"]
+            }}
+    )
+    monkeypatch.setattr(
+        linter, "build_metadata_registry", lambda *args: (set(), {}, {})
+    )
+
+    with pytest.raises(SystemExit) as e:
+        linter.main()
+    assert e.value.code == 1
+
+
+def test_main_skipped_target_json(tmp_path, monkeypatch):
+    """Test skipped target warning in JSON format."""
+    import sys
+    from engine.cli import main
+
+    invalid_dir = tmp_path / "invalid_dir"
+    invalid_dir.mkdir()
+    (tmp_path / ".git").mkdir()
+    fpath = invalid_dir / "target.md"
+    fpath.write_text("content")
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys, "argv", ["cli.py", "--target", str(invalid_dir), "--format", "json"]
+    )
+    monkeypatch.setattr("engine.cli.GOVERNANCE_ROOT", str(tmp_path))
+    monkeypatch.setattr("engine.cli.BASE_SCHEMA_PATH", "fake")
+
+    def mock_load_json(path):
+        return {
+            "x-global-config": {
+                "structure_rules": {"artifact_directories": {"01": "allowed_dir"}}
+            }
+        }
+
+    monkeypatch.setattr("engine.cli.load_json_schema_file", mock_load_json)
+
+    with pytest.raises(SystemExit) as e:
+        main()
+    assert e.value.code == 1

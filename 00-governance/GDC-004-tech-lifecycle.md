@@ -106,4 +106,3 @@ In accordance with the Quality Rubric (Trade-Offs parameter), the ARB explicitly
 1. **180-Day Sunset Grace Period vs. Immediate Deprecation**
    - _Why rejected_: Immediate deprecation halts all product delivery, forcing teams into unplanned emergency migrations and jeopardizing business roadmaps.
    - _The Trade-Off_: We consciously accept the security and maintenance risk of running obsolete technology for up to 180 days. In exchange, we provide engineering teams a predictable, humane runway to schedule their technical debt payoff without halting feature velocity.
-

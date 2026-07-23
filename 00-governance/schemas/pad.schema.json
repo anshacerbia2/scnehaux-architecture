@@ -1,251 +1,174 @@
 {
   "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/pad.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Product Architecture Document (PAD) Validation Policies",
+  "title": "Product Architecture Document (PAD) Validation Rules",
   "type": "object",
   "config": {
     "target_doc": "GDC-008-pad-guideline.md"
   },
+  "properties": {
+    "filename": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+\\.pad\\.md$"
+    }
+  },
   "allOf": [
     {
-      "$ref": "#/definitions/metadata_policies"
+      "$ref": "#/definitions/metadata_rules"
     },
     {
-      "$ref": "#/definitions/section_policies"
+      "$ref": "#/definitions/section_rules"
     },
     {
-      "$ref": "#/definitions/content_policies"
+      "$ref": "#/definitions/content_rules"
     }
   ],
   "definitions": {
-    "metadata_policies": {
-      "title": "Metadata Policies",
-      "description": "Policies for the YAML Frontmatter (doc_meta)",
+    "metadata_rules": {
+      "title": "Metadata Rules",
+      "description": "Rules for the YAML Frontmatter (doc_meta)",
       "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
-          "type": "object",
-          "required": [
-            "id",
-            "title",
-            "governed_by",
-            "owner",
-            "version",
-            "status",
-            "classification",
-            "realizes_capability",
-            "fulfilled_by",
-            "review_cycle_days",
-            "last_reviewed"
-          ],
-          "properties": {
-            "status": {
-              "title": "Allowed Statuses",
-              "type": "string",
-              "enum": ["proposed", "approved", "deprecated"]
+          "allOf": [
+            {
+              "$ref": "https://scnehaux.com/codex/gov/guidelines/schemas/base.schema.json#/definitions/common_metadata_fields"
             },
-            "classification": {
-              "title": "Allowed Classifications",
-              "type": "string",
-              "enum": ["public", "internal", "restricted"]
-            },
-            "id": {
-              "title": "Document ID",
-              "type": "string"
-            },
-            "title": {
-              "title": "Document Title",
-              "type": "string"
-            },
-            "governed_by": {
-              "title": "Governed By",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
+            {
+              "type": "object",
+              "required": [
+                "owner",
+                "version",
+                "classification",
+                "review_cycle_days",
+                "last_reviewed",
+                "governed_by",
+                "realizes_capability",
+                "fulfilled_by"
+              ],
+              "properties": {
+                "governed_by": {
+                  "title": "Governing EAD ID",
+                  "type": "string",
+                  "pattern": "^EAD-\\d{3}-[A-Z0-9-]+$"
+                },
+                "realizes_capability": {
+                  "title": "Capability Being Realized",
+                  "type": "string"
+                },
+                "fulfilled_by": {
+                  "title": "Downstream Implementation Systems",
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^SAD-\\d{3}-[A-Z0-9-]+$"
+                  }
+                }
               }
-            },
-            "owner": {
-              "title": "Owner",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
-              }
-            },
-            "version": {
-              "title": "Version",
-              "type": ["string", "number"]
-            },
-            "realizes_capability": {
-              "title": "Realizes Capability",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
-              }
-            },
-            "fulfilled_by": {
-              "title": "Fulfilled By",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
-              }
-            },
-            "review_cycle_days": {
-              "title": "Review Cycle (Days)",
-              "type": "integer"
-            },
-            "last_reviewed": {
-              "title": "Last Reviewed Date",
-              "type": "string",
-              "format": "date"
             }
-          }
+          ]
         }
       }
     },
-    "section_policies": {
-      "title": "Section Policies",
-      "description": "Policies for required and recommended sections in the Markdown body",
+    "section_rules": {
+      "title": "Section Rules",
+      "description": "Rules for required and recommended sections in the Markdown body",
       "required": [
-        "Purpose",
-        "Enterprise Position",
-        "Scope",
-        "Capability Model",
-        "Domain Model",
-        "Context Model",
-        "Trust & Responsibility Model",
-        "Integration Contract",
-        "NFR",
-        "Ownership & Governance",
-        "Traceability"
+        "Purpose & Scope",
+        "Enterprise Traceability",
+        "Domain & Context Model",
+        "Integration Contracts",
+        "Trust & Data Boundaries",
+        "Capability NFR",
+        "Ownership & Governance"
       ],
-      "recommended": ["Known Constraints", "Product Evolution", "References"],
+      "recommended": [
+        "Assumptions & Constraints",
+        "Architectural Decisions",
+        "Evolution",
+        "References"
+      ],
       "x-titles": {
         "required": "Required Sections",
         "recommended": "Recommended Sections"
       }
     },
-    "content_policies": {
-      "title": "Content Quality Policies",
-      "description": "Policies for required and recommended keywords inside specific Markdown sections",
+    "content_rules": {
+      "title": "Content Quality Rules",
+      "description": "Rules for required and recommended keywords inside specific Markdown sections",
       "properties": {
-        "Business Capability": {
+        "Purpose & Scope": {
           "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Capability\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Maturity\\b"
-            }
+          "required_subsections": ["Out Of Scope"],
+          "x-titles": {
+            "required": "Purpose & Scope (Required Concepts)"
+          }
+        },
+        "Enterprise Traceability": {
+          "type": "string",
+          "required_subsections": ["Realizes", "Relationships", "Consumed By"],
+          "x-titles": {
+            "required": "Enterprise Traceability (Required Concepts)"
+          }
+        },
+        "Domain & Context Model": {
+          "type": "string",
+          "required_subsections": ["Bounded Context", "Ubiquitous Language"],
+          "x-titles": {
+            "required": "Domain & Context Model (Required Concepts)"
+          }
+        },
+        "Integration Contracts": {
+          "type": "string",
+          "required_subsections": [
+            "Integration Provided",
+            "Integration Consumed"
           ],
           "x-titles": {
-            "required": "Business Capability (Required)"
+            "required": "Integration Contracts (Required Concepts)"
           }
         },
         "Trust & Data Boundaries": {
           "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Trust\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Data\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Compliance\\b"
-            }
-          ],
-          "recommended": ["Identity"],
-          "x-titles": {
-            "required": "Trust & Data Boundaries (Required)",
-            "recommended": "Trust & Data Boundaries (Recommended)"
-          }
-        },
-        "Context & Scope": {
-          "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Purpose\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Goals\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Non-Goal\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Stakeholder\\b"
-            }
+          "required_subsections": [
+            "Trust Boundary",
+            "Identity Access",
+            "Data Classification"
           ],
           "x-titles": {
-            "required": "Context & Scope (Required)"
+            "required": "Trust & Data Boundaries (Required Concepts)"
           }
         },
-        "Domain Model": {
-          "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Bounded Context\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Context Mapping\\b"
-            }
-          ],
-          "recommended": ["Domain Event"],
-          "x-titles": {
-            "required": "Domain Model (Required)",
-            "recommended": "Domain Model (Recommended)"
-          }
-        },
-        "Ownership & Governance": {
-          "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Owner\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)fulfilled_by\\b"
-            }
-          ],
-          "x-titles": {
-            "required": "Ownership & Realizing Systems (Required)"
-          }
-        },
-        "Integration Contract": {
-          "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)API\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Consumer\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Dependencies\\b"
-            }
-          ],
-          "recommended": ["Event", "Provider", "External"],
-          "x-titles": {
-            "required": "Integration Contracts (Required)",
-            "recommended": "Integration Contracts (Recommended)"
-          }
-        },
-        "NFR": {
+        "Capability NFR": {
           "type": "string",
           "recommended": [
             "SLA",
             "SLO",
-            "Availability",
-            "Scalability",
-            "Compliance",
-            "Data Privacy",
             "RTO",
             "RPO",
-            "Budget"
+            "Availability",
+            "Scalability",
+            "Peak Load",
+            "Concurrency",
+            "Compliance",
+            "Data Privacy",
+            "Data Residency",
+            "Audit",
+            "Usability",
+            "Accessibility",
+            "Interoperability",
+            "Cost Target"
           ],
           "x-titles": {
-            "recommended": "NFR Derivatives (Recommended)"
+            "recommended": "Capability NFR (Recommended Derivatives)"
+          }
+        },
+        "Ownership & Governance": {
+          "type": "string",
+          "required_subsections": ["Team Ownership", "Realizing Systems"],
+          "x-titles": {
+            "required": "Ownership & Governance (Required Concepts)"
           }
         }
       }

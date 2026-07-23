@@ -106,4 +106,3 @@ None.
 - **Pros**: Ensures instant ACID consistency across multiple tables in a single write operation.
 - **Cons**: Increases lock durations, causes transaction deadlocks under high load, and tightly couples aggregate lifecycles.
 - **Why Rejected**: Prevents horizontal scaling of database write operations and causes performance degradation during concurrent updates.
-

@@ -79,7 +79,7 @@ For every table containing tenant-specific data, RLS must be enabled. The applic
 ### Related Standards
 
 - [Enterprise Data Architecture Strategy (EAD-003)](../../01-enterprise/EAD-003-enterprise-data-ownership-and-topology.md)
-- [Platform Identity Architecture Document (PAD-001)](../../03-domain/identity-platform/identity-platform.pad.md)
+- [Platform Identity Architecture Document (PAD-PLT-001)](../../03-domain/PAD-PLT-001-identity-platform/PAD-PLT-001-identity-platform.pad.md)
 
 ### Compliance Status
 
@@ -102,4 +102,3 @@ None.
 - **Pros**: Perfect hardware-level isolation.
 - **Cons**: Extremely expensive infrastructure footprints, slow schema migrations (running migrations across thousands of databases), and massive connection pool exhaustion.
 - **Why Rejected**: Unviable due to high operational costs and scaling constraints for thousands of small tenants.
-

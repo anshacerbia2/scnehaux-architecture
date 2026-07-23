@@ -14,29 +14,29 @@ This index documents the internal functions and classes of the Generators.
 
 | Function | Description |
 | :--- | :--- |
-| **generate_index** | Scan the `05-decisions` directory for Architectural Decision Records (ADRs). Extracts metadata (ID, Title, Type, Status, etc.) and generates a master INDEX.md table. |
-| **parse_frontmatter** | Extract and parse the YAML frontmatter from a markdown string. Returns the parsed dictionary, or None if no frontmatter is found or parsing fails. |
+| **parse_frontmatter** | Extract and parse the YAML frontmatter from a markdown string.<br>Returns the parsed dictionary, or None if no frontmatter is found or parsing fails. |
+| **generate_index** | Scan the `05-decisions` directory for Architectural Decision Records (ADRs).<br>Extracts metadata (ID, Title, Type, Status, etc.) and generates a master INDEX.md table. |
 
 ### `generators/generate_engine_topography.py`
 
 | Function | Description |
 | :--- | :--- |
-| **build_tree** | Recursively build a visual directory tree structure for the topography diagram. Appends high-level explanatory comments to specific engine directories. |
+| **build_tree** | Recursively build a visual directory tree structure for the topography diagram.<br>Appends high-level explanatory comments to specific engine directories. |
 | **generate_markdown** | Generate the complete topography markdown text block wrapped in a code fence. |
-| **update_document** | Inject the generated engine topography into the target Governance document (GDC-001) using the BEGIN_ENGINE_TOPOGRAPHY and END_ENGINE_TOPOGRAPHY marker tags. |
+| **update_document** | Inject the generated engine topography into the target Governance document (GDC-001)<br>using the BEGIN_ENGINE_TOPOGRAPHY and END_ENGINE_TOPOGRAPHY marker tags. |
 
 ### `generators/generate_functions_doc.py`
 
 | Function | Description |
 | :--- | :--- |
-| **extract_functions** | Parse a Python file using the `ast` module to extract all function and class method definitions. Captures the docstring and line number. |
-| **generate_cli_flowchart** | Scan engine/cli.py for special inline comments starting with `# @flow:` and compile them into a Mermaid flowchart injected into engine/INDEX.md. |
-| **generate_domain_flowcharts** | Scan engine/validators/domains/*_validator.py for special inline comments starting with `# @flow-domain:` and compile them into isolated Mermaid flowcharts injected into engine/INDEX.md. |
-| **generate_markdown_table** | Format the extracted function metadata into a structured Markdown table. Groups functions by their parent Python module (file path) for clarity. |
-| **generate_validator_flowchart** | Scan engine/validators/base.py for special inline comments starting with `# @flow-validator:` and compile them into a Mermaid flowchart injected into engine/INDEX.md. |
-| **inject_to_markdown** | Inject the generated Markdown table into the target file, replacing whatever content exists between the `AUTO-GENERATED-FUNCTIONS` start and end marker tags. |
-| **main** | Main execution flow. Iterates through the core sub-ecosystems (engine, generators, scripts, tests) and updates their respective INDEX.md files. |
-| **update_directory_index** | Crawl a specific sub-ecosystem directory (e.g. `engine` or `generators`), extract all Python function documentation within it, and inject the results into its local `INDEX.md`. |
+| **extract_functions** | Parse a Python file using the `ast` module to extract all function and class method definitions.<br>Captures the docstring and line number. |
+| **generate_markdown_table** | Format the extracted function metadata into a structured Markdown table.<br>Groups functions by their parent Python module (file path) for clarity. |
+| **inject_to_markdown** | Inject the generated Markdown table into the target file, replacing whatever content<br>exists between the `AUTO-GENERATED-FUNCTIONS` start and end marker tags. |
+| **update_directory_index** | Crawl a specific sub-ecosystem directory (e.g. `engine` or `generators`), extract all<br>Python function documentation within it, and inject the results into its local `INDEX.md`. |
+| **generate_cli_flowchart** | Scan engine/cli.py for special inline comments starting with `# @flow:`<br>and compile them into a Mermaid flowchart injected into engine/INDEX.md. |
+| **generate_validator_flowchart** | Scan engine/validators/base.py for special inline comments starting with `# @flow-validator:`<br>and compile them into a Mermaid flowchart injected into engine/INDEX.md. |
+| **generate_domain_flowcharts** | Scan engine/validators/domains/*_validator.py for special inline comments starting with `# @flow-domain:`<br>and compile them into isolated Mermaid flowcharts injected into engine/INDEX.md. |
+| **main** | Main execution flow. Iterates through the core sub-ecosystems (engine, generators,<br>scripts, tests) and updates their respective INDEX.md files. |
 
 ### `generators/generate_maturity_dashboard.py`
 
@@ -49,29 +49,29 @@ This index documents the internal functions and classes of the Generators.
 
 | Function | Description |
 | :--- | :--- |
-| **generate_index** | Scan the specified architecture layer directory (e.g. `03-domain` for PAD, `04-system` for SAD) and generate a master `INDEX.md` cataloging all found documents and their traceability metrics. |
-| **parse_metadata** | Extract the `doc_meta` YAML block from a specific markdown file. Returns an empty dictionary if parsing fails or the block is missing. |
+| **parse_metadata** | Extract the `doc_meta` YAML block from a specific markdown file.<br>Returns an empty dictionary if parsing fails or the block is missing. |
+| **generate_index** | Scan the specified architecture layer directory (e.g. `03-domain` for PAD, `04-system` for SAD)<br>and generate a master `INDEX.md` cataloging all found documents and their traceability metrics. |
 
 ### `generators/generate_rules_doc.py`
 
 | Function | Description |
 | :--- | :--- |
-| **current_block** | Extract the current auto-generated block (Rules or Schema) from the target markdown file. Used for drift detection in CI to ensure documentation matches the SSOT schemas. |
-| **format_enum** | Format a JSON Schema 'enum' list into a Markdown HTML <ul> block for table rendering. Escapes pipe characters to prevent breaking Markdown tables. |
-| **format_type** | Format a JSON Schema type definition into a human-readable string. Handles arrays and multiple acceptable types (e.g., string \| array[string]). |
-| **generate_from_json_schema** | Parse a standard JSON Schema (`definitions` block) and generate a Markdown table documenting all structural, content, and metadata rules for a specific document type. |
-| **generate_from_x_engine_config** | Generate a markdown table from the custom `x-engine-config` block used in the global schema (gdc.schema.json). This outlines fundamental repository rules. |
-| **generate_markdown_table** | Dispatcher to route schema data to the appropriate Markdown table generator based on whether it's a global config or a standard JSON schema. |
-| **inject_to_markdown** | Inject the newly generated Markdown table into the target Governance document, replacing the content between the `AUTO-GENERATED-RULES` or `AUTO-GENERATED-SCHEMA` tags. |
 | **load_json** | Load and return parsed JSON data from a file path. |
-| **process** | Iterate over all schemas in `00-governance/schemas` and update their respective Governance guidelines. If `check` is True, verify if they are in sync without writing. Returns a list of out-of-sync documents (drift). |
+| **format_type** | Format a JSON Schema type definition into a human-readable string.<br>Handles arrays and multiple acceptable types (e.g., string \| array[string]). |
+| **format_enum** | Format a JSON Schema 'enum' list into a Markdown HTML <ul> block for table rendering.<br>Escapes pipe characters to prevent breaking Markdown tables. |
+| **generate_from_x_global_config** | Generate a markdown table from the custom `global_rules` block used in<br>the global schema (base.schema.json). This outlines fundamental repository rules. |
+| **generate_from_json_schema** | Parse a standard JSON Schema (`definitions` block) and generate a Markdown table<br>documenting all structural, content, and metadata rules for a specific document type. |
+| **generate_markdown_table** | Dispatcher to route schema data to the appropriate Markdown table generator<br>based on whether it's a global config or a standard JSON schema. |
+| **current_block** | Extract the current auto-generated block (Rules or Schema) from the target markdown file.<br>Used for drift detection in CI to ensure documentation matches the SSOT schemas. |
+| **inject_to_markdown** | Inject the newly generated Markdown table into the target Governance document,<br>replacing the content between the `AUTO-GENERATED-RULES` or `AUTO-GENERATED-SCHEMA` tags. |
+| **get_target_doc_name** | Helper to extract the target document name from schema config |
+| **process** | Iterate over all schemas in `00-governance/schemas` and update their respective<br>Governance guidelines. If `check` is True, verify if they are in sync without writing.<br>Returns a list of out-of-sync documents (drift). |
 
 ### `generators/generate_traceability_graph.py`
 
 | Function | Description |
 | :--- | :--- |
-| **generate_graph** | Crawl all architecture documents to extract `parent_pad` and `realizes_capability` linkages. Generates a Mermaid.js flowchart mapping the hierarchical relationships (SAD -> PAD -> EAD). |
-| **parse_metadata** | Safely extract the `doc_meta` YAML block from a specific markdown file. Returns None if parsing fails or the block is missing. |
+| **parse_metadata** | Safely extract the `doc_meta` YAML block from a specific markdown file.<br>Returns None if parsing fails or the block is missing. |
+| **generate_graph** | Crawl all architecture documents to extract `parent_pad` and `realizes_capability` linkages.<br>Generates a Mermaid.js flowchart mapping the hierarchical relationships (SAD -> PAD -> EAD). |
 
 <!-- AUTO-GENERATED-FUNCTIONS:END -->
-

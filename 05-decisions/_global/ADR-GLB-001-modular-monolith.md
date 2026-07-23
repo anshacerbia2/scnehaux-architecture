@@ -99,4 +99,3 @@ None.
 - **Pros**: Fast to write initially, zero architectural boundary friction.
 - **Cons**: Direct imports across all database tables and logic, making it impossible to separate domains or scale teams in the future.
 - **Why Rejected**: Leads to catastrophic domain contamination and code rot within 12 months.
-

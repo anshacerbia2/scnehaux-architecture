@@ -1,6 +1,7 @@
 import subprocess
 import os
 import logging
+from engine.config.severity import SeverityRule
 from engine.parsing.markdown_ast import parse_frontmatter
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ def audit_version_bump(
     version must be incremented.
     """
     findings = []
-    sev = severity_levels.get("structural_integrity_violation", "CRITICAL")
+    sev = severity_levels[SeverityRule.VERSION_BUMP_REQUIRED]
 
     # Try to find the git root. If we are not in a git repo, skip this audit.
     try:
@@ -88,6 +89,7 @@ def audit_version_bump(
                 cwd=git_root,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             if old_content_cmd.returncode != 0:
                 # File is new on the baseline, no old version to compare against

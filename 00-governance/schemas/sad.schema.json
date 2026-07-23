@@ -1,174 +1,161 @@
 {
   "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/sad.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "System Architecture Document (SAD) Validation Policies",
+  "title": "System Architecture Document (SAD) Validation Rules",
   "type": "object",
   "config": {
     "target_doc": "GDC-009-sad-guideline.md"
   },
+  "properties": {
+    "filename": {
+      "type": "string",
+      "pattern": "^SAD-[A-Z]+-\\d{3}-[a-z0-9-]+\\.md$"
+    }
+  },
   "allOf": [
     {
-      "$ref": "#/definitions/metadata_policies"
+      "$ref": "#/definitions/metadata_rules"
     },
     {
-      "$ref": "#/definitions/section_policies"
+      "$ref": "#/definitions/section_rules"
     },
     {
-      "$ref": "#/definitions/content_policies"
+      "$ref": "#/definitions/content_rules"
     }
   ],
   "definitions": {
-    "metadata_policies": {
-      "title": "Metadata Policies",
-      "description": "Policies for the YAML Frontmatter (doc_meta)",
+    "metadata_rules": {
+      "title": "Metadata Rules",
+      "description": "Rules for the YAML Frontmatter (doc_meta)",
       "required": ["doc_meta"],
       "properties": {
         "doc_meta": {
           "title": "Required Fields",
-          "type": "object",
-          "required": [
-            "id",
-            "title",
-            "governed_by",
-            "owner",
-            "version",
-            "status",
-            "classification",
-            "parent_pad",
-            "review_cycle_days",
-            "last_reviewed"
-          ],
-          "properties": {
-            "status": {
-              "title": "Allowed Statuses",
-              "type": "string",
-              "enum": ["proposed", "approved", "deprecated"]
+          "allOf": [
+            {
+              "$ref": "https://scnehaux.com/codex/gov/guidelines/schemas/base.schema.json#/definitions/common_metadata_fields"
             },
-            "classification": {
-              "title": "Allowed Classifications",
-              "type": "string",
-              "enum": ["public", "internal", "restricted"]
-            },
-            "id": {
-              "title": "Document ID",
-              "type": "string"
-            },
-            "title": {
-              "title": "Document Title",
-              "type": "string"
-            },
-            "governed_by": {
-              "title": "Governed By",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
+            {
+              "type": "object",
+              "required": [
+                "owner",
+                "version",
+                "classification",
+                "review_cycle_days",
+                "last_reviewed",
+                "governed_by",
+                "parent_pad"
+              ],
+              "properties": {
+                "governed_by": {
+                  "title": "Governed By",
+                  "type": ["string", "array"],
+                  "items": { "type": "string" }
+                },
+                "parent_pad": {
+                  "title": "Parent PAD",
+                  "type": ["string", "array"],
+                  "items": { "type": "string" }
+                },
+                "technologies": {
+                  "title": "Technologies Used",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "type"],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Technology name exactly matching tech-radar.yaml"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Type of technology (e.g. framework, library, protocol, database, cloud-provider, language, runtime)"
+                      },
+                      "base": {
+                        "type": "string",
+                        "description": "Base technology or protocol this depends on (if applicable)"
+                      }
+                    }
+                  }
+                }
               }
-            },
-            "owner": {
-              "title": "Owner",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
-              }
-            },
-            "version": {
-              "title": "Version",
-              "type": ["string", "number"]
-            },
-            "parent_pad": {
-              "title": "Parent PAD",
-              "type": ["string", "array"],
-              "items": {
-                "type": "string"
-              }
-            },
-            "review_cycle_days": {
-              "title": "Review Cycle (Days)",
-              "type": "integer"
-            },
-            "last_reviewed": {
-              "title": "Last Reviewed Date",
-              "type": "string",
-              "format": "date"
             }
-          }
+          ]
         }
       }
     },
-    "section_policies": {
-      "title": "Section Policies",
-      "description": "Policies for required and recommended sections in the Markdown body",
+    "section_rules": {
+      "title": "Section Rules",
+      "description": "Rules for required and recommended sections in the Markdown body",
       "required": [
-        "Purpose",
-        "Scope",
+        "Purpose & Scope",
+        "Enterprise Traceability",
         "Solution Context",
         "Architecture Model",
-        "Data Flow",
-        "Integration Contract",
-        "Security Model",
-        "Deployment Model",
+        "State & Data Architecture",
+        "Integration Contracts",
+        "Security & Trust Boundary",
         "NFR",
-        "Decisions",
-        "Traceability"
+        "Deployment Strategy",
+        "Architecture Decisions"
       ],
       "recommended": [
-        "Risks",
+        "Assumptions",
+        "Compatibility Strategy",
         "Migration Strategy",
-        "Operational Considerations"
+        "Alternatives"
       ],
       "x-titles": {
         "required": "Required Sections",
         "recommended": "Recommended Sections"
       }
     },
-    "content_policies": {
-      "title": "Content Quality Policies",
-      "description": "Policies for required and recommended keywords inside specific Markdown sections",
+    "content_rules": {
+      "title": "Content Quality Rules",
+      "description": "Rules for required and recommended keywords inside specific Markdown sections",
       "properties": {
-        "Scope": {
+        "Purpose & Scope": {
           "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Objective\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Constraint\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Capability\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)System Context\\b"
-            }
-          ],
+          "required_subsections": ["Objective", "Constraint", "Capability"],
           "recommended": ["Requirement", "Assumption"],
           "x-titles": {
             "required": "Context & Scope (Required)",
             "recommended": "Context & Scope (Recommended)"
           }
         },
+        "Solution Context": {
+          "type": "string",
+          "recommended": ["System Context", "External", "Internal"]
+        },
         "Architecture Model": {
           "type": "string",
-          "recommended": ["Container"],
+          "recommended": [
+            "Container",
+            "Component",
+            "Sequence",
+            "Runtime Flow",
+            "Event Flow"
+          ],
           "x-titles": {
-            "recommended": "System Architecture (Recommended)"
+            "recommended": "Architecture Model (Recommended Concepts)"
           }
         },
-        "Data Flow": {
+        "State & Data Architecture": {
           "type": "string",
-          "recommended": ["Sequence"],
+          "recommended": ["Storage", "Cache", "Schema", "Stateless"],
           "x-titles": {
-            "recommended": "Runtime Flows (Recommended)"
+            "recommended": "State & Data Architecture (Recommended Concepts)"
           }
         },
-        "Integration Contract": {
+        "Integration Contracts": {
           "type": "string",
           "recommended": ["API", "Event", "Consumed", "Published"],
           "x-titles": {
-            "recommended": "Integration (Recommended)"
+            "recommended": "Integration Contracts (Recommended Concepts)"
           }
         },
-        "Security Model": {
+        "Security & Trust Boundary": {
           "type": "string",
           "recommended": [
             "Authentication",
@@ -178,34 +165,24 @@
             "Audit"
           ],
           "x-titles": {
-            "recommended": "Security (Recommended)"
+            "recommended": "Security & Trust Boundary (Recommended Concepts)"
           }
         },
-        "Deployment Model": {
+        "Deployment Strategy": {
           "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)CI/CD\\b"
-            },
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Release\\b"
-            }
-          ],
+          "required_subsections": ["CI/CD"],
           "recommended": ["Environment", "Infrastructure"],
           "x-titles": {
-            "recommended": "Deployment (Recommended)"
+            "recommended": "Deployment Strategy (Recommended Concepts)"
           }
         },
-        "Decisions": {
+        "Architecture Decisions": {
           "type": "string",
-          "allOf": [
-            {
-              "pattern": "(?i)(?:^|\\n)(?:#{3,5}\\s+(?:[\\d\\.]+\\s+)?|\\*\\*)Rejected\\b"
-            }
-          ]
+          "required_subsections": ["Rejected"]
         },
         "NFR": {
           "type": "string",
+          "required_subsections": ["Blast Radius"],
           "recommended": [
             "Latency",
             "Throughput",
@@ -219,7 +196,6 @@
             "Circuit Breaker",
             "Retry",
             "Timeout",
-            "Resilience",
             "Failover"
           ],
           "x-titles": {

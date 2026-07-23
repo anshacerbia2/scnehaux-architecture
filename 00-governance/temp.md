@@ -91,7 +91,7 @@ At Scnehaux, **Policy resides entirely in the Guidelines**. These documents defi
 
 If the Guidelines are the Law, the 3 Core Pillars are the Police. They act universally across all Policies. If one component is missing, the ecosystem's identity collapses:
 
-- **[GDC-001 — Architecture Fitness Functions](./GDC-001-fitness-functions.md)** (The Machine Police): The CI/CD linter. It acts as the automated gatekeeper, deterministically validating structural layout, metadata, and the enterprise technology radar.
+- **[GDC-001 — Architecture Fitness Functions](GDC-001-fitness-functions.md)** (The Machine Police): The CI/CD linter. It acts as the automated gatekeeper, deterministically validating structural layout, metadata, and the enterprise technology radar.
 - **[GDC-003 — Quality Rubric](./GDC-003-quality-rubric.md)** (The Human Brain): Defines the 10 deep architectural parameters used by reviewers to judge subjective trade-offs.
 - **[GDC-004 — Review Process](./GDC-004-review-process.md)** (The Supreme Court): Defines how the ARB scores PRs and grants exception waivers.
 
@@ -208,7 +208,7 @@ All systems must define measurable targets for Availability, Performance, Scalab
 
 ### 4.7 The Fitness Function Orchestration
 
-The execution of the automated fitness function gate is orchestrated by `06-fitness-function/engine/cli.py`. The CI/CD engine utilizes a dynamic YAML federation where global rules (`linting-rules.yaml`) are deeply merged with domain-specific rules. Crucially, all specifications regarding the Fitness Function Execution Flow, Modular Ruleset Configurations, and linting enforcement are strictly maintained in the global framework: 👉 **[GDC-001 - Architecture Fitness Functions](./GDC-001-fitness-functions.md)**
+The execution of the automated fitness function gate is orchestrated by `06-fitness-function/engine/cli.py`. The CI/CD engine utilizes a dynamic YAML federation where global rules (`linting-rules.yaml`) are deeply merged with domain-specific rules. Crucially, all specifications regarding the Fitness Function Execution Flow, Modular Ruleset Configurations, and linting enforcement are strictly maintained in the global framework: 👉 **[GDC-001 - Architecture Fitness Functions](GDC-001-fitness-functions.md)**
 
 ### 4.8 The Reconciliation Flow (Adding or Modifying Rules)
 
@@ -217,4 +217,3 @@ At Scnehaux, **if an architectural rule is not enforceable by the fitness functi
 Because the process of adding or modifying a rule is fundamentally an act of modifying a Governance Document Contract (GDC), the exact 4-step execution flow for updating YAML rules, regenerating documentation, and synchronizing qualitative rubrics is defined strictly within its authoritative guideline: 👉 **[GDC-006 §3 — The Reconciliation Flow](./GDC-006-gdc-guideline.md#3-the-reconciliation-flow-adding-or-modifying-rules)**
 
 ---
-

@@ -101,4 +101,3 @@ None.
 - **Pros**: High flexibility; zero validation checks.
 - **Cons**: Leads to silent data corruption, makes debugging runtime errors difficult, and forces consumers to write complex defensive code to verify field existence.
 - **Why Rejected**: Fails to meet the enterprise reliability and predictability targets, shifting integration bugs to production.
-

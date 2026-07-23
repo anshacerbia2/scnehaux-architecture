@@ -3,10 +3,10 @@ doc_meta:
   id: GDC-000
   title: Documentation Governance Policy
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: public
-  governed_by: [GDC-000, GDC-005]
+  governed_by: []
   review_cycle_days: 180
   last_reviewed: 2026-05-22
 ---
@@ -27,7 +27,7 @@ This Constitution is not designed to create bureaucracy, it is designed to syste
 
 4. **Institutional Resilience (Anti-Brain Drain)** To decouple the survival of the architecture from the individuals who built it. The context, rationale, and historical evolution of every system must be permanently preserved, ensuring the organization survives human turnover without losing critical engineering knowledge.
 
-5. **Frictionless Developer Experience (DevEx)** To ensure widespread adoption by integrating governance seamlessly into existing engineering habits. The governance process must become an invisible, frictionless part of the daily engineering workflow rather than a bureaucratic hurdle or a separate administrative chore.
+5. **Frictionless Developer Experience (DevEx)** To ensure widespread adoption by integrating governance directly into existing engineering habits. The governance process must become an invisible, frictionless part of the daily engineering workflow rather than a bureaucratic hurdle or a separate administrative chore.
 
 ### 1.2 Core Philosophy (The Existential Maxims)
 
@@ -59,13 +59,13 @@ By applying these 9 interconnected dimensions, every architectural artifact is c
 
 | Artifact Domain | Asset Owned | Scope | Abstraction | Primary Owner | Target Audience | Blast Radius | Horizon | Change Freq | NFR Focus |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| **[GDC](./GDC-005-gdc-guideline.md)** (Governance Document Contract) | Governance Framework | Ecosystem | Meta-Framework | Architecture Authority | All SWEs | Ecosystem | Permanent | Low | Gov Metrics |
-| **[EAD](./GDC-006-ead-guideline.md)** (Enterprise Architecture Document) | Enterprise Strategy | Enterprise | Macro-Strategy | Architecture Authority | C-Level, VP, Architecture Authority | Massive (One-Way) | Strategic | Low | Cost Optimization, Sustainability, Security |
-| **[STD](./GDC-007-std-guideline.md)** (Standard Document) | Standards & Methodologies | Inherited (Enterprise/Domain/System) | Guardrails | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team) | Inherited (Massive/Domain/System) | Living | Medium | Inherited (Context) |
-| **[PAD](./GDC-008-pad-guideline.md)** (Product Architecture Document) | Domain Capability | Domain | Domain Capability | Domain Team | Domain Team, PMs | Domain-wide | Long-term | Med-Low | Performance Efficiency, Reliability, Security |
-| **[SAD](./GDC-009-sad-guideline.md)** (System Architecture Document) | Cohesive Physical System Architecture | System | Container Topo | System Team | System Team | System-level | Mid-term | Medium | Performance Efficiency, Reliability, Operational Excellence |
-| **[TDD](./GDC-011-tdd-guideline.md)** (Technical Design Document) | Component & Implementation Design | Component | Code Contracts | Component Team | Component Team | Component | Ephemeral | High | Reliability, Security, Operational Excellence |
-| **[ADR](./GDC-010-adr-guideline.md)** (Architecture Decision Record) | Architectural Decisions | Inherited (Enterprise/Domain/System) | Rationale | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team) | Inherited (Massive/Domain/System) | Point-in-time | Immutable | Inherited (Context) |
+| **[GDC](GDC-005-gdc-guideline.md)** (Governance Document Contract) | Governance Framework | Ecosystem | Meta-Framework | Architecture Authority | All SWEs | Ecosystem | Permanent | Low | Gov Metrics |
+| **[EAD](GDC-006-ead-guideline.md)** (Enterprise Architecture Document) | Enterprise Strategy | Enterprise | Macro-Strategy | Architecture Authority | C-Level, VP, Architecture Authority | Massive (One-Way) | Strategic | Low | Cost Optimization, Sustainability, Security |
+| **[STD](GDC-007-std-guideline.md)** (Standard Document) | Standards & Methodologies | Inherited (Enterprise/Domain/System) | Guardrails | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team) | Inherited (Massive/Domain/System) | Living | Medium | Inherited (Context) |
+| **[PAD](GDC-008-pad-guideline.md)** (Product Architecture Document) | Domain Capability | Domain | Domain Capability | Domain Team | Domain Team, PMs | Domain-wide | Long-term | Med-Low | Performance Efficiency, Reliability, Security |
+| **[SAD](GDC-009-sad-guideline.md)** (System Architecture Document) | Cohesive Physical System Architecture | System | Container Topo | System Team | System Team | System-level | Mid-term | Medium | Performance Efficiency, Reliability, Operational Excellence |
+| **[TDD](GDC-011-tdd-guideline.md)** (Technical Design Document) | Component & Implementation Design | Component | Code Contracts | Component Team | Component Team | Component | Ephemeral | High | Reliability, Security, Operational Excellence |
+| **[ADR](GDC-010-adr-guideline.md)** (Architecture Decision Record) | Architectural Decisions | Inherited (Enterprise/Domain/System) | Rationale | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team) | Inherited (Massive/Domain/System) | Point-in-time | Immutable | Inherited (Context) |
 
 To illustrate this separation of concerns practically, consider the analogy of a nation's infrastructure planning: EAD acts as the national planning agency (Bappenas) setting macro objectives, PAD acts as regional planning (Bappeda) mapping domain capabilities, SAD acts as public works planning (PU Perencanaan) designing physical container topologies, and TDD acts as the public works execution (PU Pelaksanaan) building the granular components.
 
@@ -73,18 +73,19 @@ To illustrate this separation of concerns practically, consider the analogy of a
 
 The 9 dimensions of the SoC Philosophy (Scope, Abstraction, NFR Focus, etc.) are powerful abstract concepts, but they require a pragmatic vehicle to be executed in the real world. To achieve this, Scnehaux rejects rigid compliance with any single architectural framework. Instead, we **adopt and synthesize the core concepts** from three industry-leading frameworks to physically manifest our 9 dimensions. We do not use their proprietary tools, we solely extract their mental models:
 
-- **C4 Model (The Vertical Axis)**: Standard C4 is used as the foundational Y-axis (depth) of our ecosystem. It dictates how we zoom in from the Enterprise level (C1) down to the Component level (C3). This guarantees that every artifact operates at the correct level of abstraction and naturally serves the right audience (from C-Level executives at C1 down to SWEs at C3) without mixing technical depths.
+- **C4 Model (The Vertical Axis)**: Standard C4 is used as the foundational Y-axis (depth) of our ecosystem. It dictates how we zoom in from the Enterprise level (System Landscape / C0) down to the Component level (C3). This guarantees that every artifact operates at the correct level of abstraction and naturally serves the right audience (from C-Level executives at C0 down to SWEs at C3) without mixing technical depths.
   - _Why not UML or ArchiMate?_ UML is too syntax-heavy and demands specialized training, while ArchiMate is often disconnected from the reality of code. C4 provides a lightweight, intuitive "map-like" mental model that developers natively understand without requiring proprietary modeling tools.
 
   | Level | C4 Name | Scnehaux Artifacts | SoC Scope | Location |
   | :-- | :-- | :-- | :-- | :-- |
   | **Meta** | **Cross-Cutting** | **GDC**, **ADR**, **STD** | Ecosystem / Inherited | Root Repo (`00`, `02`, `05`) |
-  | **C1** | **Context** | **EAD** | Enterprise | Root Repo (`01-enterprise`) |
-  | **C2** | **Container** | **PAD** & **SAD** | Domain & System | Root Repo (`03-domain`, `04-system`) |
+  | **C0** | **System Landscape** | **EAD** | Enterprise | Root Repo (`01-enterprise`) |
+  | **C1** | **System Context** | **PAD** | Domain | Root Repo (`03-domain`) |
+  | **C2** | **Container** | **SAD** | System | Root Repo (`04-system`) |
   | **C3** | **Component** | **TDD** | Component | **Specific Project Repository** |
   | **C4** | **Code** | Source Code / Implementation | Code Base | **Specific Project Repository** |
 
-- **Domain-Driven Design (DDD) & Team Topologies (The Business Anchor)**: While C4 handles technical zoom, DDD and Team Topologies provide the strategic anchor. We adopt these modern frameworks to construct the long-term foundations of our EAD and PAD artifacts. This enforces a strict separation between horizontal Platform services and vertical Business Products, ensuring our architecture always aligns with logical capability boundaries before any downstream team touches physical code.
+- **Domain-Driven Design (DDD) & Team Topologies (The Business Anchor)**: While C4 handles technical zoom, DDD and Team Topologies provide the strategic anchor. At the macro level, **DDD Strategic Design** (Bounded Contexts) constructs the long-term foundations of our EAD and PAD artifacts, enforcing a strict separation between horizontal Platform services and vertical Business Products. As we zoom in, **DDD Tactical Design** (Aggregates, Entities) shapes the physical boundaries within our SADs and TDDs. Concurrently, **Team Topologies** enforces Conway's Law across the entire ecosystem, dictating the ownership and collaboration models for every single artifact.
   - _Why not TOGAF?_ TOGAF's 4 domains (Business, Data, Application, Technology) are often too rigid and academic for hyper-growth cloud-native engineering teams. DDD provides the most pragmatic vocabulary for forcing technologists to define "What bounded context are we actually building?" while Team Topologies enforces Conway's Law in our documentation ownership.
 - **AWS Well-Architected Framework (The Quality Standard)**: We adopt its 6 pillars (Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, Sustainability) as our absolute standard for evaluating Non-Functional Requirements. To ensure linter consistency, these pillars are strictly mapped to quantifiable engineering derivatives (Fitness Function Keywords) as defined in [Section 2.5 Non-Functional Requirements (NFR) Taxonomy](#25-non-functional-requirements-nfr-taxonomy).
   - _Why not ISO/IEC 25010?_ While ISO provides an exhaustive list of software quality models, it is theoretical and difficult to quantify. AWS WAF provides battle-tested, cloud-native pillars that translate directly into actionable engineering metrics (e.g., latency, cost, RTO) that modern teams already measure.
@@ -112,7 +113,7 @@ As the foundational **Document Integrity Anchor**, this metadata acts as the phy
 doc_meta:
   id: ADR-IDP-001
   title: Use Keycloak for Identity Provider
-  owner: identity-platform-domain-team
+  owner: Identity Platform Team (Domain Team)
   version: 1.0.0
   status: approved
   classification: public
@@ -122,7 +123,7 @@ doc_meta:
 
 ### 2.3 The Fractal Boundary (Physical vs. Logical Decentralization)
 
-To prevent the Governance Framework from becoming a monolithic bottleneck, we apply the exact same **Separation of Concerns (SoC)** to the policy books as we do to our modular artifacts. This creates a "Fractal Boundary" where the policies governing decentralization are themselves decentralized.
+To prevent the Governance Framework from becoming a monolithic bottleneck, we apply the exact same **Separation of Concerns (SoC)** to the rulebooks as we do to our modular artifacts. This creates a "Fractal Boundary" where the policies governing decentralization are themselves decentralized.
 
 #### 2.3.1 Physical Decentralization (Repository Federation)
 
@@ -285,7 +286,7 @@ graph TD
 
 **1. The Root (Constitution)** `GDC-000` is the root anchor that establishes the philosophical pillars and dictates the existence of the Guidelines.
 
-**2. Centralized Automation (The Master Fitness Function)** The ecosystem maintains a centralized anchor for its enforcement engine. **[GDC-001 — Fitness Functions](./GDC-001-fitness-functions.md)** acts as the Master Policy. The Constitution (GDC-000) dictates that policies must be automated, but it delegates the technical architecture of this automation entirely to the Fitness Function (GDC-001). GDC-001 produces the universal Root Declarative Schema and Root Executable Logic that all other domains inherit from.
+**2. Centralized Automation (The Master Fitness Function)** The ecosystem maintains a centralized anchor for its enforcement engine. **[GDC-001 — Fitness Functions](GDC-001-fitness-functions.md)** acts as the Master Policy. The Constitution (GDC-000) dictates that policies must be automated, but it delegates the technical architecture of this automation entirely to the Fitness Function (GDC-001). GDC-001 produces the universal Root Declarative Schema and Root Executable Logic that all other domains inherit from.
 
 **3. Decentralized Domain Implementation (The Fractal Triad)** This is where the fractal boundary truly takes effect. The Separation of Concerns dictates that every specific architectural domain (e.g., PAD, SAD) must be completely decentralized into its own isolated 1:1:1 triad to collaborate with the Fitness Function:
 
@@ -418,13 +419,13 @@ Rather than relying solely on human oversight (which is subjective and slow), th
 
 While structural integrity is enforced mechanically (see [2.7 Policy-as-Code](#27-policy-as-code)), the assessment of complex architectural trade-offs (e.g., blast radius, domain coupling) cannot be automated. As a matter of policy, all subjective design decisions MUST be evaluated against a standardized, objective metric to eliminate opinion-based debates.
 
-The baseline standards for this evaluation are established in **[GDC-002 — Quality Rubric](./GDC-002-quality-rubric.md)**, which acts as the human-counterpart to our automated Fitness Functions.
+The baseline standards for this evaluation are established in **[GDC-002 — Quality Rubric](GDC-002-quality-rubric.md)**, which acts as the human-counterpart to our automated Fitness Functions.
 
 ### 2.9 The Metaprogramming Principle (Circular Governance)
 
 The governance ecosystem must eat its own dog food. Both the automated Fitness Functions (Policy-as-Code) and the human evaluation metrics (Quality Rubric) are used to validate **ALL** artifacts, including the governance artifacts themselves.
 
-The framework is entirely circular and fractal: GDC artifacts define how SADs and PADs are written, but the GDC artifacts are themselves governed by their own schemas and validation schemas (as explicitly proven in **[GDC-005 — GDC Guideline](./GDC-005-gdc-guideline.md)**). The Architecture Authority cannot create a new policy without that policy first passing the exact same rigorous validation gates that downstream engineering teams must pass.
+The framework is entirely circular and fractal: GDC artifacts define how SADs and PADs are written, but the GDC artifacts are themselves governed by their own schemas and validation schemas (as explicitly proven in **[GDC-005 — GDC Guideline](GDC-005-gdc-guideline.md)**). The Architecture Authority cannot create a new policy without that policy first passing the exact same rigorous validation gates that downstream engineering teams must pass.
 
 ### 2.10 Legacy Systems & Transition (Grandfathering)
 
@@ -432,11 +433,11 @@ This Constitution and its downstream policies are not brutally retroactive. We r
 
 ### 2.11 Architecture Exceptions (Waivers)
 
-This framework is pragmatic, not dogmatic. Business realities (e.g., extreme time-to-market constraints or vendor limitations) may occasionally necessitate deviations from established standards. This Constitution permits architectural exceptions under the strict condition that they are formally documented (typically as ADRs), bounded by an expiration date, and approved by the Architecture Authority. Permanent waivers are prohibited, every exception represents technical debt that must be tracked and eventually resolved. The exact mechanisms for processing waivers are delegated to **[GDC-004 — Technology Lifecycle](./GDC-004-tech-lifecycle.md)**.
+This framework is pragmatic, not dogmatic. Business realities (e.g., extreme time-to-market constraints or vendor limitations) may occasionally necessitate deviations from established standards. This Constitution permits architectural exceptions under the strict condition that they are formally documented (typically as ADRs), bounded by an expiration date, and approved by the Architecture Authority. Permanent waivers are prohibited, every exception represents technical debt that must be tracked and eventually resolved. The exact mechanisms for processing waivers are delegated to **[GDC-004 — Technology Lifecycle](GDC-004-tech-lifecycle.md)**.
 
 ### 2.12 The Architecture Authority
 
-This ecosystem must be governed by a supreme centralized authority, acting as the "Timekeeper of the Architecture". While this Constitution mandates the existence of this Architecture Authority as an organizational policy, it deliberately avoids dictating the specific organizational structure (e.g., whether it is an Architecture Review Board, a Principal Engineering Guild, or a Tech Council). The exact naming, limits of authority, escalation triggers, and operational procedures of this body are delegated to and defined entirely within **[GDC-003 — Review Process](./GDC-003-review-process.md)**.
+This ecosystem must be governed by a supreme centralized authority, acting as the "Timekeeper of the Architecture". While this Constitution mandates the existence of this Architecture Authority as an organizational policy, it deliberately avoids dictating the specific organizational structure (e.g., whether it is an Architecture Review Board, a Principal Engineering Guild, or a Tech Council). The exact naming, limits of authority, escalation triggers, and operational procedures of this body are delegated to and defined entirely within **[GDC-003 — Review Process](GDC-003-review-process.md)**.
 
 ---
 
@@ -444,14 +445,14 @@ This ecosystem must be governed by a supreme centralized authority, acting as th
 
 A Constitution cannot enforce itself. While GDC-000 dictates the overarching policies of the architecture, it delegates the actual execution of these policies to specialized enforcement guidelines.
 
-For human audit procedures, refer to **[GDC-003 — Review Process](./GDC-003-review-process.md)**. For technology sunsetting and exception waivers, refer to **[GDC-004 — Technology Lifecycle](./GDC-004-tech-lifecycle.md)**.
+For human audit procedures, refer to **[GDC-003 — Review Process](GDC-003-review-process.md)**. For technology sunsetting and exception waivers, refer to **[GDC-004 — Technology Lifecycle](GDC-004-tech-lifecycle.md)**.
 
 ### 3.1 The Dual-Gate Enforcement Model
 
 To manage governance across federated repositories without creating a human bottleneck, the ecosystem utilizes a **Dual-Gate Enforcement Model**.
 
-1. **Gate 1: Automated CI/CD Fitness Functions**: **[GDC-001 — Fitness Functions](./GDC-001-fitness-functions.md)** functions as the first line of evaluation. It deterministically validates metadata completeness, structural layout, and technology lifecycle patterns across artifacts before human review.
-2. **Gate 2: Qualitative Design Review**: **[GDC-002 — Quality Rubric](./GDC-002-quality-rubric.md)** functions as the human evaluation stage. It equips Peer Reviewers and members of the Architecture Authority with an objective scoring rubric to evaluate complex trade-offs that machines cannot parse (e.g., system blast radius, domain coupling, and business alignment).
+1. **Gate 1: Automated CI/CD Fitness Functions**: **[GDC-001 — Fitness Functions](GDC-001-fitness-functions.md)** functions as the first line of evaluation. It deterministically validates metadata completeness, structural layout, and technology lifecycle patterns across artifacts before human review.
+2. **Gate 2: Qualitative Design Review**: **[GDC-002 — Quality Rubric](GDC-002-quality-rubric.md)** functions as the human evaluation stage. It equips Peer Reviewers and members of the Architecture Authority with an objective scoring rubric to evaluate complex trade-offs that machines cannot parse (e.g., system blast radius, domain coupling, and business alignment).
 
 ---
 
@@ -516,4 +517,3 @@ To prevent ambiguity, the term "Fractal" is used in three distinct but related c
 | **Circular Governance** | The metaprogramming principle that governance artifacts are validated by the same engine they mandate | §2.9 |
 
 These three concepts are complementary but operate at different abstraction layers: Fractal Boundary is the organizational principle, Fractal Triad is the implementation pattern, and Circular Governance is the self-referential enforcement property.
-

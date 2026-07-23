@@ -3,6 +3,24 @@ import re
 import jsonschema
 from engine.parsing.markdown_ast import strip_code_fences
 
+from .schema_extensions import ExtendedValidator
+
+_base_schema_cache = None
+
+
+def _get_base_schema():
+    global _base_schema_cache
+    if _base_schema_cache is None:
+        import json
+
+        schema_dir = os.path.join(
+            os.path.dirname(__file__), "..", "..", "..", "00-governance", "schemas"
+        )
+        base_schema_path = os.path.abspath(os.path.join(schema_dir, "base.schema.json"))
+        with open(base_schema_path, "r", encoding="utf-8") as f:
+            _base_schema_cache = json.load(f)
+    return _base_schema_cache
+
 
 class BaseValidator:
     """Base class for all document type validators."""
@@ -88,11 +106,18 @@ class BaseValidator:
         If the rule is suppressed via a `lint_disable` directive, the finding is dropped UNLESS
         its severity is CRITICAL, in which case the disable is rejected and the finding fires anyway.
         """
-        severity = self.global_rules.get("severity_levels", {}).get(category, "ERROR")
+        # By this point, cli.py has already validated that all RuleIDs exist in severity_levels
+        try:
+            # We enforce that category MUST be a valid SeverityRule instance or matching string
+            severity = self.global_rules["severity_levels"][category]
+        except KeyError:
+            raise RuntimeError(
+                f"FATAL: Rule '{category}' triggered but not found in severity_levels (configuration drift!)."
+            )
         if category in self.disabled_rules:
-            # CRITICAL findings can never be silenced by an inline directive.
+            # Blocking severity findings can never be silenced by an inline directive.
             # The disable is rejected (recorded for the audit) and the finding still fires.
-            if severity == "CRITICAL":
+            if severity in self.global_rules.get("blocking_severities", []):
                 if not hasattr(self, "rejected_disables"):
                     self.rejected_disables = set()
                 self.rejected_disables.add(category)
@@ -132,7 +157,7 @@ class BaseValidator:
         import datetime
 
         # Schemas declare required sections by Title-Case, unnumbered name, and their
-        # content_policies run `pattern` checks against the section's text. Map each
+        # content_rules run `pattern` checks against the section's text. Map each
         # normalized section title to its content so both presence (`required`) and
         # content patterns validate, and expose `filename` so guideline-only
         # conditional rules (if filename ~ *-guideline.md) gate correctly.
@@ -156,17 +181,25 @@ class BaseValidator:
         for title, body in sections.items():
             doc_instance[title] = body
 
-        # @flow-validator: BuildDocInstance --> ExecJsonSchema["<b>jsonschema.validate()</b>"]
-        try:
-            jsonschema.validate(instance=doc_instance, schema=self.specific_schema)
-            # @flow-validator: ExecJsonSchema -->|Valid| CommonRules((Start Global Rules))
-        except jsonschema.exceptions.ValidationError as e:
+        # @flow-validator: BuildDocInstance --> ExecJsonSchema["<b>ExtendedValidator.iter_errors()</b>"]
+        base_schema = _get_base_schema()
+        store = {
+            base_schema.get(
+                "$id",
+                "https://scnehaux.com/codex/gov/guidelines/schemas/base.schema.json",
+            ): base_schema
+        }
+        resolver = jsonschema.RefResolver(
+            base_uri=self.specific_schema.get("$id", ""),
+            referrer=self.specific_schema,
+            store=store,
+        )
+        validator = ExtendedValidator(schema=self.specific_schema, resolver=resolver)
+        for e in validator.iter_errors(doc_instance):
             # @flow-validator: ExecJsonSchema -->|ValidationError| MapError["Map jsonschema errors to category"]
             path = " -> ".join([str(p) for p in e.absolute_path]) or "root"
 
-            # Map common errors to clearer categories. For `pattern` failures the
-            # instance is the section's full text, so report the section + expected
-            # pattern rather than dumping the entire body into the finding.
+            # Map common errors to clearer categories.
             if e.validator == "required":
                 category = "missing_section" if path == "root" else "missing_metadata"
                 message = f"Schema validation failed at {path}: {e.message}"
@@ -176,14 +209,19 @@ class BaseValidator:
             elif e.validator == "pattern":
                 category = "missing_section_keyword"
                 message = f"Section '{path}' is missing required content (expected pattern: {e.validator_value})."
+            elif e.validator == "required_subsections":
+                category = "missing_section_keyword"
+                message = f"Section '{path}' is missing required subsection '{e.validator_value}'."
+            elif e.validator == "prohibited_keywords":
+                category = "prohibited_words"
+                message = f"Section '{path}' contains prohibited governance boilerplate word: '{e.validator_value}'."
             else:
                 category = "schema_validation_failed"
                 message = f"Schema validation failed at {path}: {e.message}"
 
             # @flow-validator: MapError --> AddError["<b>add_error()</b>: Record finding"]
             self.add_error(category, message)
-            # @flow-validator: AddError --> CommonRules
-        # @flow-validator: end
+        # @flow-validator: ExecJsonSchema -->|Done| CommonRules((Start Global Rules))
 
     def validate_type_specific(self):
         """Override in subclass for doc-type-specific checks."""

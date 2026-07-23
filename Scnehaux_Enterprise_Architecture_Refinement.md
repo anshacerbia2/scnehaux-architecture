@@ -86,4 +86,3 @@ Implementation artifacts only.
 ## Guiding Principle
 
 Repositories are consequences of architecture---not the other way around.
-

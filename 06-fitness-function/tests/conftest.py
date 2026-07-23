@@ -7,6 +7,7 @@ are exercised — matching production execution paths.
 """
 
 from engine.validators.base import BaseValidator
+from engine.config.severity import SeverityRule
 
 
 def make_validator(
@@ -32,6 +33,18 @@ def make_validator(
         all_doc_ids = set()
     if all_doc_metadata is None:
         all_doc_metadata = {}
+
+    # Ensure all RuleIDs are present in mock severity_levels to prevent strict lookup crashes
+    if "severity_levels" not in rules:
+        rules["severity_levels"] = {}
+    for rule in SeverityRule:
+        if rule.value not in rules["severity_levels"]:
+            rules["severity_levels"][rule.value] = "ERROR"
+
+    # For tests that define arbitrary rules in content_rules, auto-populate them in severity_levels
+    for rule_id in rules.get("content_rules", {}):
+        if rule_id not in rules["severity_levels"]:
+            rules["severity_levels"][rule_id] = "ERROR"
 
     v = cls(
         file_path=file_path,

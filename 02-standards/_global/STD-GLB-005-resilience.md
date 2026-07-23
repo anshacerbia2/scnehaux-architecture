@@ -104,4 +104,3 @@ None. All resilience and fault tolerance rules apply universally. Deviations req
 1. **Chaos Testing Audits**: Build verification pipelines must execute automated network failure injections (e.g. using Chaos Mesh or equivalent tools) to verify that circuit breakers and load shedding trigger under the designated thresholds.
 2. **CI Validation**: Architecture compliance validation requires all backend services to declare their timeout configurations, circuit breaker registrations, and priority headers in their deployment schemas, audited during build compilation.
 3. **Exception Waivers**: Deviations from these resilience parameters require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.
-

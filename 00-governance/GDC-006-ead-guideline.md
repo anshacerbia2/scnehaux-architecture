@@ -45,7 +45,7 @@ EADs must remain conceptually agnostic (e.g., Capability, Data, Integration doma
 
 ### 2.2 The Schema Architecture
 
-In addition to the global structural enforcement defined in **[GDC-001](./GDC-001-fitness-functions.md)**, the EAD specification is strictly governed by the following domain-specific linter schemas.
+In addition to the global structural enforcement defined in **[GDC-001](GDC-001-fitness-functions.md)**, the EAD specification is strictly governed by the following domain-specific linter schemas.
 
 > [!WARNING]
 >
@@ -55,10 +55,9 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Metadata Policies** | Metadata Policies | <ul><li>doc_meta (object)</li></ul> |
-| **Metadata Policies** | Required Fields | <ul><li>id (string)</li><li>title (string)</li><li>governed_by (string &#124; array[string])</li><li>owner (string &#124; array[string])</li><li>version (string &#124; number)</li><li>status (string)</li><li>classification (string)</li><li>review_cycle_days (integer)</li><li>last_reviewed (string)</li></ul> |
-| **Metadata Policies** | Allowed Statuses | <ul><li>proposed</li><li>approved</li><li>deprecated</li></ul> |
-| **Metadata Policies** | Allowed Classifications | <ul><li>public</li><li>internal</li><li>restricted</li></ul> |
+| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
+| **Section Rules** | Required Sections | <ul><li>Purpose</li><li>Scope</li><li>Enterprise Context</li><li>Architectural Drivers & Lessons</li><li>Architecture Model</li><li>Principles & Rules</li><li>Alternatives Considered</li><li>Single Points of Failure & Graceful Degradation</li><li>Ownership</li><li>Dependencies</li><li>Traceability</li></ul> |
+| **Section Rules** | Recommended Sections | <ul><li>Assumptions</li><li>Constraints</li><li>Risks</li><li>Future Direction</li><li>References</li></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -66,7 +65,7 @@ In addition to the global structural enforcement defined in **[GDC-001](./GDC-00
 
 #### 2.3.1 Naming Conventions
 
-The filename must strictly adhere to the `ead_pattern` regex: `^EAD-\d{3}-[a-z0-9-]+\.md$`.
+The filename must strictly adhere to the regex: `^EAD-\d{3}-[a-z0-9-]+\.md$`.
 
 #### 2.3.2 Taxonomy
 
@@ -162,4 +161,3 @@ In accordance with the Quality Rubric (Trade-Offs), the Architecture Authority e
 1. **Markdown Artifacts vs. Traditional EA Tools**
    - _Why rejected_: Traditional EA tools (e.g., Sparx Enterprise Architect) create a massive disconnect between Enterprise Architects and software engineers, locking capability models in proprietary formats.
    - _The Trade-Off_: We sacrifice strict formal modeling languages (like ArchiMate) and auto-generated dependency matrices. In exchange, we force Enterprise Architecture to live in the same Git repositories as the code, ensuring visibility, democratized access, and CI/CD validation.
-

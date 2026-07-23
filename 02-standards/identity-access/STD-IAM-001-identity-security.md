@@ -106,4 +106,3 @@ None. All identity and access security rules apply unconditionally. Deviations r
 1.  **Static Application Security Testing (SAST)**: Automated scanners run in the build pipeline to prevent the injection of weak random generators (only `crypto/rand` is permitted).
 2.  **Timing Attack Protection**: Custom signature validation algorithms must utilize constant-time comparison methods.
 3.  **Auditing**: Session revocation pipelines are audited against SOC 2 CC6.1 & CC6.3 requirements.
-

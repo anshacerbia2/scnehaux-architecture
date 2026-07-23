@@ -55,12 +55,12 @@ The governing invariant: **the platform is a product with a paved road (Golden P
 
 The platform topology is driven by the enterprise goals in EAD-001 (specifically G1 and G4) and the need to scale the estate without scaling operational cognitive load linearly.
 
-| Driver | Platform Consequence |
-| :-- | :-- |
-| Standardized capability delivery | Platform exposed as versioned, self-service products, not tickets |
+| Driver                                     | Platform Consequence                                                   |
+| :----------------------------------------- | :--------------------------------------------------------------------- |
+| Standardized capability delivery           | Platform exposed as versioned, self-service products, not tickets      |
 | Cognitive load reduction for feature teams | Platform owns the underlying complexity (k8s, networks, CI/CD runners) |
-| Polyglot runtime | The platform provides container abstraction, decoupled from languages |
-| High availability foundation | Platform runtime guarantees Tier-0 availability for critical workloads |
+| Polyglot runtime                           | The platform provides container abstraction, decoupled from languages  |
+| High availability foundation               | Platform runtime guarantees Tier-0 availability for critical workloads |
 
 ### 4.2. Lessons Incorporated
 
@@ -98,13 +98,13 @@ graph TD
     style Runtime fill:#2b6cb0,stroke:#63b3ed,color:#fff
 ```
 
-| Layer | Responsibility | Consumed As |
-| :-- | :-- | :-- |
-| Internal Developer Platform | Developer self-service surface and Golden Path | Portal, templates, CLI, API |
-| Delivery Platform | Build, test, package, deploy, progressive rollout | Pipelines as a service |
-| Runtime Platform | Execute, schedule, and scale workloads | Managed runtime |
-| Security Platform | Identity, secrets, policy, supply-chain integrity | Secure-by-default controls |
-| Observability Platform | Metrics, logs, traces, alerting, SLO tracking | Telemetry as a service |
+| Layer                       | Responsibility                                    | Consumed As                 |
+| :-------------------------- | :------------------------------------------------ | :-------------------------- |
+| Internal Developer Platform | Developer self-service surface and Golden Path    | Portal, templates, CLI, API |
+| Delivery Platform           | Build, test, package, deploy, progressive rollout | Pipelines as a service      |
+| Runtime Platform            | Execute, schedule, and scale workloads            | Managed runtime             |
+| Security Platform           | Identity, secrets, policy, supply-chain integrity | Secure-by-default controls  |
+| Observability Platform      | Metrics, logs, traces, alerting, SLO tracking     | Telemetry as a service      |
 
 ### 5.2. Internal Developer Platform Strategy
 
@@ -121,16 +121,16 @@ graph LR
     style Observe fill:#805ad5,stroke:#553c9a,color:#fff
 ```
 
-| Self-service Capability | Description |
-| :-- | :-- |
-| Project Bootstrap | Golden Path templates that scaffold a compliant service in minutes |
-| Build Automation | Standardized, cached, reproducible build pipelines |
-| Deployment | Self-service progressive delivery (canary / blue-green) |
-| Secret Management | Brokered, rotated secrets; zero secrets in source |
-| Configuration | Centralized, environment-scoped configuration |
-| Service Discovery | Runtime discovery and routing |
-| Environment Provisioning | On-demand standardized environments |
-| Developer Portal | Single catalog and entry point for platform capabilities |
+| Self-service Capability  | Description                                                        |
+| :----------------------- | :----------------------------------------------------------------- |
+| Project Bootstrap        | Golden Path templates that scaffold a compliant service in minutes |
+| Build Automation         | Standardized, cached, reproducible build pipelines                 |
+| Deployment               | Self-service progressive delivery (canary / blue-green)            |
+| Secret Management        | Brokered, rotated secrets; zero secrets in source                  |
+| Configuration            | Centralized, environment-scoped configuration                      |
+| Service Discovery        | Runtime discovery and routing                                      |
+| Environment Provisioning | On-demand standardized environments                                |
+| Developer Portal         | Single catalog and entry point for platform capabilities           |
 
 **IDP principles:** Everything as a Service; Self-Service by Default; Golden Path over bespoke path; Platform as a Product with its own roadmap and SLOs. Target: a new compliant service reaches its first production deploy on the Golden Path within one working day.
 
@@ -177,30 +177,30 @@ The operational model binds every workload to a **reliability tier** (inherited 
 
 **Reliability targets by tier:**
 
-| Tier | Availability | Error Budget (monthly) | RTO | RPO |
-| :-- | :-- | :-- | :-- | :-- |
-| Tier-0 (Core Platform) | ≥ 99.99% | ≤ 4.3 min | ≤ 15 min | ≤ 1 min |
-| Tier-1 (Shared / Core Business) | ≥ 99.95% | ≤ 21.6 min | ≤ 1 h | ≤ 5 min |
-| Tier-2 (Supporting / AI) | ≥ 99.9% | ≤ 43.2 min | ≤ 4 h | ≤ 1 h |
+| Tier                            | Availability | Error Budget (monthly) | RTO      | RPO     |
+| :------------------------------ | :----------- | :--------------------- | :------- | :------ |
+| Tier-0 (Core Platform)          | ≥ 99.99%     | ≤ 4.3 min              | ≤ 15 min | ≤ 1 min |
+| Tier-1 (Shared / Core Business) | ≥ 99.95%     | ≤ 21.6 min             | ≤ 1 h    | ≤ 5 min |
+| Tier-2 (Supporting / AI)        | ≥ 99.9%      | ≤ 43.2 min             | ≤ 4 h    | ≤ 1 h   |
 
 **Delivery targets (DORA — enterprise baseline):**
 
-| Metric | Target |
-| :-- | :-- |
+| Metric               | Target             |
+| :------------------- | :----------------- |
 | Deployment frequency | ≥ daily per system |
-| Lead time for change | ≤ 1 day |
-| Change failure rate | ≤ 15% |
-| Mean time to restore | ≤ 1 hour |
+| Lead time for change | ≤ 1 day            |
+| Change failure rate  | ≤ 15%              |
+| Mean time to restore | ≤ 1 hour           |
 
 **Observability baseline:**
 
-| Capability | Requirement |
-| :-- | :-- |
-| Metrics, Logs, Traces | 100% of production services emit all three |
-| Distributed tracing | End-to-end trace correlation across domains |
-| Alerting | SLO-based, symptom-first, actionable |
-| Deployment | Zero-downtime, mandatory |
-| Disaster recovery | Tested per tier RTO/RPO at least quarterly |
+| Capability            | Requirement                                 |
+| :-------------------- | :------------------------------------------ |
+| Metrics, Logs, Traces | 100% of production services emit all three  |
+| Distributed tracing   | End-to-end trace correlation across domains |
+| Alerting              | SLO-based, symptom-first, actionable        |
+| Deployment            | Zero-downtime, mandatory                    |
+| Disaster recovery     | Tested per tier RTO/RPO at least quarterly  |
 
 ---
 
@@ -282,13 +282,13 @@ Control-plane/data-plane separation is the core guarantee: losing the platform's
 
 ## 9. Ownership
 
-| Responsibility | Accountable | Consulted |
-| :-- | :-- | :-- |
-| Enterprise platform strategy (this artifact) | Architecture Authority | Platform Engineering, SRE |
-| Internal Developer Platform | Platform Engineering | Product Teams |
-| Runtime and delivery platform | Platform Engineering | SRE |
-| Observability platform | SRE Team | Platform Engineering |
-| Reliability tiers and error-budget policy | SRE Team | Architecture Authority, Domain Leads |
+| Responsibility                               | Accountable            | Consulted                            |
+| :------------------------------------------- | :--------------------- | :----------------------------------- |
+| Enterprise platform strategy (this artifact) | Architecture Authority | Platform Engineering, SRE            |
+| Internal Developer Platform                  | Platform Engineering   | Product Teams                        |
+| Runtime and delivery platform                | Platform Engineering   | SRE                                  |
+| Observability platform                       | SRE Team               | Platform Engineering                 |
+| Reliability tiers and error-budget policy    | SRE Team               | Architecture Authority, Domain Leads |
 
 ---
 
@@ -359,4 +359,3 @@ The platform evolves by expanding reusable engineering capabilities while holdin
 - The Twelve-Factor App
 - CNCF Platform Engineering Whitepaper
 - Internal Developer Platform reference model
-

@@ -63,11 +63,11 @@ While the Peer Reviewer executes the rubric above, the Architecture Review Board
 
 To prevent review bottlenecks from degrading engineering velocity, all review tiers are bound by strict turnaround commitments:
 
-| Review Tier | Maximum Turnaround | Escalation if Breached |
-| :-- | :-- | :-- |
+| Review Tier               | Maximum Turnaround  | Escalation if Breached                              |
+| :------------------------ | :------------------ | :-------------------------------------------------- |
 | Peer Review (Standard PR) | **3 business days** | Auto-assign secondary reviewer from the owning team |
-| ARB Review (High-Risk PR) | **5 business days** | Escalate to Architecture Authority lead |
-| Waiver Decision | **5 business days** | Per [GDC-004 §4.2](./GDC-004-tech-lifecycle.md) |
+| ARB Review (High-Risk PR) | **5 business days** | Escalate to Architecture Authority lead             |
+| Waiver Decision           | **5 business days** | Per [GDC-004 §4.2](GDC-004-tech-lifecycle.md)       |
 
 If a reviewer fails to respond within the SLA, the PR author may escalate by tagging the next-level authority defined in the approval matrix (§3.2). An SLA breach does not grant auto-approval; it grants escalation rights.
 
@@ -152,9 +152,35 @@ If a rare collision occurs, standard Git rebasing protocols apply. The later PR 
 
 ---
 
-## 4. Enforcement Mechanism
+## 4. Temporal Governance & Document Lifecycle
 
-### 4.1 Scoring & Action Protocols
+### 4.1 Konsep Tiga Tanggal (Tri-Date Concept)
+
+Di dalam ekosistem Scnehaux, status `reviewed` TIDAK SAMA dengan `updated`. Sebuah arsitektur bisa saja tidak berubah selama setahun, tetapi butuh di-*review* secara berkala untuk memastikan desain tersebut masih valid dengan keadaan sistem saat ini. Oleh karena itu, kita memecah *metadata date* menjadi tiga:
+
+1. **`created_date` (Wajib untuk semua dokumen)**: Tanggal dokumen pertama kali dibuat (*Immutable*).
+   - *Tujuan*: Sebagai *anchor* (acuan) utama untuk mengukur batas umur dokumen, khususnya yang berstatus `draft`.
+2. **`last_updated` (Otomatis/Disarankan)**: Tanggal dokumen terakhir kali diubah isinya.
+   - *Tujuan*: Mengukur tingkat keaktifan revisi dokumen.
+3. **`last_reviewed` (Wajib HANYA untuk dokumen Aktif/Final)**: Tanggal dokumen terakhir diaudit/disetujui.
+   - *Tujuan*: Untuk mendeteksi dan mencegah *Architecture Rot* (desain yang basi). Dokumen `active` harus di-review secara berkala (misal tiap 6-12 bulan).
+
+### 4.2 Paradigma CI/CD untuk "Draft"
+
+Konsep *Docs as Code* menuntut kolaborasi sedini mungkin. Jika *draft* dilarang masuk ke `main`, *engineer* akan menahan dokumen tersebut di *local branch* mereka, mengurangi transparansi dan kolaborasi antar tim. Oleh karena itu, dokumen `draft` **BOLEH dan SANGAT DISARANKAN** di-merge ke `main`.
+
+Konsep CI/CD Rule-nya adalah:
+
+1. **Pengecualian Linter (INFO)**: Saat sebuah PR berisi dokumen berstatus `draft`, CI Linter akan men-*skip* aturan-aturan ketat (seperti jumlah kata minimal, larangan kata-kata ambigu, kelengkapan arsitektur). CI akan mengembalikan warna hijau (PASS) dengan pesan `INFO: Document validation skipped due to exempt status: 'draft'`.
+2. **Anti-Evasion Mechanism (ERROR / CRITICAL)**: *Draft* boleh diam di `main`, **TETAPI** tidak boleh berjamur! Kita mematok parameter `max_draft_age_days = 30`.
+   - Linter akan mengecek: `Hari Ini - created_date`.
+   - Jika `> 30 Hari`, CI akan meledak (`ERROR`/`CRITICAL`) memblokir *pipeline*. Ini secara sistematis memaksa *Approver/Author* untuk mem-*finalize* dokumen (ubah status dari `draft` ke `active`) atau menghapus dokumennya jika inisiatif tersebut batal.
+
+---
+
+## 5. Enforcement Mechanism
+
+### 5.1 Scoring & Action Protocols
 
 - **Score Calculation**: Sum the "Pass" counts. Max score is 10. Minimum approval threshold is 9/10.
 - **Reject (Score < 9)**: The document fails to meet the minimum threshold and must be revised. It cannot be merged.
@@ -163,9 +189,9 @@ If a rare collision occurs, standard Git rebasing protocols apply. The later PR 
 
 ---
 
-## 5. Severity & Exceptions
+## 6. Severity & Exceptions
 
-### 5.1 Critical Fail Conditions
+### 6.1 Critical Fail Conditions
 
 A document is immediately **Rejected** regardless of its overall score if it triggers any of the following critical fail conditions:
 
@@ -174,11 +200,10 @@ A document is immediately **Rejected** regardless of its overall score if it tri
 3. **Invalid Exception Waivers**: Reference to an Exception ADR that violates the temporal or structural laws established in GDC-010.
 4. **Missing Metadata Headers**: Absence of the required YAML frontmatter fields or incorrect sequential ID indexing.
 
-## 6. Appendix: Architectural Trade-Offs
+## 7. Appendix: Architectural Trade-Offs
 
 In accordance with the Quality Rubric (Trade-Offs), the ARB explicitly documents the compromises of this Review Process:
 
 1. **Asynchronous Git PRs vs. Synchronous ARB Meetings**
    - _Why rejected_: Synchronous committee meetings bottleneck engineering velocity and rely on verbal agreements rather than written contracts.
    - _The Trade-Off_: We lose the high-bandwidth face-to-face debate of traditional architecture boards. In exchange, we gain an asynchronous, globally scalable, and fully auditable review process where the Git commit history is the absolute source of truth.
-
