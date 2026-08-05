@@ -8,6 +8,8 @@ import sys
 import json
 import logging
 import argparse
+import subprocess
+import datetime as _dt
 import yaml
 import jsonschema
 from typing import Any, cast
@@ -22,17 +24,33 @@ from engine.auditors.graph_auditor import (
     audit_traceability_graph,
 )
 from engine.auditors.waiver_auditor import audit_waiver_expirations
+from engine.config.constants import (
+    GOVERNANCE_ROOT,
+    BASE_SCHEMA_PATH,
+    TECH_RADAR_YAML_PATH,
+    TECH_RADAR_SCHEMA_PATH,
+    SCHEMA_KEY_GLOBAL_CONFIG,
+    SCHEMA_KEY_SEVERITY_LEVELS,
+    SCHEMA_KEY_BLOCKING_SEVERITIES,
+    SCHEMA_KEY_STRUCTURE_RULES,
+    SCHEMA_KEY_ARTIFACT_DIRS,
+    SCHEMA_KEY_IGNORED_FILES,
+    SCHEMA_KEY_MAX_DIR_DEPTH,
+    SCHEMA_KEY_CONTENT_RULES,
+    SCHEMA_KEY_EXEMPT_STATUSES,
+    SCHEMA_KEY_EXACT_MATCHES,
+)
 from engine.config.loader import (
     load_json_schema_file,
-    validate_severity_schema,
-    validate_blocking_severities,
+    parse_and_validate_global_config,
 )
 from engine.config.severity import SeverityRule
-from engine.fs.crawler import build_metadata_registry, gather_markdown_files
+from engine.fs.crawler import build_metadata_registry, gather_markdown_paths
 from engine.parsing.markdown_ast import parse_frontmatter
 from engine.reporting.reporter import print_errors, build_sarif
 from engine.validators.metadata_rules import validate_exempt_age
 from engine.validators.registry import detect_doc_type, get_validator
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,33 +65,12 @@ def _validate_execution_root(cwd: str) -> None:
     if not any((path / marker).exists() for marker in markers):
         # We use sys.exit(1) directly so the CLI terminates immediately without python traceback noise
         # This acts as a fatal error that will cancel any CI/CD pipeline PR
-        print(
-            f"FATAL ERROR: Linter must be executed from the root of a repository.\n"
-            f"No repository marker (.git) was found in the current directory: '{cwd}'",
-            file=sys.stderr,
+        logger.error(
+            "FATAL: Linter must be executed from the root of a repository. "
+            "No repository marker (.git) was found in the current directory: '%s'",
+            cwd,
         )
         sys.exit(1)
-
-
-# GOVERNANCE_ROOT is strictly 2 levels up from cli.py (engine -> 06-fitness-function -> governance root)
-# This works identically in the Governance Repo or when checked out in Downstream Repos.
-GOVERNANCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-BASE_SCHEMA_PATH = os.path.join(
-    GOVERNANCE_ROOT, "00-governance", "schemas", "base.schema.json"
-)
-TECH_RADAR_YAML_PATH = os.path.join(GOVERNANCE_ROOT, "01-enterprise", "tech-radar.yaml")
-TECH_RADAR_SCHEMA_PATH = os.path.join(
-    GOVERNANCE_ROOT, "00-governance", "schemas", "tech-radar.schema.json"
-)
-
-# Base Schema Keys Constants
-SCHEMA_KEY_GLOBAL_CONFIG = "x-global-config"
-SCHEMA_KEY_SEVERITY_LEVELS = "severity_levels"
-SCHEMA_KEY_BLOCKING_SEVERITIES = "blocking_severities"
-SCHEMA_KEY_STRUCTURE_RULES = "structure_rules"
-SCHEMA_KEY_ARTIFACT_DIRS = "artifact_directories"
-SCHEMA_KEY_IGNORED_FILES = "ignored_files"
-SCHEMA_KEY_MAX_DIR_DEPTH = "max_directory_depth"
 
 
 def _disable_info(validator: Any) -> dict:
@@ -87,14 +84,17 @@ def _disable_info(validator: Any) -> dict:
         - validator (Any): The instantiated validator object containing tracked disable directives.
 
     Returns:
-        dict: A dictionary containing 'disabled' (mapping rule -> reason) and
-              'rejected' (set of rules that could not be silenced).
+        dict: A dictionary containing 'disabled' (a list of tuples: (rule_id, reason, start_line, end_line))
+              and 'rejected' (set of rules that could not be silenced).
     </pre>
     """
+    disabled_list = []
+    for rule_id, blocks in validator.block_disables.items():
+        for start_line, end_line, reason in blocks:
+            disabled_list.append((rule_id, reason, start_line, end_line))
+            
     return {
-        "disabled": {
-            r: validator.disable_reasons.get(r) for r in validator.disabled_rules
-        },
+        "disabled": disabled_list,
         "rejected": set(getattr(validator, "rejected_disables", set())),
     }
 
@@ -129,7 +129,7 @@ def lint_file(
             - disable_info (dict): Captured `lint_disable` directives.
     </pre>
     """
-    # @flow: StartLint(("2. Start Document Validation")) --> Read[2.1. Read raw markdown]
+    # @flow-lint: StartLint(("2. Start Document Validation")) --> Read[2.1. Read raw markdown]
     try:
         rel_path = os.path.relpath(file_path, ".").replace("\\", "/")
     except ValueError:
@@ -138,39 +138,45 @@ def lint_file(
     filename = os.path.basename(file_path)
 
     # Step 1: Read the raw markdown content
-    # @flow: Read --> ParseFM["2.2. <b>markdown_ast.py - parse_frontmatter()</b>: Extract and parse YAML metadata block"]
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
     except Exception as e:
+        # @flow-lint: Read -->|Exception| RecordErrUnreadable["<code>Record Error</code>: Unreadable Artifact"]
+        # @flow-lint: RecordErrUnreadable --> Return
         file_errors, is_clean, is_blocking = print_errors(
             file_path,
-            [(severity_levels.get(SeverityRule.UNREADABLE_ARTIFACT, "CRITICAL"), f"Failed to read file: {e}")],
+            [(severity_levels[SeverityRule.UNREADABLE_ARTIFACT], f"Failed to read file: {e}")],
             output_format,
             blocking_severities,
         )
         return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
 
     # Step 2: Parse the YAML Frontmatter to extract document metadata
-    # @flow: ParseFM --> IsFMErr{"2.3. Frontmatter Parse Error?"}
+    # @flow-lint: Read --> ParseFM["2.2. <b>markdown_ast.py - parse_frontmatter()</b>: Extract and parse YAML metadata block"]
     doc_meta, meta_err = parse_frontmatter(content)
     if meta_err:
-        # @flow: IsFMErr -->|Yes| PrintErrFM["2.4. <b>print_errors()</b>: Hard block"]
+        # @flow-lint: ParseFM -->|Parse Error| RecordErrFM["<code>Record Error</code>: Corrupt Frontmatter"]
+        # @flow-lint: RecordErrFM --> Return
         # Fatal syntax error in frontmatter means we cannot even determine doc type
         file_errors, is_clean, is_blocking = print_errors(
             file_path, 
-            [(severity_levels.get(SeverityRule.CORRUPT_FRONTMATTER, "CRITICAL"), meta_err)], 
+            [(severity_levels[SeverityRule.CORRUPT_FRONTMATTER], meta_err)], 
             output_format, 
             blocking_severities
         )
         return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
 
-    # @flow: IsFMErr -->|No| CheckExempt{"2.5. Is document exempt from validation?"}
-    # @flow: CheckExempt -->|Yes| ValidateExemptAge["2.6. <b>validate_exempt_age()</b>: Validate exempt duration"]
-    # @flow: CheckExempt -->|No| DetectType["2.7. <b>detect_doc_type()</b>: Detect document type"]
+    # @flow-lint: ParseFM -->|Yes| CheckExempt{"2.3. Is document exempt?"}
+    # @flow-lint: CheckExempt -->|Yes| ValidateExemptAge["2.4. <b>metadata_rules.py - validate_exempt_age()</b>: Validate exempt duration"]
+    # @flow-lint: CheckExempt -->|No| DetectType["2.6. <b>registry.py - detect_doc_type()</b>: Detect document type"]
     
+    # Step 3: Validate exempt status and age
+    exempt_statuses_config = global_rules.get(SCHEMA_KEY_CONTENT_RULES, {}).get(SCHEMA_KEY_EXEMPT_STATUSES, [])
     exempt_statuses = [
-        s.lower() for s in global_rules.get("content_rules", {}).get("exempt_statuses", [])
+        cfg.get("status", "").lower() 
+        for cfg in exempt_statuses_config 
+        if isinstance(cfg, dict) and cfg.get("status")
     ]
     
     # Satisfy static type checkers (Pylance/MyPy) since parse_frontmatter is now guaranteed to return a dict here
@@ -179,83 +185,69 @@ def lint_file(
     doc_status = str(doc_meta.get("status", "")).lower()
     
     if doc_status in exempt_statuses:
-        # Enforce max_draft_age_days even for exempt statuses
+        # Enforce max age limits for exempt statuses
         violation_severity = severity_levels[SeverityRule.DRAFT_STATUS_VIOLATION]
-        draft_errs = validate_exempt_age(doc_meta, doc_status, violation_severity, global_rules)
+        try:
+            exempt_errs = validate_exempt_age(doc_meta, doc_status, violation_severity, global_rules)
+        except ValueError as e:
+            logger.error("FATAL: %s", str(e))
+            sys.exit(1)
 
-        if draft_errs:
+        # @flow-lint: ValidateExemptAge --> IsExemptErr{"2.5. Is Exempt Age Expired?"}
+        if exempt_errs:
+            # @flow-lint: IsExemptErr -->|Yes| RecordErrExemptAge["<code>Record Error</code>: Exempt Age Violation"]
+            # @flow-lint: RecordErrExemptAge --> Return
             # Short-circuit logic for exempt docs (only minimal compliance required)
             file_errors, is_clean, is_blocking = print_errors(
-                file_path, draft_errs, output_format, blocking_severities
+                file_path, exempt_errs, output_format, blocking_severities
             )
             return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
 
+        # @flow-lint: IsExemptErr -->|No| RecordInfoExempt["<code>Record Info</code>: Exempt Document Skipped"]
+        # @flow-lint: RecordInfoExempt --> Return
         # Record the exemption as an INFO warning so it's tracked in compliance reports, not counted as PASS
         file_errors, is_clean, is_blocking = print_errors(
             file_path, 
-            [(severity_levels.get(SeverityRule.EXEMPT_DOCUMENT_SKIPPED, "INFO"), f"Document validation skipped due to exempt status: '{doc_status}'")], 
+            [(severity_levels[SeverityRule.EXEMPT_DOCUMENT_SKIPPED], f"Document validation skipped due to exempt status: '{doc_status}'")], 
             output_format, 
             blocking_severities
         )
         return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
 
-    # Step 3: Detect the Document Type (SAD, PAD, ADR, etc.) based on ID or filename
-    doc_id = doc_meta.get("id")
-    doc_type = detect_doc_type(doc_id, filename, rel_path)
-    # @flow: DetectType --> IsDocType{"2.8. Doc type known?"}
+    # Step 4: Detect the Document Type (SAD, PAD, ADR, etc.) based on metadata ID
+    meta_id = doc_meta.get("id")
+    doc_type = detect_doc_type(meta_id, global_rules)
+    # @flow-lint: DetectType --> IsDocType{"2.7. Doc type known?"}
 
     if not doc_type:
-        # @flow: IsDocType -->|No| PrintErrDoc["2.9. <b>print_errors()</b>: Hard block"]
-        # @flow: PrintErrDoc --> Return
-        errs, p, b = print_errors(
+        # @flow-lint: IsDocType -->|No| RecordErrDocType["<code>Record Error</code>: Unknown Document Type"]
+        # @flow-lint: RecordErrDocType --> Return
+        file_errors, is_clean, is_blocking = print_errors(
             file_path,
             [
                 (
-                    severity_levels.get(SeverityRule.UNKNOWN_DOCUMENT_TYPE, "CRITICAL"),
+                    severity_levels[SeverityRule.UNKNOWN_DOCUMENT_TYPE],
                     f"Unknown doc type for '{filename}'. Missing or invalid metadata ID. Hard blocking.",
                 )
             ],
             output_format,
             blocking_severities,
         )
-        return errs, p, b, {}
+        return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
 
-    # Step 4: Retrieve the specific validator class for this document type
+    # Step 5: Retrieve the specific domain validator for this document type
     validator_cls = get_validator(doc_type)
-    # @flow: IsDocType -->|Yes| GetValidator["2.10. <b>get_validator()</b>: Get specific validator class"]
-    # @flow: GetValidator --> IsVal{"2.11. Validator exists?"}
+    # @flow-lint: IsDocType -->|Yes| GetValidator["2.8. <b>registry.py - get_validator()</b>: Get specific domain validator"]
+    # @flow-lint: GetValidator --> IsVal{"2.9. Validator exists?"}
     if not validator_cls:
-        # @flow: IsVal -->|No| PrintErrVal["2.12. <b>print_errors()</b>: Hard block"]
-        # @flow: PrintErrVal --> Return
-        errs, p, b = print_errors(
-            file_path,
-            [
-                (
-                    severity_levels.get(SeverityRule.MISSING_VALIDATOR, "CRITICAL"),
-                    f"No validator implemented for doc type '{doc_type}'. Hard blocking.",
-                )
-            ],
-            output_format,
-            blocking_severities,
-        )
-        return errs, p, b, {}
-
-    # Step 5: Load the specific JSON schema for this document type
-    specific_schema_path = os.path.join(
-        GOVERNANCE_ROOT, f"00-governance/schemas/{doc_type.lower()}.schema.json"
-    )
-    # @flow: IsVal -->|Yes| LoadSchemaType["2.13. <b>load_json_schema_file()</b>: Load specific JSON schema"]
-    # @flow: LoadSchemaType --> IsSchema{"2.14. Schema exists?"}
-
-    if not os.path.exists(specific_schema_path):
-        # @flow: IsSchema -->|No| PrintErrSchema["2.15. <b>print_errors()</b>: Hard block"]
-        # @flow: PrintErrSchema --> Return
+        # @flow-lint: IsVal -->|No| RecordErrMissingVal["<code>Record Error</code>: Missing Validator"]
+        # @flow-lint: RecordErrMissingVal --> Return
         file_errors, is_clean, is_blocking = print_errors(
             file_path,
             [
                 (
-                    severity_levels.get(SeverityRule.MISSING_DOMAIN_SCHEMA, "CRITICAL"),
-                    f"Missing mandatory domain-specific schema: '{specific_schema_path}'. Hard blocking.",
+                    severity_levels[SeverityRule.MISSING_VALIDATOR],
+                    f"No validator implemented for doc type '{doc_type}'. Hard blocking.",
                 )
             ],
             output_format,
@@ -263,21 +255,35 @@ def lint_file(
         )
         return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
 
-    specific_schema = load_json_schema_file(specific_schema_path)
+    # Step 6: Load the specific JSON schema for this document type
+    domain_schema_path = os.path.join(
+        GOVERNANCE_ROOT, "00-governance", "schemas", f"{doc_type.lower()}.schema.json"
+    )
+    # @flow-lint: IsVal -->|Yes| LoadSchemaType["2.10. <b>loader.py - load_json_schema_file()</b>: Load specific domainJSON schema"]
+    # @flow-lint: LoadSchemaType --> IsSchema{"2.11. Schema exists?"}
 
-    # Step 6: Initialize the specific validator and execute validation
-    # @flow: IsSchema -->|Yes| Execute["<b>validator.validate()</b>: Initialize & Run validator engine"]
+    try:
+        domain_schema = load_json_schema_file(domain_schema_path)
+    except (FileNotFoundError, ValueError) as e:
+        # @flow-lint: IsSchema -->|No| ExitFailSchema((sys.exit 1))
+        logger.error("FATAL: %s", str(e))
+        sys.exit(1)
+
+    # Step 7: Initialize the specific validator and execute validation
+    # @flow-lint: IsSchema -->|Yes| Execute(("2.12. <b>base.py - validate()</b>: Initialize & Run validator engine"))
     validator = validator_cls(
         file_path,
         content,
         doc_meta or {},
         global_rules,
-        specific_schema,
+        domain_schema,
         all_doc_ids,
         all_doc_metadata,
+        severity_levels,
+        blocking_severities,
     )
     errors = validator.validate()
-    # @flow: Execute --> Return[2.17. Return list of errors]
+    # @flow-lint: Execute --> Return[2.13. Return list of errors]
 
     file_errors, is_clean, is_blocking = print_errors(file_path, errors, output_format, blocking_severities)
     return file_errors, is_clean, is_blocking, _disable_info(validator)
@@ -349,48 +355,18 @@ def main() -> None:
         format="%(levelname)s: %(message)s",
     )
 
-    # @flow: ParseArgs --> LoadGlobal["1.2. <b>load_json_schema_file()</b>: Load base schema (global rules)"]
-    # @flow: LoadGlobal --> CheckGlobalRules{"Valid global rules & severities?"}
+    # @flow: ParseArgs --> LoadGlobal["1.2. <b>loader.py - load_json_schema_file()</b>: Load base schema (global rules)"]
+    # @flow: LoadGlobal --> CheckGlobalRules{"Valid global rules?"}
     # @flow: CheckGlobalRules -->|No| ExitFailGlobal((sys.exit 1))
     # Step 2: Load the Global Governance Rules baseline from base schema
-    base_schema = load_json_schema_file(BASE_SCHEMA_PATH)
-    global_rules = base_schema.get(SCHEMA_KEY_GLOBAL_CONFIG)
-    if not global_rules:
-        logger.error(
-            "FATAL: Missing '%s' in %s.", SCHEMA_KEY_GLOBAL_CONFIG, BASE_SCHEMA_PATH
-        )
-        sys.exit(1)
-
-    raw_severity_levels = global_rules.get(SCHEMA_KEY_SEVERITY_LEVELS, {})
-    severity_levels = {
-        code: level 
-        for group, rules in raw_severity_levels.items() 
-        for code, level in rules.items()
-    }
-    if not severity_levels:
-        logger.error(
-            "FATAL: Missing '%s' in %s.", SCHEMA_KEY_SEVERITY_LEVELS, BASE_SCHEMA_PATH
-        )
-        sys.exit(1)
-
-    # Overwrite the nested dictionary in global_rules with our flattened version
-    # so that downstream validators can perform O(1) lookups by error code.
-    global_rules[SCHEMA_KEY_SEVERITY_LEVELS] = severity_levels
-
-    blocking_severities = global_rules.get(SCHEMA_KEY_BLOCKING_SEVERITIES)
-    if not blocking_severities:
-        logger.error(
-            "FATAL: Missing '%s' in %s.",
-            SCHEMA_KEY_BLOCKING_SEVERITIES,
-            BASE_SCHEMA_PATH,
-        )
-        sys.exit(1)
 
     try:
-        validate_severity_schema(severity_levels)
-        validate_blocking_severities(blocking_severities)
-    except RuntimeError as e:
-        logger.error(str(e))
+        base_schema = load_json_schema_file(BASE_SCHEMA_PATH)
+        # @flow: CheckGlobalRules -->|Yes| IsConfigValid{"Valid Global Config & Severity? </br> <b>loader.py - (validate_global_config_structure, validate_severity_schema, validate_blocking_severities)</b>"}
+        # @flow: IsConfigValid -->|No| ExitFailConfig((sys.exit 1))
+        global_rules, severity_levels, blocking_severities = parse_and_validate_global_config(base_schema)
+    except (FileNotFoundError, ValueError, RuntimeError) as e:
+        logger.error("FATAL: %s", str(e))
         sys.exit(1)
 
     std_dirs = global_rules.get(SCHEMA_KEY_STRUCTURE_RULES, {}).get(
@@ -401,13 +377,12 @@ def main() -> None:
     ignored_config = global_rules.get(SCHEMA_KEY_STRUCTURE_RULES, {}).get(
         SCHEMA_KEY_IGNORED_FILES, {}
     )
-    # Support backward compatibility if it's still just a list
-    if isinstance(ignored_config, list):
-        ignored_files_lower = {f.lower() for f in ignored_config}
-        ignored_patterns = []
-    else:
-        ignored_files_lower = {f.lower() for f in ignored_config.get("exact_matches", [])}
+    if ignored_config:
+        ignored_files_lower = {f.lower() for f in ignored_config.get(SCHEMA_KEY_EXACT_MATCHES, [])}
         ignored_patterns = [re.compile(p, re.IGNORECASE) for p in ignored_config.get("patterns", [])]
+    else:
+        ignored_files_lower = set()
+        ignored_patterns = []
 
     max_dir_depth = global_rules.get(SCHEMA_KEY_STRUCTURE_RULES, {}).get(
         SCHEMA_KEY_MAX_DIR_DEPTH, 3
@@ -415,20 +390,22 @@ def main() -> None:
 
     # Validate that the Current Working Directory (CWD) is a valid repository root
     cwd = os.getcwd()
-    # @flow: CheckGlobalRules -->|Yes| CheckCwd["1.3. <b>_validate_execution_root()</b>: Valid CWD?"]
+    # @flow: IsConfigValid -->|Yes| CheckCwd["1.3. <b>_validate_execution_root()</b>: Valid CWD?"]
     # @flow: CheckCwd -->|No| ExitFailCwd((sys.exit 1))
     _validate_execution_root(cwd)
 
-    # @flow: CheckCwd -->|Yes| PreScan[["1.4. <b>crawler.py - build_metadata_registry()</b>: Collect doc_meta from all files & validate unique IDs"]]
+    # @flow: CheckCwd -->|Yes| PreScan[["1.4. <b>crawler.py - build_metadata_registry()</b>: Collect Document Metadata from all files & validate unique IDs"]]
     # @flow: PreScan -->|executes| StartRegistry
-    # @flow: StartRegistry(("Start")) --> GatherDocs["<b>crawler.py - gather_markdown_files()</b>: Gather all valid markdown files within governed boundaries"]
-    # @flow: GatherDocs --> CheckBoundary{"Path Boundary Valid?"}
-    # @flow: CheckBoundary -->|No: Outside Repo / Unauthorized / Cross-Drive| ExitFailCrawler((sys.exit 1))
-    # @flow: CheckBoundary -->|Yes| LoopRegFile{"Iterate per file"}
+    # @flow: StartRegistry(("Start")) --> GatherDocs["<b>crawler.py - gather_markdown_paths()</b>: Enforce boundary & collect markdown paths within governed boundaries"]
+    # @flow: GatherDocs -->|File Error: Outside Repo / Unauthorized / Cross-Drive| ExitFailPreScan((sys.exit 1))
+    # @flow: GatherDocs -->|Valid File Path| CheckRegIgnore{"Is Ignored File?"}
+    # @flow: CheckRegIgnore -->|"Yes (Skip)"| GatherDocs
+    # @flow: CheckRegIgnore -->|"No (Keep)"| LoopRegFile{"Iterate file paths to build Registry"}
     # @flow: LoopRegFile -->|Valid Markdown| ParseYamlReg["<b>markdown_ast.py - parse_frontmatter()</b>: Extract and parse YAML metadata block"]
-    # @flow: ParseYamlReg --> CheckDups{"Duplicate ID?"}
-    # @flow: CheckDups -->|Yes| RecordDup["Record as Duplicate (Excluded from Registry)"]
-    # @flow: CheckDups -->|No| RecordReg["Register Document Metadata"]
+    # @flow: ParseYamlReg -->|Parse Error| LoopRegFile
+    # @flow: ParseYamlReg -->|Success| CheckDups{"Is Document ID already registered?"}
+    # @flow: CheckDups -->|Yes| RecordDup["Store Duplicate in Registry"]
+    # @flow: CheckDups -->|No| RecordReg["Store Metadata in Registry"]
     # @flow: RecordDup --> LoopRegFile
     # @flow: RecordReg --> LoopRegFile
     # @flow: LoopRegFile -->|Done Iterating| ReturnRegistry[Return Metadata Registry and Duplicate Records]
@@ -440,9 +417,17 @@ def main() -> None:
     # TARGET_REPO_ROOT is strictly defined by the CWD. No magic tree climbing, no arguments.
     TARGET_REPO_ROOT = cwd
     
-    all_doc_ids, all_doc_metadata, duplicate_ids = build_metadata_registry(
-        TARGET_REPO_ROOT, TARGET_REPO_ROOT, allowed_root_dirs
-    )
+    try:
+        all_doc_ids, all_doc_metadata, duplicate_ids = build_metadata_registry(
+            TARGET_REPO_ROOT,
+            TARGET_REPO_ROOT,
+            allowed_root_dirs,
+            ignored_files_lower,
+            ignored_patterns,
+        )
+    except ValueError as e:
+        logger.error("FATAL: %s", str(e))
+        sys.exit(1)
 
     has_blocking_errors = False
     results: list[dict] = []
@@ -473,6 +458,8 @@ def main() -> None:
             pass_count += 1
             total_files += 1
         except Exception as e:
+            # @flow: ValidateTechRadar -->|Validation Error| RecordErrRadar["<code>Record Error</code>: Tech Radar Schema Violation"]
+            # @flow: RecordErrRadar --> FindTarget
             # Resolve severity dynamically from global schema
             severity = severity_levels[SeverityRule.STRUCTURAL_INTEGRITY_VIOLATION]
             err_msg = (
@@ -509,26 +496,27 @@ def main() -> None:
 
             total_files += 1
 
-    # @flow: ValidateTechRadar --> FindTarget["1.6. <b>crawler.py - gather_markdown_files()</b>: Gather targeted markdown files within governed boundaries"]
-    files_to_lint = gather_markdown_files(
-        args.target, TARGET_REPO_ROOT, allowed_root_dirs
-    )
+    # @flow: ValidateTechRadar --> FindTarget["1.6. <b>crawler.py - gather_markdown_paths()</b>: Gather markdown paths from CLI target arguments"]
+    try:
+        files_to_lint = gather_markdown_paths(
+            args.target,
+            TARGET_REPO_ROOT,
+            allowed_root_dirs,
+            ignored_files_lower,
+            ignored_patterns,
+        )
+    except ValueError as e:
+        # @flow: FindTarget -->|File Error: Outside Repo / Unauthorized / Cross-Drive| ExitFailFindTarget((sys.exit 1))
+        logger.error("FATAL: %s", str(e))
+        sys.exit(1)
 
-    # @flow: FindTarget --> LoopFile{"1.7. Iterate per file"}
+    # @flow: FindTarget --> |Valid File Path| CheckFilter{"Is ignored file?"}
+    # @flow: CheckFilter -->|"Yes (Skip)"| FindTarget
+    # @flow: CheckFilter -->|"No (Keep)"| LoopFile{"1.7. Iterate file paths"}
     for full_path in files_to_lint:
-        # @flow: LoopFile --> CheckFilter{"Is contain ignored file or pattern?"}
-        # @flow: CheckFilter -->|Yes| LoopFile
-        filename = os.path.basename(full_path)
-        # Filter 1: Ignore configured standard files (e.g., README, CHANGELOG) governed by schema
-        if filename.lower() in ignored_files_lower:
-            continue
 
-        # Filter 2: Ignore files matching schema-defined patterns (e.g., templates, copies)
-        if any(p.search(full_path) for p in ignored_patterns):
-            continue
-
-        # @flow: CheckFilter -->|No| CheckDepth{"Exceeds maximum directory depth?"}
-        # @flow: CheckDepth -->|Yes| RecordDepthError["Record Directory Depth Violation"]
+        # @flow: LoopFile --> CheckDepth{"Exceeds maximum directory depth?"}
+        # @flow: CheckDepth -->|Yes| RecordDepthError["<code>Record Error</code>: Directory Depth Violation"]
         # @flow: RecordDepthError --> LoopFile
         # Rule: Enforce Max Directory Depth
         try:
@@ -563,8 +551,8 @@ def main() -> None:
             # This ValueError will mathematically never be triggered here.
             pass
 
-        # @flow: CheckDepth -->|No| LintFileSub[["1.8. <b>lint_file()</b>: Validate markdown document"]]
-        # @flow: LintFileSub -->|executes| StartLint
+        # @flow: CheckDepth -->|No| LintFileSub[["1.8. <b>lint_file()</b>: Validate markdown document against base schema and specific domain schema"]]
+        # @flow: LintFileSub -->|executes| StartLinting(("Start Linting"))
         # Execute linting for the current valid file
         file_errors, is_clean, is_blocking, disable_info = lint_file(
             full_path,
@@ -578,10 +566,10 @@ def main() -> None:
         # @flow: LintFileSub --> LoopFile
 
         # Track lint_disable governance
-        disabled = disable_info.get("disabled", {})
+        disabled = disable_info.get("disabled", [])
         if disabled:
             disabled_usages[full_path] = disabled
-            undoc = [r for r, reason in disabled.items() if not reason]
+            undoc = [r for r, reason, _, _ in disabled if not reason]
             if undoc:
                 undocumented_disables[full_path] = undoc
         rejected = disable_info.get("rejected", set())
@@ -622,7 +610,7 @@ def main() -> None:
 
     for category, msg in audit_traceability_graph(all_doc_metadata):
         repo_findings.append(
-            (severity_levels.get(category, "ERROR"), msg, "TRACEABILITY-GRAPH")
+            (severity_levels[category], msg, "TRACEABILITY-GRAPH")
         )
 
     for sev, msg, pfile in repo_findings:
@@ -663,10 +651,11 @@ def main() -> None:
 
     if disabled_usages:
         print("\n--- Lint Disable Usage ---")
-        for fpath, disabled in disabled_usages.items():
+        for fpath, disabled_list in disabled_usages.items():
             rendered = ", ".join(
-                f"{r} (reason: {reason})" if reason else f"{r} (UNDOCUMENTED)"
-                for r, reason in disabled.items()
+                f"{r} [L{start}-{end if end != float('inf') else 'EOF'}] (reason: {reason})" if reason 
+                else f"{r} [L{start}-{end if end != float('inf') else 'EOF'}] (UNDOCUMENTED)"
+                for r, reason, start, end in disabled_list
             )
             print(f"  {fpath}: {rendered}")
 
@@ -689,8 +678,6 @@ def main() -> None:
 
             # --- Break-Glass Audit Trail (C3 fix) ---
             # Write a persistent, structured audit event so the claim above is truthful.
-            import subprocess, datetime as _dt
-
             _invoker = os.environ.get("GITHUB_ACTOR") or os.environ.get("USER") or os.environ.get("USERNAME") or "unknown"
             try:
                 _invoker = subprocess.check_output(

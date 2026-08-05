@@ -8,6 +8,7 @@ doc_meta:
   classification: internal
   governed_by: [GDC-000]
   review_cycle_days: 90
+  created_date: 2026-01-01
   last_reviewed: 2026-07-06
 ---
 

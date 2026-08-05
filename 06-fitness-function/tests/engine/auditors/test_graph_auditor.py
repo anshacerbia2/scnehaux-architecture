@@ -68,9 +68,9 @@ def test_audit_traceability_graph_acyclic_clean():
     assert audit_traceability_graph(meta) == []
 
 
-def test_audit_traceability_graph_ignores_non_dict_meta():
-    meta = {"X-1": "not a dict", "PAD-1": {"parent_pad": None}}
-    assert audit_traceability_graph(meta) == []
+def test_audit_hierarchy_and_orphans_non_dict():
+    meta = {"INVALID_KEY": "not_a_dict_metadata"}
+    sev = {"structural_integrity_violation": "CRITICAL", "traceability_violation": "ERROR"}
+    assert audit_hierarchy_tiers(meta, sev) == []
+    assert audit_orphans(meta, sev) == []
 
-
-# ---------- ADD#5: SARIF ----------

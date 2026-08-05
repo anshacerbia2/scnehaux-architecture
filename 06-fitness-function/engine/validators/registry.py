@@ -5,6 +5,7 @@ from .domains.ead_validator import EADValidator
 from .domains.std_validator import STDValidator
 from .domains.tdd_validator import TDDValidator
 from .domains.gdc_validator import GDCValidator
+from engine.config.constants import SCHEMA_KEY_STRUCTURE_RULES, SCHEMA_KEY_ARTIFACT_DIRS
 
 VALIDATOR_REGISTRY = {
     "ADR": ADRValidator,
@@ -17,32 +18,33 @@ VALIDATOR_REGISTRY = {
 }
 
 
-def detect_doc_type(doc_id: str | None, filename: str, rel_path: str) -> str | None:
+def detect_doc_type(meta_id: str | None, global_rules: dict) -> str | None:
     """
-    Determine the architecture document type based on cascading fallback logic.
+    Determine the architecture document type based on the explicit `id` field from the document's YAML frontmatter.
+    Example: 'SAD-001' -> 'SAD'
 
-    Resolution order:
-    1. Parse the explicit `id` field from the document's YAML frontmatter (e.g. 'SAD-001').
-    2. Fallback: Check if the filename uses legacy/domain extensions (e.g. `.sad.md`).
-    3. Fallback: Parse the filename prefix itself (e.g. 'GDC-001.md').
+    <pre>Args:
+        - meta_id (str | None): The metadata ID parsed from the document's YAML frontmatter.
+        - global_rules (dict): The global rules dictionary parsed from base.schema.json.
 
     Returns:
-        str | None: The 3-letter uppercase document type (e.g. 'SAD', 'PAD') or None if unknown.
+        str | None: The document type prefix (e.g. 'SAD', 'PAD') or None if unknown/invalid.
+    </pre>
     """
-    prefixes = ("GDC-", "EAD-", "STD-", "PAD-", "SAD-", "ADR-", "TDD-")
+    if not meta_id:
+        return None
 
-    if doc_id:
-        for prefix in prefixes:
-            if doc_id.startswith(prefix):
-                return prefix.rstrip("-")
+    structure_rules = global_rules.get(SCHEMA_KEY_STRUCTURE_RULES, {})
+    artifact_dirs = structure_rules.get(SCHEMA_KEY_ARTIFACT_DIRS, {})
+    valid_types = artifact_dirs.keys()
 
-    if filename.endswith(".pad.md"):
-        return "PAD"
-    if filename.endswith(".sad.md"):
-        return "SAD"
-    for prefix in prefixes:
-        if filename.startswith(prefix):
-            return prefix.rstrip("-")
+    parts = meta_id.split("-")
+    if not parts:
+        return None
+
+    doc_type = parts[0].upper()
+    if doc_type in valid_types:
+        return doc_type
 
     return None
 
@@ -52,6 +54,12 @@ def get_validator(doc_type: str):
     Return the corresponding Validator subclass for the detected document type.
 
     Maps strings like 'SAD' to `SADValidator`, 'PAD' to `PADValidator`, etc.
-    Returns None if the document type is not supported by the validation engine.
+
+    <pre>Args:
+        - doc_type (str): The document type prefix (e.g. 'SAD', 'PAD').
+
+    Returns:
+        type[BaseValidator] | None: The specific validator class or None if not supported.
+    </pre>
     """
     return VALIDATOR_REGISTRY.get(doc_type)

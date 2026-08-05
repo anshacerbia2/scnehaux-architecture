@@ -3,11 +3,12 @@ doc_meta:
   id: GDC-000
   title: Documentation Governance Policy
   owner: Architecture Authority
-  version: 1.0.1
+  version: 1.0.0
   status: approved
   classification: public
   governed_by: []
-  review_cycle_days: 180
+  review_cycle_days: 365
+  created_date: 2026-01-01
   last_reviewed: 2026-05-22
 ---
 

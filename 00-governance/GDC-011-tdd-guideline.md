@@ -8,6 +8,7 @@ doc_meta:
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
+  created_date: 2026-01-01
   last_reviewed: 2026-06-01
 ---
 

@@ -4,11 +4,27 @@ from engine.validators.domains.sad_validator import SADValidator
 
 
 def test_detect_doc_type():
-    assert detect_doc_type("ADR-001", "ADR-001-test.md", "") == "ADR"
-    assert detect_doc_type(None, "scnehaux.sad.md", "") == "SAD"
-    assert detect_doc_type(None, "scnehaux.pad.md", "") == "PAD"
-    assert detect_doc_type("GDC-002", "GDC-002-test.md", "") == "GDC"
-    assert detect_doc_type(None, "unknown.md", "") is None
+    dummy_rules = {
+        "structure_rules": {
+            "artifact_directories": {
+                "GDC": "00-governance",
+                "PAD": "03-domain",
+                "SAD": "04-system",
+                "ADR": "05-decisions"
+            }
+        }
+    }
+    # Valid metadata IDs
+    assert detect_doc_type("ADR-001", dummy_rules) == "ADR"
+    assert detect_doc_type("SAD-999", dummy_rules) == "SAD"
+    assert detect_doc_type("PAD-XYZ", dummy_rules) == "PAD"
+    assert detect_doc_type("GDC-002", dummy_rules) == "GDC"
+    
+    # Invalid or missing metadata IDs should return None
+    assert detect_doc_type(None, dummy_rules) is None
+    assert detect_doc_type("UNKNOWN-001", dummy_rules) is None
+    assert detect_doc_type("", dummy_rules) is None
+
 
 
 def test_get_validator():

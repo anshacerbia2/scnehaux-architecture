@@ -4,9 +4,10 @@ doc_meta:
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
   version: 1.0.0
-  status: adopted
+  status: approved
   classification: restricted
   review_cycle_days: 180
+  created_date: 2026-01-01
   last_reviewed: 2026-05-18
 ---
 

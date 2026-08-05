@@ -46,6 +46,11 @@
                 "governed_by"
               ],
               "properties": {
+                "status": {
+                  "title": "Allowed Statuses",
+                  "type": "string",
+                  "enum": ["draft", "approved", "deprecated"]
+                },
                 "governed_by": {
                   "title": "Governed By",
                   "type": ["string", "array"],

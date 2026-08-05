@@ -9,7 +9,7 @@
   "properties": {
     "filename": {
       "type": "string",
-      "pattern": "^SAD-[A-Z]+-\\d{3}-[a-z0-9-]+\\.md$"
+      "pattern": "^[a-z0-9-]+\\.sad\\.md$"
     }
   },
   "allOf": [
@@ -47,6 +47,11 @@
                 "parent_pad"
               ],
               "properties": {
+                "status": {
+                  "title": "Allowed Statuses",
+                  "type": "string",
+                  "enum": ["draft", "approved", "deprecated"]
+                },
                 "governed_by": {
                   "title": "Governed By",
                   "type": ["string", "array"],

@@ -4,7 +4,8 @@ doc_meta:
   title: ADR-UIP-TKN-002 OKLCH Gamut and Dual-Engine Alpha Blending Architecture
   adr_type: foundational
   status: accepted
-  created: 2026-05-01
+  created: 2026-01-01
+  created_date: 2026-01-01
   created_by: Enterprise Architect
 ---
 

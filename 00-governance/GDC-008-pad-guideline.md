@@ -3,11 +3,12 @@ doc_meta:
   id: GDC-008
   title: Product Architecture Document (PAD) Guideline
   owner: Architecture Authority
-  version: 1.0.1
+  version: 1.0.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
+  created_date: 2026-01-01
   last_reviewed: 2026-05-22
 ---
 

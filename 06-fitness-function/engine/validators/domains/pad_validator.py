@@ -13,6 +13,13 @@ class PADValidator(BaseValidator):
           Additionally checks that those SADs declare this PAD as their `parent_pad` (bidirectional link).
         - Upward traceability: Validates the `realizes_capability` field. It is strictly mandatory and must point
           to a valid EAD ID in the registry, ensuring the platform architecture maps back to business capabilities.
+
+        <pre>Args:
+            None
+
+        Returns:
+            None
+        </pre>
         """
         # @flow-domain: StartPAD((Start PAD Validation)) --> CheckFulfilled["Check 'fulfilled_by' metadata"]
         if not self.doc_meta:

@@ -4,10 +4,11 @@ doc_meta:
   title: Enterprise API Design Standard
   owner: Architecture Review Board
   version: 1.0.0
-  status: adopted
+  status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 365
+  created_date: 2026-01-01
 ---
 
 # STD-GLB-001: Enterprise API Design Standard

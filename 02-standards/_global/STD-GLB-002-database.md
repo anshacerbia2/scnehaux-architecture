@@ -4,10 +4,11 @@ doc_meta:
   title: Enterprise Database & Persistence Standard
   owner: Architecture Review Board
   version: 1.0.0
-  status: adopted
+  status: approved
   classification: internal
   governed_by: [GDC-000]
   review_cycle_days: 365
+  created_date: 2026-01-01
 ---
 
 # STD-GLB-002: Enterprise Database & Persistence Standard

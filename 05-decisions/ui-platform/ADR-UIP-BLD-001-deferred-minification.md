@@ -4,13 +4,14 @@ doc_meta:
   title: Deferred Minification
   adr_type: foundational
   owner: Principal UI/UX Architect
-  version: 1.0.2
+  version: 1.0.0
   status: accepted
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   last_reviewed: 2026-06-26
-  created: 2026-06-20
+  created: 2026-01-01
+  created_date: 2026-01-01
   created_by: Staff Engineer
 ---
 

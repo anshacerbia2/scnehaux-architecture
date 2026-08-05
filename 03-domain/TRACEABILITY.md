@@ -70,8 +70,6 @@ graph LR
     SAD-006 --> PAD-PLT-004
     SAD-004[SAD-004]:::sad
     SAD-004 --> PAD-PLT-002
-    SAD-TEST-001[SAD-TEST-001]:::sad
-    SAD-TEST-001 --> PAD-TEST-001
     classDef ead fill:#059669,stroke:#047857,color:#fff
     classDef pad fill:#2563eb,stroke:#1d4ed8,color:#fff
     classDef sad fill:#7c3aed,stroke:#6d28d9,color:#fff

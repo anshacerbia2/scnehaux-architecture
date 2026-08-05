@@ -12,6 +12,13 @@ class SADValidator(BaseValidator):
         - Validates the mandatory `parent_pad` field, ensuring the system maps to a recognized platform.
         - Checks that the referenced PAD exists in the repository.
         - Checks that the referenced PAD declares this SAD in its `fulfilled_by` array (bidirectional link).
+
+        <pre>Args:
+            None
+
+        Returns:
+            None
+        </pre>
         """
         # @flow-domain: StartSAD((Start SAD Validation)) --> CheckParentPAD["Check 'parent_pad' metadata"]
         if not self.doc_meta:

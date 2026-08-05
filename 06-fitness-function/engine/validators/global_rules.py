@@ -2,7 +2,7 @@ import re
 import logging
 from .base import BaseValidator
 from engine.parsing.markdown_ast import (
-    clean_content_for_length,
+    strip_code_fences,
 )
 from .metadata_rules import (
     _validate_review_age,
@@ -25,8 +25,9 @@ def run_common_validations(validator: BaseValidator) -> None:
     traceability) that apply universally across all architecture document types.
     """
     # @flow-validator: subgraph GlobalRulesPhase[Global Rules Validation Suite]
+    # @flow-validator: direction TB
 
-    # @flow-validator: GlobalRulesPhase --> ValCompliance["<b>_validate_compliance_placement()</b>: Check folder placement & file naming"]
+    # @flow-validator: GlobalRules --> ValCompliance["<b>_validate_compliance_placement()</b>: Check folder placement & file naming"]
     _validate_compliance_placement(validator)
     # @flow-validator: ValCompliance --> ValRevAge["<b>_validate_review_age()</b>: Check if document is expired"]
     _validate_review_age(validator)
@@ -73,18 +74,23 @@ def _validate_compliance_placement(v: BaseValidator) -> None:
 
     # 2. Filename identity check
     if doc_id:
-        if not filename.startswith(doc_id):
+        if not filename.endswith(".sad.md") and not filename.endswith(".pad.md") and not filename.startswith(doc_id):
             v.add_error(
                 "compliance_filename_match",
                 f"Filename '{filename}' must start with the document ID '{doc_id}'.",
             )
 
 
+
 def _validate_content_quality(v: BaseValidator) -> None:
     """Ensure the content avoids prohibited boilerplate words and vague claims based on the governance constraints."""
-    text_content = clean_content_for_length(v.content)
+    # Strip fences and frontmatter but preserve line numbers
+    text_content = strip_code_fences(v.content)
+    def replacer(m):
+        return "\n" * m.group(0).count("\n")
+    text_content = re.sub(r"^---\s+.*?\s+---", replacer, text_content, flags=re.DOTALL)
+    
     rules_content = v.global_rules
-
     content_rules = rules_content.get("content_rules", {})
 
     for rule_id, rule_config in content_rules.items():
@@ -99,5 +105,6 @@ def _validate_content_quality(v: BaseValidator) -> None:
         )
 
         for pattern in patterns:
-            if re.search(pattern, text_content, re.IGNORECASE):
-                v.add_error(rule_id, message)
+            for match in re.finditer(pattern, text_content, re.IGNORECASE):
+                line_num = text_content.count('\n', 0, match.start()) + 1
+                v.add_error(rule_id, message, line_num=line_num)

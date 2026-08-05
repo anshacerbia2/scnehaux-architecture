@@ -4,7 +4,8 @@ doc_meta:
   title: ADR-GLB-FE-006 Zero-Runtime CSS and Utility-First Compilation
   adr_type: foundational
   status: accepted
-  created: 2026-05-01
+  created: 2026-01-01
+  created_date: 2026-01-01
   created_by: Principal Frontend Architect
 ---
 

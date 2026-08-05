@@ -12,6 +12,7 @@ doc_meta:
     - EAD-001
     - EAD-005
   review_cycle_days: 180
+  created_date: 2026-01-01
   last_reviewed: 2026-07-06
   fulfilled_by:
     - SAD-008

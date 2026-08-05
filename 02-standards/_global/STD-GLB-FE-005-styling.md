@@ -7,6 +7,7 @@ doc_meta:
   status: adopted
   classification: restricted
   review_cycle_days: 180
+  created_date: 2026-01-01
   last_reviewed: 2026-05-31
 ---
 

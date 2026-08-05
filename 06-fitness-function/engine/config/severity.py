@@ -14,6 +14,7 @@ class SeverityRule(str, Enum):
     UNKNOWN_DOCUMENT_TYPE = "unknown_document_type"
     MISSING_VALIDATOR = "missing_validator"
     MISSING_DOMAIN_SCHEMA = "missing_domain_schema"
+    INVALID_LINT_DISABLE = "invalid_lint_disable"
 
     # 1. TOPOLOGY & IDENTITY DOMAIN (Graph & Lineage)
     CIRCULAR_DEPENDENCY = "circular_dependency"

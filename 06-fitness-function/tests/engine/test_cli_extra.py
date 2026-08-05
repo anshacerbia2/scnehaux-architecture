@@ -59,3 +59,57 @@ def test_main_invalid_severity_schema(monkeypatch):
     with pytest.raises(SystemExit) as e:
         main()
     assert e.value.code == 1
+
+
+def test_main_break_glass(tmp_path, monkeypatch):
+    import sys
+    from engine.cli import main
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".git").mkdir()
+    
+    monkeypatch.setattr(sys, "argv", ["cli.py", "--break-glass", "--target", str(tmp_path)])
+    monkeypatch.setattr("engine.cli.gather_markdown_paths", lambda *args, **kwargs: [str(tmp_path / "doc.md")])
+    
+    # Mock lint_file returning a blocking error
+    mock_lint = lambda *args, **kwargs: (
+        [("CRITICAL", "blocking error")],
+        False,
+        True,
+        {"disabled": [("mock_rule", "reason", 10, 20)], "rejected": {"CRITICAL_RULE"}}
+    )
+    monkeypatch.setattr("engine.cli.lint_file", mock_lint)
+
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 0
+    assert (tmp_path / "break-glass-audit.log").exists()
+
+
+def test_main_json_and_sarif_format(tmp_path, monkeypatch):
+    import sys
+    from engine.cli import main
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".git").mkdir()
+
+    monkeypatch.setattr("engine.cli.gather_markdown_paths", lambda *args, **kwargs: [str(tmp_path / "doc.md")])
+    mock_lint = lambda *args, **kwargs: ([], True, False, {"disabled": {}, "rejected": set()})
+    monkeypatch.setattr("engine.cli.lint_file", mock_lint)
+
+    # Test json format exit 0
+    monkeypatch.setattr(sys, "argv", ["cli.py", "--format", "json", "--target", str(tmp_path)])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 0
+
+    # Test sarif format exit 0
+    monkeypatch.setattr(sys, "argv", ["cli.py", "--format", "sarif", "--target", str(tmp_path)])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 0
+
+
+
+
+

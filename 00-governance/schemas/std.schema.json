@@ -9,7 +9,7 @@
   "properties": {
     "filename": {
       "type": "string",
-      "pattern": "^STD-[A-Z]+-[A-Z]+-\\d{3}-[a-z0-9-]+\\.md$"
+      "pattern": "^STD-[A-Z]+(?:-[A-Z]+)?-\\d{3}-[a-z0-9-]+\\.md$"
     }
   },
   "allOf": [
@@ -42,7 +42,7 @@
                 "status": {
                   "title": "Allowed Statuses",
                   "type": "string",
-                  "enum": ["adopted", "trial", "assessed", "hold"]
+                  "enum": ["adopted", "trial", "assessed", "hold", "approved", "draft", "proposed", "deprecated"]
                 }
               }
             }

@@ -3,6 +3,12 @@ import yaml
 import logging
 import datetime
 from .base import BaseValidator
+from engine.config.constants import (
+    SCHEMA_KEY_CONTENT_RULES,
+    SCHEMA_KEY_EXEMPT_STATUSES,
+    SCHEMA_KEY_MAX_REVIEW_AGE,
+    TECH_RADAR_YAML_PATH,
+)
 from engine.parsing.markdown_ast import parse_date
 
 logger = logging.getLogger(__name__)
@@ -29,35 +35,50 @@ def validate_exempt_age(doc_meta: dict, doc_status: str, violation_severity: str
         None: Does not raise exceptions; missing or unparseable dates are safely handled and appended as errors.
     </pre>
     """
-    draft_errs = []
-    created_date_raw = doc_meta.get("created_date")
+    exempt_errs = []
     
-    if not created_date_raw:
-        draft_errs.append(
+    exempt_configs = global_rules.get(SCHEMA_KEY_CONTENT_RULES, {}).get(SCHEMA_KEY_EXEMPT_STATUSES, [])
+    
+    # Find the specific config for this status
+    status_config = next((cfg for cfg in exempt_configs if isinstance(cfg, dict) and cfg.get("status", "").lower() == doc_status), None)
+    
+    if not status_config:
+        return exempt_errs
+        
+    for required_key in ["depend_on", "max_age_days", "error_message"]:
+        if required_key not in status_config or status_config[required_key] is None or status_config[required_key] == "":
+            raise ValueError(
+                f"Global rules misconfiguration: 'exempt_statuses' for status '{doc_status}' "
+                f"is missing or has empty required field '{required_key}'."
+            )
+            
+    depend_on_field = status_config["depend_on"]
+    max_age_days = status_config["max_age_days"]
+    err_msg_template = status_config["error_message"]
+
+    date_raw = doc_meta.get(depend_on_field)
+    
+    if not date_raw:
+        exempt_errs.append(
             (
                 violation_severity,
-                f"Document with status '{doc_status}' is missing 'created_date'. It cannot evade governance indefinitely.",
+                f"Document with status '{doc_status}' is missing '{depend_on_field}'. It cannot evade governance indefinitely.",
             )
         )
-    else:
-        created_date = parse_date(created_date_raw)
-        if created_date:
-            age_days = (datetime.date.today() - created_date).days
-            try:
-                max_draft_age = global_rules["content_rules"]["max_draft_age_days"]["value"]
-                err_msg_template = global_rules["content_rules"]["max_draft_age_days"]["error_message"]
-            except KeyError as e:
-                raise KeyError(f"Missing required configuration in base.schema.json: {e}")
-            
-            if age_days > max_draft_age:
-                err_msg = err_msg_template.format(doc_status=doc_status, age_days=age_days, limit=max_draft_age)
-                draft_errs.append(
-                    (
-                        violation_severity,
-                        err_msg,
-                    )
+        return exempt_errs
+        
+    parsed_date = parse_date(date_raw)
+    if parsed_date:
+        age_days = (datetime.date.today() - parsed_date).days
+        if age_days > max_age_days:
+            err_msg = err_msg_template.format(doc_status=doc_status, age_days=age_days, limit=max_age_days, depend_on=depend_on_field)
+            exempt_errs.append(
+                (
+                    violation_severity,
+                    err_msg,
                 )
-    return draft_errs
+            )
+    return exempt_errs
 
 
 def _validate_review_age(v: BaseValidator) -> None:
@@ -70,8 +91,8 @@ def _validate_review_age(v: BaseValidator) -> None:
         if last_reviewed:
             age_days = (datetime.date.today() - last_reviewed).days
             cycle_days = v.doc_meta.get("review_cycle_days")
-            rules_meta = v.global_rules.get("content_rules", {})
-            rule_config = rules_meta.get("max_review_age_days", {})
+            rules_meta = v.global_rules.get(SCHEMA_KEY_CONTENT_RULES, {})
+            rule_config = rules_meta.get(SCHEMA_KEY_MAX_REVIEW_AGE, {})
             default_limit = rule_config.get("value", 365)
 
             limit = int(cycle_days) if cycle_days is not None else int(default_limit)
@@ -126,25 +147,15 @@ def _validate_technologies_whitelist(v: BaseValidator) -> None:
     if not technologies:
         return
 
-    tech_radar_path = os.path.normpath(
-        os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "..",
-            "..",
-            "..",
-            "01-enterprise",
-            "tech-radar.yaml",
-        )
-    )
-    if not os.path.exists(tech_radar_path):
+    if not os.path.exists(TECH_RADAR_YAML_PATH):
         return
 
     try:
-        with open(tech_radar_path, "r", encoding="utf-8") as f:
+        with open(TECH_RADAR_YAML_PATH, "r", encoding="utf-8") as f:
             radar = yaml.safe_load(f)
             tech_radar = radar.get("technology_radar", {})
     except Exception as e:
-        logger.debug("Failed to load tech radar from '%s': %s", tech_radar_path, e)
+        logger.debug("Failed to load tech radar from '%s': %s", TECH_RADAR_YAML_PATH, e)
         return
 
     # Build maps of approved and hold technologies

@@ -9,7 +9,7 @@
   "properties": {
     "filename": {
       "type": "string",
-      "pattern": "^[a-z0-9-]+\\.pad\\.md$"
+      "pattern": "^[A-Za-z0-9-]+\\.pad\\.md$"
     }
   },
   "allOf": [
@@ -48,21 +48,31 @@
                 "fulfilled_by"
               ],
               "properties": {
-                "governed_by": {
-                  "title": "Governing EAD ID",
+                "status": {
+                  "title": "Allowed Statuses",
                   "type": "string",
-                  "pattern": "^EAD-\\d{3}-[A-Z0-9-]+$"
+                  "enum": ["draft", "approved", "deprecated"]
+                },
+                "governed_by": {
+                  "title": "Governing GDC/EAD IDs",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "realizes_capability": {
                   "title": "Capability Being Realized",
-                  "type": "string"
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "fulfilled_by": {
                   "title": "Downstream Implementation Systems",
                   "type": "array",
                   "items": {
                     "type": "string",
-                    "pattern": "^SAD-\\d{3}-[A-Z0-9-]+$"
+                    "pattern": "^SAD-\\d{3}(?:-[A-Z0-9-]+)?$"
                   }
                 }
               }

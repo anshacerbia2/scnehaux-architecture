@@ -3,10 +3,11 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.0.0
-  status: adopted
+  version: 1.0.0
+  status: approved
   classification: restricted
   review_cycle_days: 180
+  created_date: 2026-01-01
   last_reviewed: 2026-05-25
   governed_by:
     - GDC-000

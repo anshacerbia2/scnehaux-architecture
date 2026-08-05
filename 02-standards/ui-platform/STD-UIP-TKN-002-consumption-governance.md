@@ -4,9 +4,10 @@ doc_meta:
   title: Enterprise Design Token Governance
   owner: Enterprise Architect
   version: 1.0.0
-  status: adopted
+  status: approved
   classification: public
   review_cycle_days: 180
+  created_date: 2026-01-01
   last_reviewed: 2026-05-22
 ---
 

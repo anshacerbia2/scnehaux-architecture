@@ -18,17 +18,35 @@ def test_load_json_schema_file_success():
 @patch("engine.config.loader.logger.critical")
 def test_load_json_schema_file_not_found(mock_logger_critical):
     """
-    Validates the Fail-Closed security behavior when a schema file is missing.
-    Ensures that a FileNotFoundError triggers a hard system crash (SystemExit)
-    and logs a critical error message.
+    Validates the behavior when a schema file is missing.
+    Ensures that a FileNotFoundError is properly raised.
     """
     with patch("builtins.open", side_effect=FileNotFoundError):
-        with pytest.raises(SystemExit) as exc_info:
+        with pytest.raises(FileNotFoundError):
             load_json_schema_file("missing_schema.json")
 
-        # Verify the exit code is 1 (hard crash)
-        assert exc_info.value.code == 1
-        # Verify the critical logger was called
-        mock_logger_critical.assert_called_once_with(
-            "Schema file '%s' not found.", "missing_schema.json"
-        )
+
+def test_validate_severity_schema_unknown_rule():
+    from engine.config.loader import validate_severity_schema
+    from engine.config.severity import SeverityRule
+    full_levels = {r.value: "ERROR" for r in SeverityRule}
+    full_levels["unknown_rule_xyz"] = "HIGH"
+    with pytest.raises(RuntimeError) as exc:
+        validate_severity_schema(full_levels)
+    assert "Unknown severity rules found" in str(exc.value)
+
+
+
+def test_validate_blocking_severities_missing_and_unknown():
+    from engine.config.loader import validate_blocking_severities
+    
+    # Missing required blocking severity
+    with pytest.raises(RuntimeError) as exc1:
+        validate_blocking_severities(["CRITICAL"])
+    assert "Missing blocking severities" in str(exc1.value)
+
+    # Unknown blocking severity
+    with pytest.raises(RuntimeError) as exc2:
+        validate_blocking_severities(["CRITICAL", "ERROR", "UNKNOWN_SEV"])
+    assert "Unknown blocking severities" in str(exc2.value)
+

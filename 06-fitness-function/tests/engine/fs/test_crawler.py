@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch
-from engine.fs.crawler import build_metadata_registry, gather_markdown_files
+from engine.fs.crawler import build_metadata_registry, gather_markdown_paths
 
 
 def test_build_metadata_registry_basic(tmp_path):
@@ -48,35 +48,35 @@ def test_duplicate_id_detection(tmp_path):
     assert "ADR-002" in ids
 
 
-def test_gather_markdown_files_valueerror_relpath():
+def test_gather_markdown_paths_valueerror_relpath():
     """
     Validates the security mechanism handling cross-drive path traversals.
     Ensures that when os.path.relpath throws a ValueError due to mismatched drives
-    (e.g., on Windows), the system performs a Fail-Closed hard crash (SystemExit).
+    (e.g., on Windows), the system performs a Fail-Closed hard crash (ValueError).
     """
-    with patch("os.path.relpath", side_effect=ValueError):
-        with pytest.raises(SystemExit):
-            gather_markdown_files(
-                "C:\\some\\file.md", "D:\\repo", allowed_root_dirs={"allowed"}
+    with patch("os.path.relpath", side_effect=ValueError("Different drive")):
+        with pytest.raises(ValueError):
+            gather_markdown_paths(
+                "C:/docs/file.md", repo_root="D:/repo", allowed_root_dirs={"allowed"}
             )
 
 
-def test_gather_markdown_files_target_str():
+def test_gather_markdown_paths_target_str():
     """
     Validates the type coercion mechanism for the target_dirs argument.
     Ensures that passing a single string path is correctly converted into a list
     before path evaluation continues.
     """
     # Pass a non-existent file just to trigger the string-to-list conversion
-    files = gather_markdown_files("some_target.md", "repo_root")
+    files = gather_markdown_paths("some_target.md", "repo_root")
     assert isinstance(files, list)
 
 
-def test_gather_markdown_files_skipped_targets(tmp_path):
+def test_gather_markdown_paths_skipped_targets(tmp_path):
     """
     Validates strict boundary enforcement against unauthorized internal directories.
     Ensures that targets not explicitly present in the allowed_root_dirs list
-    trigger a Fail-Closed hard crash (SystemExit).
+    trigger a Fail-Closed hard crash (ValueError).
     """
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -89,19 +89,19 @@ def test_gather_markdown_files_skipped_targets(tmp_path):
     disallowed.mkdir()
     (disallowed / "file2.md").write_text("# Disallowed")
 
-    with pytest.raises(SystemExit):
-        gather_markdown_files(
+    with pytest.raises(ValueError):
+        gather_markdown_paths(
             [str(allowed), str(disallowed)],
             repo_root=str(repo),
             allowed_root_dirs={"allowed_dir"},
         )
 
 
-def test_gather_markdown_files_outside_repo(tmp_path):
+def test_gather_markdown_paths_outside_repo(tmp_path):
     """
     Validates boundary enforcement against external path traversal attacks.
     Ensures that targets located outside the designated repo_root boundary
-    (e.g., ../) trigger a Fail-Closed hard crash (SystemExit).
+    (e.g., ../) trigger a Fail-Closed hard crash (ValueError).
     """
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -110,8 +110,8 @@ def test_gather_markdown_files_outside_repo(tmp_path):
     outside.mkdir()
     (outside / "file.md").write_text("# Outside")
 
-    with pytest.raises(SystemExit):
-        gather_markdown_files(
+    with pytest.raises(ValueError):
+        gather_markdown_paths(
             [str(outside)], repo_root=str(repo), allowed_root_dirs={"allowed"}
         )
 
@@ -131,3 +131,21 @@ def test_crawler_handles_exception_during_read():
             assert len(ids) == 0
             assert len(metadata) == 0
             assert len(duplicates) == 0
+
+
+def test_gather_markdown_paths_unallowed_directory_in_tree(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    allowed = repo / "00-governance"
+    allowed.mkdir()
+    (allowed / "gdc.md").write_text("# GDC")
+    
+    unallowed = repo / "unallowed_subdir"
+    unallowed.mkdir()
+    (unallowed / "extra.md").write_text("# Extra")
+
+    # Scanning whole repo with allowed_root_dirs set to {"00-governance"}
+    files = gather_markdown_paths(str(repo), repo_root=str(repo), allowed_root_dirs={"00-governance"})
+    assert any("gdc.md" in f for f in files)
+    assert not any("extra.md" in f for f in files)
+

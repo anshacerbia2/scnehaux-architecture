@@ -34,6 +34,7 @@ This index documents the internal functions and classes of the Generators.
 | **inject_to_markdown** | Inject the generated Markdown table into the target file, replacing whatever content<br>exists between the `AUTO-GENERATED-FUNCTIONS` start and end marker tags. |
 | **update_directory_index** | Crawl a specific sub-ecosystem directory (e.g. `engine` or `generators`), extract all<br>Python function documentation within it, and inject the results into its local `INDEX.md`. |
 | **generate_cli_flowchart** | Scan engine/cli.py for special inline comments starting with `# @flow:`<br>and compile them into a Mermaid flowchart injected into engine/INDEX.md. |
+| **generate_lint_flowchart** | Scan engine/cli.py for special inline comments starting with `# @flow-lint:`<br>and compile them into a Mermaid flowchart injected into engine/INDEX.md. |
 | **generate_validator_flowchart** | Scan engine/validators/base.py for special inline comments starting with `# @flow-validator:`<br>and compile them into a Mermaid flowchart injected into engine/INDEX.md. |
 | **generate_domain_flowcharts** | Scan engine/validators/domains/*_validator.py for special inline comments starting with `# @flow-domain:`<br>and compile them into isolated Mermaid flowcharts injected into engine/INDEX.md. |
 | **main** | Main execution flow. Iterates through the core sub-ecosystems (engine, generators,<br>scripts, tests) and updates their respective INDEX.md files. |

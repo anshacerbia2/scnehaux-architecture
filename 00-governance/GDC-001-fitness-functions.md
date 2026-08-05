@@ -8,6 +8,7 @@ doc_meta:
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 365
+  created_date: 2026-01-01
   last_reviewed: 2026-07-06
 ---
 
@@ -40,7 +41,7 @@ To fulfill the Constitution (GDC-000), we divide the automation scope of the Mas
 3. **Semantic & Quality Domain (Meaning & Language)**
    Focuses on the editorial quality and semantic clarity of the architectural content.
    - **NFR Taxonomy Enforcement**: Enforces that non-functional requirements map strictly to AWS Well-Architected Framework pillars. _[NFR Taxonomy](./GDC-000-governance-policy.md#24-non-functional-requirements-nfr-taxonomy)_
-   - **Clarity & Objectivity**: Eradicates subjective terminology (e.g., "blazingly fast") and enforces clear, unambiguous claims. _[The Quality Framework](./GDC-000-governance-policy.md#27-the-quality-framework)_
+   - **Clarity & Objectivity**: Eradicates subjective terminology (e.g., "unquantified fast") and enforces clear, unambiguous claims. _[The Quality Framework](./GDC-000-governance-policy.md#27-the-quality-framework)_
 
 4. **Lifecycle & Environment Domain (Time, Space, & State)**
    Focuses on the artifact's status in time, its physical location, and its CI/CD lifecycle state.
@@ -134,6 +135,7 @@ scnehaux-architecture/
 │       │   ├── entry_points.txt
 │       │   ├── requires.txt
 │       │   └── top_level.txt
+│       ├── scratch/
 │       ├── scripts/             # (Git hooks and manual CI/CD utilities)
 │       │   ├── INDEX.md
 │       │   ├── codeowners-validator.py
@@ -142,38 +144,37 @@ scnehaux-architecture/
 │       └── tests/               # (High-coverage pytest suite)
 │           ├── INDEX.md
 │           ├── conftest.py
-│           ├── engine/          # (Core automated execution logic)
-│           │   ├── auditors/     # (External environment validators)
-│           │   │   ├── test_dependency_scanner.py
-│           │   │   ├── test_git_auditor.py
-│           │   │   ├── test_graph_auditor.py
-│           │   │   └── test_waiver_auditor.py
-│           │   ├── config/       # (Engine configuration & environment variables)
-│           │   │   └── test_loader.py
-│           │   ├── fs/           # (File system utilities & workspace traversal)
-│           │   │   └── test_crawler.py
-│           │   ├── parsing/      # (Data extraction from raw files)
-│           │   │   └── test_markdown_ast.py
-│           │   ├── reporting/    # (CLI output formatting & CI/CD error logs)
-│           │   ├── test_cli.py
-│           │   ├── test_cli_extra.py
-│           │   └── validators/   # (The core policy sandbox)
-│           │       ├── domains/  # (Federated domain-specific triad scripts)
-│           │       │   ├── test_adr_validator.py
-│           │       │   ├── test_all_domains.py
-│           │       │   ├── test_ead_validator.py
-│           │       │   ├── test_gdc_validator.py
-│           │       │   ├── test_pad_validator.py
-│           │       │   ├── test_sad_validator.py
-│           │       │   ├── test_std_validator.py
-│           │       │   └── test_tdd_validator.py
-│           │       ├── test_base.py
-│           │       ├── test_global_rules.py
-│           │       ├── test_metadata_rules.py
-│           │       ├── test_registry.py
-│           │       ├── test_schema_extensions.py
-│           │       └── test_structure_rules.py
-│           └── test_manual.sad.md
+│           └── engine/          # (Core automated execution logic)
+│               ├── auditors/    # (External environment validators)
+│               │   ├── test_dependency_scanner.py
+│               │   ├── test_git_auditor.py
+│               │   ├── test_graph_auditor.py
+│               │   └── test_waiver_auditor.py
+│               ├── config/      # (Engine configuration & environment variables)
+│               │   └── test_loader.py
+│               ├── fs/          # (File system utilities & workspace traversal)
+│               │   └── test_crawler.py
+│               ├── parsing/     # (Data extraction from raw files)
+│               │   └── test_markdown_ast.py
+│               ├── reporting/   # (CLI output formatting & CI/CD error logs)
+│               ├── test_cli.py
+│               ├── test_cli_extra.py
+│               └── validators/  # (The core policy sandbox)
+│                   ├── domains/ # (Federated domain-specific triad scripts)
+│                   │   ├── test_adr_validator.py
+│                   │   ├── test_all_domains.py
+│                   │   ├── test_ead_validator.py
+│                   │   ├── test_gdc_validator.py
+│                   │   ├── test_pad_validator.py
+│                   │   ├── test_sad_validator.py
+│                   │   ├── test_std_validator.py
+│                   │   └── test_tdd_validator.py
+│                   ├── test_base.py
+│                   ├── test_global_rules.py
+│                   ├── test_metadata_rules.py
+│                   ├── test_registry.py
+│                   ├── test_schema_extensions.py
+│                   └── test_structure_rules.py
 ```
 <!-- END_ENGINE_TOPOGRAPHY -->
 
@@ -211,7 +212,7 @@ The global baseline applies universally to all architecture documents across the
 >
 > **DO NOT EDIT THIS TABLE MANUALLY.** This table is automatically generated from the JSON Schema (`schemas/base.schema.json`). If you need to update a rule, modify the schema file and run: `python 06-fitness-function/generators/generate_rules_doc.py`
 
-<!-- lint_disable_start: prohibited_word -->
+<!-- lint_disable_start: prohibited_word (reason: governance engine documentation) -->
 <!-- AUTO-GENERATED-RULES:START -->
 
 | Rule Category      | Parameter                | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -219,7 +220,7 @@ The global baseline applies universally to all architecture documents across the
 | **Structure Rules** | Artifact Directories | **Gdc**: `00-governance`<br>**Ead**: `01-enterprise`<br>**Std**: `02-standards`<br>**Pad**: `03-domain`<br>**Sad**: `04-system`<br>**Adr**: `05-decisions`<br>**Tdd**: `docs/designs` |
 | **Structure Rules** | Ignored Files | **Exact Matches**: <ul><li>`readme.md`</li><li>`index.md`</li><li>`contributing.md`</li><li>`changelog.md`</li><li>`maturity.md`</li><li>`traceability.md`</li><li>`temp.md`</li><li>`scnehaux_enterprise_architecture_refinement.md`</li></ul><br>**Patterns**: <ul><li>`\.copy\.md$`</li><li>`\.template\.md$`</li><li>`-template\.md$`</li><li>`[\\/]templates[\\/]`</li></ul> |
 | **Structure Rules** | Max Directory Depth | `3` |
-| **Content Rules** | Exempt Statuses | <ul><li>`draft`</li></ul> |
+| **Content Rules** | Exempt Statuses | <ul><li>`{'status': 'draft', 'depend_on': 'created_date', 'max_age_days': 30, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."}`</li><li>`{'status': 'deprecated', 'depend_on': 'last_updated', 'max_age_days': 180, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be fully retired and deleted."}`</li></ul> |
 | **Content Rules** | Max Review Age Days | **Value**: `365`<br>**Error Message**: `Document review age of {age_days} days exceeds limit of {limit} days.` |
 | **Content Rules** | Min Content Length Chars | **Value**: `50`<br>**Error Message**: `Section '{section_name}' content length ({length} chars) is below minimum of {min_length} chars.` |
 | **Content Rules** | Prohibited Words | **Patterns**: <ul><li>`\bmaybe\b`</li><li>`\bprobably\b`</li><li>`\bshould consider\b`</li><li>`\bTBD\b`</li><li>`\bcoming soon\b`</li><li>`\band so on\b`</li><li>`\bseamless(?:ly)?\b`</li><li>`\bobviously\b`</li><li>`\bblazingly\b`</li><li>`\btrivially\b`</li></ul><br>**Error Message**: `Prohibited boilerplate or hesitant word detected. Use definitive, professional language.` |
@@ -228,7 +229,7 @@ The global baseline applies universally to all architecture documents across the
 | **Severity Levels** | 1. Topology & Identity Domain (Graph & Lineage) | **Circular Dependency**: `CRITICAL`<br>**Cross Reference Missing**: `ERROR`<br>**Duplicate Id**: `CRITICAL`<br>**Inline Reference Missing**: `WARNING`<br>**Orphan Document**: `ERROR`<br>**Traceability Violation**: `ERROR`<br>**Broken Internal Link**: `ERROR` |
 | **Severity Levels** | 2. Structural Compliance Domain (Shape & Completeness) | **Missing Metadata**: `ERROR`<br>**Missing Required Subsection**: `ERROR`<br>**Missing Section**: `ERROR`<br>**Missing Section Keyword**: `ERROR`<br>**Schema Validation Failed**: `CRITICAL`<br>**Subsection Order Violation**: `WARNING` |
 | **Severity Levels** | 3. Semantic & Quality Domain (Meaning & Language) | **Ambiguity Rules**: `WARNING`<br>**Nfr Taxonomy Violation**: `ERROR`<br>**Prohibited Words**: `ERROR`<br>**Structural Integrity Violation**: `CRITICAL`<br>**Stylistic Deviation**: `WARNING`<br>**Vague Claim In Nfr**: `ERROR` |
-| **Severity Levels** | 4. Lifecycle & Environment Domain (Time, Space, & State) | **Compliance Filename Match**: `ERROR`<br>**Compliance Macro Directory**: `ERROR`<br>**Draft Status Violation**: `WARNING`<br>**Exception Expired**: `ERROR`<br>**Exempt Document Skipped**: `INFO`<br>**Review Age Violation**: `WARNING`<br>**Version Bump Required**: `ERROR` |
+| **Severity Levels** | 4. Lifecycle & Environment Domain (Time, Space, & State) | **Compliance Filename Match**: `ERROR`<br>**Compliance Macro Directory**: `ERROR`<br>**Draft Status Violation**: `ERROR`<br>**Exception Expired**: `ERROR`<br>**Exempt Document Skipped**: `INFO`<br>**Review Age Violation**: `WARNING`<br>**Version Bump Required**: `ERROR` |
 | **Severity Levels** | 5. Architecture Constraints Domain (Hard Technical Limits) | **Operational Stability Violation**: `ERROR`<br>**Prohibited Technology Violation**: `ERROR`<br>**Security Isolation Violation**: `CRITICAL`<br>**Technology Hold Violation**: `CRITICAL`<br>**Unapproved Technology**: `ERROR` |
 | **Governance** | Blocking Severities | `['CRITICAL', 'ERROR']` |
 
@@ -279,7 +280,7 @@ The global baseline applies universally to all architecture documents across the
 | :--- | :--- |
 | `compliance_filename_match` | **ERROR** |
 | `compliance_macro_directory` | **ERROR** |
-| `draft_status_violation` | **WARNING** |
+| `draft_status_violation` | **ERROR** |
 | `exception_expired` | **ERROR** |
 | `exempt_document_skipped` | **INFO** |
 | `review_age_violation` | **WARNING** |
@@ -297,7 +298,7 @@ The global baseline applies universally to all architecture documents across the
 
 | Rule Category | Parameter | Enforcement / Value |
 | :--- | :--- | :--- |
-| **Common Metadata Fields** | Common Metadata Fields | <ul><li>id (string)</li><li>title (string)</li><li>status (string)</li></ul> |
+| **Common Metadata Fields** | Common Metadata Fields | <ul><li>id (string)</li><li>title (string)</li><li>status (string)</li><li>created_date (string)</li></ul> |
 
 <!-- AUTO-GENERATED-RULES:END -->
 <!-- lint_disable_end: prohibited_word -->

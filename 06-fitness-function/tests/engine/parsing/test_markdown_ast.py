@@ -145,3 +145,44 @@ def test_extract_section_contents_close_map_none():
     content = "---\nmeta\n---\n## Only Section\nContent here"
     sections = extract_section_contents(content)
     assert "only section" in sections
+
+
+def test_extract_links_tuple_attrs(monkeypatch):
+    from engine.parsing.markdown_ast import extract_links
+    import markdown_it
+
+    # Test extract_links where token attrs is a list of tuples [("href", "https://example.com")]
+    content = "[Test Link](https://example.com)"
+    links = extract_links(content)
+    assert "https://example.com" in links
+
+
+def test_markdown_ast_walker_branches(monkeypatch):
+    from engine.parsing import markdown_ast
+    from markdown_it import MarkdownIt
+
+    class FakeToken:
+        def __init__(self, type_, attrs=None, children=None, map_=None):
+            self.type = type_
+            self.attrs = attrs
+            self.children = children
+            self.map = map_
+            self.content = ""
+
+    # Test extract_links tuple attrs branch (lines 165-167)
+    fake_link = FakeToken("link_open", attrs=[("href", "https://tuple-link.com")])
+    fake_inline = FakeToken("inline", children=[fake_link])
+    
+    monkeypatch.setattr(MarkdownIt, "parse", lambda self, content: [fake_inline])
+    links = markdown_ast.extract_links("dummy")
+    assert "https://tuple-link.com" in links
+
+    # Test clean_content_for_length non-inline children branch (line 141)
+    fake_text = FakeToken("text")
+    fake_text.content = "Nested prose"
+    fake_block = FakeToken("paragraph_open", children=[fake_text])
+    monkeypatch.setattr(MarkdownIt, "parse", lambda self, content: [fake_block])
+    cleaned = markdown_ast.clean_content_for_length("dummy")
+    assert "Nested prose" in cleaned
+
+

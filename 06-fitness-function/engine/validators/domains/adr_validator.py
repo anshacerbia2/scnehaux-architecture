@@ -12,6 +12,13 @@ class ADRValidator(BaseValidator):
         Enforces lifecycle rules for architecture exceptions:
         - If the ADR type is 'exception' and status is 'accepted', it must have a valid `expiry_date`.
         - If the `expiry_date` is in the past, an `exception_expired` error is raised to force a review.
+
+        <pre>Args:
+            None
+
+        Returns:
+            None
+        </pre>
         """
         # @flow-domain: StartADR((Start ADR Validation)) --> CheckADRType{"Is ADR type 'exception'?"}
         if not self.doc_meta:

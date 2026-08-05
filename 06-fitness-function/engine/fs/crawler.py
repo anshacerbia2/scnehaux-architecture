@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 from engine.config.constants import EXCLUDED_DIRS
 from engine.parsing.markdown_ast import parse_frontmatter
@@ -6,7 +7,13 @@ from engine.parsing.markdown_ast import parse_frontmatter
 logger = logging.getLogger(__name__)
 
 
-def gather_markdown_files(target_dirs, repo_root=None, allowed_root_dirs=None):
+def gather_markdown_paths(
+    target_dirs,
+    repo_root=None,
+    allowed_root_dirs=None,
+    ignored_files_lower=None,
+    ignored_patterns=None,
+):
     """
     Scans and deduplicates Markdown file paths from target directories.
     Deduplication here applies strictly to file paths (to handle overlapping input directories), 
@@ -32,6 +39,18 @@ def gather_markdown_files(target_dirs, repo_root=None, allowed_root_dirs=None):
     if isinstance(target_dirs, str):
         target_dirs = [target_dirs]
 
+    ignored_files_lower = ignored_files_lower or []
+    ignored_patterns = ignored_patterns or []
+
+    def _is_ignored(fpath: str) -> bool:
+        fname = os.path.basename(fpath)
+        if fname.lower() in ignored_files_lower:
+            return True
+        for pattern in ignored_patterns:
+            if re.match(pattern, fname):
+                return True
+        return False
+
     files_to_lint = []
     repo_root_abs = os.path.abspath(repo_root) if repo_root else None
 
@@ -44,13 +63,9 @@ def gather_markdown_files(target_dirs, repo_root=None, allowed_root_dirs=None):
                 # Input: target_dirs = ["../other-repo/secret.md"]
                 # Logic: os.path.relpath detects the ".." prefix. Fails closed (HARD CRASH) to prevent bypass.
                 if rel_to_root.startswith(".."):
-                    import sys
-
-                    print(
-                        f"CRITICAL: Target '{target}' is outside the repository boundary. Execution blocked to prevent validation bypass.",
-                        file=sys.stderr,
+                    raise ValueError(
+                        f"Target '{target}' is outside the repository boundary. Execution blocked to prevent validation bypass."
                     )
-                    sys.exit(1)
 
                 # CASE 2 & 5: Specific Internal Directory (Valid vs Unauthorized)
                 # Input: target_dirs = ["00-governance/designs"] (Valid) or ["docs/api"] (Unauthorized)
@@ -66,27 +81,19 @@ def gather_markdown_files(target_dirs, repo_root=None, allowed_root_dirs=None):
                             is_allowed = True
                             break
                     if not is_allowed:
-                        import sys
-
-                        print(
-                            f"CRITICAL: Target '{target}' is not in allowed artifact directories. Execution blocked to prevent validation bypass.",
-                            file=sys.stderr,
+                        raise ValueError(
+                            f"Target '{target}' is not in allowed artifact directories. Execution blocked to prevent validation bypass."
                         )
-                        sys.exit(1)
             # CASE 4: Cross-Drive Traversal (Windows Specific)
             # Input: target_dirs = ["C:/malicious.md"], repo_root = "D:/repo"
             # Logic: os.path.relpath throws ValueError because C: and D: do not intersect. Fails closed.
             except ValueError:
-                import sys
-
-                print(
-                    f"CRITICAL: Target '{target}' is on a different drive than the repository. Execution blocked to prevent validation bypass.",
-                    file=sys.stderr,
+                raise ValueError(
+                    f"Target '{target}' is on a different drive than the repository. Execution blocked to prevent validation bypass."
                 )
-                sys.exit(1)
 
         if os.path.isfile(target):
-            if target.lower().endswith(".md"):
+            if target.lower().endswith(".md") and not _is_ignored(target):
                 files_to_lint.append(target)
         else:
             for root, dirs, files in os.walk(target):
@@ -123,7 +130,9 @@ def gather_markdown_files(target_dirs, repo_root=None, allowed_root_dirs=None):
 
                 for file in files:
                     if file.lower().endswith(".md"):
-                        files_to_lint.append(os.path.join(root, file))
+                        fpath = os.path.join(root, file)
+                        if not _is_ignored(fpath):
+                            files_to_lint.append(fpath)
 
     # Deduplicate file paths while preserving order (to keep determinism).
     # This prevents scanning the exact same file twice if `target_dirs` contains overlapping directories.
@@ -138,11 +147,17 @@ def gather_markdown_files(target_dirs, repo_root=None, allowed_root_dirs=None):
     return unique_files
 
 
-def build_metadata_registry(target_dirs, repo_root=None, allowed_root_dirs=None):
+def build_metadata_registry(
+    target_dirs,
+    repo_root=None,
+    allowed_root_dirs=None,
+    ignored_files_lower=None,
+    ignored_patterns=None,
+):
     """
     Builds a central registry of architecture documents by parsing YAML frontmatter. Enforces the 
     SSOT (Single Source of Truth) invariant by detecting duplicate IDs.
-    **Note**: This phase strictly GATHERS data by calling `gather_markdown_files`. We then call 
+    **Note**: This phase strictly GATHERS data by calling `gather_markdown_paths`. We then call 
     `parse_frontmatter` but intentionally IGNORE any parsing errors (e.g., missing `doc_meta` or 
     invalid YAML). This is because this phase is NOT for structural validation, its sole purpose 
     is to build a registry to detect duplicate IDs. All other metadata validation is delegated to 
@@ -159,8 +174,7 @@ def build_metadata_registry(target_dirs, repo_root=None, allowed_root_dirs=None)
             - duplicates (dict): Maps duplicated `doc_id` to conflicting file paths.
 
     Raises:
-        SystemExit: Inherited from `gather_markdown_files` if path traversal (e.g., `../`) or 
-        unauthorized directories are detected.
+        ValueError: If `gather_markdown_paths` detects path traversal or unauthorized boundaries.
     </pre>
     """
     if isinstance(target_dirs, str):
@@ -171,7 +185,17 @@ def build_metadata_registry(target_dirs, repo_root=None, allowed_root_dirs=None)
     first_seen_path = {}
     duplicates = {}
 
-    files_to_lint = gather_markdown_files(target_dirs, repo_root, allowed_root_dirs)
+    try:
+        files_to_lint = gather_markdown_paths(
+            target_dirs,
+            repo_root,
+            allowed_root_dirs,
+            ignored_files_lower=ignored_files_lower,
+            ignored_patterns=ignored_patterns,
+        )
+    except ValueError as e:
+        # Explicitly forward the exception to the caller (e.g., cli.py)
+        raise ValueError(str(e))
 
     for path in files_to_lint:
         norm_path = path.replace("\\", "/")

@@ -4,7 +4,8 @@ doc_meta:
   title: ADR-GLB-001 Enterprise Adoption of Modular Monolith Architecture
   adr_type: foundational
   status: accepted
-  created: 2026-05-01
+  created: 2026-01-01
+  created_date: 2026-01-01
   created_by: Enterprise Architect
 ---
 

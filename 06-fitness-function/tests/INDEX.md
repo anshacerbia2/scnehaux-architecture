@@ -22,6 +22,7 @@ This index documents the test suite utilities and fixtures.
 | :--- | :--- |
 | **test_dependency_scanner_no_filepath** | *(No docstring provided)* |
 | **test_audit_circular_dependencies** | *(No docstring provided)* |
+| **test_dependency_scanner_fallback_srd_text** | *(No docstring provided)* |
 
 ### `tests/engine/auditors/test_git_auditor.py`
 
@@ -38,7 +39,7 @@ This index documents the test suite utilities and fixtures.
 | **test_audit_traceability_graph_cycle_detected** | *(No docstring provided)* |
 | **test_audit_traceability_graph_self_reference** | *(No docstring provided)* |
 | **test_audit_traceability_graph_acyclic_clean** | *(No docstring provided)* |
-| **test_audit_traceability_graph_ignores_non_dict_meta** | *(No docstring provided)* |
+| **test_audit_hierarchy_and_orphans_non_dict** | *(No docstring provided)* |
 
 ### `tests/engine/auditors/test_waiver_auditor.py`
 
@@ -51,7 +52,9 @@ This index documents the test suite utilities and fixtures.
 | Function | Description |
 | :--- | :--- |
 | **test_load_json_schema_file_success** | Validates that a valid JSON schema file is successfully parsed.<br>Mocks the file system read operation to return a predefined JSON structure. |
-| **test_load_json_schema_file_not_found** | Validates the Fail-Closed security behavior when a schema file is missing.<br>Ensures that a FileNotFoundError triggers a hard system crash (SystemExit)<br>and logs a critical error message. |
+| **test_load_json_schema_file_not_found** | Validates the behavior when a schema file is missing.<br>Ensures that a FileNotFoundError is properly raised. |
+| **test_validate_severity_schema_unknown_rule** | *(No docstring provided)* |
+| **test_validate_blocking_severities_missing_and_unknown** | *(No docstring provided)* |
 
 ### `tests/engine/fs/test_crawler.py`
 
@@ -59,11 +62,12 @@ This index documents the test suite utilities and fixtures.
 | :--- | :--- |
 | **test_build_metadata_registry_basic** | Validates the basic metadata extraction flow from Markdown files.<br>Ensures that YAML frontmatter is parsed correctly to build a registry,<br>and explicitly verifies that exclusions like 'node_modules' are enforced. |
 | **test_duplicate_id_detection** | Validates the Single Source of Truth (SSOT) invariant mechanism.<br>Ensures that if multiple Markdown files declare the same architecture ID,<br>they are correctly flagged and captured in the duplicates registry. |
-| **test_gather_markdown_files_valueerror_relpath** | Validates the security mechanism handling cross-drive path traversals.<br>Ensures that when os.path.relpath throws a ValueError due to mismatched drives<br>(e.g., on Windows), the system performs a Fail-Closed hard crash (SystemExit). |
-| **test_gather_markdown_files_target_str** | Validates the type coercion mechanism for the target_dirs argument.<br>Ensures that passing a single string path is correctly converted into a list<br>before path evaluation continues. |
-| **test_gather_markdown_files_skipped_targets** | Validates strict boundary enforcement against unauthorized internal directories.<br>Ensures that targets not explicitly present in the allowed_root_dirs list<br>trigger a Fail-Closed hard crash (SystemExit). |
-| **test_gather_markdown_files_outside_repo** | Validates boundary enforcement against external path traversal attacks.<br>Ensures that targets located outside the designated repo_root boundary<br>(e.g., ../) trigger a Fail-Closed hard crash (SystemExit). |
+| **test_gather_markdown_paths_valueerror_relpath** | Validates the security mechanism handling cross-drive path traversals.<br>Ensures that when os.path.relpath throws a ValueError due to mismatched drives<br>(e.g., on Windows), the system performs a Fail-Closed hard crash (ValueError). |
+| **test_gather_markdown_paths_target_str** | Validates the type coercion mechanism for the target_dirs argument.<br>Ensures that passing a single string path is correctly converted into a list<br>before path evaluation continues. |
+| **test_gather_markdown_paths_skipped_targets** | Validates strict boundary enforcement against unauthorized internal directories.<br>Ensures that targets not explicitly present in the allowed_root_dirs list<br>trigger a Fail-Closed hard crash (ValueError). |
+| **test_gather_markdown_paths_outside_repo** | Validates boundary enforcement against external path traversal attacks.<br>Ensures that targets located outside the designated repo_root boundary<br>(e.g., ../) trigger a Fail-Closed hard crash (ValueError). |
 | **test_crawler_handles_exception_during_read** | Validates graceful error handling during file read operations.<br>Ensures that if a PermissionError occurs while extracting metadata,<br>it safely bypasses the unreadable file without crashing the crawler. |
+| **test_gather_markdown_paths_unallowed_directory_in_tree** | *(No docstring provided)* |
 
 ### `tests/engine/parsing/test_markdown_ast.py`
 
@@ -88,6 +92,8 @@ This index documents the test suite utilities and fixtures.
 | **test_extract_sections_normalized_numbered_headings** | Cover extract_sections_normalized with numbered section headings (regex strip). |
 | **test_extract_sections_normalized_empty** | Cover extract_sections_normalized with no h2 headings. |
 | **test_extract_section_contents_close_map_none** | Exercising the fallback branch (line 61/64) when heading_close has no map. |
+| **test_extract_links_tuple_attrs** | *(No docstring provided)* |
+| **test_markdown_ast_walker_branches** | *(No docstring provided)* |
 
 ### `tests/engine/test_cli.py`
 
@@ -98,9 +104,9 @@ This index documents the test suite utilities and fixtures.
 | **_global_rules** | *(No docstring provided)* |
 | **test_print_errors** | *(No docstring provided)* |
 | **test_print_errors_json_format** | JSON format returns without printing, preserving error data. |
-| **test_lint_file_draft_skip** | A fresh draft (within max_draft_age_days) should be skipped, not fail. |
+| **test_lint_file_draft_skip** | A draft within max_draft_age_days must skip structural checks and yield INFO. |
 | **test_lint_file_draft_expired** | A draft older than max_draft_age_days must produce a blocking ERROR. |
-| **test_lint_file_draft_missing_last_reviewed** | A draft without last_reviewed must produce a blocking ERROR. |
+| **test_lint_file_draft_missing_created_date** | A draft without created_date must produce a blocking ERROR. |
 | **test_lint_file_unknown_doc_type** | File with an unrecognized ID prefix must produce a blocking ERROR. |
 | **test_lint_file_missing_frontmatter** | File without YAML frontmatter must produce a blocking ERROR. |
 | **test_lint_file_read_error** | Non-existent file must produce a blocking ERROR (not crash). |
@@ -120,7 +126,6 @@ This index documents the test suite utilities and fixtures.
 | **test_main_with_file_target** | *(No docstring provided)* |
 | **test_lint_file_with_disables_and_warnings** | *(No docstring provided)* |
 | **test_tech_radar_failure** | *(No docstring provided)* |
-| **test_lint_file_valueerror_relpath** | Test when os.path.relpath raises ValueError in lint_file. |
 | **test_tech_radar_yaml_parse_error** | Test tech radar parsing exception. |
 | **test_tech_radar_validation_error_json** | Test tech radar jsonschema error in JSON mode. |
 | **test_main_filters** | Test Filter 2 (README) and Filter 3 (.copy.md). |
@@ -137,6 +142,8 @@ This index documents the test suite utilities and fixtures.
 | **test_main_missing_global_config** | *(No docstring provided)* |
 | **test_main_missing_blocking_severities** | *(No docstring provided)* |
 | **test_main_invalid_severity_schema** | *(No docstring provided)* |
+| **test_main_break_glass** | *(No docstring provided)* |
+| **test_main_json_and_sarif_format** | *(No docstring provided)* |
 
 ### `tests/engine/validators/domains/test_adr_validator.py`
 
@@ -149,7 +156,6 @@ This index documents the test suite utilities and fixtures.
 
 | Function | Description |
 | :--- | :--- |
-| **_global_rules** | *(No docstring provided)* |
 | **test_missing_doc_meta_for_all** | *(No docstring provided)* |
 
 ### `tests/engine/validators/domains/test_ead_validator.py`
@@ -176,6 +182,7 @@ This index documents the test suite utilities and fixtures.
 | **test_pad_invalid_fulfilled_by** | *(No docstring provided)* |
 | **test_pad_bidirectional_traceability_fail** | *(No docstring provided)* |
 | **test_pad_bidirectional_traceability_pass** | *(No docstring provided)* |
+| **test_pad_empty_fulfilled_by_and_missing_ead** | *(No docstring provided)* |
 
 ### `tests/engine/validators/domains/test_sad_validator.py`
 
@@ -243,7 +250,10 @@ This index documents the test suite utilities and fixtures.
 | **test_review_age_no_meta** | *(No docstring provided)* |
 | **test_validate_cross_references** | *(No docstring provided)* |
 | **test_cross_references_no_meta** | *(No docstring provided)* |
-| **test_validate_exempt_status** | *(No docstring provided)* |
+| **test_validate_exempt_age** | *(No docstring provided)* |
+| **test_validate_exempt_age_missing_config** | *(No docstring provided)* |
+| **test_validate_technologies_whitelist** | *(No docstring provided)* |
+| **test_validate_technologies_whitelist_missing_tech_radar** | *(No docstring provided)* |
 
 ### `tests/engine/validators/test_registry.py`
 
@@ -270,5 +280,7 @@ This index documents the test suite utilities and fixtures.
 | **test_nfr_taxonomy_unstructured_section** | *(No docstring provided)* |
 | **test_validate_internal_links** | *(No docstring provided)* |
 | **test_validate_inline_references** | *(No docstring provided)* |
+| **test_validate_internal_links_empty_file_part** | *(No docstring provided)* |
+| **test_validate_inline_references_self_reference** | *(No docstring provided)* |
 
 <!-- AUTO-GENERATED-FUNCTIONS:END -->

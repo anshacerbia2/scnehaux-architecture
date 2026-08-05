@@ -15,6 +15,13 @@ class GDCValidator(BaseValidator):
         - It strictly enforces the presence and sequential order of these subsections
           nested under their respective parent headings to ensure structural consistency
           across all domain templates (SAD, PAD, etc.).
+
+        <pre>Args:
+            None
+
+        Returns:
+            None
+        </pre>
         """
         # @flow-domain: StartGDC((Start GDC Validation)) --> CheckIsGuideline{"Is filename a guideline?"}
         if not self.doc_meta:

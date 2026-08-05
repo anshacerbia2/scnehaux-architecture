@@ -10,6 +10,13 @@ class EADValidator(BaseValidator):
 
         Currently, EADs serve as the top-level anchor for the architecture hierarchy.
         They have no type-specific rules beyond the global governance constraints.
+
+        <pre>Args:
+            None
+
+        Returns:
+            None
+        </pre>
         """
         # @flow-domain: StartEAD((Start EAD Validation)) --> NoOp["No type-specific rules"]
         pass

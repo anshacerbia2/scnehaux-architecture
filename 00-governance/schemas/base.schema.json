@@ -38,11 +38,20 @@
       "max_directory_depth": 3
     },
     "content_rules": {
-      "exempt_statuses": ["draft"],
-      "max_draft_age_days": {
-        "value": 30,
-        "error_message": "Document with status '{doc_status}' has an age of {age_days} days, exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."
-      },
+      "exempt_statuses": [
+        {
+          "status": "draft",
+          "depend_on": "created_date",
+          "max_age_days": 30,
+          "error_message": "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."
+        },
+        {
+          "status": "deprecated",
+          "depend_on": "last_updated",
+          "max_age_days": 180,
+          "error_message": "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be fully retired and deleted."
+        }
+      ],
       "max_review_age_days": {
         "value": 365,
         "error_message": "Document review age of {age_days} days exceeds limit of {limit} days."
@@ -79,7 +88,8 @@
         "corrupt_frontmatter": "CRITICAL",
         "unknown_document_type": "CRITICAL",
         "missing_validator": "CRITICAL",
-        "missing_domain_schema": "CRITICAL"
+        "missing_domain_schema": "CRITICAL",
+        "invalid_lint_disable": "ERROR"
       },
       "1. Topology & Identity Domain (Graph & Lineage)": {
         "circular_dependency": "CRITICAL",
@@ -146,8 +156,7 @@
         },
         "status": {
           "title": "Allowed Statuses",
-          "type": "string",
-          "enum": ["draft", "approved", "deprecated"]
+          "type": "string"
         },
         "classification": {
           "title": "Allowed Classifications",

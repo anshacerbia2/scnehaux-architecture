@@ -199,6 +199,51 @@ def generate_cli_flowchart():
     print(f"[OK] Injected CLI flowchart into {index_md}")
 
 
+def generate_lint_flowchart():
+    """
+    Scan engine/cli.py for special inline comments starting with `# @flow-lint:`
+    and compile them into a Mermaid flowchart injected into engine/INDEX.md.
+    """
+    cli_path = os.path.join(ENGINE_DIR, "cli.py")
+    index_md = os.path.join(ENGINE_DIR, "INDEX.md")
+
+    if not os.path.exists(cli_path) or not os.path.exists(index_md):
+        return
+
+    with open(cli_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    flow_lines = []
+    for line in content.split("\n"):
+        match = re.search(r"#\s*@flow-lint:\s*(.*)", line)
+        if match:
+            flow_lines.append(f"    {match.group(1).strip()}")
+
+    if not flow_lines:
+        return
+
+    theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
+    table_str = f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+
+    with open(index_md, "r", encoding="utf-8") as f:
+        md_content = f.read()
+
+    pattern = r"(<!-- AUTO-GENERATED-LINT-FLOW:START -->)(.*?)(<!-- AUTO-GENERATED-LINT-FLOW:END -->)"
+    if not re.search(pattern, md_content, flags=re.DOTALL):
+        print(f"[SKIP] Lint flowchart -> No placeholder found in {index_md}")
+        return
+
+    def replacer(m):
+        return f"{m.group(1)}\n\n{table_str}\n\n{m.group(3)}"
+
+    new_content = re.sub(pattern, replacer, md_content, flags=re.DOTALL)
+
+    with open(index_md, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+    print(f"[OK] Injected Lint flowchart into {index_md}")
+
+
 def generate_validator_flowchart():
     """
     Scan engine/validators/base.py for special inline comments starting with `# @flow-validator:`
@@ -225,6 +270,10 @@ def generate_validator_flowchart():
 
     if not flow_lines:
         return
+
+    # Style the subgraphs with a cream background
+    flow_lines.append("    style SchemaPhase fill:#fffdd0,stroke:#d2b48c,stroke-width:2px,color:#333,stroke-dasharray: 5 5")
+    flow_lines.append("    style GlobalRulesPhase fill:#fffdd0,stroke:#d2b48c,stroke-width:2px,color:#333,stroke-dasharray: 5 5")
 
     theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
     table_str = f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
@@ -322,6 +371,7 @@ def main():
     scripts, tests) and updates their respective INDEX.md files.
     """
     generate_cli_flowchart()
+    generate_lint_flowchart()
     generate_validator_flowchart()
     generate_domain_flowcharts()
 

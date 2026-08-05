@@ -156,8 +156,8 @@ def test_compliance_placement_filename_match():
     assert len(v_valid.errors) == 0
 
     v_invalid = make_validator(
-        file_path="/home/repo/04-system/scnehaux-ui-platform/design-tokens.sad.md",
-        filename="design-tokens.sad.md",
+        file_path="/home/repo/04-system/scnehaux-ui-platform/design-tokens.md",
+        filename="design-tokens.md",
         doc_meta={"id": "SAD-003"},
     )
     v_invalid.doc_type_name = "SAD"

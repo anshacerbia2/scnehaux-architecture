@@ -12,6 +12,13 @@ class STDValidator(BaseValidator):
         - Checks the `status` field. If a standard is marked as 'hold' (meaning it is slated
           for retirement or deprecation), an `operational_stability_violation` is raised to
           warn implementers against adopting it for new work.
+
+        <pre>Args:
+            None
+
+        Returns:
+            None
+        </pre>
         """
         # @flow-domain: StartSTD((Start STD Validation)) --> CheckStatus{"Is status 'hold'?"}
         if not self.doc_meta:

@@ -16,7 +16,7 @@ def test_validate_review_age():
     )
     _validate_review_age(v)
     assert len(v.errors) == 1
-    assert v.errors[0][0] == "ERROR"
+    assert v.errors[0][0] == "WARNING"
 
 
 def test_review_age_no_meta():
@@ -59,10 +59,14 @@ def test_cross_references_no_meta():
 def test_validate_exempt_age():
     global_rules = {
         "content_rules": {
-            "max_draft_age_days": {
-                "value": 30,
-                "error_message": "Document with status '{doc_status}' has an age of {age_days} days, exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."
-            }
+            "exempt_statuses": [
+                {
+                    "status": "draft",
+                    "depend_on": "created_date",
+                    "max_age_days": 30,
+                    "error_message": "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days."
+                }
+            ]
         },
         "severity_levels": {SeverityRule.DRAFT_STATUS_VIOLATION: "WARNING"}
     }
@@ -82,3 +86,75 @@ def test_validate_exempt_age():
     fresh_date = (datetime.date.today() - datetime.timedelta(days=10)).isoformat()
     errs3 = validate_exempt_age({"created_date": fresh_date}, "draft", "WARNING", global_rules)
     assert len(errs3) == 0
+
+
+def test_validate_exempt_age_missing_config():
+    global_rules = {"content_rules": {}}
+    fresh_date = datetime.date.today().isoformat()
+    # Missing config gracefully returns empty list (no validation performed)
+    errs = validate_exempt_age({"created_date": fresh_date}, "draft", "WARNING", global_rules)
+    assert len(errs) == 0
+
+
+def test_validate_technologies_whitelist():
+    rules = {
+        "severity_levels": {
+            "technology_hold_violation": "CRITICAL",
+            "unapproved_technology": "ERROR",
+        }
+    }
+    
+    # 1. No doc_meta / no technologies
+    v1 = make_validator(doc_meta={}, rules=rules)
+    v1.doc_type_name = "SAD"
+    _validate_technologies_whitelist(v1)
+    assert len(v1.errors) == 0
+
+    # 2. Technologies whitelist check with tech on hold and unapproved tech
+    v2 = make_validator(
+        doc_meta={
+            "technologies": [
+                {"name": "UnknownTechName123"},
+                "invalid_non_dict_tech",
+            ]
+        },
+        rules=rules,
+    )
+    v2.doc_type_name = "SAD"
+    _validate_technologies_whitelist(v2)
+    assert len(v2.errors) >= 1
+    assert any("not defined in the Enterprise Tech Radar" in e[1] for e in v2.errors)
+
+
+    # 3. Technologies whitelist check with 'base' property
+    v3 = make_validator(
+        doc_meta={
+            "technologies": [
+                {"name": "postgresql", "base": "jquery"}  # jquery is on HOLD in tech-radar
+            ]
+        },
+        rules=rules,
+    )
+    v3.doc_type_name = "SAD"
+    _validate_technologies_whitelist(v3)
+    assert any("technology on HOLD" in e[1] for e in v3.errors)
+
+
+def test_validate_technologies_whitelist_missing_tech_radar(monkeypatch, tmp_path):
+    rules = {
+        "severity_levels": {
+            "technology_hold_violation": "CRITICAL",
+            "unapproved_technology": "ERROR",
+        }
+    }
+    v = make_validator(doc_meta={"technologies": [{"name": "postgresql"}]}, rules=rules)
+    v.doc_type_name = "SAD"
+
+    # Mock os.path.exists to return False for tech_radar_path (line 140)
+    monkeypatch.setattr("os.path.exists", lambda path: False)
+    _validate_technologies_whitelist(v)
+    assert len(v.errors) == 0
+
+
+
+

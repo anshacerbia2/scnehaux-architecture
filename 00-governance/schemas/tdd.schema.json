@@ -46,6 +46,11 @@
                 "parent_sad"
               ],
               "properties": {
+                "status": {
+                  "title": "Allowed Statuses",
+                  "type": "string",
+                  "enum": ["draft", "approved", "deprecated"]
+                },
                 "parent_sad": {
                   "title": "Parent SAD",
                   "type": ["string", "array"],

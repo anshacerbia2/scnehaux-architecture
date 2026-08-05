@@ -236,13 +236,32 @@ def extract_sections_normalized(content: str) -> dict[str, str]:
 
 def strip_code_fences(content: str) -> str:
     """
-    Remove fenced code blocks (``` and ~~~) so that directives or examples
-    embedded inside documentation (e.g. an illustrative `<!-- lint_disable: ... -->`)
-    are NOT parsed as live directives by the engine.
+    Remove fenced and indented code blocks safely using AST parsing.
+    This replaces the blocks with an equivalent number of newlines to preserve line numbering,
+    avoiding regex false positives with nested backticks, indented blocks, or unclosed fences.
+    
+    Args:
+        content (str): The raw Markdown text to be processed.
+        
+    Returns:
+        str: The Markdown text with all code blocks replaced by blank lines.
     """
-    no_fence = re.sub(r"```.*?```", "", content, flags=re.DOTALL)
-    no_fence = re.sub(r"~~~.*?~~~", "", no_fence, flags=re.DOTALL)
-    return no_fence
+    md = MarkdownIt()
+    tokens = md.parse(content)
+    
+    lines = content.split('\n')
+    for t in tokens:
+        # "fence"      = code block using backticks (```) or tildes (~~~)
+        # "code_block" = code block using 4-space indentation
+        if t.type in ("fence", "code_block"):
+            if t.map:
+                start_line, end_line = t.map
+                # Blank out the lines to preserve line numbers underneath
+                for i in range(start_line, end_line):
+                    if i < len(lines):
+                        lines[i] = ""
+                        
+    return "\n".join(lines)
 
 
 DOC_ID_REFERENCE_PATTERN = re.compile(

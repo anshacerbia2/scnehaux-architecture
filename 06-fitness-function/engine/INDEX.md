@@ -23,7 +23,7 @@ This index documents the internal functions and classes of the Fitness Function 
 | Function | Description |
 | :--- | :--- |
 | **_resolve_base_ref** | Resolve the git ref the working tree is compared against for the immutability<br>audit. In CI (pull request) the baseline is the target branch, NOT HEAD:<br>comparing against HEAD is a no-op there because the checked-out tree already<br>equals HEAD. We therefore prefer the integration branch and fall back to HEAD<br>for local pre-commit use.<br><br>Priority: $SCNEHAUX_BASE_REF (injected by CI) -> origin/main -> origin/master<br>-> main -> master -> HEAD. |
-| **audit_version_bump** | Enforce Git-Aware Version Bump Mandate (GDC-000 Section 2.5).<br>If an 'approved' artifact is modified relative to the integration branch, its<br>version must be incremented. |
+| **audit_version_bump** | Enforce Git-Aware Version Bump Mandate (GDC-000 Section 2.5).<br>Disabled per project requirements (all docs stay at 1.0.0 and created_date 2026-01-01). |
 
 ### `engine/auditors/graph_auditor.py`
 
@@ -47,7 +47,7 @@ This index documents the internal functions and classes of the Fitness Function 
 | Function | Description |
 | :--- | :--- |
 | **_validate_execution_root** | Ensure the linter is executed strictly from a repository root.<br>Zero-magic rule: If the CWD does not contain a repository marker, crash immediately. |
-| **_disable_info** | Capture the state of any `lint_disable` governance directives from the validator.<br><br>This includes rules that the author successfully disabled (along with their justification)<br>and CRITICAL rules that the author attempted to disable but were rejected by the engine.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- validator (Any): The instantiated validator object containing tracked disable directives.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;dict: A dictionary containing 'disabled' (mapping rule -> reason) and<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'rejected' (set of rules that could not be silenced).<br></pre> |
+| **_disable_info** | Capture the state of any `lint_disable` governance directives from the validator.<br><br>This includes rules that the author successfully disabled (along with their justification)<br>and CRITICAL rules that the author attempted to disable but were rejected by the engine.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- validator (Any): The instantiated validator object containing tracked disable directives.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;dict: A dictionary containing 'disabled' (a list of tuples: (rule_id, reason, start_line, end_line))<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and 'rejected' (set of rules that could not be silenced).<br></pre> |
 | **lint_file** | Orchestrate validation for a single markdown file.<br>This executes the core lifecycle: Read -> Parse Metadata -> Identify Type -> Validate.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- file_path (str): The path to the markdown file being linted.<br>&nbsp;&nbsp;&nbsp;&nbsp;- global_rules (dict): Global governance schema containing severity configurations.<br>&nbsp;&nbsp;&nbsp;&nbsp;- severity_levels (dict): Pre-extracted and validated severity mappings.<br>&nbsp;&nbsp;&nbsp;&nbsp;- blocking_severities (tuple): Pre-extracted, immutable tuple of blocking severities.<br>&nbsp;&nbsp;&nbsp;&nbsp;- all_doc_ids (set): A set of all known document IDs across the repository.<br>&nbsp;&nbsp;&nbsp;&nbsp;- all_doc_metadata (dict): Metadata mapping for cross-reference checks.<br>&nbsp;&nbsp;&nbsp;&nbsp;- output_format (str, optional): Desired output format (text, json, sarif). Defaults to "text".<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;tuple: (errors, is_clean, has_blocking, disable_info)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- errors (list): Found violations.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- is_clean (bool): True if no errors were found.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- has_blocking (bool): True if blocking violations were detected.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- disable_info (dict): Captured `lint_disable` directives.<br></pre> |
 | **main** | Main entrypoint for the Linter engine.<br><br>Execution phases:<br>1. Parse CLI arguments and configure logging.<br>2. Load global governance schemas (`base.schema.json`).<br>3. Perform a fast pre-scan of the repository to build a global cross-reference registry<br>&nbsp;&nbsp;&nbsp;and detect ID duplicates.<br>4. Traverse the file tree and invoke `lint_file` for each valid markdown document.<br>5. Execute repository-level audits (e.g., orphan detection, circular dependency checks).<br>6. Aggregate results into the requested format (text, json, sarif) and exit with code 1<br>&nbsp;&nbsp;&nbsp;if any CRITICAL or ERROR violations are found, else exit 0.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None (Arguments are parsed directly from sys.argv).<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;SystemExit: Code 1 on blocking violations or fatal runtime errors; Code 0 otherwise.<br></pre> |
 
@@ -55,16 +55,17 @@ This index documents the internal functions and classes of the Fitness Function 
 
 | Function | Description |
 | :--- | :--- |
+| **load_json_schema_file** | Loads and parses a JSON schema file for the validation engine.<br>Enforces a hard crash (exit code 1) if the mandatory schema file is missing.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- schema_path (str): File path to the JSON schema.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;dict: Parsed JSON schema.<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;FileNotFoundError: If the schema file is not found.<br></pre> |
+| **validate_global_config_structure** | Validates that the global governance rules configuration contains all required nested keys.<br>Prevents silent failures when schema keys are accidentally deleted.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- global_rules (dict): The x-global-config dictionary from base.schema.json.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;RuntimeError: If a required top-level or sub-level configuration key is missing.<br></pre> |
 | **validate_severity_schema** | Validates that the provided schema severity levels comprehensively map<br>every SeverityRule defined in the system. Ensures no configuration drift.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- schema_levels (dict): Dictionary mapping rule strings to severity strings.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;RuntimeError: If a rule is missing or unrecognized.<br></pre> |
 | **validate_blocking_severities** | Validates that the provided schema blocking severities comprehensively map<br>every BlockingSeverity defined in the system. Ensures no configuration drift.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- schema_blocking (list): List of blocking severity strings from base.schema.json.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;RuntimeError: If a severity is missing or unrecognized.<br></pre> |
-| **load_json_schema_file** | Loads and parses a JSON schema file for the validation engine.<br>Enforces a hard crash (exit code 1) if the mandatory schema file is missing.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- schema_path (str): File path to the JSON schema.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;dict: Parsed JSON schema.<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;SystemExit: If the schema file is not found (prevents validation bypass).<br></pre> |
 
 ### `engine/fs/crawler.py`
 
 | Function | Description |
 | :--- | :--- |
-| **gather_markdown_files** | Scans and deduplicates Markdown file paths from target directories.<br>Deduplication here applies strictly to file paths (to handle overlapping input directories), <br>NOT to document IDs. Enforces Fail-Closed security by strictly checking `allowed_root_dirs` <br>and bypassing deeply nested exclusions. If `repo_root` is provided, it guarantees that only <br>directories explicitly within the repository boundary are scanned; any external paths will <br>trigger a hard crash.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- target_dirs (str \| list): Target paths/files to scan.<br>&nbsp;&nbsp;&nbsp;&nbsp;- repo_root (str, optional): Repository root for boundary validation.<br>&nbsp;&nbsp;&nbsp;&nbsp;- allowed_root_dirs (set, optional): Whitelisted top-level directories. External paths <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger a hard crash.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list: Valid Markdown file paths.<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;SystemExit: If path traversal (e.g., `../`) or unauthorized directories are detected.<br></pre> |
-| **build_metadata_registry** | Builds a central registry of architecture documents by parsing YAML frontmatter. Enforces the <br>SSOT (Single Source of Truth) invariant by detecting duplicate IDs.<br>**Note**: This phase strictly GATHERS data by calling `gather_markdown_files`. We then call <br>`parse_frontmatter` but intentionally IGNORE any parsing errors (e.g., missing `doc_meta` or <br>invalid YAML). This is because this phase is NOT for structural validation, its sole purpose <br>is to build a registry to detect duplicate IDs. All other metadata validation is delegated to <br>the main engine.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- target_dirs (str \| list): Target directories to scan.<br>&nbsp;&nbsp;&nbsp;&nbsp;- allowed_root_dirs (set, optional): Whitelisted root directories for boundary enforcement.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;tuple: (unique_ids, registry, duplicates)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- unique_ids (set): Discovered document IDs.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- registry (dict): Maps `doc_id` to its metadata (includes `_filepath`).<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- duplicates (dict): Maps duplicated `doc_id` to conflicting file paths.<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;SystemExit: Inherited from `gather_markdown_files` if path traversal (e.g., `../`) or <br>&nbsp;&nbsp;&nbsp;&nbsp;unauthorized directories are detected.<br></pre> |
+| **gather_markdown_paths** | Scans and deduplicates Markdown file paths from target directories.<br>Deduplication here applies strictly to file paths (to handle overlapping input directories), <br>NOT to document IDs. Enforces Fail-Closed security by strictly checking `allowed_root_dirs` <br>and bypassing deeply nested exclusions. If `repo_root` is provided, it guarantees that only <br>directories explicitly within the repository boundary are scanned; any external paths will <br>trigger a hard crash.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- target_dirs (str \| list): Target paths/files to scan.<br>&nbsp;&nbsp;&nbsp;&nbsp;- repo_root (str, optional): Repository root for boundary validation.<br>&nbsp;&nbsp;&nbsp;&nbsp;- allowed_root_dirs (set, optional): Whitelisted top-level directories. External paths <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;trigger a hard crash.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list: Valid Markdown file paths.<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;SystemExit: If path traversal (e.g., `../`) or unauthorized directories are detected.<br></pre> |
+| **build_metadata_registry** | Builds a central registry of architecture documents by parsing YAML frontmatter. Enforces the <br>SSOT (Single Source of Truth) invariant by detecting duplicate IDs.<br>**Note**: This phase strictly GATHERS data by calling `gather_markdown_paths`. We then call <br>`parse_frontmatter` but intentionally IGNORE any parsing errors (e.g., missing `doc_meta` or <br>invalid YAML). This is because this phase is NOT for structural validation, its sole purpose <br>is to build a registry to detect duplicate IDs. All other metadata validation is delegated to <br>the main engine.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- target_dirs (str \| list): Target directories to scan.<br>&nbsp;&nbsp;&nbsp;&nbsp;- allowed_root_dirs (set, optional): Whitelisted root directories for boundary enforcement.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;tuple: (unique_ids, registry, duplicates)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- unique_ids (set): Discovered document IDs.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- registry (dict): Maps `doc_id` to its metadata (includes `_filepath`).<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- duplicates (dict): Maps duplicated `doc_id` to conflicting file paths.<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;ValueError: If `gather_markdown_paths` detects path traversal or unauthorized boundaries.<br></pre> |
 
 ### `engine/parsing/markdown_ast.py`
 
@@ -77,7 +78,7 @@ This index documents the internal functions and classes of the Fitness Function 
 | **extract_links** | Traverse the Markdown AST to find and extract all hyperlink targets (href values).<br>Used to validate internal repository links and prevent link rot. |
 | **normalize_section** | Normalize section name for comparison by stripping numbering. |
 | **extract_sections_normalized** | Return {section_title: section_content} for H2 sections, with any leading<br>numbering stripped and the ORIGINAL case preserved<br>(e.g. '## 1. Context & Scope' -> key 'Context & Scope').<br><br>This is the canonical source of section identity for JSON-Schema validation:<br>schemas declare required/recommended sections by their Title-Case, unnumbered<br>name, and `content_rules` run `pattern` checks against the section's text.<br>(`extract_section_contents` lowercases the key and keeps the numeric prefix, so<br>it can neither satisfy a `required` match nor feed content patterns.) |
-| **strip_code_fences** | Remove fenced code blocks (``` and ~~~) so that directives or examples<br>embedded inside documentation (e.g. an illustrative `<!-- lint_disable: ... -->`)<br>are NOT parsed as live directives by the engine. |
+| **strip_code_fences** | Remove fenced and indented code blocks safely using AST parsing.<br>This replaces the blocks with an equivalent number of newlines to preserve line numbering,<br>avoiding regex false positives with nested backticks, indented blocks, or unclosed fences.<br><br>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;content (str): The raw Markdown text to be processed.<br>&nbsp;&nbsp;&nbsp;&nbsp;<br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;str: The Markdown text with all code blocks replaced by blank lines. |
 | **extract_doc_id_references** | Extract architecture document IDs referenced in prose (e.g. '(**ADR-018**)').<br>Code fences and frontmatter are excluded via clean_content_for_length.<br>Returns a de-duplicated, order-preserving list. |
 
 ### `engine/reporting/reporter.py`
@@ -91,9 +92,12 @@ This index documents the internal functions and classes of the Fitness Function 
 
 | Function | Description |
 | :--- | :--- |
-| **_get_base_schema** | *(No docstring provided)* |
-| **BaseValidator.add_error** | Record a validation finding. Resolves the severity level from global governance rules.<br>If the rule is suppressed via a `lint_disable` directive, the finding is dropped UNLESS<br>its severity is CRITICAL, in which case the disable is rejected and the finding fires anyway. |
-| **BaseValidator.validate** | Execute the complete validation lifecycle for this document.<br><br>The lifecycle runs in three sequential phases:<br>1. JSON-Schema Validation: Strict structural and pattern checking based on the domain schema.<br>2. Global Rules Validation: Execution of governance rules applicable to all documents.<br>3. Domain-Specific Rules: Execution of custom rules defined in the specific subclass validator.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str]]: An aggregated list of (severity, message) error tuples. |
+| **_get_base_schema** | Load and cache the global base JSON schema for document validation.<br>Prevents redundant disk reads by storing the schema in memory upon first invocation.<br><br>Note on Error Handling:<br>We do not wrap this in try/except because `cli.py` already loaded and validated <br>this exact schema during its boot sequence. If an error occurs here, it means <br>the file was deleted or corrupted mid-execution. In that impossible state, <br>`load_json_schema_file` will correctly crash the program with a ValueError or FileNotFoundError.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;dict: The parsed JSON dictionary of the base schema.<br></pre> |
+| **BaseValidator._extract_rules_and_reason** | Parses the payload of a `lint_disable` tag to extract rule IDs and an optional reason.<br><br>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;directive_payload (str): The string inside the tag (e.g., "rule_a, rule_b (reason: waiver)").<br>&nbsp;&nbsp;&nbsp;&nbsp;<br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;tuple: A list of unique rule IDs and the extracted reason string (or None). |
+| **BaseValidator._close_all_active_blocks** | Drains all currently unclosed `_start` tags and commits them as finalized block coordinates.<br>This is triggered either when a `_end` tag is encountered, or at the very end of the file <br>(using `float('inf')` to keep the block open indefinitely).<br><br>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;closing_line_num (float): The line number where the block ends (or infinity).<br>&nbsp;&nbsp;&nbsp;&nbsp;unclosed_start_tags_by_rule (dict): A mapping of rule IDs to their pending (start_line, reason) tuples. |
+| **BaseValidator._parse_lint_directives** | Scans the document to extract all `lint_disable` coordinates into `self.block_disables`.<br><br>Architecture Mechanics:<br>1. Pre-strips code blocks (fenced and inline) to prevent false positives.<br>2. Sequential parsing ensures safe handling of `_start`, `_end`, and inline tags.<br>3. Redundant or nested `_start` tags are safely collapsed using a LIFO stack.<br>4. Unclosed `_start` tags implicitly extend to infinity (end of document). |
+| **BaseValidator.add_error** | Record a validation finding. Resolves the severity level from global governance rules.<br>If the rule is suppressed via a `lint_disable` directive (either block or inline), the finding is dropped UNLESS<br>its severity is CRITICAL, in which case the disable is rejected and the finding fires anyway.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- category (str): The rule category/ID triggering the error.<br>&nbsp;&nbsp;&nbsp;&nbsp;- message (str): The specific validation error message.<br>&nbsp;&nbsp;&nbsp;&nbsp;- line_num (int \| None, optional): The line number where the error occurred.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
+| **BaseValidator.validate** | Execute the complete validation lifecycle for this document.<br><br>The lifecycle runs in three sequential phases:<br>1. JSON-Schema Validation: Strict structural and pattern checking based on the domain schema.<br>2. Global Rules Validation: Execution of governance rules applicable to all documents.<br>3. Domain-Specific Rules: Execution of custom rules defined in the specific subclass validator.<br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str]]: An aggregated list of (severity, message) error tuples.<br></pre> |
 | **BaseValidator._validate_schema** | Execute JSON-Schema validation against the document's metadata block and section bodies.<br>Translates raw jsonschema exceptions into actionable, governance-aware error messages<br>(e.g., mapping pattern failures to missing keywords). |
 | **BaseValidator.validate_type_specific** | Override in subclass for doc-type-specific checks. |
 
@@ -101,43 +105,43 @@ This index documents the internal functions and classes of the Fitness Function 
 
 | Function | Description |
 | :--- | :--- |
-| **ADRValidator.validate_type_specific** | Execute rules specific to Architecture Decision Records (ADRs).<br><br>Enforces lifecycle rules for architecture exceptions:<br>- If the ADR type is 'exception' and status is 'accepted', it must have a valid `expiry_date`.<br>- If the `expiry_date` is in the past, an `exception_expired` error is raised to force a review. |
+| **ADRValidator.validate_type_specific** | Execute rules specific to Architecture Decision Records (ADRs).<br><br>Enforces lifecycle rules for architecture exceptions:<br>- If the ADR type is 'exception' and status is 'accepted', it must have a valid `expiry_date`.<br>- If the `expiry_date` is in the past, an `exception_expired` error is raised to force a review.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
 
 ### `engine/validators/domains/ead_validator.py`
 
 | Function | Description |
 | :--- | :--- |
-| **EADValidator.validate_type_specific** | Execute rules specific to Enterprise Architecture Documents (EAD).<br><br>Currently, EADs serve as the top-level anchor for the architecture hierarchy.<br>They have no type-specific rules beyond the global governance constraints. |
+| **EADValidator.validate_type_specific** | Execute rules specific to Enterprise Architecture Documents (EAD).<br><br>Currently, EADs serve as the top-level anchor for the architecture hierarchy.<br>They have no type-specific rules beyond the global governance constraints.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
 
 ### `engine/validators/domains/gdc_validator.py`
 
 | Function | Description |
 | :--- | :--- |
-| **GDCValidator.validate_type_specific** | Execute rules specific to Governance Documents (GDC).<br><br>Enforces meta-governance constraints for guideline artifacts:<br>- If the document is a guideline (e.g., *-guideline.md), it dynamically fetches<br>&nbsp;&nbsp;required downstream subsections from `base.schema.json`.<br>- It strictly enforces the presence and sequential order of these subsections<br>&nbsp;&nbsp;nested under their respective parent headings to ensure structural consistency<br>&nbsp;&nbsp;across all domain templates (SAD, PAD, etc.). |
+| **GDCValidator.validate_type_specific** | Execute rules specific to Governance Documents (GDC).<br><br>Enforces meta-governance constraints for guideline artifacts:<br>- If the document is a guideline (e.g., *-guideline.md), it dynamically fetches<br>&nbsp;&nbsp;required downstream subsections from `base.schema.json`.<br>- It strictly enforces the presence and sequential order of these subsections<br>&nbsp;&nbsp;nested under their respective parent headings to ensure structural consistency<br>&nbsp;&nbsp;across all domain templates (SAD, PAD, etc.).<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
 
 ### `engine/validators/domains/pad_validator.py`
 
 | Function | Description |
 | :--- | :--- |
-| **PADValidator.validate_type_specific** | Execute rules specific to Platform Architecture Documents (PAD).<br><br>Enforces bidirectional traceability and capability realization:<br>- Downward traceability: Validates the `fulfilled_by` field. If populated, it must reference valid SAD IDs.<br>&nbsp;&nbsp;Additionally checks that those SADs declare this PAD as their `parent_pad` (bidirectional link).<br>- Upward traceability: Validates the `realizes_capability` field. It is strictly mandatory and must point<br>&nbsp;&nbsp;to a valid EAD ID in the registry, ensuring the platform architecture maps back to business capabilities. |
+| **PADValidator.validate_type_specific** | Execute rules specific to Platform Architecture Documents (PAD).<br><br>Enforces bidirectional traceability and capability realization:<br>- Downward traceability: Validates the `fulfilled_by` field. If populated, it must reference valid SAD IDs.<br>&nbsp;&nbsp;Additionally checks that those SADs declare this PAD as their `parent_pad` (bidirectional link).<br>- Upward traceability: Validates the `realizes_capability` field. It is strictly mandatory and must point<br>&nbsp;&nbsp;to a valid EAD ID in the registry, ensuring the platform architecture maps back to business capabilities.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
 
 ### `engine/validators/domains/sad_validator.py`
 
 | Function | Description |
 | :--- | :--- |
-| **SADValidator.validate_type_specific** | Execute rules specific to System Architecture Documents (SAD).<br><br>Enforces upward traceability and bidirectional consistency:<br>- Validates the mandatory `parent_pad` field, ensuring the system maps to a recognized platform.<br>- Checks that the referenced PAD exists in the repository.<br>- Checks that the referenced PAD declares this SAD in its `fulfilled_by` array (bidirectional link). |
+| **SADValidator.validate_type_specific** | Execute rules specific to System Architecture Documents (SAD).<br><br>Enforces upward traceability and bidirectional consistency:<br>- Validates the mandatory `parent_pad` field, ensuring the system maps to a recognized platform.<br>- Checks that the referenced PAD exists in the repository.<br>- Checks that the referenced PAD declares this SAD in its `fulfilled_by` array (bidirectional link).<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
 
 ### `engine/validators/domains/std_validator.py`
 
 | Function | Description |
 | :--- | :--- |
-| **STDValidator.validate_type_specific** | Execute rules specific to Standard Documents (STD).<br><br>Enforces lifecycle constraints for enterprise standards:<br>- Checks the `status` field. If a standard is marked as 'hold' (meaning it is slated<br>&nbsp;&nbsp;for retirement or deprecation), an `operational_stability_violation` is raised to<br>&nbsp;&nbsp;warn implementers against adopting it for new work. |
+| **STDValidator.validate_type_specific** | Execute rules specific to Standard Documents (STD).<br><br>Enforces lifecycle constraints for enterprise standards:<br>- Checks the `status` field. If a standard is marked as 'hold' (meaning it is slated<br>&nbsp;&nbsp;for retirement or deprecation), an `operational_stability_violation` is raised to<br>&nbsp;&nbsp;warn implementers against adopting it for new work.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
 
 ### `engine/validators/domains/tdd_validator.py`
 
 | Function | Description |
 | :--- | :--- |
-| **TDDValidator.validate_type_specific** | Execute rules specific to Technical Design Documents (TDD).<br><br>Enforces upward traceability:<br>- Validates the mandatory `parent_sad` field, ensuring the technical design maps to a system architecture.<br>- Checks that the referenced SAD actually exists in the repository registry. |
+| **TDDValidator.validate_type_specific** | Execute rules specific to Technical Design Documents (TDD).<br><br>Enforces upward traceability:<br>- Validates the mandatory `parent_sad` field, ensuring the technical design maps to a system architecture.<br>- Checks that the referenced SAD actually exists in the repository registry.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
 
 ### `engine/validators/global_rules.py`
 
@@ -151,7 +155,7 @@ This index documents the internal functions and classes of the Fitness Function 
 
 | Function | Description |
 | :--- | :--- |
-| **validate_exempt_status** | Check if an exempt document (like a draft) has exceeded the maximum allowed age. |
+| **validate_exempt_age** | Check if an exempt document (like a draft) has exceeded the maximum allowed age.<br>This prevents documents from indefinitely evading governance while holding an exempt status.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- doc_meta (dict): Parsed frontmatter metadata of the document.<br>&nbsp;&nbsp;&nbsp;&nbsp;- doc_status (str): The normalized document status evaluated by the CLI orchestrator.<br>&nbsp;&nbsp;&nbsp;&nbsp;- violation_severity (str): The severity level to assign if a violation is found.<br>&nbsp;&nbsp;&nbsp;&nbsp;- global_rules (dict): The global governance rules containing 'max_draft_age_days'.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str]]: A list of (severity, error_message) tuples. Returns an empty list if no violations are found.<br><br>Raises:<br>&nbsp;&nbsp;&nbsp;&nbsp;None: Does not raise exceptions; missing or unparseable dates are safely handled and appended as errors.<br></pre> |
 | **_validate_review_age** | Check if a document's last review date exceeds the maximum allowed age, triggering a review requirement. |
 | **_validate_cross_references** | Verify that any architecture IDs referenced in the document metadata (e.g., parent_pad, governed_by) actually exist in the registry. |
 | **_validate_technologies_whitelist** | Enforce strict whitelist technology validation based on structured metadata.<br>Instead of full-text scanning, this rule checks the 'technologies' array in doc_meta.<br>Every technology (and its 'base') MUST exist in the Enterprise Tech Radar.<br>If it exists but is on HOLD, a violation is thrown. |
@@ -160,8 +164,8 @@ This index documents the internal functions and classes of the Fitness Function 
 
 | Function | Description |
 | :--- | :--- |
-| **detect_doc_type** | Determine the architecture document type based on cascading fallback logic.<br><br>Resolution order:<br>1. Parse the explicit `id` field from the document's YAML frontmatter (e.g. 'SAD-001').<br>2. Fallback: Check if the filename uses legacy/domain extensions (e.g. `.sad.md`).<br>3. Fallback: Parse the filename prefix itself (e.g. 'GDC-001.md').<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;str \| None: The 3-letter uppercase document type (e.g. 'SAD', 'PAD') or None if unknown. |
-| **get_validator** | Return the corresponding Validator subclass for the detected document type.<br><br>Maps strings like 'SAD' to `SADValidator`, 'PAD' to `PADValidator`, etc.<br>Returns None if the document type is not supported by the validation engine. |
+| **detect_doc_type** | Determine the architecture document type based on the explicit `id` field from the document's YAML frontmatter.<br>Example: 'SAD-001' -> 'SAD'<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- meta_id (str \| None): The metadata ID parsed from the document's YAML frontmatter.<br>&nbsp;&nbsp;&nbsp;&nbsp;- global_rules (dict): The global rules dictionary parsed from base.schema.json.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;str \| None: The document type prefix (e.g. 'SAD', 'PAD') or None if unknown/invalid.<br></pre> |
+| **get_validator** | Return the corresponding Validator subclass for the detected document type.<br><br>Maps strings like 'SAD' to `SADValidator`, 'PAD' to `PADValidator`, etc.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- doc_type (str): The document type prefix (e.g. 'SAD', 'PAD').<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;type[BaseValidator] \| None: The specific validator class or None if not supported.<br></pre> |
 
 ### `engine/validators/schema_extensions.py`
 
@@ -199,55 +203,42 @@ This index documents the internal functions and classes of the Fitness Function 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%
 graph TD
-    StartLint(("2. Start Document Validation")) --> Read[2.1. Read raw markdown]
-    Read --> ParseFM["2.2. <b>markdown_ast.py - parse_frontmatter()</b>: Extract and parse YAML metadata block"]
-    ParseFM --> IsFMErr{"2.3. Frontmatter Parse Error?"}
-    IsFMErr -->|Yes| PrintErrFM["2.4. <b>print_errors()</b>: Hard block"]
-    IsFMErr -->|No| CheckExempt{"2.5. Is document exempt from validation?"}
-    CheckExempt -->|Yes| ValidateExemptStatus["2.6. <b>validate_exempt_status()</b>: Validate exempt duration"]
-    CheckExempt -->|No| DetectType["2.7. <b>detect_doc_type()</b>: Detect document type"]
-    DetectType --> IsDocType{"2.8. Doc type known?"}
-    IsDocType -->|No| PrintErrDoc["2.9. <b>print_errors()</b>: Hard block"]
-    PrintErrDoc --> Return
-    IsDocType -->|Yes| GetValidator["2.10. <b>get_validator()</b>: Get specific validator class"]
-    GetValidator --> IsVal{"2.11. Validator exists?"}
-    IsVal -->|No| PrintErrVal["2.12. <b>print_errors()</b>: Hard block"]
-    PrintErrVal --> Return
-    IsVal -->|Yes| LoadSchemaType["2.13. <b>load_json_schema_file()</b>: Load specific JSON schema"]
-    LoadSchemaType --> IsSchema{"2.14. Schema exists?"}
-    IsSchema -->|No| PrintErrSchema["2.15. <b>print_errors()</b>: Hard block"]
-    PrintErrSchema --> Return
-    IsSchema -->|Yes| Execute["<b>validator.validate()</b>: Initialize & Run validator engine"]
-    Execute --> Return[2.17. Return list of errors]
     Main(("1. Start CLI<br><b>cli.py - main()</b>")) --> ParseArgs[1.1. Parse CLI arguments]
-    ParseArgs --> LoadGlobal["1.2. <b>load_json_schema_file()</b>: Load base schema (global rules)"]
-    LoadGlobal --> CheckGlobalRules{"Valid global rules & severities?"}
+    ParseArgs --> LoadGlobal["1.2. <b>loader.py - load_json_schema_file()</b>: Load base schema (global rules)"]
+    LoadGlobal --> CheckGlobalRules{"Valid global rules?"}
     CheckGlobalRules -->|No| ExitFailGlobal((sys.exit 1))
-    CheckGlobalRules -->|Yes| CheckCwd["1.3. <b>_validate_execution_root()</b>: Valid CWD?"]
+    CheckGlobalRules -->|Yes| IsConfigValid{"Valid Global Config & Severity? </br> <b>loader.py - (validate_global_config_structure, validate_severity_schema, validate_blocking_severities)</b>"}
+    IsConfigValid -->|No| ExitFailConfig((sys.exit 1))
+    IsConfigValid -->|Yes| CheckCwd["1.3. <b>_validate_execution_root()</b>: Valid CWD?"]
     CheckCwd -->|No| ExitFailCwd((sys.exit 1))
-    CheckCwd -->|Yes| PreScan[["1.4. <b>crawler.py - build_metadata_registry()</b>: Collect doc_meta from all files & validate unique IDs"]]
+    CheckCwd -->|Yes| PreScan[["1.4. <b>crawler.py - build_metadata_registry()</b>: Collect Document Metadata from all files & validate unique IDs"]]
     PreScan -->|executes| StartRegistry
-    StartRegistry(("Start")) --> GatherDocs["<b>crawler.py - gather_markdown_files()</b>: Gather all valid markdown files within governed boundaries"]
-    GatherDocs --> CheckBoundary{"Path Boundary Valid?"}
-    CheckBoundary -->|No: Outside Repo / Unauthorized / Cross-Drive| ExitFailCrawler((sys.exit 1))
-    CheckBoundary -->|Yes| LoopRegFile{"Iterate per file"}
+    StartRegistry(("Start")) --> GatherDocs["<b>crawler.py - gather_markdown_paths()</b>: Enforce boundary & collect markdown paths within governed boundaries"]
+    GatherDocs -->|File Error: Outside Repo / Unauthorized / Cross-Drive| ExitFailPreScan((sys.exit 1))
+    GatherDocs -->|Valid File Path| CheckRegIgnore{"Is Ignored File?"}
+    CheckRegIgnore -->|"Yes (Skip)"| GatherDocs
+    CheckRegIgnore -->|"No (Keep)"| LoopRegFile{"Iterate file paths to build Registry"}
     LoopRegFile -->|Valid Markdown| ParseYamlReg["<b>markdown_ast.py - parse_frontmatter()</b>: Extract and parse YAML metadata block"]
-    ParseYamlReg --> CheckDups{"Duplicate ID?"}
-    CheckDups -->|Yes| RecordDup["Record as Duplicate (Excluded from Registry)"]
-    CheckDups -->|No| RecordReg["Register Document Metadata"]
+    ParseYamlReg -->|Parse Error| LoopRegFile
+    ParseYamlReg -->|Success| CheckDups{"Is Document ID already registered?"}
+    CheckDups -->|Yes| RecordDup["Store Duplicate in Registry"]
+    CheckDups -->|No| RecordReg["Store Metadata in Registry"]
     RecordDup --> LoopRegFile
     RecordReg --> LoopRegFile
     LoopRegFile -->|Done Iterating| ReturnRegistry[Return Metadata Registry and Duplicate Records]
     ReturnRegistry --> ValidateTechRadar["1.5. <b>jsonschema.validate()</b>: Validate Tech Radar data against its JSON Schema"]
-    ValidateTechRadar --> FindTarget["1.6. <b>crawler.py - gather_markdown_files()</b>: Gather targeted markdown files within governed boundaries"]
-    FindTarget --> LoopFile{"1.7. Iterate per file"}
-    LoopFile --> CheckFilter{"Is contain ignored file or pattern?"}
-    CheckFilter -->|Yes| LoopFile
-    CheckFilter -->|No| CheckDepth{"Exceeds maximum directory depth?"}
-    CheckDepth -->|Yes| RecordDepthError["Record Directory Depth Violation"]
+    ValidateTechRadar -->|Validation Error| RecordErrRadar["<code>Record Error</code>: Tech Radar Schema Violation"]
+    RecordErrRadar --> FindTarget
+    ValidateTechRadar --> FindTarget["1.6. <b>crawler.py - gather_markdown_paths()</b>: Gather markdown paths from CLI target arguments"]
+    FindTarget -->|File Error: Outside Repo / Unauthorized / Cross-Drive| ExitFailFindTarget((sys.exit 1))
+    FindTarget --> |Valid File Path| CheckFilter{"Is ignored file?"}
+    CheckFilter -->|"Yes (Skip)"| FindTarget
+    CheckFilter -->|"No (Keep)"| LoopFile{"1.7. Iterate file paths"}
+    LoopFile --> CheckDepth{"Exceeds maximum directory depth?"}
+    CheckDepth -->|Yes| RecordDepthError["<code>Record Error</code>: Directory Depth Violation"]
     RecordDepthError --> LoopFile
-    CheckDepth -->|No| LintFileSub[["1.8. <b>lint_file()</b>: Validate markdown document"]]
-    LintFileSub -->|executes| StartLint
+    CheckDepth -->|No| LintFileSub[["1.8. <b>lint_file()</b>: Validate markdown document against base schema and specific domain schema"]]
+    LintFileSub -->|executes| StartLinting(("Start Linting"))
     LintFileSub --> LoopFile
     LoopFile -->|Done Iterating| RepoAudit["1.9. <b>audit_*()</b>: Run repository-level audits"]
     RepoAudit --> Reporter["1.10. <b>build_sarif()</b>: Generate output format (SARIF/JSON/Text)"]
@@ -259,11 +250,56 @@ graph TD
 
 <!-- AUTO-GENERATED-CLI-FLOW:END -->
 
+## Lint File Subroutine (cli.py)
+
+> [!NOTE]
+>
+> This diagram details the execution of the `lint_file` subroutine (Step 1.8).
+
+> [!WARNING]
+>
+> **DO NOT EDIT THIS FLOWCHART MANUALLY.** This diagram is automatically generated by the `generate_lint_flowchart()` function parsing the inline `@flow-lint:` comments in `cli.py`. To regenerate this block, run: `python 06-fitness-function/generators/generate_functions_doc.py`
+
+<!-- AUTO-GENERATED-LINT-FLOW:START -->
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%
+graph TD
+    StartLint(("2. Start Document Validation")) --> Read[2.1. Read raw markdown]
+    Read -->|Exception| RecordErrUnreadable["<code>Record Error</code>: Unreadable Artifact"]
+    RecordErrUnreadable --> Return
+    Read --> ParseFM["2.2. <b>markdown_ast.py - parse_frontmatter()</b>: Extract and parse YAML metadata block"]
+    ParseFM -->|Parse Error| RecordErrFM["<code>Record Error</code>: Corrupt Frontmatter"]
+    RecordErrFM --> Return
+    ParseFM -->|Yes| CheckExempt{"2.3. Is document exempt?"}
+    CheckExempt -->|Yes| ValidateExemptAge["2.4. <b>metadata_rules.py - validate_exempt_age()</b>: Validate exempt duration"]
+    CheckExempt -->|No| DetectType["2.6. <b>registry.py - detect_doc_type()</b>: Detect document type"]
+    ValidateExemptAge --> IsExemptErr{"2.5. Is Exempt Age Expired?"}
+    IsExemptErr -->|Yes| RecordErrExemptAge["<code>Record Error</code>: Exempt Age Violation"]
+    RecordErrExemptAge --> Return
+    IsExemptErr -->|No| RecordInfoExempt["<code>Record Info</code>: Exempt Document Skipped"]
+    RecordInfoExempt --> Return
+    DetectType --> IsDocType{"2.7. Doc type known?"}
+    IsDocType -->|No| RecordErrDocType["<code>Record Error</code>: Unknown Document Type"]
+    RecordErrDocType --> Return
+    IsDocType -->|Yes| GetValidator["2.8. <b>registry.py - get_validator()</b>: Get specific domain validator"]
+    GetValidator --> IsVal{"2.9. Validator exists?"}
+    IsVal -->|No| RecordErrMissingVal["<code>Record Error</code>: Missing Validator"]
+    RecordErrMissingVal --> Return
+    IsVal -->|Yes| LoadSchemaType["2.10. <b>loader.py - load_json_schema_file()</b>: Load specific domainJSON schema"]
+    LoadSchemaType --> IsSchema{"2.11. Schema exists?"}
+    IsSchema -->|No| ExitFailSchema((sys.exit 1))
+    IsSchema -->|Yes| Execute(("2.12. <b>base.py - validate()</b>: Initialize & Run validator engine"))
+    Execute --> Return[2.13. Return list of errors]
+```
+
+<!-- AUTO-GENERATED-LINT-FLOW:END -->
+
 ## Validation Engine Lifecycle (base.py)
 
 > [!NOTE]
 >
-> This diagram maps the internal execution of `validator.validate()`, detailing how the JSON Schema and governance rules are applied.
+> This diagram maps the internal execution of `validate()`, detailing how the JSON Schema and governance rules are applied.
 
 > [!WARNING]
 >
@@ -274,17 +310,20 @@ graph TD
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%
 graph TD
-    Validate((Start validator.validate)) --> ExtractSections
-    ValTech --> TypeSpecific["<b>validate_type_specific()</b>: Execute Domain Rules"]
-    TypeSpecific --> ReturnErrors((Return aggregate errors))
-    subgraph SchemaPhase[JSON Schema Validation Phase]
-    ExtractSections["<b>extract_sections_normalized()</b>: Parse sections"] --> BuildDocInstance["Build validation instance dict"]
+    Validate(("3.0. <b>validate()</b>: Start lifecycle")) --> ValidateSchema["3.1. <b>_validate_schema()</b>: JSON Schema Check"]
+    ValidateSchema --> GlobalRules["3.2. <b>global_rules.py</b>: run_common_validations()"]
+    GlobalRules --> TypeSpecific["3.3. <b>validate_type_specific()</b>: Domain Rules"]
+    TypeSpecific --> ReturnErrors(("3.4. Return accumulated errors"))
+    subgraph SchemaPhase[3.1. JSON Schema Validation Phase]
+    ValidateSchema --> ExtractSections["<b>extract_sections_normalized()</b>: Parse sections"]
+    ExtractSections --> BuildDocInstance["Build validation instance dict"]
     BuildDocInstance --> ExecJsonSchema["<b>ExtendedValidator.iter_errors()</b>"]
     ExecJsonSchema -->|ValidationError| MapError["Map jsonschema errors to category"]
     MapError --> AddError["<b>add_error()</b>: Record finding"]
-    ExecJsonSchema -->|Done| CommonRules((Start Global Rules))
+    end
     subgraph GlobalRulesPhase[Global Rules Validation Suite]
-    GlobalRulesPhase --> ValCompliance["<b>_validate_compliance_placement()</b>: Check folder placement & file naming"]
+    direction TB
+    GlobalRules --> ValCompliance["<b>_validate_compliance_placement()</b>: Check folder placement & file naming"]
     ValCompliance --> ValRevAge["<b>_validate_review_age()</b>: Check if document is expired"]
     ValRevAge --> ValContent["<b>_validate_content_quality()</b>: Check for prohibited words & vague claims"]
     ValContent --> ValStruct["<b>_validate_structure()</b>: Check minimum section lengths"]
@@ -294,6 +333,8 @@ graph TD
     ValInline --> ValNFR["<b>_validate_nfr_taxonomy()</b>: Ensure NFRs follow AWS WAF pillars"]
     ValNFR --> ValTech["<b>_validate_technologies_whitelist()</b>: Check for prohibited technologies"]
     end
+    style SchemaPhase fill:#fffdd0,stroke:#d2b48c,stroke-width:2px,color:#333,stroke-dasharray: 5 5
+    style GlobalRulesPhase fill:#fffdd0,stroke:#d2b48c,stroke-width:2px,color:#333,stroke-dasharray: 5 5
 ```
 
 <!-- AUTO-GENERATED-VALIDATOR-FLOW:END -->

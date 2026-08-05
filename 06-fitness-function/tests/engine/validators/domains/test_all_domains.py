@@ -1,18 +1,4 @@
 from tests.conftest import make_validator
-import os
-import json
-
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
-
-
-def _global_rules():
-    with open(
-        os.path.join(ROOT, "00-governance", "schemas", "base.schema.json"),
-        encoding="utf-8",
-    ) as f:
-        return json.load(f).get("x-global-config", {})
-
-
 from engine.validators.domains.adr_validator import ADRValidator
 from engine.validators.domains.ead_validator import EADValidator
 from engine.validators.domains.gdc_validator import GDCValidator
@@ -20,6 +6,7 @@ from engine.validators.domains.pad_validator import PADValidator
 from engine.validators.domains.sad_validator import SADValidator
 from engine.validators.domains.std_validator import STDValidator
 from engine.validators.domains.tdd_validator import TDDValidator
+
 
 
 def test_missing_doc_meta_for_all():

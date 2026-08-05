@@ -4,7 +4,8 @@ doc_meta:
   title: ADR-GLB-004 Atlas Schema Governance for Deterministic Data Migrations
   adr_type: foundational
   status: accepted
-  created: 2026-05-01
+  created: 2026-01-01
+  created_date: 2026-01-01
   created_by: Enterprise Architect
 ---
 

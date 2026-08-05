@@ -8,6 +8,7 @@ doc_meta:
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
+  created_date: 2026-01-01
   last_reviewed: 2026-07-05
 ---
 
@@ -97,7 +98,7 @@ This map is a deliberate reaction to failure modes recorded in enterprise COE (C
 ### 5.1. Macro Capability Map
 
 ```mermaid
-graph TD
+graph LR
     A([Scnehaux Cloud Service])
 
     A --> P[["Platform Plane<br/>(business-agnostic substrate)"]]

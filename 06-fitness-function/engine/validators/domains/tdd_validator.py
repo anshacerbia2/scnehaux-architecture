@@ -11,6 +11,13 @@ class TDDValidator(BaseValidator):
         Enforces upward traceability:
         - Validates the mandatory `parent_sad` field, ensuring the technical design maps to a system architecture.
         - Checks that the referenced SAD actually exists in the repository registry.
+
+        <pre>Args:
+            None
+
+        Returns:
+            None
+        </pre>
         """
         # @flow-domain: StartTDD((Start TDD Validation)) --> CheckParentSAD["Check 'parent_sad' metadata"]
         if not self.doc_meta:

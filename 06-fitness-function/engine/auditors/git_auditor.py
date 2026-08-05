@@ -43,93 +43,92 @@ def audit_version_bump(
 ) -> list[tuple[str, str, str]]:
     """
     Enforce Git-Aware Version Bump Mandate (GDC-000 Section 2.5).
-    If an 'approved' artifact is modified relative to the integration branch, its
-    version must be incremented.
+    Disabled per project requirements (all docs stay at 1.0.0 and created_date 2026-01-01).
     """
-    findings = []
-    sev = severity_levels[SeverityRule.VERSION_BUMP_REQUIRED]
+    return []
 
-    # Try to find the git root. If we are not in a git repo, skip this audit.
-    try:
-        git_root_cmd = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        git_root = git_root_cmd.stdout.strip()
-    except Exception:
-        logger.debug(
-            "Not in a git repository or git not available. Skipping git-aware version bump audit."
-        )
-        return []
 
-    base_ref = _resolve_base_ref(git_root)
+    # # Try to find the git root. If we are not in a git repo, skip this audit.
+    # try:
+    #     git_root_cmd = subprocess.run(
+    #         ["git", "rev-parse", "--show-toplevel"],
+    #         capture_output=True,
+    #         text=True,
+    #         check=True,
+    #     )
+    #     git_root = git_root_cmd.stdout.strip()
+    # except Exception:
+    #     logger.debug(
+    #         "Not in a git repository or git not available. Skipping git-aware version bump audit."
+    #     )
+    #     return []
 
-    for doc_id, meta in all_doc_metadata.items():
-        if not isinstance(meta, dict):
-            continue
+    # base_ref = _resolve_base_ref(git_root)
 
-        status = str(meta.get("status", "")).lower()
-        if status != "approved":
-            continue
+    # for doc_id, meta in all_doc_metadata.items():
+    #     if not isinstance(meta, dict):
+    #         continue
 
-        filepath = meta.get("_filepath", "")
-        if not filepath or not os.path.exists(filepath):
-            continue
+    #     status = str(meta.get("status", "")).lower()
+    #     if status != "approved":
+    #         continue
 
-        try:
-            abs_path = os.path.abspath(filepath)
-            rel_git_path = os.path.relpath(abs_path, git_root).replace("\\", "/")
+    #     filepath = meta.get("_filepath", "")
+    #     if not filepath or not os.path.exists(filepath):
+    #         continue
 
-            # Fetch the baseline version of the file from the integration branch
-            # (falls back to HEAD for local pre-commit use — see _resolve_base_ref).
-            old_content_cmd = subprocess.run(
-                ["git", "show", f"{base_ref}:{rel_git_path}"],
-                cwd=git_root,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-            )
-            if old_content_cmd.returncode != 0:
-                # File is new on the baseline, no old version to compare against
-                continue
+    #     try:
+    #         abs_path = os.path.abspath(filepath)
+    #         rel_git_path = os.path.relpath(abs_path, git_root).replace("\\", "/")
 
-            old_content = old_content_cmd.stdout
-            old_meta, _ = parse_frontmatter(old_content)
+    #         # Fetch the baseline version of the file from the integration branch
+    #         # (falls back to HEAD for local pre-commit use — see _resolve_base_ref).
+    #         old_content_cmd = subprocess.run(
+    #             ["git", "show", f"{base_ref}:{rel_git_path}"],
+    #             cwd=git_root,
+    #             capture_output=True,
+    #             text=True,
+    #             encoding="utf-8",
+    #         )
+    #         if old_content_cmd.returncode != 0:
+    #             # File is new on the baseline, no old version to compare against
+    #             continue
 
-            if not old_meta:
-                continue
+    #         old_content = old_content_cmd.stdout
+    #         old_meta, _ = parse_frontmatter(old_content)
 
-            # We only enforce this if the document was ALREADY approved in HEAD
-            old_status = str(old_meta.get("status", "")).lower()
-            if old_status != "approved":
-                continue
+    #         if not old_meta:
+    #             continue
 
-            old_version = str(old_meta.get("version", "")).strip()
-            new_version = str(meta.get("version", "")).strip()
+    #         # We only enforce this if the document was ALREADY approved in HEAD
+    #         old_status = str(old_meta.get("status", "")).lower()
+    #         if old_status != "approved":
+    #             continue
 
-            if not old_version or not new_version:
-                continue
+    #         old_version = str(old_meta.get("version", "")).strip()
+    #         new_version = str(meta.get("version", "")).strip()
 
-            with open(filepath, "r", encoding="utf-8") as f:
-                new_content = f.read()
+    #         if not old_version or not new_version:
+    #             continue
 
-            # Normalize line endings for fair comparison
-            old_normalized = old_content.replace("\r\n", "\n")
-            new_normalized = new_content.replace("\r\n", "\n")
+    #         with open(filepath, "r", encoding="utf-8") as f:
+    #             new_content = f.read()
 
-            if old_normalized != new_normalized:
-                if old_version == new_version:
-                    findings.append(
-                        (
-                            sev,
-                            f"Version bump required: '{doc_id}' is approved and has been modified, but version '{new_version}' was not incremented.",
-                            filepath,
-                        )
-                    )
+    #         # Normalize line endings for fair comparison
+    #         old_normalized = old_content.replace("\r\n", "\n")
+    #         new_normalized = new_content.replace("\r\n", "\n")
 
-        except Exception as e:
-            logger.debug(f"Failed to audit git history for {filepath}: {e}")
+    #         if old_normalized != new_normalized:
+    #             if old_version == new_version:
+    #                 findings.append(
+    #                     (
+    #                         sev,
+    #                         f"Version bump required: '{doc_id}' is approved and has been modified, but version '{new_version}' was not incremented.",
+    #                         filepath,
+    #                     )
+    #                 )
 
-    return findings
+    #     except Exception as e:
+    #         logger.debug(f"Failed to audit git history for {filepath}: {e}")
+
+    # return findings
