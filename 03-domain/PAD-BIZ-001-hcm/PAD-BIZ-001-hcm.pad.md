@@ -320,4 +320,4 @@ The Architecture Authority governs enterprise architectural boundaries and integ
 - AI capabilities shall be consumed exclusively through the AI Platform.
 - Breaking integration contracts requires Architecture Authority approval.
 
-<!-- lint_disable: cross_reference_missing, inline_reference_missing, pad_fulfilled_by_exists -->
+<!-- lint_disable: cross_reference_missing, inline_reference_missing (reason: SAD-101 fulfilment recorded in the SAD layer index) -->

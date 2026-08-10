@@ -136,7 +136,7 @@ err = pglogrepl.StartReplication(ctx, conn, "scnehaux_outbox_slot", startLSN, pg
 ### Related Standards
 
 - [Enterprise Application Architecture Strategy (EAD-004)](../../01-enterprise/EAD-004-enterprise-integration-architecture.md)
-- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- [Scnehaux Identity Runtime (SAD-001)](../../04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md)
 
 ### Compliance Status
 

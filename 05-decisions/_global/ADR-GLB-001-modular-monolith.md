@@ -77,7 +77,7 @@ Core modules (e.g., `internal/auth`, `internal/tenant`, `internal/token` in IAM)
 ### Related Standards
 
 - [Technology Architecture Strategy (EAD-005)](../../01-enterprise/EAD-005-enterprise-platform-architecture.md)
-- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- [Scnehaux Identity Runtime (SAD-001)](../../04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md)
 
 ### Compliance Status
 

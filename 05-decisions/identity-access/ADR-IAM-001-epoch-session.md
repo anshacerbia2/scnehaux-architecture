@@ -108,7 +108,7 @@ Upon each refresh request:
 ### Related Standards
 
 - [EAD-004 (Integration Architecture)](../../01-enterprise/EAD-004-enterprise-integration-architecture.md)
-- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- [Scnehaux Identity Runtime (SAD-001)](../../04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md)
 
 ### Compliance Status
 

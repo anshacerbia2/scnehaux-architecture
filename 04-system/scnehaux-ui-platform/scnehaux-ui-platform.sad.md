@@ -59,7 +59,7 @@ The platform inherits and enforces the [Enterprise Frontend Performance and Rend
 
 ## 3. Solution Context
 
-It provides the physical visual foundation consumed by all frontend portals across the monorepo — including the [Scnehaux IAM Dashboard (SAD-002)](../scnehaux-iam-dashboard/scnehaux-iam-dashboard.sad.md) and the federated ERP Portal. It is developed as isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
+It provides the physical visual foundation consumed by all frontend portals across the monorepo — including the [Scnehaux Identity Experience (SAD-002)](../scnehaux-iam/scnehaux-identity-experience.sad.md) and the federated ERP Portal. It is developed as isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
 
 ## 4. Architecture Model
 
@@ -79,7 +79,7 @@ graph TD
     end
 
     subgraph Consumer_Apps [Downstream Portal Consuming Layer]
-        IAM["scnehaux-iam-dashboard"]
+        IAM["Scnehaux Identity Experience"]
         ERP["ERP Portal Host"]
     end
 

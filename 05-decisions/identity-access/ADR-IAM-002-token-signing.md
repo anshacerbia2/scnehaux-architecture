@@ -117,7 +117,7 @@ copy(sigBytes[64-len(sBytes):64], sBytes)
 ### Related Standards
 
 - [Identity Platform Domain Strategy (PAD-PLT-001)](../../03-domain/PAD-PLT-001-identity-platform/PAD-PLT-001-identity-platform.pad.md)
-- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- [Scnehaux Identity Runtime (SAD-001)](../../04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md)
 - [ADR-IAM-001 (Epoch Sessions)](ADR-IAM-001-epoch-session.md) - Relies on fast verification to bypass database hits.
 
 ### Compliance Status

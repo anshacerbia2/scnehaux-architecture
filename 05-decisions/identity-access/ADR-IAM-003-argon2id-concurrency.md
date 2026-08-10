@@ -138,7 +138,7 @@ func (h *BoundedHasher) Hash(ctx context.Context, password string) (string, erro
 
 ### Related Standards
 
-- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- [Scnehaux Identity Runtime (SAD-001)](../../04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md)
 - Enterprise Security Standard (STD-GLB-FE-010)
 
 ### Compliance Status
