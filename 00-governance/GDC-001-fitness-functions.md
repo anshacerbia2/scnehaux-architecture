@@ -212,7 +212,7 @@ The global baseline applies universally to all architecture documents across the
 >
 > **DO NOT EDIT THIS TABLE MANUALLY.** This table is automatically generated from the JSON Schema (`schemas/base.schema.json`). If you need to update a rule, modify the schema file and run: `python 06-fitness-function/generators/generate_rules_doc.py`
 
-<!-- lint_disable_start: prohibited_word (reason: governance engine documentation) -->
+<!-- lint_disable_start: prohibited_words (reason: governance engine documentation) -->
 <!-- AUTO-GENERATED-RULES:START -->
 
 | Rule Category      | Parameter                | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -301,7 +301,7 @@ The global baseline applies universally to all architecture documents across the
 | **Common Metadata Fields** | Common Metadata Fields | <ul><li>id (string)</li><li>title (string)</li><li>status (string)</li><li>created_date (string)</li></ul> |
 
 <!-- AUTO-GENERATED-RULES:END -->
-<!-- lint_disable_end: prohibited_word -->
+<!-- lint_disable_end: prohibited_words -->
 
 #### 2.3.2 The Universal Schema Generator
 
