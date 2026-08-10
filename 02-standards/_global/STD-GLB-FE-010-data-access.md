@@ -3,91 +3,97 @@ doc_meta:
   id: STD-GLB-FE-010
   title: Enterprise Frontend Data Access & Network Standard
   owner: Principal Frontend Architect
-  version: 1.0.0
+  version: 2.0.0
   status: assessed
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-31
+  last_reviewed: 2026-08-10
 ---
 
 # Enterprise Frontend Data Access & Network Standard (STD-GLB-FE-010)
 
----
-
 ## 1. Objective & Scope
 
-This standard defines the mandatory network policies, HTTP client architecture, data fetching mechanics, and real-time transport protocols for all browser-executed frontend applications within the Scnehaux enterprise ecosystem.
-
-It establishes a rigorous boundary layer between the frontend UI and the backend APIs to ensure resilience against transient network failures, strict type safety for data contracts, and deterministic control over async request lifecycles.
-
-The scope of this standard applies to all REST, GraphQL, WebSocket, SSE, and streaming data consumption mechanisms originating from the client.
-
----
+Define the frontend boundary for REST, GraphQL, WebSocket, SSE, streaming, and BFF-mediated data access without assuming that every application exposes bearer tokens to browser JavaScript.
 
 ## 2. Design Principles
 
-All frontend network IO architectures must strictly adhere to the Supreme Frontend Governance principles:
-
-- **Absolute IO Isolation**: Components must never directly negotiate with the network. All API interactions must route through centralized infrastructure services or caching hooks.
-- **Zero Silent Failure**: Every asynchronous request must explicitly account for loading, success, and failure states. Unhandled promise rejections are strictly prohibited.
-- **Transactional Consistency**: If a mutation (e.g., POST/PUT/DELETE) fails, the local UI state must deterministically roll back to its pristine condition without leaving shadow artifacts.
-
----
+- Components consume typed domain/data-access abstractions rather than embedding protocol behavior everywhere
+- BFF/server-session and direct-browser API profiles are both supported where explicitly selected
+- Requested tenant/workspace context never becomes authorization proof
+- Retry, caching, optimistic update, and streaming behavior follow operation semantics and business risk
+- Loading, failure, cancellation, and stale-context behavior are explicit
 
 ## 3. Normative Rules
 
-### 3.1 HTTP Client Architecture
+### 3.1 Data-Access Boundary
 
-- **Centralized Wrapper**: Applications must use a single, centrally configured HTTP client instance (e.g., Axios or a customized `fetch` wrapper). Directly calling native `fetch()` or instantiating ad-hoc Axios instances inside component files is strictly prohibited.
-- **Global Interceptors**: The centralized client must utilize interceptors to globally handle concern-crossing requirements:
-  - **Request**: Injecting `Authorization` bearer tokens, `X-Tenant-Id`, `X-Trace-Id` (for OpenTelemetry), and `Accept-Language` headers.
-  - **Response**: Global error handling logic (e.g., `401 Unauthorized` triggering an automated silent token refresh, `403 Forbidden` triggering a redirect, and `5xx` triggering retry logic).
+- Applications MUST centralize cross-cutting network concerns in an approved data-access layer, generated client, SDK adapter, BFF boundary, or equivalent abstraction
+- UI components SHOULD NOT construct authentication, tenant, tracing, retry, or protocol policy ad hoc
+- Native `fetch` is permitted inside approved network/domain infrastructure; the standard does not require Axios
+- Third-party SDKs MUST be wrapped behind a domain/integration boundary when they bypass the normal client stack
 
-### 3.2 Network Cancellation & AbortController
+### 3.2 Authentication & Context Propagation
 
-- **Lifecycle Binding**: All asynchronous requests initiated by a component must be bound to an `AbortController`. If the component unmounts before the network responds, the request must be explicitly aborted to prevent memory leaks and state updates on unmounted components.
-- **Sequence Invalidation (Race Conditions)**: When multiple identical requests are triggered in rapid succession (e.g., typeahead search), previous pending requests must be aborted so only the final response resolves.
+- BFF/server-session applications SHOULD rely on secure server-managed session state and MUST NOT inject browser bearer tokens merely for architectural uniformity
+- Direct browser-token applications inject `Authorization` only through the approved public-client profile
+- `X-Tenant-Id`, `Scnehaux-Account`, workspace, or equivalent headers MAY carry **requested context** but MUST NOT be treated by the backend as authority
+- The server MUST validate requested context against trusted identity/session claims or authoritative/projected Membership context
+- Trace/correlation identifiers MAY be propagated from the client but trusted tracing metadata is normalized at the server boundary
 
-### 3.3 Retry & Circuit Breaker Strategies
+### 3.3 Cancellation & Stale Request Control
 
-- **Idempotent Retries**: Failed idempotent requests (e.g., `GET`, `PUT`, `DELETE`) must automatically retry using an **Exponential Backoff with Jitter** strategy.
-- **Non-Idempotent Rules**: Requests that alter state without idempotency guarantees (e.g., `POST`) must not be automatically retried without explicit user consent.
-- **Circuit Breakers**: If a specific backend service continuously returns `5xx` errors, the frontend client must trip a circuit breaker to halt requests for a defined cooldown period, protecting the backend from cascading failure.
+- Requests whose results can become stale after navigation, search changes, or context switching SHOULD support cancellation or sequence invalidation
+- Principal/Tenant/Workspace switch MUST invalidate outstanding context-sensitive requests and relevant caches
+- Cancellation mechanics belong to the data-access/query layer rather than being duplicated across every component
 
-### 3.4 Data Cache Engine (Stale-While-Revalidate)
+### 3.4 Retry & Idempotency
 
-- **Engine Mandate**: The management of remote server state inside raw component lifecycles (e.g., `useEffect`) is prohibited. Applications must utilize standardized query engines (such as **TanStack Query** or **SWR**) to manage request deduplication, background revalidation, and caching.
-- **Optimistic UI Updates**: UI state mutations (e.g., toggling a "Like" button) must update the UI instantly without waiting for the server response, creating an illusion of zero latency. Components must implement transactional rollbacks (e.g., via React Query `onMutate`/`onError`) so that if the background network request fails, the cache state automatically reverts to the pre-optimistic snapshot.
+- Automatic retries are allowed only when the operation is safe to repeat or protected by an explicit idempotency contract
+- HTTP method alone MUST NOT be treated as sufficient proof that a business operation is safe to retry
+- Mutations with duplicate-processing risk require idempotency keys, server-side deduplication, or explicit no-retry behavior
+- Retries use bounded attempts, exponential backoff, jitter where appropriate, and respect server retry guidance
+- Repeated backend failure MUST degrade gracefully rather than creating browser retry storms
 
-### 3.5 Real-Time Transports
+### 3.5 Server-State Cache
 
-- **WebSockets**: Must be used for bidirectional, low-latency, full-duplex communication. The WebSocket client must implement automatic reconnection logic with exponential backoff and continuous heartbeat pings to detect stale connections.
-- **Server-Sent Events (SSE)**: Must be used for unidirectional server-to-client streaming (e.g., live logs, notification feeds) due to its built-in browser reconnection capabilities and ability to traverse standard HTTP proxies.
-- **Streaming & Chunked Responses**: Applications consuming progressive data (e.g., AI text streaming or large dataset exports) must process the data progressively using the browser's native `ReadableStream` API.
+- Remote server state SHOULD use an approved query/cache abstraction where caching, deduplication, invalidation, or background refresh provide value
+- Raw lifecycle effects MAY be used for simple one-off IO when they do not recreate a server-state engine
+- Cache keys and invalidation MUST encode the validated Principal/Tenant/Workspace boundary for context-sensitive data
+- Optimistic updates are permitted only where rollback, reconciliation, and duplicate-processing behavior are understood
 
-### 3.6 GraphQL & Type Safety
+### 3.6 Error Handling
 
-- **Schema-Driven Code Generation**: For GraphQL architectures, all client queries and mutations must be type-checked against the remote schema at compile time using code generators (e.g., GraphQL Codegen).
-- **Persisted Queries**: Production applications should utilize Persisted Queries to reduce request payload sizes and prevent arbitrary query injection.
+- `401` means the current authentication/session is not usable for the request and MUST be handled according to the selected BFF or browser-token profile
+- `403` MUST NOT automatically redirect users in a way that hides actionable authorization context; products define the appropriate denied experience
+- `429` and transient `5xx` handling follows retry policy and server guidance
+- Errors MUST be normalized without leaking credentials, secrets, sensitive claims, or client data
 
----
+### 3.7 Real-Time & Streaming
+
+- WebSocket, SSE, polling, and streaming are selected by interaction semantics rather than mandated globally
+- Long-lived connections MUST authenticate using an approved session/token profile
+- Long-lived connections MUST declare a maximum lifetime that does not exceed the access token lifetime of their profile; on expiry the connection is closed and re-authentication is required
+- A long-lived connection MUST revalidate Principal, Tenant, and Workspace context on every reconnection and on any server-signalled context change; an open connection MUST NOT outlive the authority that established it
+- Termination of long-lived connections MUST be treated as a revocation enforcement mechanism and counted in the enforcement delay defined by the identity security standard
+- Reconnection is bounded and uses backoff to prevent storms
+- AI or large-response streaming MUST handle cancellation, partial output, failure, and audit requirements appropriate to the product
+
+### 3.8 Schema & Type Safety
+
+- API clients SHOULD be generated or validated from versioned contracts where practical
+- GraphQL, REST, event, and streaming clients MUST handle backward-compatible contract evolution according to their protocol standards
+- Production GraphQL may use persisted/allowlisted operations where threat model and platform support justify it
 
 ## 4. Exceptions
 
-Exceptions are granted exclusively when strict compliance with a normative rule introduces disproportionate technical, accessibility, or business risk.
-
-### Exception to "Centralized HTTP Client Wrapper" (Rule 3.1)
-
-- **Condition for Deviation**: You are integrating proprietary third-party SDKs (e.g., Stripe, Firebase, AWS Amplify) that enforce their own internal HTTP clients which cannot be intercepted by the central Axios/fetch wrapper.
-- **Mandatory Alternative**: The SDK is permitted to bypass the central wrapper, provided its logic is strictly abstracted behind a custom Domain Service hook that manually handles the `AbortController` cancellation lifecycle.
-
-### Exception to "Idempotent Retries (Exponential Backoff)" (Rule 3.3)
-
-- **Condition for Deviation**: A failed network request occurs on a highly critical transaction path (e.g., Payment processing gateways, final checkout submissions, or ledger updates) where duplicate processing introduces severe business risk.
-- **Mandatory Alternative**: Automatic retries must be strictly disabled (`0` retries) for these endpoints. The system must fail immediately and surface a localized error instructing the user on manual intervention.
+Exceptions follow the formal GDC-000 exception process when strict compliance creates disproportionate technical, accessibility, security, or business risk. Third-party SDKs and legacy integrations require an explicit wrapping and lifecycle strategy.
 
 ## 5. Enforcement Mechanism
 
-- **AST Linting**: CI/CD pipelines must enforce AST-based linting rules (e.g., `no-restricted-globals`) to flag and block the usage of raw `fetch` or `XMLHttpRequest` outside of the authorized `core/network` infrastructure directory.
-- **Waiver Protocol**: Deviations from this standard (such as integrating legacy non-compliant libraries) must be documented in a local project ADR. The Architecture Review Board (ARB) must respond with a review decision within **5 business days** of the ADR submission.
+- static checks for unauthorized network/authentication logic in components where practical
+- contract/type checks in CI
+- E2E tests for context switch, cache invalidation, authentication expiry, and denied access
+- retry/idempotency tests on critical mutations
+- telemetry for retry storms, request failures, and stale-context defects

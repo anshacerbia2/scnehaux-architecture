@@ -3,107 +3,122 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 1.0.0
+  version: 2.0.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-18
+  last_reviewed: 2026-08-10
 ---
 
 # Enterprise Identity Security Standard (STD-IAM-001)
 
----
-
 ## 1. Objective & Scope
 
-This standard defines the mandatory cryptographic algorithms, token lifecycles, and tenant isolation policies for any system handling authentication, authorization, or user secrets within the Scnehaux enterprise. It aligns with SOC 2 Type II, ISO 27001, and OWASP ASVS v4.0.3 standards.
+Define the mandatory security profile for Scnehaux Identity & Access implementations without coupling the enterprise standard to a custom password, session, token, or signing engine.
+
+This standard applies to the Identity Runtime, Identity Control Service, federation adapters, OAuth/OIDC clients, workload identities, administrative identity experiences, and product-side token validation.
+
+Business authorization, Tenant/Membership authority, Product permissions, and commercial entitlements remain outside Identity authority unless explicitly defined by their accountable domains.
 
 ## 2. Design Principles
 
-1. **Zero-Trust Token Validation**: Authentication tokens must be validated self-sufficiently without relying on persistent database hits on the hot-path.
-2. **Defensive Cryptography**: Always employ the strongest, modern cryptographic hashing and signing mechanisms (such as Argon2id and ES256/RS256) to secure credentials and tokens.
-3. **Decoupled Key Management**: Separation of key storage from the application context to enforce security boundaries and protect root signing keys.
-4. **Deterministic Fail-Secure Design**: Systems must degrade gracefully during outages (such as caching fallbacks) while maintaining an absolute secure state.
+- **Standards-based trust** — OAuth 2.0, OpenID Connect, SAML, WebAuthn, and federation behavior use approved protocol profiles rather than proprietary equivalents
+- **Kernel over reimplementation** — credential hashing, authenticator storage, session lifecycle, token grants, and protocol runtime are delegated to the approved identity kernel where supported
+- **Local verification by default** — normal product requests validate signed tokens locally and do not synchronously call Identity on every request
+- **Least-context tokens** — tokens carry only audience-appropriate identity and operating context required by the consumer
+- **Separation of authorities** — Principal/authentication, Tenant/Membership, Entitlement, and Product permission remain distinct
+- **Fail secure** — loss of a dependency must never silently create new trust, privilege, or operating context
 
 ## 3. Normative Rules
 
-### Hardened Security Standards
+### 3.1 Credential & Authenticator Security
 
-#### Cryptographic Credential Hashing
+- Passwords, passkeys, OTP secrets, recovery factors, and other authenticators MUST be stored and processed only by the approved identity kernel or an explicitly approved external identity provider
+- Scnehaux services MUST NOT create a parallel credential database or custom password-verification engine when the approved kernel already owns that responsibility
+- Credential policy MUST support modern password hashing, breached/weak credential controls where available, secure recovery, MFA, WebAuthn/passkeys, and step-up authentication according to assurance requirements
+- Plaintext credentials, recovery secrets, private keys, and bearer tokens MUST NOT be logged
+- Authentication endpoints MUST implement rate limiting, abuse detection, and bounded resource consumption
 
-- **Algorithm**: **Argon2id** strictly. Legacy hashing algorithms (bcrypt, PBKDF2, MD5) are prohibited for passwords and API secrets.
-- **Salt Complexity**: Must be salted with at least `16 bytes` of cryptographically secure random entropy (`crypto/rand`).
-- **Configuration Parameters**:
-  - `Memory = 64MB`
-  - `Iterations = 3`
-  - `Parallelism = 4`
-- **CPU Starvation Prevention (Weighted Semaphore Concurrency Isolation)**: Hashing is computationally expensive. To prevent CPU starvation Denial of Service (DoS) attacks, global Argon2id hashing operations must be governed by a Process-Level Weighted Semaphore capped strictly at `Runtime.NumCPU() - 1` (**ADR-IAM-003**). In addition:
-  - _Fast-Shedding Backpressure_: If all semaphore slots are occupied, incoming hashing requests must be rejected immediately at the boundary with an HTTP 429 status code to protect host scheduler responsiveness.
-  - _Active Cancellation_: Hashing execution must actively monitor context cancellation (`ctx.Done()`) to immediately abort computationally heavy hashing operations if the client terminates the connection mid-flight.
-- **Output Storage**: Plaintext credentials must never be stored at rest or written to logs. Only Argon2id hashes are permitted.
+### 3.2 OAuth 2.0 / OpenID Connect Security Profile
 
-#### JWT Token Lifecycle & Rotation
+- Authorization Code flow with PKCE using `S256` is REQUIRED for public browser and native clients
+- Redirect URIs MUST be explicitly registered and matched according to the approved client profile; open redirect patterns are prohibited
+- Access tokens MUST be audience-bound and short-lived according to the approved token-lifetime class
+- An access token MUST NOT exceed a 15-minute lifetime unless an approved token-lifetime class defines a longer bound for a named audience; any longer lifetime MUST be carried into the revocation enforcement delay of every affected revocation class
+- Refresh tokens MUST use the approved identity kernel's rotation, reuse-detection, revocation, and session controls when refresh tokens are issued
+- Client credentials and private client secrets MUST never be embedded in public browser or mobile applications
+- Confidential clients MUST authenticate using an approved method appropriate to their threat model
+- Token introspection MAY be used where opaque-token or active-state semantics require it, but normal signed-token validation SHOULD remain local when sufficient
 
-- **Access Tokens (JWT)**: Short-lived with a maximum Time-To-Live (TTL) of `15 minutes`. Enforces **Algorithmic Duality** based on the client channel boundary (**ADR-IAM-002**):
-  - _Internal & Mobile Channels_: Signed with `ES256` (ECDSA P-256) to minimize header overhead and gateway processing latency.
-  - _External Federation & B2B Channels_: Signed with `RS256` (RSA 2048-bit) to ensure universal compatibility with standard enterprise OIDC clients.
-- **Refresh Tokens**: Maximum TTL of `30 days`.
-- **Refresh Token Rotation (RTR)**: Mandated on all sessions. Upon refreshing, the token family's rotation state is updated in Redis, invalidating the old token JTI and issuing a new one.
-- **Cryptographic Rotation Grace Period**: To eliminate false-positive session terminations on mobile clients due to network package retries, a **10-second Grace Period** is mandated on rotated refresh tokens. Duplicate requests using the recently rotated refresh token within this 10-second window must return the already generated token pair. Replays outside the 10-second window must trigger instant, automatic revocation of the entire session token family.
+### 3.3 Token & Claim Profile
 
-#### Cryptographic Key Sovereignty
+- Every consumer MUST validate issuer, audience, signature, token type, expiry, and other mandatory protocol claims
+- `sub` remains the protocol subject, MAY be pairwise or otherwise scoped per relying party, and MUST NOT be used as an enterprise foreign key by any Scnehaux domain
+- Internal Scnehaux access tokens MUST carry the canonical enterprise `principal_id` claim defined by the Principal Identifier decision
+- A protected resource accepting an internal-audience token MUST reject the token when `principal_id` is absent
+- External, partner, and third-party token profiles MAY omit `principal_id`; such profiles MUST be identified by audience and validated against their declared external profile
+- Tenant, Membership, Workspace, or operating-context claims MUST represent an authority-derived or approved projection, never untrusted browser input
+- An access token MUST carry exactly one active Tenant context and at most one Workspace context; the set of Memberships held by a Principal MUST NOT be placed in a token, bounded or otherwise
+- Business Product permissions SHOULD remain product-owned and MUST NOT be silently converted into IAM-owned authorization truth
+- Claims containing sensitive identity or tenant context MUST be minimized by audience and data-classification need
 
-- **Root-of-Trust Isolation**: The master private signing keys must reside securely in an external Key Management Service (KMS / AWS KMS / Vault Transit) in staging and production environments. A secure ephemeral memory fallback signer is permitted solely in local development (DX) environments.
-- **High-Performance Paved Road (KMS Envelope Encryption)**: To prevent synchronous network API latency bottlenecks (`15-50ms` per signature) and KMS API rate limit exhaustion on the critical authentication path, systems must utilize **Envelope Encryption** for persistent token keys (**ADR-IAM-002**). The application loads versioned private signing keys from the persistent KMS _only_ at startup or key rotation. The decrypted signing key references are cached strictly within the application's secure RAM memory context to perform local, sub-1ms cryptographic signing.
-- **Continuous Trust Key Rotation**: The cryptographic signing key lifecycle must implement a deterministic four-state transition machine (**Active**, **Retiring**, **Retired**, **Purged**) utilizing unique version-anchored Key IDs (`kid`). The active signing key is rotated every `30 days`, with a `7-day` retirement phase where the JWKS endpoint continues to advertise the retiring key to verify older outstanding tokens without session disruption.
+### 3.4 Session & Revocation
 
-#### Session Governance & Monotonic Epochs
+- Session creation, refresh, logout, global logout, factor changes, credential reset, and high-risk administrative actions MUST be governed by the approved identity kernel and enterprise session policy
+- Revocation requirements MUST define a measurable maximum enforcement delay appropriate to the affected risk class
+- Maximum enforcement delay MUST be computed as `propagation_time + remaining_access_token_lifetime`; access token lifetime is therefore a security parameter of the revocation contract and MUST NOT be selected on performance grounds alone
+- Every revocation class MUST declare which mechanisms enforce it, covering context-projection removal, kernel session removal, consumer projection update, and termination of long-lived connections
+- Acknowledgement of a revocation request means the change is durable and queued; it MUST NOT be reported as enforced until the declared mechanisms have applied
+- Products MUST NOT require synchronous Identity calls for every request solely to check session state when local token validation plus bounded revocation/projection mechanisms satisfy the requirement
+- Privileged administrative sessions SHOULD use server-managed/BFF session patterns where the application architecture supports them
 
-To achieve instant, distributed global session invalidation without N-complexity lookup queries, all authentication systems must enforce **Session Epochs**:
+### 3.5 Signing Keys & Cryptographic Trust
 
-- **Monotonic Counters**: Every user account maintains a `session_epoch` integer.
-- **JWT Inject**: The active `session_epoch` is injected into the JWT claims payload upon token generation:
-  ```json
-  {
-    "sub": "usr_99a82f",
-    "tid": "ten_1028a",
-    "x_scnx_ent": ["iam.tenant.write"],
-    "epc": 3,
-    "exp": 1779998822
-  }
-  ```
-- **Validation**: Middleware must compare the token's epoch with the account's active cached epoch. If `token.epc < account.epoch`, the request is blocked.
-- **Outage Resilience (L1 Cache Fallback)**: To prevent authentication failures during Redis outages, validation middleware must fall back to a local process-memory L1 cache containing recently revoked epochs (with a time-to-live of `300s`). JWT cryptographic signatures must continue to be verified, enabling degraded but operational verification instead of failing-closed or blocking authenticated traffic.
+- Production signing keys, federation keys, secrets, and certificates MUST use approved protected custody and lifecycle controls
+- One `kid` MUST map to exactly one immutable key pair for its entire lifecycle; a `kid` MUST NOT be reused, regenerated, or bound to different key material by any replica, restart, environment, or recovery procedure
+- Signing key material MUST be identical across every replica of an issuer; per-process or per-replica production key generation is prohibited, including as a fallback when protected custody is unreachable
+- Key IDs and rotation MUST allow verification continuity across planned rotation, and public verification material MUST remain published for at least the maximum lifetime of any artifact signed with that key plus consumer cache and clock-skew margin
+- Private signing material MUST NOT be exposed to product consumers or browser applications
+- Products MUST obtain verification material through approved discovery/JWKS or equivalent trust distribution
+- Exact algorithm and key-lifecycle configuration belong to an approved Identity implementation profile or ADR and MUST remain interoperable with required clients
 
-#### Monotonic Entitlements Propagation (PBAC)
+### 3.6 Federation
 
-- **Entitlements Snapshot**: User permissions (e.g., `iam.tenant.write`) are represented as namespaces and snapshot into the JWT as claims (e.g., `x_scnx_ent`) at token generation to prevent downstream database lookup latency.
-- **Device Classification**: All authentication requests must parse and store device metrics (`mobile`, `desktop`, `tablet`, `bot`) to enable anomaly detection.
+- External identities MUST be bound by stable issuer plus external-subject identity, not by mutable email address alone
+- Federation trust MUST validate issuer, signature, audience, time constraints, and approved claims
+- Upstream MFA/assurance MAY be accepted only when the federation contract and assurance mapping explicitly permit it
+- JIT provisioning, account linking, and reconciliation MUST preserve Principal authority and prevent unintended account takeover
 
-#### Immutable Hash-Chained Audit Ledger
+### 3.7 Workload Identity
 
-Critical identity operations (login, registration, password resets, permission changes) must be appended to an immutable, cryptographically verifiable audit ledger:
+- Service, workload, automation, and AI-agent identities MUST use non-human credential profiles with explicit owner, audience, rotation, and lifecycle
+- Shared human credentials or long-lived static secrets are prohibited when a managed workload-identity mechanism is available
+- Workload identity MUST be distinguishable from human Principal context in audit and authorization flows
 
-- **Hashing**: Each record contains a `row_hash` (SHA256) of its contents.
-- **Chaining**: Each record contains a `previous_hash` pointing to its predecessor, guaranteeing that any tampering or retro-active modification is immediately detectable.
+### 3.8 Audit & Security Evidence
 
-#### Global Security Headers
+- Authentication, federation, recovery, factor change, session lifecycle, token/client administration, privileged identity administration, and security-relevant configuration changes MUST emit governed security/audit events
+- Identity Runtime MAY keep operational logs, but enterprise evidence authority remains with the designated Audit & Evidence capability
+- Audit evidence MUST preserve actor, subject, action, outcome, time, source, correlation, and relevant assurance/context metadata
 
-All external HTTP interface layers must enforce the following secure headers:
+### 3.9 Browser Security
 
-- `X-Frame-Options: DENY`
-- `X-Content-Type-Options: nosniff`
-- `Content-Security-Policy`: Default-deny baseline (`default-src 'none'`).
-
----
+- Browser applications MUST NOT persist refresh tokens or equivalent long-lived bearer secrets in `localStorage`
+- Privileged/admin experiences SHOULD prefer secure `HttpOnly`, `Secure`, appropriately scoped cookies backed by server-side/BFF session control
+- Direct browser-token applications require an approved public-client profile, PKCE, bounded token lifetime, XSS controls, and no client secret
+- UI authorization is defense-in-depth and user-experience control only; backend/domain authorization remains authoritative
 
 ## 4. Exceptions
 
-None. All identity and access security rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
+Deviation from this standard requires formal exception approval under GDC-000 with explicit threat model, compensating controls, owner, and review condition where appropriate.
 
 ## 5. Enforcement Mechanism
 
-1.  **Static Application Security Testing (SAST)**: Automated scanners run in the build pipeline to prevent the injection of weak random generators (only `crypto/rand` is permitted).
-2.  **Timing Attack Protection**: Custom signature validation algorithms must utilize constant-time comparison methods.
-3.  **Auditing**: Session revocation pipelines are audited against SOC 2 CC6.1 & CC6.3 requirements.
+- protocol conformance and integration tests
+- client-registration policy and redirect-URI validation
+- token-validation contract tests
+- federation and account-linking security tests
+- browser security and secret-scanning checks
+- administrative audit-event assertions
+- architecture fitness functions preventing Identity ownership of Tenant, Membership, Product Permission, or business state
