@@ -4,387 +4,458 @@ doc_meta:
   title: Enterprise Security Architecture
   owner: Architecture Authority
   version: 1.0.0
-  status: approved
+  status: draft
   classification: restricted
   governed_by: [GDC-006]
   review_cycle_days: 180
-  created_date: 2026-01-01
-  last_reviewed: 2026-07-05
+  created_date: 2026-08-06
+  last_reviewed: 2026-08-06
 ---
 
 # Enterprise Security Architecture
 
 ## 1. Purpose
 
-Establish the enterprise security model that every Platform Service and Business Product inherits: the Zero Trust boundary, the centralized identity strategy, the layered control architecture, and the data-protection rules. Security at Scnehaux is a shared enterprise capability delivered by the Identity and Audit Platforms and enforced uniformly, so that individual products inherit a strong posture rather than each re-implementing (and re-weakening) it.
+Define the enterprise trust model, identity strategy, security-control architecture, and data-protection direction for the **Scnehaux Enterprise Cloud**.
 
-**Decision question this document answers:** _"What is the enterprise trust model, and which security controls are mandatory and centrally provided rather than product-specific?"_
+**Decision question:** _How is trust established, constrained, enforced, monitored, and recovered across users, workloads, applications, tenants, products, data, and external systems?_
 
-This document states the enterprise security model and mandatory controls. It does not define product-specific authentication flows, authorization policy contents, cryptographic algorithm selection, or infrastructure hardening; those are owned downstream by the Identity Platform PAD, security standards, and SADs.
-
----
+This document defines enterprise security intent and macro boundaries. It does not define token claims, protocol endpoints, cryptographic algorithms, browser controls, database policies, route middleware, or system-specific incident procedures.
 
 ## 2. Scope
 
 **In scope:**
 
-- The Zero Trust trust model and its enterprise boundaries.
-- The centralized Identity Platform strategy.
-- The layered (defense-in-depth) security control architecture.
-- Enterprise data protection: classification, encryption, secrets, and auditability.
+- Zero Trust boundaries and trust relationships.
+- Enterprise IAM and workload-identity strategy.
+- Separation of identity, application trust, membership, entitlement, and Product authorization.
+- Security-control families and accountable authorities.
+- Privileged access, external trust, audit, detection, and incident-containment direction.
+- Data protection, privacy, residency, and cryptographic-custody principles.
 
 **Out of scope:**
 
-- Product-specific authentication and authorization implementations (owned by Identity Platform PAD/SAD).
-- Specific cryptographic algorithm and key-length selection (owned by security standards).
-- Infrastructure and network hardening configuration (owned by SAD).
-- Incident response runbooks (owned by Security Operations).
+- Detailed authentication, token, session, and federation design — Identity PAD, standards, and SADs.
+- Product-specific authorization rules — Product PADs.
+- Tenant-isolation implementation — Tenancy PAD, standards, and SADs.
+- Network, runtime, database, frontend, and API control implementation — standards and SADs.
+- Detailed threat models and security tests — PADs, SADs, TDDs, and security assessments.
+- Regulatory control mappings — compliance standards and evidence catalogs.
 
----
+This document binds every product, platform, workload, user, partner, and external integration in the Scnehaux Enterprise Cloud.
 
 ## 3. Enterprise Context
 
-Scnehaux adopts a **Zero Trust Security Model** aligned to NIST SP 800-207. No request is trusted by virtue of its network location; every request is authenticated, authorized, encrypted, and audited, and access decisions are continuously evaluated. Identity is the primary control plane, provided centrally by the Identity Platform, so that authentication and authorization are implemented once and consumed everywhere.
+Scnehaux Enterprise Cloud will serve ATI workforce, client and partner users, product customers, machine workloads, integrations, and AI agents across multiple tenant and external-system boundaries.
 
-The governing invariant: **no Business Product implements its own authentication or authorization; it consumes identity as a platform capability.** This makes the enterprise security posture a property of the platform rather than the weakest product, and it makes every security-relevant action auditable through a single, tamper-evident trail.
+Trust cannot be inferred from network location, possession of a tenant identifier, or successful authentication alone. Effective access is composed from independent authorities and enforced near the protected resource.
 
----
+Security must support urgent internal delivery while preserving an evolution path toward managed services and selective SaaS exposure. Target controls are not represented as implemented until realizer and evidence exist.
 
 ## 4. Architectural Drivers & Lessons
 
-### 4.1. Drivers
+### 4.1 Drivers
 
-The enterprise security architecture protects the business value defined in EAD-001 by assuming breach, eliminating implicit trust, and demanding cryptographic proof of identity.
+| ID | Driver | Security Consequence |
+| :-- | :-- | :-- |
+| S1 | Multi-tenant and cross-client ATI workforce | Principal identity and contextual Membership remain separate |
+| S2 | Multiple applications and future third parties | Application ownership and protocol trust are explicit |
+| S3 | Client and industry integrations | External trust is scoped by provider, purpose, tenant, and data class |
+| S4 | Travel and financial actions are high impact | Strong assurance, separation of duties, evidence, and containment |
+| S5 | AI and automation may invoke tools | Agents receive bounded delegated authority, not unrestricted user power |
+| S6 | Identity implementation is urgent but incomplete | Security capability status requires implementation and test evidence |
 
-| Driver | Security Consequence |
+### 4.2 Lessons Incorporated
+
+| Lesson | Security Response |
 | :-- | :-- |
-| Assume breach | Security boundaries exist inside the perimeter; no implicit trust on the internal network |
-| Never trust, always verify | Explicit, cryptographic authentication and authorization for every request |
-| Centralized governance, decentralized execution | Policy defined centrally (IAM, Gateways), enforced locally (Sidecars, SDKs) |
-| Frictionless security | Security is baked into the Golden Path, invisible to product teams unless violated |
-
-### 4.2. Lessons Incorporated
-
-From enterprise COE (Correction-of-Error) themes, not a greenfield ideal.
-
-| COE-class lesson | Design response in this document |
-| :-- | :-- |
-| A product-local authentication implementation became the weakest link and was breached | Identity First: zero local credential stores; identity consumed as a platform capability |
-| Network-location trust enabled lateral movement after an initial foothold | Zero Trust with east-west mTLS and per-call authorization (below) |
-| A missing audit trail made an incident uninvestigable and failed compliance | Audit Everything: 100% of security-sensitive actions produce an immutable event |
-| Standing admin privilege turned one credential theft into a broad breach | Zero standing privileges; time-bound, reviewed elevation |
-
----
+| Central identity was interpreted as central business authorization | IAM authority is narrowed; Product domains retain resource decisions |
+| Tenant headers were treated as trusted context | Context requires validated identity, application, and Membership |
+| Signed token was treated as complete authorization | Signature is one input; audience, scope, context, policy, and resource rules still apply |
+| Security controls were declared without realizers | Control status and evidence are explicit downstream |
+| Shared human credentials were used for services | Workloads and agents receive distinct identities |
+| Key and session behavior was assumed rather than tested | Custody, lifecycle, containment, and recovery are evidence-backed |
 
 ## 5. Architecture Model
 
-### 5.1. Zero Trust Boundary
+### 5.1 Zero Trust Boundary
 
 ```mermaid
-graph TD
-    User([User / Service Identity]) --> Gateway[API Gateway]
-    Gateway --> Identity[Identity Platform]
-    Identity --> Policy[Policy Decision Point]
-    Policy --> Product[Product / Platform Service]
-    Product --> Data[(Domain Data)]
-    Product --> Audit[Audit Platform]
-    Data --> Encryption[Encryption at Rest]
-    Audit --> SIEM[SIEM / SOC]
+graph TB
+    ACTOR[Human / Workload / Agent]
+    APP[Application or Client Trust]
+    IAM[Identity & Authentication]
+    TEN[Organization & Tenancy]
+    ENT[Subscription & Entitlement]
+    POLICY[Policy and Product Authorization]
+    RESOURCE[Protected Product Resource]
+    DATA[Protected Data]
+    EXTERNAL[External Trust Provider]
+    AUDIT[Audit, Detection and Response]
 
-    style Identity fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
-    style Policy fill:#dd6b20,stroke:#c05621,color:#fff
-    style Audit fill:#805ad5,stroke:#553c9a,color:#fff
+    ACTOR --> IAM
+    APP --> IAM
+    EXTERNAL --> IAM
+    IAM --> RESOURCE
+    TEN --> RESOURCE
+    ENT --> RESOURCE
+    POLICY --> RESOURCE
+    RESOURCE --> DATA
+    RESOURCE --> AUDIT
+    IAM --> AUDIT
+    TEN --> AUDIT
 ```
 
-| Trust Principle       | Description                                                               |
-| :-------------------- | :------------------------------------------------------------------------ |
-| Never Trust           | Every request is untrusted by default, regardless of network origin.      |
-| Always Verify         | Authentication and authorization are mandatory on every request.          |
-| Least Privilege       | Access is limited to the minimum permissions required for the task.       |
-| Continuous Evaluation | Access decisions may be re-evaluated within a session on context change.  |
-| Complete Auditability | Every security-sensitive action is recorded in the immutable audit trail. |
+Every request or action is evaluated from explicit trust signals. Network placement alone grants no privilege.
 
-### 5.2. Enterprise IAM Strategy
+#### Trust Dimensions
 
-```mermaid
-flowchart LR
-    Identity[Identity Platform] --> AuthN[Authentication]
-    AuthN --> AuthZ[Authorization]
-    AuthZ --> Session[Session / Token]
-    Session --> Product[Product]
-    Product --> Audit[Audit Platform]
+| Dimension | Question | Authority |
+| :-- | :-- | :-- |
+| Identity | Who or what is acting? | Identity & Access |
+| Application Trust | Which application or workload requests access? | Identity protocol trust plus Software Catalog ownership |
+| Operating Context | In which Tenant or Workspace may the actor operate? | Organization & Tenancy |
+| Commercial Access | Which Product capabilities are active? | Subscription & Entitlement |
+| Resource Authorization | May this action occur on this resource? | Product domain and/or Policy authority |
+| Assurance | Is the authentication strength and recency sufficient? | Identity & Access plus Security policy |
+| Evidence | Can the decision and action be reconstructed? | Source domain and Audit & Evidence |
 
-    style Identity fill:#1a365d,stroke:#3182ce,color:#fff
-    style Audit fill:#805ad5,stroke:#553c9a,color:#fff
-```
+Effective access is the intersection of these dimensions, not the output of one god-platform.
 
-| Capability                  | Owning Platform   | Enterprise Standard / Target                    |
-| :-------------------------- | :---------------- | :---------------------------------------------- |
-| Identity Lifecycle          | Identity Platform | SCIM 2.0 provisioning                           |
-| Authentication              | Identity Platform | OAuth 2.1 / OIDC; FIDO2 / WebAuthn              |
-| Identity Authorization      | Identity Platform | OAuth 2.0 Delegation, Scope, Consent Management |
-| Federation                  | Identity Platform | External IdP federation & Public OIDC Provider  |
-| Multi-Factor Authentication | Identity Platform | 100% coverage for privileged access             |
-| Session & Tokens            | Identity Platform | Access token TTL ≤ 15 min; refresh rotation     |
-| Service Accounts & API Keys | Identity Platform | Scoped, rotated, auditable                      |
-| Security Audit              | Audit Platform    | Immutable, append-only, ≥ 400-day retention     |
+### 5.2 Enterprise IAM Strategy
 
-**Enterprise & Ecosystem IAM rules:**
+The enterprise IAM strategy establishes:
 
-- Identity is centralized in the Identity Platform.
-- Business Products never implement authentication.
-- Third-party applications consume Identity via explicit OAuth 2.0 user consent grants, and strictly operate outside the enterprise trust boundary.
-- Authorization policy is evaluated consistently across all products.
-- Products consume identity; they do not store or manage credentials.
+- stable Principals for humans, services, workloads, and governed agents;
+- explicit Identity Realms and correlation boundaries;
+- governed identifiers and authenticators;
+- authentication assurance and recovery;
+- session and credential lifecycle;
+- standards-based authentication, federation, and delegated-access protocols;
+- registered application and protected-resource trust;
+- locally verifiable security artifacts;
+- machine and workload identity;
+- identity-security event publication.
 
-### 5.3. Security Control Architecture
+#### Identity Boundary
 
-```mermaid
-graph TD
-    Internet([Internet]) --> WAF[WAF / DDoS / Rate Limit]
-    WAF --> API[API Gateway]
-    API --> IAM[Identity Platform]
-    IAM --> Products[Products / Platform Services]
-    Products --> Audit[Audit Platform]
-    Products --> Mon[Runtime Monitoring]
-    Mon --> SOC[Security Operations Center]
+Identity owns Principal and authentication trust. It does not own:
 
-    style IAM fill:#1a365d,stroke:#3182ce,color:#fff
-    style SOC fill:#805ad5,stroke:#553c9a,color:#fff
-```
+- Tenant, Workspace, or Membership;
+- Product, Application ownership, or Subscription;
+- Entitlement or business permission;
+- Product resource state;
+- enterprise-wide immutable evidence.
 
-| Layer                | Responsibility                                       |
-| :------------------- | :--------------------------------------------------- |
-| Edge Security        | WAF, DDoS protection, rate limiting                  |
-| Identity Security    | Authentication and authorization enforcement         |
-| API Security         | Gateway policy, token validation, schema enforcement |
-| Application Security | Secure SDLC, dependency and supply-chain integrity   |
-| Runtime Security     | Hardened, isolated workloads                         |
-| Monitoring           | Threat detection and anomaly analysis                |
-| Audit                | Tamper-evident compliance evidence                   |
+#### Identity Populations
 
-Security control principles: Defense in Depth, Secure by Default, Fail Secure, Least Privilege, Zero Standing Privileges, and Continuous Monitoring.
+The strategy supports distinct realm policies for:
 
-### 5.4. Service-to-Service (East-West) Security
+- ATI workforce;
+- customer workforce;
+- partner identities;
+- external consumers;
+- federated enterprise identities;
+- service, workload, and agent identities.
 
-Zero Trust does not stop at the edge. Inside the runtime there is no implicit trust between workloads: every service-to-service call is mutually authenticated, encrypted, and authorized independently of the north-south (edge) path.
+The same human may hold one stable workforce Principal across many Tenant Memberships, while customer or partner identities may remain realm-scoped where correlation is not justified.
 
-```mermaid
-graph LR
-    A[Service A] -->|mTLS + workload identity| B[Service B]
-    A --> SPIFFE[Workload Identity Authority]
-    B --> SPIFFE
-    A --> PDP[Policy Decision Point]
-    B --> PDP
-    A --> Audit[Audit Platform]
-    B --> Audit
+#### Application and Workload Trust
 
-    style SPIFFE fill:#1a365d,stroke:#3182ce,color:#fff
-    style PDP fill:#dd6b20,stroke:#c05621,color:#fff
-```
+Applications are owned by the Software Catalog domain. Identity owns their protocol-security registration and credential trust. Workloads use non-human identities and do not reuse human credentials.
 
-| East-West Control | Requirement |
-| :-- | :-- |
-| Transport | Mutual TLS (mTLS) on every internal call; no plaintext east-west traffic |
-| Workload Identity | Each workload holds a cryptographic identity (SPIFFE/SVID); no shared network-implicit trust |
-| Authorization | The Policy Decision Point authorizes each call on identity + context; the calling network segment grants nothing |
-| Certificate Lifecycle | Short-lived, automatically rotated workload certificates; no long-lived service credentials |
-| Auditability | Service-to-service authorization decisions are audited like user actions |
+#### Local Verification
 
-**East-west rules:** the internal network is treated as hostile; a workload authenticates and is authorized on every call regardless of origin; certificates are short-lived and auto-rotated; there is no "trusted internal zone" that bypasses identity.
+Products validate approved security artifacts locally during normal operation. Online identity or policy checks are reserved for decisions whose freshness or risk requires them.
 
-### 5.5. Data Protection
+### 5.3 Security Control Architecture
 
-```mermaid
-flowchart TD
-    PII[Sensitive / PII Data] --> Encrypt[Encrypt in Transit and at Rest]
-    Encrypt --> Storage[(Protected Storage)]
-    Storage --> Backup[Encrypted Backup]
-    Backup --> Recovery[Tested Recovery]
-    Storage --> Audit[Access Audit]
-    Audit --> Compliance[Compliance Evidence]
+Security controls are organized into enterprise families:
 
-    style Encrypt fill:#dd6b20,stroke:#c05621,color:#fff
-    style Audit fill:#805ad5,stroke:#553c9a,color:#fff
-```
+| Control Family | Enterprise Direction | Primary Authority |
+| :-- | :-- | :-- |
+| Identity and Authentication | Strong, risk-appropriate authentication and recovery | Identity & Access |
+| Application and Workload Trust | Registered clients, resources, workloads, and credential lifecycle | Identity, Software Catalog, Security & Trust |
+| Tenant Isolation | Explicit context, scoped administration, data and runtime isolation | Organization & Tenancy, Products, Runtime |
+| Authorization | Default deny; enforcement near resource; explicit separation of duties | Product domain / Policy authority |
+| Privileged Access | Dedicated privilege, strong assurance, limited duration, full attribution | Security Authority plus owning domain |
+| Cryptographic Trust | Managed custody, lifecycle, rotation, and recovery | Security & Trust Services |
+| Data Protection | Classification, minimization, encryption, residency, retention | Data, Security, Privacy, Domain owners |
+| Application Security | Secure design, supply chain, testing, and runtime protection | Application owner plus Security |
+| Network and Runtime Security | Segmentation, workload trust, hardened runtime, monitored exposure | Runtime and Security owners |
+| Integration Security | Provider trust, credential isolation, input validation, and scoped data exchange | Natural business owner plus Integration/Security |
+| Audit and Detection | Durable events, correlation, monitoring, response, and evidence | Source domains, Security Operations, Audit |
+| Resilience and Recovery | Containment, backup, restore, failover, and tested recovery | System owners plus Reliability/Security |
+| AI Security | Data controls, tool authorization, evaluation, human oversight, bounded autonomy | AI, Product, Security, and Data owners |
 
-| Classification | Protection Level | Baseline Control                                              |
-| :------------- | :--------------- | :------------------------------------------------------------ |
-| Public         | Basic            | Integrity protection                                          |
-| Internal       | Standard         | Encryption at rest + access control                           |
-| Confidential   | High             | Encryption + fine-grained authZ + access audit                |
-| Restricted     | Maximum          | Encryption + least privilege + full audit + residency binding |
+#### Distributed Authorization
 
-**Data protection rules:**
+Authorization is layered:
 
-- Data is encrypted in transit using TLS 1.3.
-- Sensitive data is encrypted at rest using AES-256.
-- Secrets are brokered from a managed store and never stored in application code or images.
-- Every access to sensitive data is recorded in the audit trail.
-- Data retention and residency follow enterprise governance (EAD-003).
-- Cryptographic keys are centrally managed with defined rotation.
+- protocol delegation defines which client may request which scope for which resource;
+- Membership defines valid Tenant/Workspace context;
+- Entitlement defines commercial capability;
+- Product policy defines actions, resources, relationships, and business invariants;
+- risk and assurance may require stronger authentication or human approval.
 
-**Regulatory scope:** payment data (Billing + payment providers) is in **PCI DSS** scope and is never stored in Scnehaux stores — it is tokenized at the provider and only tokens transit the estate. Personal data is handled under **GDPR** (lawful basis, data-subject rights, residency binding); the enterprise targets **SOC 2 Type II** and **ISO/IEC 27001** control coverage, with the immutable audit trail (EAD-003) serving as the primary compliance evidence source.
+A universal synchronous Policy Decision Point is not required. Shared policy capability may distribute or evaluate policy where justified, while the Product domain remains accountable for the final business decision.
 
----
+#### Privileged Access and Break-Glass
+
+Privileged access is separate from ordinary user access and includes:
+
+- dedicated administrative authority;
+- strong and recent authentication;
+- explicit scope and duration;
+- approval or separation of duties for high-risk actions;
+- complete attribution and evidence;
+- periodic review and revocation.
+
+Break-glass access may be claimed only when a dedicated mechanism, owner, scope, evidence path, automatic expiry, and tested recovery procedure exist.
+
+#### Security Control Status
+
+Downstream security controls distinguish:
+
+- designed;
+- assigned;
+- implemented;
+- tested;
+- monitored;
+- retired.
+
+An approved architecture does not make a control implemented.
+
+### 5.4 Data Protection
+
+#### Protection Principles
+
+- Data is classified and minimized by purpose.
+- Sensitive data is protected in transit, at rest, in backups, in events, in logs, and in analytical/AI copies.
+- Cryptographic keys and secrets use managed custody appropriate to risk.
+- Tenant, client, classification, purpose, residency, and retention context are preserved.
+- Public verification material is separated from restricted identity and key material.
+- Derived analytics, knowledge, and AI context inherit source restrictions.
+- Data-subject rights, legal hold, evidence, and contractual obligations are reconciled rather than applied as blind deletion.
+
+#### Cryptographic Trust
+
+Enterprise cryptographic direction requires:
+
+- explicit key and certificate authority;
+- managed production custody;
+- unique and stable key identity;
+- controlled activation, rotation, retirement, recovery, and destruction;
+- separation of duties for high-impact key operations;
+- no silent production fallback to ephemeral keys;
+- tested continuity across failure and recovery.
+
+Detailed algorithms and lifetimes belong in standards and SADs.
+
+#### Privacy and Correlation
+
+- Identity correlation is limited to justified realm and purpose.
+- External applications receive only required attributes.
+- Pairwise or scoped identifiers are used when global correlation is unnecessary.
+- Consent does not override prohibited processing.
+- Cross-tenant search, support, analytics, and administration require explicit authorization and evidence.
+
+#### Residency and Sovereignty
+
+Residency and sovereignty apply to authoritative stores, projections, messages, backups, support access, analytics, AI processing, and evidence. Unsupported requirements block the affected use rather than silently violating policy.
+
+#### Security Telemetry and Evidence
+
+Critical security events identify actor, application/workload, Tenant context, action, result, assurance, correlation, and evidence state without exposing secrets. Source systems retain durable facts until enterprise evidence is delivered.
 
 ## 6. Principles & Rules
 
-Each principle is paired with a machine-verifiable or audit-verifiable **fitness function**, upholding the GDC-000 maxim that a rule without an enforcement mechanism is only a suggestion.
+### 6.1 Explicit Trust, No Network Inheritance
 
-### 6.1. Zero Trust
+Every actor, application, workload, context, and resource establishes trust explicitly.
 
-Every request is authenticated and authorized regardless of origin.
+- **Fitness function:** protected-system review reports zero network-location-only trust paths.
 
-- **Rationale:** Network-location trust is the root cause of lateral-movement breaches.
-- **Fitness function:** 100% of production endpoints require validated identity; unauthenticated paths = `0` (except explicitly approved public endpoints).
+### 6.2 Identity Has Narrow Authority
 
-### 6.2. Identity First
+IAM does not own Membership, Entitlement, Application ownership, or Product permission.
 
-The Identity Platform is the single source of enterprise identity.
+- **Fitness function:** Identity PAD and data-model audit report zero prohibited authoritative aggregates.
 
-- **Rationale:** Distributed identity implementations diverge and become the weakest link.
-- **Fitness function:** Zero Business Products implement local authentication; local credential stores = `0`.
+### 6.3 Realm and Operating Context Are Explicit
 
-### 6.3. Security by Default
+Identity correlation and Tenant context follow governed realm and Membership policies.
 
-Security controls are enabled by default, not opt-in.
+- **Fitness function:** every authentication and context journey identifies realm and context authority.
 
-- **Rationale:** Opt-in security guarantees inconsistent coverage.
-- **Fitness function:** Golden Path services inherit encryption, authN, and audit with no additional configuration.
+### 6.4 Default Deny
 
-### 6.4. Zero Trust Privilege
+Access is denied unless required trust and authorization are positively established.
 
-Every identity holds the minimum permissions required.
+- **Fitness function:** route and policy tests verify unauthenticated and unauthorized denial.
 
-- **Rationale:** Excess privilege converts any single compromise into a broad breach.
-- **Fitness function:** Privileged access is time-bound and reviewed; standing admin privileges trend toward `0`.
+### 6.5 Signature Is Not Authorization
 
-### 6.5. Defense in Depth
+A valid cryptographic artifact does not by itself authorize a Product action.
 
-Independent controls exist at every architectural layer.
+- **Fitness function:** protected resources validate audience/context and enforce Product policy.
 
-- **Rationale:** No single control is infallible; layered controls contain failures.
-- **Fitness function:** Every request path traverses edge, identity, and application controls; single-control paths = `0`.
+### 6.6 Authorization Is Enforced Near the Resource
 
-### 6.6. Audit Everything
+The owning Product remains accountable for business authorization.
 
-Every security-relevant action is recorded and traceable.
+- **Fitness function:** Product PADs identify authorization owner and high-risk decisions.
 
-- **Rationale:** Un-audited actions cannot be investigated and fail compliance.
-- **Fitness function:** 100% of security-sensitive actions produce an immutable audit event; retention ≥ 400 days.
+### 6.7 Membership, Entitlement, and Permission Are Distinct
 
----
+Context, commercial access, and action authorization do not imply one another.
+
+- **Fitness function:** contract and domain review reports zero conflated authority.
+
+### 6.8 Production Cryptographic Material Uses Managed Custody
+
+Keys and secrets have explicit owner, lifecycle, and recovery.
+
+- **Fitness function:** critical SADs provide custody and rotation evidence.
+
+### 6.9 Workloads Have Distinct Identities
+
+Services, jobs, connectors, and agents do not use shared human credentials.
+
+- **Fitness function:** workload inventory reports owner, identity, credential lifecycle, and audience.
+
+### 6.10 Privilege Is Attributable and Time-Bound
+
+Administrative and emergency authority is scoped, evidenced, and reviewed.
+
+- **Fitness function:** privileged-access review reports owner, scope, expiry, and evidence.
+
+### 6.11 Tenant Isolation Is Defense in Depth
+
+Application, data, runtime, cache, messaging, export, and administration controls enforce isolation together.
+
+- **Fitness function:** cross-tenant negative-test coverage includes every relevant data path.
+
+### 6.12 Security Controls Require Realizers and Evidence
+
+Architecture status is not implementation status.
+
+- **Fitness function:** implemented/tested controls resolve to systems and current evidence.
+
+### 6.13 External Trust Is Scoped
+
+Federation, providers, partners, and client systems are trusted only for declared facts and purposes.
+
+- **Fitness function:** external trust inventory identifies issuer/provider, scope, owner, and lifecycle.
+
+### 6.14 AI Authority Is Delegated and Bounded
+
+AI and agents operate within user/workflow authority, tool policy, data purpose, risk limits, and human oversight.
+
+- **Fitness function:** high-risk AI actions have explicit authorization and approval control.
+
+### 6.15 Degraded Security Is Explicit
+
+Failure modes define which operations continue, degrade, or fail closed.
+
+- **Fitness function:** critical security dependencies have approved degradation contracts.
 
 ## 7. Alternatives Considered
 
-The Zero Trust / centralized-identity model was chosen against rejected alternatives. Each rejection is a consciously accepted trade-off.
-
-| Alternative | Why Rejected | Debt Consciously Accepted |
+| Alternative | Why Rejected | Debt Accepted |
 | :-- | :-- | :-- |
-| **Perimeter (castle-and-moat) security** | A single breached perimeter grants lateral free movement; the root cause of large breaches | Per-request verification and mTLS add latency and operational complexity |
-| **Per-product IAM** | Divergent implementations become the weakest link; inconsistent policy and audit | Products depend on a central Identity Platform (an enterprise SPOF, mitigated below) |
-| **Coarse RBAC only, evaluated at login** | Cannot react to context change mid-session; over-grants standing privilege | Continuous, context-aware authorization is more complex to build and reason about |
-| **Long-lived service credentials / API keys for east-west** | Long-lived secrets leak and are hard to rotate; enable persistent lateral access | Short-lived workload certificates require automated issuance and rotation machinery |
-
----
+| Perimeter/network trust | Internal location does not prove identity or authorization | More explicit identity and workload controls |
+| IAM owns all authorization | It creates a god-platform and ignores Product context | Distributed policy and local enforcement complexity |
+| One global identity correlation policy | Workforce, customer, partner, and consumer needs differ | Explicit Identity Realms and linking governance |
+| Shared human service accounts | They destroy attribution and safe rotation | Workload-identity lifecycle investment |
+| Security controls considered implemented when documented | It creates false assurance | Evidence and control-status administration |
+| AI agent inherits full user access | It creates excessive and opaque authority | Bounded delegation and approval flow |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-Centralizing identity concentrates risk in the Identity Platform by design; its failure and degradation modes are therefore first-class.
-
-| SPOF | Blast radius | Graceful degradation strategy |
+| Security Dependency | Blast Radius | Required Posture |
 | :-- | :-- | :-- |
-| Identity Platform (authN/authZ) | Enterprise-wide | Tier-0 hardened; consumers validate short-lived cached tokens locally during an outage so existing sessions continue while new logins and privileged writes fail-closed; a controlled, fully-audited break-glass path exists for emergency access |
-| Policy Decision Point (authZ) | All authorization decisions | Fails **closed** (default-deny); recently-evaluated policy is cached with a bounded TTL to ride out a brief PDP outage without granting unaudited access |
-| Secrets store / KMS | Services needing fresh secrets/keys | Leased secrets are cached with a bounded TTL; running workloads continue on current leases while issuance is degraded; no secret is ever written to code or images |
-| Audit pipeline | Compliance evidence, not serving | Security-sensitive events are written to a local durable queue and backfilled — audit events are delayed, never dropped; loss of the audit path fails security-critical writes closed |
-
-The design bias is uniform: on a security-control failure the system **fails closed** for privileged and write operations and degrades to read/existing-session continuity, never to open access.
-
----
+| Identity issuance | New authentication and credential lifecycle | Existing valid artifacts remain locally verifiable; new trust fails closed |
+| Tenant/Membership authority | New context and revocation changes | Bounded projections continue within security policy |
+| Cryptographic custody | New signing, encryption, or credential operation | Unsafe issuance fails closed; verification remains available where safe |
+| Policy capability | Shared policy decisions | Local approved policy or fail-closed behavior according to decision class |
+| Audit/evidence service | Central evidence consolidation | Source systems retain durable facts and retry |
+| Security telemetry | Detection quality | Preventive controls remain; telemetry restoration is prioritized |
+| External identity/provider | Affected federation or integration | Failure is isolated to the provider and journey |
 
 ## 9. Ownership
 
-| Responsibility                                   | Accountable               | Consulted                    |
-| :----------------------------------------------- | :------------------------ | :--------------------------- |
-| Enterprise security architecture (this artifact) | Architecture Authority    | Security Team, Identity Team |
-| Identity Platform                                | Identity Team             | Security Team                |
-| Security governance and standards                | Security Team             | Architecture Authority       |
-| Audit trail and compliance evidence              | Audit Team                | Security Team, Legal         |
-| Security operations and response                 | Security Operations (SOC) | Domain Teams                 |
-
----
+| Responsibility | Accountable | Consulted |
+| :-- | :-- | :-- |
+| Enterprise security architecture | Security Architecture Authority | Architecture, Platform, Product, Data |
+| Identity and protocol trust | Identity Platform Owner | Security and Application owners |
+| Tenant and Membership security | Organization & Tenancy Owner | Identity, Product, Security |
+| Product authorization | Product Domain Owner | Security and Policy owner |
+| Application ownership | Software Catalog Owner | Application team and Security |
+| Cryptographic custody | Security & Trust Owner | Identity, Runtime, Data |
+| Security operations and incident response | Security Operations | System and Product owners |
+| Enterprise evidence | Audit & Evidence Owner | Security, Compliance, source domains |
+| Privacy and data protection | Privacy/Data Protection Authority | Data and Domain owners |
 
 ## 10. Dependencies
 
-**Upstream (this document depends on):**
+**Strategic inputs:** enterprise capability, system, data, interaction, and runtime architecture.
 
-- EAD-001 Enterprise Capability & Domain Map — supplies domains and trust boundaries.
-- EAD-002 Enterprise System Landscape — supplies systems to be secured.
-- EAD-004 Enterprise Integration Architecture — gateway and contract security surfaces.
-- EAD-005 Enterprise Platform Architecture — secure-by-default substrate and secret brokering.
-
-**Downstream (this document governs):**
-
-- Identity Platform PAD and Audit Platform PAD.
-- Security and Compliance standards (STD).
-- Every PAD and SAD (security conformance).
-
----
+**Governed outputs:** domain security architecture, enterprise security standards, system threat models, controls, and evidence.
 
 ## 11. Traceability
 
-- **Referenced by:** every Platform PAD, every Business Product PAD, every SAD, the security standards, and compliance policies.
-- **Governs:** the identity, encryption, and audit standards in the STD layer.
-- **Consistency rule:** every SAD's security section MUST conform to the trust model and mandatory controls defined here; a SAD implementing local authentication is rejected.
-
----
+- Every control family maps to one accountable authority.
+- Every implemented control maps to a PAD/SAD realizer and evidence.
+- Every protected system maps to identity, Tenant, data, application, and authorization boundaries.
+- Major trust-model changes require an enterprise ADR and EAD review.
 
 ## 12. Assumptions
 
-- The Identity Platform is the enterprise trust anchor and is itself Tier-0.
-- Every system can integrate centralized authentication and authorization.
-- Encryption and secret-brokering capabilities are available across all runtime environments.
-
----
+- ATI initially has primarily internal and managed-service users.
+- External federation and third-party application exposure grow incrementally.
+- Products can validate approved security artifacts locally.
+- Managed key, secret, and runtime-security capabilities are available.
+- Security evidence maturity will increase with system maturity.
 
 ## 13. Constraints
 
-- Local authentication inside Business Products is prohibited.
-- Shared credentials are prohibited.
-- Hardcoded secrets are prohibited.
-- Anonymous access is prohibited unless explicitly approved and audited.
-- Internal systems cannot bypass edge, identity, or audit controls.
-
----
+- Network location cannot be the sole trust basis.
+- Identity cannot own Tenant Membership, Entitlement, or Product permission.
+- Human credentials cannot be reused by workloads.
+- Production keys cannot silently fall back to process-ephemeral material.
+- High-risk actions require attributable identity and appropriate assurance.
+- Sensitive data cannot be copied without purpose, classification, and protection.
+- A documented control cannot be claimed implemented without evidence.
 
 ## 14. Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 | :-- | :-- | :-- | :-- |
-| Identity Platform compromise | Low | Critical — enterprise-wide breach | Tier-0 hardening, MFA, continuous monitoring, blast-radius containment |
-| Excessive standing privilege | Medium | High — broad unauthorized access | Least Privilege + time-bound access reviews |
-| Weak or missing encryption | Low | High — data exposure | TLS 1.3 / AES-256 mandated by default |
-| Missing audit trail | Low | High — compliance failure | Audit Everything + immutable trail |
-| Inconsistent controls across products | Medium | High — expanded attack surface | Security by Default via the platform |
-
----
+| IAM becomes a god-platform | High | Critical | Narrow authority and Product authorization ownership |
+| Cross-tenant context is trusted from client input | High | Critical | Validated Membership and context controls |
+| Workload identity remains shared or anonymous | Medium | Critical | Workload inventory and credential lifecycle |
+| Key custody or rotation fails across replicas/recovery | Medium | Critical | Managed custody and tested continuity |
+| Security controls remain paper-only | High | High | Realizer/evidence status |
+| External federation leaks or correlates identities unnecessarily | Medium | High | Realm, purpose, and privacy controls |
+| AI agent acts beyond delegated authority | Medium | Critical | Bounded tools, scope, risk, and approval |
+| Degraded security fails open silently | Medium | Critical | Explicit degradation contract and testing |
 
 ## 15. Future Direction
 
-The security architecture evolves by strengthening controls without weakening the Zero Trust core: broader passwordless (FIDO2) adoption, continuous authorization with richer context signals, automated policy-as-code enforcement across the supply chain, and confidential-computing options for the most sensitive workloads. Cryptographic and vendor choices will change; the model — centralized identity, least privilege, defense in depth, complete auditability — remains fixed.
-
----
+The security architecture will evolve from minimum safe workforce and tenant trust toward stronger authentication, enterprise federation, workload identity, distributed authorization, automated evidence, advanced detection, and bounded external/AI ecosystems. Capability claims advance only with implementation and test evidence.
 
 ## 16. References
 
-- Zero Trust Architecture — NIST SP 800-207
-- NIST Cybersecurity Framework (CSF)
-- OWASP Application Security Verification Standard (ASVS)
-- OWASP Top 10
-- OAuth 2.1 / OpenID Connect
-- FIDO2 & WebAuthn
-- SCIM 2.0
-- CIS Controls
-- Cloud Security Alliance (CSA) guidance
+- EAD-001 — Enterprise Capability & Domain Map.
+- EAD-002 — Enterprise System Landscape.
+- EAD-003 — Enterprise Data Ownership & Topology.
+- EAD-004 — Enterprise Integration Architecture.
+- EAD-005 — Enterprise Platform Architecture.
+- GDC-000 — Governance Policy.
+- GDC-006 — EAD Guideline.
+- NIST SP 800-207 — Zero Trust Architecture.
+- NIST Digital Identity Guidelines.
+- OAuth and OpenID Connect security practices.
+- OWASP Application Security Verification Standard.
+- Privacy, cryptographic-key-management, and workload-identity practices.

@@ -4,366 +4,433 @@ doc_meta:
   title: Enterprise Data Ownership & Topology
   owner: Architecture Authority
   version: 1.0.0
-  status: approved
+  status: draft
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
-  created_date: 2026-01-01
-  last_reviewed: 2026-07-05
+  created_date: 2026-08-06
+  last_reviewed: 2026-08-06
 ---
 
 # Enterprise Data Ownership & Topology
 
 ## 1. Purpose
 
-Establish enterprise data sovereignty: which domain owns which data, where the transactional boundary ends and the analytical boundary begins, how data legitimately moves between them, and the governance controls that keep the whole estate auditable. This document eliminates the shared operational database as an enterprise anti-pattern while enabling enterprise-wide analytics through governed replication.
+Define enterprise data authority, ownership, movement, and governance for the **Scnehaux Enterprise Cloud**, including data whose canonical authority remains with client or industry systems.
 
-**Decision question this document answers:** _"Who owns each dataset, and how may data cross a domain boundary without creating coupling?"_
+**Decision question:** _Who is authoritative for each class of data, how may that data move, and what obligations apply when ATI stores a copy, projection, derivative, or execution record?_
 
-This document states data ownership and movement policy. It does not define physical schemas, database engines, ETL code, or reporting tools; those are owned downstream by SAD and TDD.
-
----
+This document defines enterprise data principles and macro topology. It does not define database schemas, table structures, storage indexes, field-level contracts, retention schedules, or implementation-specific pipelines.
 
 ## 2. Scope
 
 **In scope:**
 
-- Assignment of every dataset to exactly one owning domain (data sovereignty).
-- The separation of transactional (OLTP) from analytical (OLAP) estates.
-- The sanctioned mechanisms for moving data across boundaries (events, Change Data Capture).
-- Enterprise data classification and the governance rules attached to each class.
+- Enterprise data-authority classes.
+- Domain ownership of strategic data families.
+- Transactional, operational, analytical, knowledge, and evidence boundaries.
+- Macro movement and projection patterns.
+- External-authority, freshness, reconciliation, and lineage principles.
+- Enterprise data governance, classification, privacy, residency, and retention direction.
 
 **Out of scope:**
 
-- Physical table design, indexing, partitioning, and storage engines (owned by SAD/TDD).
-- Concrete ETL/ELT pipeline implementations and orchestration tools.
-- Reporting and dashboard products (consumers of the analytical estate).
-- Domain-internal data models (owned by each domain's PAD/SAD).
+- Physical schemas and storage engines — SADs and TDDs.
+- API/event/file contract shape — EAD-004 and standards.
+- Product-specific data models — PADs.
+- Detailed security controls — EAD-006 and standards.
+- Analytical model, ontology, vector-index, or pipeline implementation — PADs and SADs.
 
----
+This document binds every system that creates, stores, transforms, exports, analyzes, or deletes enterprise or client data.
 
 ## 3. Enterprise Context
 
-Scnehaux adopts a **Domain-Owned Data** architecture, the data-plane expression of the domain boundaries in **EAD-001**. Every domain is the sole authoritative source for the data it owns. No two domains share an operational database, and no domain reaches into another's store.
+Scnehaux Enterprise Cloud is both:
 
-Enterprise analytics are built from **replicated, read-only data products**, not from queries against operational systems. This is the Data Mesh principle applied pragmatically: the operational estate optimizes for transactional correctness and isolation, while a separate analytical estate optimizes for cross-domain insight, and a governed, asynchronous replication path connects the two. The transactional estate is never coupled to, nor slowed by, analytical demand.
+- an owner of internal enterprise, control, operational-execution, and evidence data; and
+- a processor of client and industry data whose canonical authority remains external.
 
----
+Travel operations make this distinction critical. PNR, ticket, fare, inventory, payment, settlement, and financial posting may remain authoritative in client or industry systems, while ATI owns local work, decision, command, exception, reconciliation, and evidence state.
+
+The data architecture therefore treats authority as an explicit property of every critical fact rather than assuming that the system holding a copy owns the truth.
 
 ## 4. Architectural Drivers & Lessons
 
-### 4.1. Drivers
+### 4.1 Drivers
 
-Data topology is shaped by the enterprise goals in EAD-001 and by one dominant constraint: enterprise analytics must never be paid for in operational reliability.
+| ID | Driver | Data Consequence |
+| :-- | :-- | :-- |
+| D1 | Multi-tenant enterprise operation | Tenant, classification, purpose, and residency context accompany governed data |
+| D2 | External travel and financial systems remain authoritative | External canonical data and local projections are distinct classes |
+| D3 | Cross-product analytics and AI require reusable data | Analytical and knowledge products are derived without mutating source transactions |
+| D4 | Operational actions may have financial impact | Freshness, revalidation, idempotency, evidence, and reconciliation are correctness concerns |
+| D5 | Identity and tenancy authorities are being separated | Principal, Membership, Entitlement, and Product permission have distinct owners |
+| D6 | Physical platform maturity will evolve | Logical data authority is independent of physical database consolidation or separation |
 
-| Driver | Topology Consequence |
+### 4.2 Lessons Incorporated
+
+| Lesson | Data Response |
 | :-- | :-- |
-| Data ownership is the physical proof of a bounded context | One owning domain per dataset; no shared operational DB |
-| Analytics must not couple to or slow the transactional estate | Separate OLAP estate fed by asynchronous, governed replication |
-| Privacy and residency are non-negotiable | PII stays domain-owned; analytical copies masked/tokenized; residency-bound |
-| Every dataset must be discoverable and auditable | Cataloged ownership + end-to-end lineage |
-
-### 4.2. Lessons Incorporated
-
-Recorded from enterprise COE (Correction-of-Error) themes, not a greenfield ideal.
-
-| COE-class lesson | Design response in this document |
-| :-- | :-- |
-| A reporting query run directly against an OLTP database degraded production | Reporting/BI MUST NOT query transactional stores; read only the replicated analytical estate |
-| A shared operational database became irreversible coupling between domains | No Shared Persistence rule + zero cross-domain-grant fitness function |
-| Unmasked PII replicated into a warehouse became a privacy incident | Masking/tokenization enforced at replication; PII cannot leave its domain unmasked |
-| An unowned "temporary" dataset became an ungoverned data swamp | Data-as-a-Product: every analytical dataset has a registered owner, schema, and freshness SLA |
-
----
+| Shared persistence recreated a distributed monolith | Domains own private logical persistence boundaries |
+| Cached external data was treated as current truth | Projections remain non-authoritative and expose freshness |
+| CDC was treated as a business contract | Business contracts remain owned APIs/events; CDC is an implementation mechanism |
+| Analytical and AI stores became shadow authorities | Derived systems cannot directly mutate transactional truth |
+| Tenant scope was lost during movement | Scope and classification travel with data |
+| Deletion was treated as a single database operation | Retention, evidence, legal hold, external authority, and downstream copies are coordinated |
 
 ## 5. Architecture Model
 
-### 5.1. Data Ownership
+### 5.1 Data Ownership
 
-```mermaid
-graph TD
-    subgraph Domains["Domain-Owned Transactional Stores (one owner each)"]
-        IAM[(Identity DB)]
-        WS[(Workspace DB)]
-        HCM[(HCM DB)]
-        ERP[(ERP DB)]
-        CRM[(CRM DB)]
-        BILL[(Billing DB)]
-        DOC[(Document Store)]
-        AUDIT[(Audit Ledger)]
-    end
+#### Data Authority Classes
 
-    Rule{{"Invariant:<br/>exactly one owning domain per dataset<br/>no cross-domain reads at the DB layer"}}
+| Class | Meaning | Authority Rule |
+| :-- | :-- | :-- |
+| ATI Authoritative Data | Facts created and governed by an ATI domain | One ATI domain is the source of truth |
+| Externally Authoritative Data | Facts whose canonical owner is a client, partner, or industry system | External authority is named explicitly |
+| Operational Execution State | Work, decision, command, exception, and outcome state created by ATI | Owned by the executing Product domain |
+| Non-Authoritative Projection | Local copy used for performance, resilience, or product needs | Source authority, version, freshness, and reconciliation are declared |
+| Evidence Data | Tamper-evident accountability record | Enterprise evidence authority owns the durable record |
+| Derived / Analytical Data | Metrics, aggregates, features, models, or reports derived from source facts | Derived product owner is accountable; source lineage remains intact |
+| Proposed / AI-Generated Data | Suggested classification, extraction, decision, or content | Never authoritative until accepted by the owning domain |
+| Reference Data | Governed codes, classifications, and shared reference values | One named authority or external source owns the reference |
 
-    IAM --- Rule
-    WS --- Rule
-    HCM --- Rule
-    ERP --- Rule
-    CRM --- Rule
-    BILL --- Rule
-    DOC --- Rule
-    AUDIT --- Rule
+#### Canonical Ownership Matrix
 
-    style Rule fill:#dd6b20,stroke:#c05621,color:#fff
-```
-
-The diagram shows representative transactional stores. The invariant is exhaustive: **every domain in the EAD-001 Ownership Matrix maps to exactly one operational store, or is explicitly stateless.** The complete ownership assignment:
-
-| Domain             | Operational Store       | Notes                                                               |
-| :----------------- | :---------------------- | :------------------------------------------------------------------ |
-| Identity           | Identity DB             | Credentials, sessions, consent grants, OAuth clients                |
-| Workspace          | Workspace DB            | Tenant, org, membership                                             |
-| Workflow           | Workflow DB             | Process/instance state                                              |
-| Notification       | Notification DB         | Delivery state, templates                                           |
-| Integration        | Integration DB          | Connector config, mapping state                                     |
-| Audit              | Audit Ledger            | Append-only, tamper-evident                                         |
-| AI                 | AI Store + Vector Index | Embeddings, retrieval index                                         |
-| Document           | Document Store          | Blobs + metadata                                                    |
-| Billing            | Billing DB              | Subscription, metering, invoices                                    |
-| HCM                | HCM DB                  | Human capital records                                               |
-| ERP                | ERP DB                  | Resource-planning records                                           |
-| CRM                | CRM DB                  | Customer records                                                    |
-| ITSM               | ITSM DB                 | Tickets, service records                                            |
-| Procurement        | Procurement DB          | Sourcing, purchase orders                                           |
-| Project Management | PM DB                   | Projects, portfolios                                                |
-| CMS                | CMS DB                  | Content entities                                                    |
-| LMS                | LMS DB                  | Courses, enrollments                                                |
-| UI Platform        | _none — stateless_      | Design-system assets are build-time artifacts, not operational data |
-
-No two rows share a store; the single stateless domain (UI Platform) owns no operational data, so the map remains MECE.
-
-**Ownership rules:**
-
-| Rule | Description |
+| Data Family | Canonical Authority |
 | :-- | :-- |
-| Single Ownership | Every dataset has exactly one owning domain. |
-| No Shared Database | Domains never share an operational database instance or schema. |
-| Authoritative Source | The owning domain is the sole source of truth for its data. |
-| Read Isolation | Other domains obtain data only through the owner's API or published events, never by direct query. |
+| Principal, Identifier, Authenticator, Session, Protocol Trust | Identity & Access |
+| Organization, Tenant, Workspace, Membership | Organization & Tenancy |
+| Product and Offering | Product-owning domain / Product & Offering Catalog |
+| Application and Application Owner | Software Catalog |
+| Subscription and Entitlement | Subscription & Entitlement |
+| Employee, Employment, HR Organization, Payroll | HCM |
+| BPO Client Account, Contract, SOW, Commercial Terms | BPO Client & Contract domain |
+| Operational Team, Workstream Assignment, Shift, Capacity | Workforce Operations / Service Catalog domains |
+| Work Item, Case, Task, Decision, Product Outcome | Owning Product domain |
+| Enterprise Evidence | Audit & Evidence |
+| PNR, Ticket, Offer, Inventory | Client or industry system defined by contract |
+| Fare and Fare Rule | Airline, ATPCO, GDS, or contracted source |
+| Financial Posting and Settlement | Client ERP, revenue accounting, payment, or settlement authority |
+| Analytical Product | Named Data or Product owner |
+| Knowledge Asset | Named Knowledge or Product owner with source provenance |
 
-### 5.2. Transactional & Analytical Boundary
+A copied fact does not change the authority listed above.
 
-```mermaid
-flowchart LR
-    A[Business Domain] --> DB[(Transactional DB — OLTP)]
-    DB -->|Domain Events + CDC| STREAM{{Governed Replication}}
-    STREAM --> LAKE[(Data Lake — raw)]
-    LAKE --> WH[(Enterprise Warehouse — modeled)]
-    WH --> BI[BI & Dashboards]
-    WH --> AIW[AI / ML Workloads]
-    WH --> ANALYTICS[Cross-domain Analytics]
+#### Logical Persistence Boundary
 
-    style DB fill:#2b6cb0,stroke:#63b3ed,color:#fff
-    style WH fill:#805ad5,stroke:#553c9a,color:#fff
-    style STREAM fill:#dd6b20,stroke:#c05621,color:#fff
-```
+Each authoritative domain controls:
 
-| Layer                | Optimized For                                     | Access Pattern        |
-| :------------------- | :------------------------------------------------ | :-------------------- |
-| Transactional (OLTP) | Correctness, low-latency writes, domain isolation | Owning domain only    |
-| Analytical (OLAP)    | Cross-domain read, aggregation, ML                | Read-only, replicated |
+- its write model and integrity rules;
+- access to its authoritative records;
+- publication of its contracts;
+- retention and correction obligations;
+- restoration and reconciliation responsibility.
 
-**Boundary rules:**
+Multiple domains may temporarily share infrastructure, but direct cross-domain persistence access remains prohibited.
 
-- Transactional databases remain private to their owning domain.
-- Analytical systems are read-only and MUST NOT write back into transactional systems.
-- Reporting and BI MUST NOT query transactional databases directly.
-- The analytical estate consumes replicated data products, and its freshness is a governed target (analytical replication freshness P95 ≤ 15 minutes).
-
-### 5.3. Data Movement Strategy
+#### Authority Topology
 
 ```mermaid
-flowchart TD
-    DomainDB[(Domain DB)] -->|business change| Events[Domain Events]
-    DomainDB -->|row-level change| CDC[CDC Stream]
-
-    Events --> Broker[(Event Broker)]
-    CDC --> Pipeline[Replication Pipeline]
-
-    Broker --> Consumers[Domain Consumers]
-    Pipeline --> DataLake[(Data Lake)]
-    DataLake --> Warehouse[(Enterprise Warehouse)]
-
-    Warehouse --> BI[BI]
-    Warehouse --> AIW[AI]
-
-    style Broker fill:#2b6cb0,stroke:#63b3ed,color:#fff
-    style Warehouse fill:#805ad5,stroke:#553c9a,color:#fff
+graph LR
+    EXT[External Systems of Record] --> PROJ[ATI Projections]
+    AUTH[ATI Authoritative Domains] --> PROJ
+    AUTH --> EXEC[Operational Execution State]
+    PROJ --> EXEC
+    EXEC --> EVID[Evidence]
+    AUTH --> ANALYTICS[Analytical Data Products]
+    PROJ --> ANALYTICS
+    EXEC --> ANALYTICS
+    ANALYTICS --> KNOW[Knowledge / AI Products]
+    KNOW -. proposed outputs .-> AUTH
 ```
 
-| Principle | Description | Target |
+The final arrow requires authoritative acceptance; derived systems cannot promote themselves.
+
+### 5.2 Transactional & Analytical Boundary
+
+| Data Plane | Purpose | Mutation Rule |
 | :-- | :-- | :-- |
-| Event First | Business state changes are published as domain events. | At-least-once; P99 propagation ≤ 5 s |
-| CDC for Analytics | Change Data Capture replicates data to the analytical estate. | Freshness P95 ≤ 15 min |
-| Asynchronous by Default | Cross-domain synchronization is eventually consistent. | Convergence within replication SLA |
-| Immutable History | Historical records remain traceable and auditable. | Audit retention ≥ 400 days |
+| Authoritative Transactional | Enforce business and control invariants | Only owning domain commands mutate state |
+| Operational Projection | Support local product execution or resilience | Updated from declared authority; never independent truth |
+| Evidence | Preserve accountability and chain of custody | Append and govern according to evidence policy |
+| Analytical | Produce metrics, reports, forecasting, and data products | Read/derive from governed sources; no direct source mutation |
+| Knowledge | Organize documents, claims, entities, relationships, and provenance | Source authority and access controls are preserved |
+| AI / ML | Train, evaluate, infer, and recommend | Outputs remain derived or proposed until accepted |
 
-### 5.4. Data Governance
+Transactional workloads prioritize correctness and domain invariants. Analytical and AI workloads prioritize governed reuse, lineage, and appropriate freshness without coupling operational availability to analytical systems.
 
-| Classification | Description | Baseline Control |
-| :-- | :-- | :-- |
-| Master Data | Enterprise reference data owned by one domain | Single-writer, published read model |
-| Transactional Data | Operational business records | Domain-private, encrypted at rest |
-| Reference Data | Shared lookup values | Versioned, read-only distribution |
-| Analytical Data | Read-only reporting datasets | Replicated, no write-back |
-| Audit Data | Immutable compliance records | Append-only, tamper-evident, ≥ 400-day retention |
-| PII / Sensitive | Personally identifiable information | Domain-owned, encrypted, access-audited, residency-bound |
+#### Data Product Boundary
 
-**Governance rules:**
+A data product has:
 
-- Every dataset has an identified owner recorded in a data catalog.
-- Sensitive data follows the enterprise security policy defined in EAD-006.
-- Data duplication is permitted only through governed replication, never ad-hoc copies.
-- PII remains under its owning domain; replicated analytical copies are masked or tokenized.
-- Analytical datasets are read-only.
-- Data lineage from source to consumer is traceable end to end.
+- an accountable owner;
+- defined consumers and purpose;
+- source lineage;
+- quality and freshness expectations;
+- classification and access policy;
+- lifecycle and deprecation rules.
 
----
+A database table, dashboard, or copied dataset is not automatically a data product.
+
+### 5.3 Data Movement Strategy
+
+Sanctioned enterprise movement patterns include:
+
+| Pattern               | Appropriate Use                                                                |
+| :-------------------- | :----------------------------------------------------------------------------- |
+| Provider-Owned API    | Current authoritative query or command requiring immediate response            |
+| Domain Event          | Publication of an accepted fact to independent consumers                       |
+| Bounded Projection    | Resilient local enforcement or read needs                                      |
+| Batch / File Exchange | External or high-volume processes where synchronous contracts are unsuitable   |
+| Change Data Capture   | Governed replication or analytical ingestion, not business semantics           |
+| Data Export / Import  | Migration, portability, contractual delivery, or offboarding                   |
+| Reconciliation        | Detect and repair divergence between authority and copies or external outcomes |
+
+#### Projection Requirements
+
+Every critical projection identifies:
+
+- source authority;
+- consuming purpose;
+- scope and classification;
+- acceptable freshness;
+- stale-state behavior;
+- conflict rule;
+- replay/bootstrap approach;
+- reconciliation owner;
+- retention and deletion behavior.
+
+The detailed contract format belongs in standards and PAD/SAD artifacts.
+
+#### External Authority Requirements
+
+Every critical external dataset identifies:
+
+- the external authority and contracted scope;
+- the ATI domain accountable for the relationship;
+- whether ATI is read-only, command-through, propose-only, or approved write-back;
+- the freshness required before an irreversible action;
+- the expected reconciliation and exception process.
+
+#### Conflict Direction
+
+By default:
+
+- external authority wins for externally authoritative facts;
+- ATI authority wins for ATI-owned facts;
+- local execution and evidence remain ATI-owned even when the external business outcome differs;
+- conflicts produce an explicit exception rather than silent overwrite.
+
+### 5.4 Data Governance
+
+#### Governance Responsibilities
+
+| Responsibility                                | Accountable Role                        |
+| :-------------------------------------------- | :-------------------------------------- |
+| Enterprise data principles and classification | Data Governance Authority               |
+| Authoritative domain model                    | Domain Owner                            |
+| Data Product quality and lifecycle            | Data Product Owner                      |
+| External-authority contract                   | Product Domain Owner                    |
+| Tenant isolation and residency policy         | Security, Data, and Tenancy authorities |
+| Evidence retention                            | Audit & Compliance authority            |
+| Analytical and AI usage                       | Data/AI Governance plus source owner    |
+
+#### Classification Direction
+
+Enterprise data uses classification appropriate to business and regulatory impact, including:
+
+- public;
+- internal;
+- restricted;
+- confidential or regulated where required.
+
+Classification applies to source records, projections, events, logs, exports, backups, analytics, knowledge indexes, and AI context.
+
+#### Tenant and Purpose Context
+
+Tenant-scoped or client-scoped data preserves:
+
+- owning or source context;
+- allowed purpose;
+- consumer authorization;
+- residency and retention obligations;
+- lineage to the authoritative source.
+
+Cross-tenant aggregation requires explicit authorization and purpose.
+
+#### Residency and Sovereignty
+
+Residency applies to:
+
+- authoritative storage;
+- projections and caches;
+- messages and files;
+- backups and recovery copies;
+- analytical and AI datasets;
+- support access and exports.
+
+Unsupported residency requirements block use rather than silently violating policy.
+
+#### Retention and Disposal
+
+Retention is determined by purpose, contract, regulation, security evidence, and legal hold. Deletion of authoritative data must account for projections, derived products, backups, evidence, and external authority obligations.
+
+#### Data Quality and Lineage
+
+Critical data products and projections expose:
+
+- source and owner;
+- timeliness and completeness;
+- validity and reconciliation status;
+- transformation lineage;
+- known limitations.
+
+AI-generated and extracted claims retain source provenance and confidence; they are not promoted to authoritative facts without domain acceptance.
 
 ## 6. Principles & Rules
 
-Each principle is paired with a machine-verifiable or audit-verifiable **fitness function**, upholding the GDC-000 maxim that a rule without an enforcement mechanism is only a suggestion.
+### 6.1 One Authority per Fact
 
-### 6.1. Domain-Owned Data
+Every critical fact has one named ATI or external authority.
 
-Each business domain owns and governs its operational data.
+- **Fitness function:** authority catalog reports zero unowned or multiply-authoritative critical datasets.
 
-- **Rationale:** Data ownership is the physical proof of a bounded context; shared data dissolves the boundary.
-- **Fitness function:** Every dataset in the catalog resolves to exactly one owning domain; unowned datasets fail governance.
+### 6.2 Projection Is Not Authority
 
-### 6.2. Database per Domain
+A copy used for performance or resilience retains source lineage and freshness semantics.
 
-Each domain owns its persistence; cross-domain database access is prohibited.
+- **Fitness function:** critical projection registry has source, freshness, stale behavior, and reconciliation owner.
 
-- **Rationale:** A shared database is the strongest and least reversible form of coupling.
-- **Fitness function:** Cross-domain database grants = `0` (audited on every SAD).
+### 6.3 Private Domain Persistence
 
-### 6.3. Eventual Consistency Across Domains
+Only the owning domain mutates authoritative data.
 
-Cross-domain data converges asynchronously through events and CDC.
+- **Fitness function:** cross-domain database grants and direct write paths equal zero.
 
-- **Rationale:** Synchronous cross-domain consistency couples availability and destroys independent evolution.
-- **Fitness function:** No cross-domain distributed transaction (two-phase commit) exists in the estate.
+### 6.4 External Authority Is Explicit
 
-### 6.4. Data as a Product
+Client and industry systems remain canonical where contractually defined.
 
-Analytical datasets are curated, documented, discoverable data products.
+- **Fitness function:** external data inventory identifies authority and ATI relationship owner.
 
-- **Rationale:** Treating analytics output as a product with an owner and SLA prevents an ungoverned data swamp.
-- **Fitness function:** Every analytical data product has a registered owner, schema, and freshness SLA.
+### 6.5 Revalidate Irreversible Actions
 
-### 6.5. No Shared Persistence
+High-impact actions use sufficiently current authoritative state.
 
-No two domains share an operational database.
+- **Fitness function:** affected PADs declare freshness and revalidation policy.
 
-- **Rationale:** Shared persistence is the precise mechanism by which decomposed services re-fuse into a monolith.
-- **Fitness function:** Zero operational database instances mapped to more than one domain.
+### 6.6 Reconciliation Is Correctness
 
----
+Divergence between authority, projection, command, and external outcome is detected and resolved.
+
+- **Fitness function:** critical integrations report reconciliation objective and unresolved exceptions.
+
+### 6.7 Analytical and AI Systems Do Not Mutate Source Truth Directly
+
+Derived outputs enter authoritative domains only through governed commands and acceptance.
+
+- **Fitness function:** direct analytical/AI write paths into authoritative stores equal zero.
+
+### 6.8 Scope, Classification, Purpose, and Lineage Travel with Data
+
+Governance context is preserved through every copy and transformation.
+
+- **Fitness function:** critical data contracts include governance context.
+
+### 6.9 CDC Is an Implementation Mechanism
+
+Business consumers depend on owned contracts, not database change semantics.
+
+- **Fitness function:** no Product contract is defined solely by a source table change stream.
+
+### 6.10 Retention Is Purpose-Bound
+
+Data is retained only while business, legal, contractual, security, or evidence purpose requires it.
+
+- **Fitness function:** critical data families have approved retention and disposal ownership.
 
 ## 7. Alternatives Considered
 
-The domain-owned data topology was chosen against rejected alternatives. Each rejection is a consciously accepted trade-off.
-
-| Alternative | Why Rejected | Debt Consciously Accepted |
+| Alternative | Why Rejected | Debt Accepted |
 | :-- | :-- | :-- |
-| **Shared enterprise operational database** | The strongest, least reversible form of coupling; dissolves every bounded context | Data duplication across domains and eventual consistency to reconcile |
-| **Federated queries across domain databases** (query other domains' stores directly) | Recreates read-time coupling and couples availability; a slow domain slows its callers | Consumers must obtain data via the owner's API/events, adding latency and denormalization |
-| **Synchronous cross-domain transactions (2PC)** for strong consistency | Couples the availability of every participant; a distributed monolith at the data layer | Cross-domain state is eventually consistent; workflows must tolerate convergence windows |
-| **Reporting on OLTP read-replicas** (skip a separate analytical estate) | Analytical query shapes still contend with and constrain the transactional schema | A separate lake/warehouse and replication pipeline to build and operate |
-
----
+| Treat every ATI copy as source of truth | It creates stale and conflicting authority | Projection and reconciliation governance |
+| Shared enterprise operational database | It destroys domain autonomy and security boundaries | Contract-mediated movement and duplicated projections |
+| CDC as universal integration | It leaks physical schemas and business ambiguity | Owned events/APIs plus selected CDC for replication |
+| One analytical store for all use cases | It creates classification, residency, and ownership risk | Multiple governed data products may exist |
+| AI-generated facts become canonical automatically | Probabilistic outputs cannot own business truth | Human/domain acceptance introduces additional workflow |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-Per-domain operational stores are isolated by design, so no single operational store is an enterprise SPOF. The shared risk is the replication path feeding analytics.
-
-| SPOF | Blast radius | Graceful degradation strategy |
+| Dependency | Data Impact | Required Posture |
 | :-- | :-- | :-- |
-| Event Broker / CDC pipeline | Analytical freshness across all domains | At-least-once with durable retention; on outage the transactional estate is unaffected and events are buffered and replayed — analytics goes stale (bounded by SLA), it does not corrupt |
-| Data Lake / Enterprise Warehouse | BI, AI/ML, cross-domain analytics | Read-only consumers serve last-successful data; dashboards degrade to a visible staleness marker rather than failing; no write-back path can affect OLTP |
-| A single domain's transactional store | That domain only | Contained by database-per-domain; other domains continue on cached/replicated read models of that domain's published data |
-
-The transactional/analytical separation is the core degradation guarantee: an analytical-estate failure can never degrade transactional correctness or availability.
-
----
+| Authoritative domain unavailable | New authoritative reads/writes may pause | Approved projections may continue within freshness; unsafe writes fail closed |
+| Projection pipeline unavailable | Copies become stale | Freshness is visible; consumers apply declared stale behavior |
+| Analytical platform unavailable | Reports and intelligence degrade | Operational systems continue independently |
+| Evidence platform unavailable | Central evidence consolidation delays | Source domains retain durable local facts |
+| External authority unavailable | External state cannot be confirmed | Unsafe actions pause; local execution records remain durable |
+| Data catalog unavailable | Discovery and governance administration degrade | Existing systems continue with versioned contracts |
 
 ## 9. Ownership
 
-| Responsibility                                | Accountable            | Consulted                         |
-| :-------------------------------------------- | :--------------------- | :-------------------------------- |
-| Enterprise data governance (this artifact)    | Architecture Authority | Data Platform Team, Security Team |
-| Domain transactional data                     | Domain Teams           | Architecture Authority            |
-| Analytical estate (lake, warehouse, products) | Data Platform Team     | Domain Teams                      |
-| Data classification and compliance            | Security & Governance  | Architecture Authority, Legal     |
-| Data catalog and lineage                      | Data Platform Team     | Domain Teams                      |
-
----
+| Responsibility                    | Accountable                           | Consulted                             |
+| :-------------------------------- | :------------------------------------ | :------------------------------------ |
+| Enterprise data architecture      | Data Architecture Authority           | Domain, Security, Privacy, Compliance |
+| Authoritative data family         | Owning Domain Team                    | Data Governance                       |
+| External data relationship        | Natural Product Owner                 | Integration, Security, Client owner   |
+| Data Product                      | Named Data Product Owner              | Source owners and consumers           |
+| Classification and privacy policy | Security/Privacy Authority            | Data and Domain owners                |
+| Residency and retention           | Data Governance plus Legal/Compliance | Domain and Runtime owners             |
 
 ## 10. Dependencies
 
-**Upstream (this document depends on):**
+**Strategic inputs:** enterprise domain ownership and the macro system landscape.
 
-- EAD-001 Enterprise Capability & Domain Map — supplies domain boundaries and ownership.
-- EAD-002 Enterprise System Landscape — supplies the systems that own the stores.
-
-**Downstream (this document governs):**
-
-- EAD-004 Enterprise Integration Architecture — event and CDC movement conform to integration contracts.
-- Every Platform PAD and Business Product PAD that owns data.
-- Every SAD that defines persistence.
-
----
+**Governed outputs:** integration contracts, runtime data design, security controls, domain data models, and physical data topology.
 
 ## 11. Traceability
 
-- **Referenced by:** every PAD and every SAD involving persistence; the Data Platform, Analytics, and AI Platform.
-- **Constraint enforced downstream:** a SAD that declares a database shared across domains, or a direct cross-domain query, is rejected against this policy.
-- **Lineage anchor:** the enterprise data catalog traces every analytical product back to its owning transactional source defined here.
-
----
+- Every critical data family traces to one authority in EAD-001/EAD-002.
+- Every PAD declares authoritative data, external authorities, and projections.
+- Data movement and projection details trace to standards and SADs.
+- Authority changes require an ADR and migration plan.
 
 ## 12. Assumptions
 
-- Every domain owns and can independently operate its transactional store.
-- Enterprise analytics is decentralized at the source and integrated at the warehouse.
-- Replication between transactional and analytical estates is asynchronous.
-
----
+- External systems remain authoritative for significant travel and financial data.
+- Products can operate with bounded local projections.
+- Physical infrastructure may be consolidated while logical authority remains private.
+- Data and product discovery will refine quality, freshness, and retention targets.
 
 ## 13. Constraints
 
-- Cross-domain joins against transactional databases are prohibited.
-- Shared operational databases are prohibited.
-- Data ownership cannot be shared or transferred without an ADR.
-- Analytical systems cannot write into transactional systems.
-- PII cannot leave its owning domain unmasked.
-
----
+- Direct cross-domain persistence access is prohibited.
+- A projection cannot silently become canonical.
+- Analytical and AI stores cannot bypass owning-domain commands.
+- Tenant and classification context cannot be discarded during movement.
+- Irreversible external actions require declared authority and freshness policy.
 
 ## 14. Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 | :-- | :-- | :-- | :-- |
-| Shared operational database emerges | Low | High — irreversible coupling | No Shared Persistence rule + grant audit |
-| Multiple claimed owners for one dataset | Medium | Medium — data inconsistency | Single Ownership rule + data catalog |
-| Direct reporting queries on OLTP | Medium | High — production degradation | Boundary rule + replicated analytical estate |
-| Missing or broken lineage | Medium | High — compliance failure | Mandatory lineage in catalog |
-| Unmasked PII in analytical estate | Low | High — privacy breach | Masking/tokenization at replication |
-
----
+| External projection treated as current truth | High | Critical | Authority, freshness, revalidation, reconciliation |
+| Shared infrastructure becomes shared authority | Medium | High | Logical private persistence and access controls |
+| Analytical platform becomes shadow system of record | Medium | High | No direct source mutation |
+| Tenant scope is lost in downstream copies | Medium | Critical | Governance context in contracts and tests |
+| Retention/deletion is inconsistent across copies | Medium | High | Data inventory, lineage, and coordinated disposal |
+| AI output is promoted without domain acceptance | Medium | Critical | Proposed-output classification and acceptance gate |
 
 ## 15. Future Direction
 
-The data topology evolves by adding domain-owned datasets and governed data products, never by widening operational access. Analytical capability expands through additional replication and modeling rather than tighter operational coupling. Real-time analytical use cases are served by streaming materialized views fed from the event backbone, preserving the transactional/analytical separation.
-
----
+The enterprise will progressively formalize authority catalogs, data products, projection standards, and reconciliation objectives as operational evidence grows. Physical data-platform investment follows proven consumers and governance requirements rather than preceding them.
 
 ## 16. References
 
-- Domain-Driven Design — Eric Evans
-- Data Mesh — Zhamak Dehghani
-- Designing Data-Intensive Applications — Martin Kleppmann
-- Enterprise Integration Patterns — Gregor Hohpe
-- Change Data Capture (CDC) patterns
-- Event-Driven Architecture
+- EAD-001 — Enterprise Capability & Domain Map.
+- EAD-002 — Enterprise System Landscape.
+- GDC-000 — Governance Policy.
+- GDC-006 — EAD Guideline.
+- Domain-Driven Design.
+- Data Mesh principles.
+- Privacy, residency, and records-management practices.

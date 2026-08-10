@@ -4,393 +4,392 @@ doc_meta:
   title: Enterprise Integration Architecture
   owner: Architecture Authority
   version: 1.0.0
-  status: approved
+  status: draft
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
-  created_date: 2026-01-01
-  last_reviewed: 2026-07-05
+  created_date: 2026-08-06
+  last_reviewed: 2026-08-06
 ---
 
 # Enterprise Integration Architecture
 
 ## 1. Purpose
 
-Define how independently owned domains collaborate without fusing into a distributed monolith: the strategic context relationships between domains, the communication patterns permitted for each interaction type, the governance of the contracts that carry those interactions, and the gateway/broker topology that physically routes them. This document is the connective tissue between the domain boundaries of EAD-001 and the data sovereignty of EAD-003.
+Define the enterprise integration strategy for the **Scnehaux Enterprise Cloud**, including how product, control, shared, legacy, client, and industry systems exchange commands, facts, files, projections, and outcomes.
 
-**Decision question this document answers:** _"When two domains must interact, which pattern and contract do they use, and who owns it?"_
+**Decision question:** _Which integration relationship is appropriate for each enterprise interaction, who owns the contract, and how are failure, duplication, ambiguity, and reconciliation governed?_
 
-This document states integration patterns and contract governance. It does not define concrete service implementations, API endpoint signatures, event payload schemas, or infrastructure deployment; those are owned downstream by PAD and SAD.
-
----
+This document establishes macro patterns and ownership. It does not define endpoint paths, payload schemas, retry intervals, connector implementations, workflow steps, protocol libraries, or deployment topology.
 
 ## 2. Scope
 
 **In scope:**
 
-- The enterprise context map: strategic DDD relationships between domains.
-- The communication strategy: which pattern (synchronous, event, workflow) fits which interaction.
-- Contract governance: ownership, versioning, and backward-compatibility rules for APIs and events.
-- The gateway and broker topology and the enterprise integration standards.
+- Enterprise context map and relationship ownership.
+- Synchronous, asynchronous, batch/file, projection, and workflow patterns.
+- Internal versus external integration direction.
+- API, event, contract, gateway, broker, and connector governance principles.
+- Idempotency, compatibility, outcome ambiguity, and reconciliation direction.
+- Coexistence with legacy and client systems.
 
 **Out of scope:**
 
-- Endpoint-level API specifications and event payload schemas (owned by provider PAD/SAD).
-- Service implementation and internal orchestration logic.
-- Infrastructure sizing, broker cluster topology, and deployment (owned by EAD-005/SAD).
-- Data ownership and replication mechanics (owned by EAD-003).
+- Field-level contracts and schemas — standards, PADs, and SADs.
+- Product-specific process flow — Product PADs and workflow designs.
+- Connector, gateway, broker, and adapter topology — SADs.
+- Technology selection — EAD-005 and standards.
+- Credential and protocol security detail — EAD-006 and standards.
 
----
+This document binds every system interaction represented in the enterprise landscape.
 
 ## 3. Enterprise Context
 
-Scnehaux adopts a **Contract-Driven Integration** architecture. Domains evolve independently and collaborate exclusively through stable, versioned contracts owned by the provider. Integration expresses Domain-Driven Design strategic patterns explicitly, so that every cross-domain relationship carries a known coupling posture rather than an accidental one.
+Scnehaux Enterprise Cloud integrates two fundamentally different worlds:
 
-The governing invariant: **every cross-domain interaction flows through a published contract owned by the provider domain; there are no private back-channels.** Synchronous calls are reserved for genuine request-response needs on the critical path; everything else defaults to events, which decouple availability and let producers and consumers scale and fail independently.
+- **internal domain relationships**, where ATI controls both sides and can publish stable contracts; and
+- **external operational relationships**, where client or industry protocols, availability, session semantics, files, manual channels, and reconciliation obligations shape the interaction.
 
----
+Integration must preserve business ownership. Shared integration capabilities may provide connectivity and operational machinery, but the domain that owns the business intent remains accountable for commands, acceptance criteria, and outcomes.
 
 ## 4. Architectural Drivers & Lessons
 
-### 4.1. Drivers
+### 4.1 Drivers
 
-Integration exists to let the domains of EAD-001 collaborate on the value streams defined there without fusing into a distributed monolith.
+| ID | Driver | Integration Consequence |
+| :-- | :-- | :-- |
+| D1 | Independent domain evolution | Provider-owned, versioned contracts mediate interaction |
+| D2 | Travel ecosystems use APIs, files, queues, terminals, and proprietary protocols | The enterprise supports multiple governed interaction modes |
+| D3 | External outcomes may be delayed or ambiguous | Command status and reconciliation are first-class concerns |
+| D4 | Multi-tenant operation | Tenant, purpose, classification, and correlation context cross boundaries |
+| D5 | Control-plane resilience | Products consume local artifacts/projections where feasible |
+| D6 | Product ownership must remain explicit | Shared Integration is machinery, not business authority |
 
-| Driver | Integration Consequence |
+### 4.2 Lessons Incorporated
+
+| Lesson | Integration Response |
 | :-- | :-- |
-| Domains must evolve on independent cadences | Provider-owned, versioned contracts; consumers never touch internal models |
-| Availability must not be coupled across domains | Events are the default; synchronous calls reserved for the critical path |
-| Breaking a consumer must never be silent | Backward-compatibility rule + CI contract-diff gate + deprecation window |
-| Vendor change must stay localized | External systems integrate only through the Integration Platform ACL |
-
-### 4.2. Lessons Incorporated
-
-From enterprise COE (Correction-of-Error) themes, not a greenfield ideal.
-
-| COE-class lesson | Design response in this document |
-| :-- | :-- |
-| Implementation-first APIs leaked internal models and broke consumers on refactor | Contract First: contract designed and reviewed before implementation |
-| A silent breaking change caused untraceable, cascading consumer outages | Breaking changes require a new major version + published deprecation window |
-| A chain of synchronous cross-domain calls became a distributed monolith on the critical path | Event First default; long-running work on the Workflow Platform, not call chains |
-
----
+| API-first was interpreted as synchronous HTTP everywhere | Pattern selection follows business timing and coupling needs |
+| Event-first was interpreted as publishing commands as facts | Commands, facts, acknowledgements, and outcomes remain distinct |
+| Transport success was treated as business success | Provider acceptance and final outcome are separately modeled |
+| Retry created duplicate business effects | Idempotency is an enterprise contract property |
+| A universal gateway obscured Product ownership | Natural owner remains accountable for each relationship |
+| External state divergence surfaced only during incidents | Reconciliation is part of normal operation |
 
 ## 5. Architecture Model
 
-### 5.1. Enterprise Context Map
+### 5.1 Enterprise Context Map
 
 ```mermaid
-graph TD
-    subgraph Platform["Platform Plane (Open Host Services)"]
-        IAM[Identity]
-        INT[Integration]
-        NOTIF[Notification]
-        WF[Workflow]
-        DOC[Document]
-        AUDIT[Audit]
-        AI[AI]
-    end
+graph LR
+    CONTROL[Ecosystem Control Systems]
+    PRODUCT[Product Systems]
+    SHARED[Shared Execution & Intelligence]
+    ENGINEERING[Engineering & Runtime]
+    EXTERNAL[Client / Partner / Industry Systems]
+    LEGACY[Legacy ATI Systems and Manual Channels]
 
-    subgraph Business["Business Plane (Customers)"]
-        HCM
-        ERP
-        CRM
-        ITSM
-        PROC
-        LMS
-        PM
-        CMS
-    end
-
-    HCM --> IAM
-    ERP --> IAM
-    CRM --> IAM
-    ITSM --> IAM
-    HCM --> WF
-    ERP --> WF
-    HCM --> NOTIF
-    ERP --> NOTIF
-    CRM --> AI
-    ERP --> DOC
-    HCM --> AUDIT
-    ERP --> AUDIT
-    ERP --> INT
-    CRM --> INT
-    HCM --> INT
-
-    style Platform fill:#1a365d,stroke:#3182ce,color:#fff
-    style Business fill:#553c9a,stroke:#805ad5,color:#fff
+    CONTROL -. artifacts, events, projections .-> PRODUCT
+    CONTROL -. artifacts, events, projections .-> SHARED
+    SHARED -. APIs, events, workflows .-> PRODUCT
+    ENGINEERING -. gateway, broker, runtime .-> CONTROL
+    ENGINEERING -. gateway, broker, runtime .-> SHARED
+    ENGINEERING -. gateway, broker, runtime .-> PRODUCT
+    PRODUCT <--> EXTERNAL
+    SHARED <--> EXTERNAL
+    LEGACY <--> PRODUCT
+    LEGACY <--> SHARED
 ```
 
-> The context map shows the primary strategic edges for readability. It is deliberately not exhaustive: every Business Product also depends on Identity, Workspace, UI, Audit, and Billing (event-driven metering) per the EAD-002 dependency matrix. The **authoritative, complete** cross-domain edge set is that matrix; the consistency rule below requires each of its edges to be realized by a contract governed here.
+#### Strategic Relationship Types
 
-**Strategic relationship patterns (DDD):**
+| Relationship          | Appropriate Meaning                                                           |
+| :-------------------- | :---------------------------------------------------------------------------- |
+| Customer–Supplier     | Downstream depends on a provider-owned contract                               |
+| Published Language    | Provider exposes a stable model to multiple consumers                         |
+| Anti-Corruption Layer | Consumer protects its domain from an external or legacy model                 |
+| Partnership           | Coordinated evolution is accepted explicitly                                  |
+| Conformist            | Consumer accepts an external standard where adaptation adds no value          |
+| Open Host Service     | Provider exposes a stable integration service for many consumers              |
+| Separate Ways         | No direct integration; duplication or manual exchange is consciously accepted |
 
-| Relationship | When It Applies | Coupling Posture |
+#### Natural Ownership Rule
+
+- The **Product or control domain** owns business intent, acceptance, and outcome.
+- The **provider domain** owns its published contract.
+- A **shared Integration capability** may own connector runtime, transformation, transport operations, and provider observability.
+- External-system authority remains defined by EAD-003.
+
+### 5.2 Communication Strategy
+
+| Pattern | Use When | Primary Trade-Off |
 | :-- | :-- | :-- |
-| Open Host Service | A Platform Service exposes a shared capability to many consumers | Provider publishes a stable, public contract |
-| Customer / Supplier | Default relationship between a consuming and providing domain | Provider prioritizes consumer needs by agreement |
-| Published Language | APIs and events act as the shared enterprise language | Contract is the only shared artifact |
-| Anti-Corruption Layer | Integrating an external vendor or legacy system | Consumer isolates itself from the foreign model |
-| Partnership | Two strategically aligned domains evolving together | Bidirectional, coordinated change (used sparingly) |
+| Synchronous Request/Response | Immediate authoritative answer is required to complete the current journey | Availability and latency coupling |
+| Asynchronous Event | An accepted fact must be published to independent consumers | Eventual consistency and consumer reconciliation |
+| Asynchronous Command | Work is requested without requiring immediate completion | Outcome tracking and duplicate protection |
+| Durable Workflow | Multi-step, long-running, human, or compensating process requires persisted coordination | Workflow ownership and operational complexity |
+| Bounded Projection | Local enforcement or reads must survive authority unavailability | Freshness and reconciliation |
+| Batch / File Exchange | Volume, partner capability, or contractual process makes online integration unsuitable | Delay, partial failure, and operational control |
+| Webhook / Callback | External provider notifies ATI of a change or outcome | Authentication, duplication, and ordering |
+| Human / Assisted Integration | A system lacks reliable machine interface or policy requires human control | Throughput, evidence, and error risk |
 
-### 5.2. Communication Strategy
+#### Pattern Selection Principles
+
+1. Use synchronous interaction only when the current response is required.
+2. Publish events only after the provider has accepted the fact.
+3. Use commands for requested action, not events disguised as intent.
+4. Use durable workflow for long-running coordination and compensation.
+5. Use projections when local resilience is more important than immediate global consistency.
+6. Treat files and manual channels as governed contracts, not exceptions outside architecture.
+7. Separate transport acknowledgement, provider acceptance, and final business outcome.
+
+#### Internal and External Integration
+
+Internal interactions favor provider-owned APIs, events, projections, and durable workflows.
+
+External interactions additionally account for:
+
+- protocol and provider constraints;
+- rate and session limits;
+- file and batch windows;
+- uncertain or delayed outcomes;
+- command revalidation;
+- reconciliation and exception handling;
+- client-specific credentials and contractual obligations.
+
+Detailed external profiles belong in Product PADs, integration standards, and SADs.
+
+### 5.3 Contract Governance
+
+Every critical contract has:
+
+- one provider owner;
+- named consumers or consumer class;
+- business purpose and authority boundary;
+- version and compatibility policy;
+- tenant, classification, and purpose context;
+- error and outcome semantics;
+- idempotency expectation where mutation occurs;
+- reliability and support ownership;
+- lifecycle, deprecation, and migration policy;
+- evidence and observability expectations.
+
+#### Contract Types
+
+| Contract Type    | Owner                                                           |
+| :--------------- | :-------------------------------------------------------------- |
+| API              | Provider domain                                                 |
+| Event            | Domain that owns the published fact                             |
+| Command          | Domain that accepts responsibility for requested work           |
+| Projection       | Source authority plus consumer-specific contract ownership      |
+| File / Batch     | Business relationship owner and technical provider              |
+| External Adapter | Natural ATI business owner; integration machinery may be shared |
+| Signed Artifact  | Issuing control authority                                       |
+
+#### Compatibility Direction
+
+- Backward-compatible evolution is preferred for active consumers.
+- Breaking changes require a new version, migration window, and consumer inventory.
+- Consumer-specific hidden behavior is prohibited.
+- External incompatibility is isolated behind an anti-corruption boundary where appropriate.
+- Contract retirement requires evidence that active consumers have migrated.
+
+#### Idempotency and Outcome
+
+Mutation contracts identify how duplicate requests are recognized and which business effect must remain unique. When an external outcome is unknown, the state remains explicitly unresolved until reconciled; transport timeout does not prove failure.
+
+#### Reconciliation
+
+Critical integrations define:
+
+- which states are compared;
+- which authority wins for each fact;
+- how often reconciliation occurs;
+- who owns exceptions;
+- how correction and evidence are recorded.
+
+The detailed reconciliation contract belongs downstream.
+
+### 5.4 Gateway & Broker Topology
 
 ```mermaid
-flowchart LR
-    Client([Client / Consumer]) --> GW[API Gateway]
-    GW --> SVC[Provider Service]
-    SVC --> Broker[(Event Broker)]
-    Broker --> C1[Consumer A]
-    Broker --> C2[Consumer B]
-    Broker --> C3[Consumer C]
+graph TB
+    CONSUMERS[Users, Applications, Partners]
+    EDGE[External API / Experience Boundary]
+    INTERNAL[Internal Service Connectivity]
+    BROKER[Event & Messaging Substrate]
+    CONNECTORS[External Connector Runtime]
+    SYSTEMS[Product, Control & Shared Systems]
+    PROVIDERS[Client and Industry Providers]
 
-    style GW fill:#2b6cb0,stroke:#63b3ed,color:#fff
-    style Broker fill:#805ad5,stroke:#553c9a,color:#fff
+    CONSUMERS --> EDGE
+    EDGE --> SYSTEMS
+    SYSTEMS --> INTERNAL
+    INTERNAL --> SYSTEMS
+    SYSTEMS --> BROKER
+    BROKER --> SYSTEMS
+    SYSTEMS --> CONNECTORS
+    CONNECTORS --> PROVIDERS
 ```
 
-| Interaction                 | Preferred Pattern             | Rationale & Target                                    |
-| :-------------------------- | :---------------------------- | :---------------------------------------------------- |
-| User request (read/command) | REST / GraphQL via gateway    | Synchronous; cross-domain P99 ≤ 300 ms                |
-| Cross-domain command        | REST (synchronous)            | Only when a response is required on the critical path |
-| Business notification       | Event (asynchronous)          | Decouples availability; at-least-once delivery        |
-| Data synchronization        | Event / CDC                   | Eventually consistent; conforms to EAD-003            |
-| Long-running process        | Workflow Platform             | Orchestrated, durable, resumable                      |
-| External partner            | API Gateway + Integration ACL | Vendor isolated behind Anti-Corruption Layer          |
+The topology defines enterprise roles, not a requirement for one gateway, broker, mesh, or connector product.
 
-**Communication rules:**
+#### Gateway Direction
 
-- Synchronous communication is reserved for request-response on the critical path.
-- Events are the default for domain notifications and cross-domain propagation.
-- Long-running business processes run on the Workflow Platform, not chained synchronous calls.
-- Cross-domain database communication is prohibited (enforced by EAD-003).
+Gateway capabilities may provide authentication enforcement, traffic policy, routing, request protection, and external exposure. They do not replace Product authorization or provider contract ownership.
 
-### 5.3. Contract Governance
+#### Broker Direction
 
-```mermaid
-graph TD
-    Provider([Provider Domain]) --> API[REST API]
-    Provider --> Events[Domain Events]
-    API --> OpenAPI[OpenAPI contract]
-    Events --> AsyncAPI[AsyncAPI contract]
-    Consumer([Consumer Domain]) --> OpenAPI
-    Consumer --> AsyncAPI
+Messaging capabilities provide durable delivery, partitioning, replay, and failure isolation. They do not provide business-level exactly-once semantics by themselves.
 
-    style Provider fill:#2b6cb0,stroke:#63b3ed,color:#fff
-    style Consumer fill:#553c9a,stroke:#805ad5,color:#fff
-```
+#### Connector Direction
 
-| Principle | Description |
-| :-- | :-- |
-| Provider Owns Contract | Only the provider domain publishes and versions a contract. |
-| Backward Compatibility | Non-breaking changes only within a major version; breaking changes require a new major version and a deprecation window. |
-| Consumer Independence | Consumers depend on the contract, never on the provider's internal implementation. |
-| Versioned Contracts | Every API and event carries an explicit version. |
-| Contract First | The contract is designed and reviewed before implementation begins. |
-
-**Enterprise contract standards:**
-
-| Contract Type          | Mandated Standard                                           |
-| :--------------------- | :---------------------------------------------------------- |
-| REST API               | OpenAPI 3.1                                                 |
-| Event                  | AsyncAPI 3.0                                                |
-| Authentication         | OAuth 2.1 / OpenID Connect                                  |
-| Identity Authorization | JWT claims validated at the edge                            |
-| Error model            | RFC 9457 Problem Details                                    |
-| Deprecation window     | ≥ 2 consumer release cycles or 90 days, whichever is longer |
-
-### 5.4. Gateway & Broker Topology
-
-```mermaid
-graph TD
-    Internet([Internet]) --> GW[API Gateway]
-    GW --> IAM[Identity]
-    GW --> HCM
-    GW --> ERP
-    GW --> CRM
-    GW --> Broker[(Enterprise Event Broker)]
-
-    Broker --> WF[Workflow]
-    Broker --> NOTIF[Notification]
-    Broker --> AUDIT[Audit]
-    Broker --> AI[AI]
-    Broker --> ANALYTICS[Analytics]
-
-    style GW fill:#2b6cb0,stroke:#63b3ed,color:#fff
-    style Broker fill:#805ad5,stroke:#553c9a,color:#fff
-```
-
-| Component | Responsibility | Enterprise Target |
-| :-- | :-- | :-- |
-| API Gateway | Single ingress for synchronous traffic; authN, rate limiting, routing | Added overhead P99 ≤ 50 ms |
-| Event Broker | Durable enterprise event distribution | Replication factor ≥ 3; at-least-once |
-| Integration Platform | External connectors and payload transformation | Anti-Corruption Layer per vendor |
-| Workflow Platform | Durable business orchestration | Resumable, idempotent steps |
-| Identity Platform | AuthN/authZ enforcement at the edge | Token validation on every request |
-
-**Topology rules:**
-
-- Every external synchronous request enters through the API Gateway.
-- Internal domain events flow through the Event Broker, not point-to-point.
-- External vendors integrate only through the Integration Platform.
-- Platform Services never communicate through database sharing.
-
----
+Connector capabilities isolate provider protocol and operational variation. They do not own Product intent, external authority, or final business acceptance.
 
 ## 6. Principles & Rules
 
-Each principle is paired with a machine-verifiable or audit-verifiable **fitness function**, upholding the GDC-000 maxim that a rule without an enforcement mechanism is only a suggestion.
+### 6.1 Contract First
 
-### 6.1. API First
+Cross-system interaction uses an explicit provider-owned contract.
 
-Every synchronous cross-domain capability is exposed as a governed, versioned API.
+- **Fitness function:** every production integration resolves to a registered owner and contract.
 
-- **Rationale:** An explicit API is the contract that makes a capability consumable and evolvable.
-- **Fitness function:** Every provider capability consumed across a domain boundary has a published OpenAPI contract.
+### 6.2 Pattern Follows Business Need
 
-### 6.2. Event First
+Synchronous, event, command, projection, batch, and workflow patterns are selected by timing, coupling, and correctness needs.
 
-Significant domain state changes are published as events.
+- **Fitness function:** architecture review identifies rationale for each critical relationship type.
 
-- **Rationale:** Events decouple availability and enable consumers unknown at design time.
-- **Fitness function:** Cross-domain notifications use the Event Broker; count of point-to-point notification calls = `0`.
+### 6.3 Provider Owns the Contract
 
-### 6.3. Contract First
+The domain owning the fact or operation owns its published contract.
 
-The contract is designed and reviewed before implementation.
+- **Fitness function:** contract registry reports exactly one provider owner.
 
-- **Rationale:** Implementation-first integration leaks internal models into the contract and breaks consumers.
-- **Fitness function:** Every contract has a reviewed OpenAPI/AsyncAPI artifact committed before the providing service ships.
+### 6.4 Shared Integration Does Not Own Business Intent
 
-### 6.4. Loose Coupling
+Shared machinery handles connectivity and operations without absorbing Product decisions.
 
-Domains interact only through published contracts.
+- **Fitness function:** shared Integration PAD contains zero Product-specific authoritative outcomes.
 
-- **Rationale:** Contract-only coupling is the sole coupling that can be versioned and evolved safely.
-- **Fitness function:** Zero cross-domain in-process or database dependencies in downstream audits.
+### 6.5 Commands, Facts, and Outcomes Are Distinct
 
-### 6.5. Provider Authority
+A request, transport acknowledgement, accepted fact, and final outcome are not interchangeable.
 
-Only the provider domain owns and versions its contracts.
+- **Fitness function:** critical mutation contracts define outcome semantics and unresolved state.
 
-- **Rationale:** Consumer-owned or shared contracts create ambiguous change authority and coordination deadlock.
-- **Fitness function:** Every contract maps to exactly one owning provider domain in the contract registry.
+### 6.6 Mutations Are Duplicate-Safe
 
-### 6.6. Backward Compatibility
+Critical mutation contracts define idempotency at the business boundary.
 
-Breaking changes require a new major version and a published deprecation window.
+- **Fitness function:** critical command inventory identifies duplicate-protection ownership.
 
-- **Rationale:** Silent breaking changes cause unbounded, untraceable consumer failures.
-- **Fitness function:** Contract diff checks in CI block breaking changes within a major version; deprecation window ≥ 90 days.
+### 6.7 Compatibility Is Governed
 
----
+Breaking changes require version, migration, and consumer evidence.
+
+- **Fitness function:** deprecated contracts have a consumer migration record.
+
+### 6.8 Reconciliation Is Mandatory for External Critical Outcomes
+
+External ambiguity and divergence are detected as part of normal operation.
+
+- **Fitness function:** critical external integrations have a reconciliation owner and objective.
+
+### 6.9 Tenant and Security Context Cross Boundaries Explicitly
+
+Scope, classification, actor, purpose, and correlation are preserved.
+
+- **Fitness function:** critical contracts carry required governance context.
+
+### 6.10 No Universal Integration Hop
+
+A shared gateway or integration system is used only when it adds governed capability.
+
+- **Fitness function:** landscape review reports zero mandatory hops justified solely by uniformity.
 
 ## 7. Alternatives Considered
 
-Contract-driven, event-default integration was chosen against rejected alternatives. Each rejection is a consciously accepted trade-off.
-
-| Alternative | Why Rejected | Debt Consciously Accepted |
+| Alternative | Why Rejected | Debt Accepted |
 | :-- | :-- | :-- |
-| **Synchronous request/response as the default** | Couples the availability of every domain in a call chain; one slow domain degrades all callers | Eventual consistency and the complexity of asynchronous reasoning (idempotency, ordering) |
-| **Central ESB with a canonical enterprise data model** | A shared model becomes a change-coordination bottleneck owned by no domain; the ESB is a SPOF and a monolith | Some translation logic is duplicated at domain edges rather than centralized |
-| **Consumer-owned or shared contracts** | Ambiguous change authority produces coordination deadlock and finger-pointing | Providers must design for consumer needs deliberately (Customer/Supplier discipline) |
-| **Point-to-point event subscriptions** (no central broker) | An O(n²) mesh of couplings with no durable, replayable, governed backbone | A shared Event Broker dependency that must itself be engineered for 99.99% availability |
-
----
+| Synchronous REST everywhere | It couples availability and mishandles long-running work | Multiple interaction patterns and operational complexity |
+| Event-driven everything | It obscures commands, current queries, and user journeys | Synchronous and workflow patterns remain |
+| Universal ESB | It centralizes business coupling and ownership | Domains may operate direct governed contracts |
+| Product-specific connector code everywhere | It duplicates provider handling and security | Shared connector machinery may be chartered |
+| Retry until success | It creates duplicates and hides unknown outcomes | Idempotency, state tracking, and reconciliation |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-The two shared integration surfaces are enterprise SPOFs by construction; their degradation posture is mandatory in the owning system's SAD.
-
-| SPOF | Blast radius | Graceful degradation strategy |
+| Dependency | Blast Radius | Required Posture |
 | :-- | :-- | :-- |
-| API Gateway (single synchronous ingress) | All external synchronous traffic | Multi-instance, health-checked, regionally redundant; on partial failure it sheds load with RFC 9457 errors and honors cached routing rather than blocking; asynchronous event paths are unaffected |
-| Enterprise Event Broker | All cross-domain asynchronous propagation | Replication factor ≥ 3, at-least-once, durable retention with dead-letter queues; producers buffer and consumers replay on recovery — propagation is delayed, never lost |
-| Integration Platform ACL (per external vendor) | Only the affected vendor integration | Circuit-breaker per vendor with cached last-known-good responses; a failing vendor is isolated and does not cascade into the calling domain |
-
-Synchronous cross-domain calls carry a mandatory timeout, retry-with-backoff, and circuit breaker so that a slow provider degrades the caller into a fallback path rather than exhausting it.
-
----
+| External API boundary | External access | Internal processing and queued work continue where safe |
+| Messaging substrate | Delayed events and commands | Authoritative systems retain durable work and replay after recovery |
+| Connector runtime | Affected provider journeys | Other providers and local operations remain isolated |
+| External provider | Affected business outcome | Unsafe commands pause; unresolved outcomes reconcile |
+| Contract registry/catalog | New integration administration | Existing versioned contracts continue |
+| Workflow coordination | Long-running processes | State remains durable and resumable |
 
 ## 9. Ownership
 
-| Responsibility                                      | Accountable            | Consulted                      |
-| :-------------------------------------------------- | :--------------------- | :----------------------------- |
-| Enterprise integration architecture (this artifact) | Architecture Authority | Integration Team, Domain Leads |
-| API governance and standards                        | Integration Team       | Architecture Authority         |
-| Event governance and the broker                     | Integration Team       | Platform Engineering           |
-| Provider contracts                                  | Provider Domain        | Consumer Domains               |
-| Consumer conformance                                | Consumer Domain        | Provider Domain                |
-| External vendor mediation                           | Integration Team       | Security Team                  |
-
----
+| Responsibility                    | Accountable                   | Consulted                            |
+| :-------------------------------- | :---------------------------- | :----------------------------------- |
+| Enterprise integration principles | Architecture Authority        | Integration, Product, Security, Data |
+| Business contract                 | Provider Domain Owner         | Consumers and Integration            |
+| External provider relationship    | Natural Product/Control Owner | Integration, Security, Client owner  |
+| Shared integration capability     | Integration Platform Owner    | Product consumers                    |
+| Gateway and broker substrate      | Engineering Platform Owner    | System owners and Security           |
+| Reconciliation outcome            | Product Domain Owner          | Integration, Data, Operations        |
 
 ## 10. Dependencies
 
-**Upstream (this document depends on):**
+**Strategic inputs:** domain ownership, system roles, and data authority.
 
-- EAD-001 Enterprise Capability & Domain Map — supplies the domains that interact.
-- EAD-002 Enterprise System Landscape — supplies the systems and dependency direction.
-- EAD-003 Enterprise Data Ownership & Topology — event and CDC movement conform to data policy.
-
-**Downstream (this document governs):**
-
-- Platform PADs and Business Product PADs (integration sections conform here).
-- Global API and Event Standards (STD).
-- Every SAD that defines external or cross-domain communication.
-
----
+**Governed outputs:** runtime integration substrate, security controls, domain contracts, standards, and system topology.
 
 ## 11. Traceability
 
-- **Referenced by:** Integration Platform PAD, Identity Platform PAD, Workflow Platform PAD, Notification Platform PAD, and every SAD defining external communication.
-- **Governs:** the API Design and Event-Driven standards in the STD layer.
-- **Consistency rule:** every cross-domain edge in EAD-002's dependency matrix MUST be realized by a contract governed under this document.
-
----
+- Every integration traces to provider and consumer domains.
+- Every critical external integration traces to an external-authority statement in EAD-003.
+- Every gateway, broker, connector, and workflow system traces to a SAD.
+- Enterprise pattern changes require an ADR and EAD review.
 
 ## 12. Assumptions
 
-- Every domain can expose and version stable contracts.
-- Enterprise communication is contract-driven end to end.
-- Events are asynchronous and idempotently consumable by default.
-
----
+- External systems expose varied protocols and operational behavior.
+- Products can hold bounded projections and durable local work.
+- Shared integration capabilities will be chartered incrementally.
+- Some legacy and manual channels remain during transition.
 
 ## 13. Constraints
 
-- Direct database integration across domains is prohibited.
-- Point-to-point integrations bypassing the gateway or broker are prohibited.
-- Every API and every event is versioned.
-- Every event has exactly one owning provider domain.
-- Breaking contract changes require a major version and a deprecation window.
-
----
+- Direct cross-domain database interaction is prohibited.
+- A transport acknowledgement cannot be treated as final business success.
+- Shared Integration cannot own Product business outcomes.
+- Critical mutations require duplicate-protection ownership.
+- External critical outcomes require reconciliation.
+- Contract detail belongs downstream, not in this EAD.
 
 ## 14. Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 | :-- | :-- | :-- | :-- |
-| Tight synchronous coupling across domains | Medium | High — distributed monolith | Event First default + synchronous only on critical path |
-| Duplicated integration logic per product | Medium | Medium — maintenance cost | Integration Platform as the single egress/ingress |
-| Contract instability | Medium | High — consumer outages | Backward Compatibility rule + CI contract diff |
-| Event schema divergence | Medium | Medium — data divergence | AsyncAPI governance + provider authority |
-| Vendor coupling bypassing the ACL | Low | Medium — lock-in | Topology rule: vendors only via Integration Platform |
-
----
+| Universal integration layer becomes bottleneck | Medium | High | Natural-owner and no-universal-hop principles |
+| Commands are published as misleading facts | Medium | High | Explicit interaction taxonomy |
+| Retry creates duplicate financial or travel effects | Medium | Critical | Idempotency and reconciliation |
+| External timeout is treated as failure | High | Critical | Unresolved outcome state and verification |
+| Contract versions drift across consumers | Medium | High | Registry, compatibility, and migration governance |
+| Manual/file channels remain unaudited | Medium | High | Govern them as first-class contracts |
 
 ## 15. Future Direction
 
-Integration evolves by adding contracts and patterns while preserving backward compatibility. New integration technologies conform to this architecture rather than redefine it. The event backbone is expected to expand toward richer streaming and event-sourcing use cases; the gateway toward finer-grained policy and progressive delivery. In all cases, the provider-owned, versioned-contract invariant remains fixed.
-
----
+The enterprise will evolve from fragmented point integrations toward registered contracts, reusable connector capabilities, durable workflows, and measurable reconciliation. Standardization follows proven integration families rather than forcing every interaction through one platform.
 
 ## 16. References
 
-- Domain-Driven Design — Eric Evans
-- Enterprise Integration Patterns — Gregor Hohpe
-- OpenAPI Specification 3.1
-- AsyncAPI Specification 3.0
-- OAuth 2.1 / OpenID Connect
-- RFC 9457 Problem Details for HTTP APIs
-- Building Event-Driven Microservices — Adam Bellemare
+- EAD-001 — Enterprise Capability & Domain Map.
+- EAD-002 — Enterprise System Landscape.
+- EAD-003 — Enterprise Data Ownership & Topology.
+- GDC-000 — Governance Policy.
+- GDC-006 — EAD Guideline.
+- Domain-Driven Design context mapping.
+- Enterprise integration and event-driven architecture patterns.

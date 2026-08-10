@@ -3,397 +3,418 @@ doc_meta:
   id: EAD-001
   title: Enterprise Capability & Domain Map
   owner: Architecture Authority
-  version: 1.0.0
-  status: approved
+  version: 2.0.0
+  status: draft
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
-  created_date: 2026-01-01
-  last_reviewed: 2026-07-05
+  created_date: 2026-08-06
+  last_reviewed: 2026-08-10
 ---
 
 # Enterprise Capability & Domain Map
 
 ## 1. Purpose
 
-Establish the authoritative decomposition of the Scnehaux Cloud Service into business capabilities, bind each capability to exactly one owning domain, and classify every domain by strategic value. This artifact is the root node of the C4 Contractual Lineage: every Platform, Business Product, PAD, SAD, and TDD traces its right to exist upward to a capability defined here.
+Establish the authoritative enterprise capability model for the **Scnehaux Enterprise Cloud**, assign every capability to one accountable domain, and define the strategic boundaries that govern all downstream Product Architecture Documents (PADs), System Architecture Documents (SADs), standards, and decisions.
 
-**Decision question this document answers:** _"What capabilities must the enterprise own, who owns each one, and which are strategic differentiators versus commodities?"_
+**Decision question:** _What capabilities must the enterprise own, and which domain is accountable for each capability?_
 
-This document states enterprise **capability boundaries and ownership**. It does not describe systems, runtimes, or code. The moment a statement names a container, API, database, or deployment, it has leaked into a PAD or SAD.
-
----
+This document defines enterprise intent and ownership. It does not define systems, APIs, databases, deployment topology, implementation phases, or component design.
 
 ## 2. Scope
 
 **In scope:**
 
-- Decomposition of the enterprise into a Mutually Exclusive, Collectively Exhaustive (MECE) capability map.
-- Assignment of every capability to exactly one owning domain (Conway alignment).
-- Strategic classification of each domain (Wardley evolution stage and build/buy posture).
-- The lifecycle rules governing how new capabilities enter, evolve, and retire.
+- Enterprise architectural planes and capability families.
+- Single-domain authority for enterprise capabilities.
+- Strategic classification and build/adopt posture.
+- Capability-chartering and evolution principles.
+- Canonical enterprise terms whose ownership crosses product boundaries.
 
 **Out of scope:**
 
-- Runtime implementation, deployment topology, container boundaries (owned by SAD).
-- API and event contract signatures (owned by EAD-004 and downstream PAD/SAD).
-- Physical data schemas and storage engines (owned by EAD-003 and SAD).
-- Organizational headcount and reporting lines (durable team-topology principle only; no org chart).
+- System inventory and runtime relationships — EAD-002.
+- Data authority and movement — EAD-003.
+- API, event, file, and external-integration patterns — EAD-004.
+- Technology portfolio, runtime, and reliability strategy — EAD-005.
+- Trust boundaries and enterprise security strategy — EAD-006.
+- Detailed domain capabilities, contracts, and NFRs — PADs.
+- Physical systems, containers, infrastructure, and code — SADs and TDDs.
 
----
+This document binds every enterprise and product team operating within the Scnehaux Enterprise Cloud architecture lineage.
 
 ## 3. Enterprise Context
 
-Scnehaux operates as a **Platform-first, multi-tenant Cloud Service Ecosystem**. The enterprise is partitioned into two irreducible architectural planes, separated to decouple the rate of change of reusable engineering substrate from the rate of change of market-facing business logic:
+Scnehaux Enterprise Cloud is ATI Business Group's enterprise technology ecosystem for internal enterprise applications, BPO service delivery, travel operations, shared platforms, and future commercial cloud products.
 
-- **Platform Services** — reusable, business-agnostic enterprise capabilities. They are consumed by many products, evolve on their own cadence, and expose their value exclusively through published contracts. Platform Services never encode business-domain rules.
-- **Business Products** — domain-driven, customer-facing applications that compose Platform Services to deliver a bounded business capability. Business Products never re-implement a shared capability; they consume it.
+The strategic progression is:
 
-This split is the enterprise expression of the C4 boundary (C1 Context) and Team Topologies (Platform teams enabling Stream-aligned teams). The invariant that makes the entire architecture tractable is singular: **every capability belongs to exactly one domain, and every domain has exactly one accountable owner.**
+```text
+Internal Operating Platform
+    → Software-Enabled Managed Service
+        → Managed Platform / BPaaS
+            → Selective SaaS Products
+```
 
----
+ATI does not replace every client or industry system of record. The enterprise differentiates through execution, coordination, evidence, reconciliation, knowledge, and intelligence while integrating with client-owned and industry-owned authorities.
+
+The architecture therefore separates direct business outcome ownership from reusable platform capability and governance. The Platform Plane is grouped by five enduring concerns: foundational control, business execution, data/knowledge/intelligence, experience/interaction, and engineering/runtime.
 
 ## 4. Architectural Drivers & Lessons
 
-### 4.1. Business Goals
+### 4.1 Business Goals
 
-The capability map exists to serve four enterprise business goals; every classification and ownership decision in this document traces to one of them.
-
-| # | Business Goal | Architectural Consequence |
+| ID | Business Goal | Architectural Consequence |
 | :-- | :-- | :-- |
-| G1 | Ship many market-facing products from one shared substrate | Platform/Business plane split; reuse-by-contract |
-| G2 | Let each product evolve without cross-team release trains | One owner per capability; independent evolution |
-| G3 | Present a single tenant and identity experience ecosystem-wide | Identity & Workspace as universal Tier-0 capabilities |
-| G4 | Contain the blast radius of any single failure or breach | Domain isolation; database-per-domain; tiered reliability |
+| G1 | Improve ATI operational quality, capacity, and traceability | Travel and BPO products remain the primary business focus |
+| G2 | Reuse trusted capabilities across products | Shared capabilities receive explicit domain ownership and contracts |
+| G3 | Support multiple organizations, tenants, products, and applications | Identity, tenancy, application ownership, and entitlement remain distinct authorities |
+| G4 | Preserve client and industry systems of record | ATI owns execution state and projections without claiming external canonical authority |
+| G5 | Deliver urgent foundations without approving an imaginary product suite | Target capabilities are separated from formally chartered domains |
+| G6 | Prevent platform and microservice sprawl | A named capability does not automatically become a platform, team, database, or deployable |
 
-### 4.2. Value Streams → Capabilities
+### 4.2 Value Streams to Capability Families
 
-Capabilities are not an abstract taxonomy; each realizes a concrete enterprise value stream. This mapping is the "why" a capability is owned at all.
-
-| Value Stream               | Primary Capabilities (owning domains)    |
-| :------------------------- | :--------------------------------------- |
-| Tenant onboarding & access | Identity, Workspace                      |
-| Hire-to-Retire             | HCM (+ Workflow, Notification, Document) |
-| Order-to-Cash              | ERP, Billing (+ Integration, Audit)      |
-| Lead-to-Customer           | CRM (+ AI, Notification)                 |
-| Issue-to-Resolution        | ITSM (+ Workflow, Notification)          |
-| Procure-to-Pay             | Procurement, ERP (+ Billing)             |
-| Content-to-Consumption     | CMS, LMS (+ Document, AI)                |
-
-### 4.3. Lessons Incorporated
-
-This map is a deliberate reaction to failure modes recorded in enterprise COE (Correction-of-Error) themes, not a greenfield ideal chosen for elegance.
-
-| COE-class lesson | Design response in this document |
+| Value Stream | Primary Capability Families |
 | :-- | :-- |
-| A shared operational database silently re-fused decomposed services into a distributed monolith | Database-per-Domain rule + zero cross-schema-grant fitness function |
-| Duplicated "shared" capabilities (multiple notification stacks) diverged and multiplied cost | Platform First + duplication-count-`0` fitness function |
-| Product-local identity implementations became the weakest security link | Identity centralized as a Tier-0 capability (see EAD-006) |
-| Co-owned capabilities produced no accountable owner during incidents | Single Domain Authority; co-ownership structurally prohibited |
+| Workforce administration | HCM, Foundation & Control, Experience & Interaction |
+| Client and service onboarding | BPO Service Management, Foundation & Control, Business Execution & Enablement |
+| Work intake to operational outcome | Travel/BPO Product domains, Business Execution & Enablement |
+| Travel servicing and reconciliation | Travel Operations, Business Execution & Enablement, Data Knowledge & Intelligence |
+| Product and tenant onboarding | Foundation & Control, Business Execution & Enablement |
+| Knowledge-assisted operations | Data Knowledge & Intelligence, Product domains |
+| Software delivery | Experience & Interaction, Engineering & Runtime |
 
----
+### 4.3 Lessons Incorporated
+
+| Lesson | Enterprise Response |
+| :-- | :-- |
+| Generic enterprise products were treated as strategic commitments without evidence | Product families remain hypotheses until chartered through discovery and ownership |
+| Tenant, membership, identity, and entitlement were compressed into one platform | Each concept receives a distinct authority |
+| Every reusable idea was prematurely called a platform | Capability, domain, system, and deployable are separate concepts |
+| Client-system data was treated as ATI-owned truth | External authority is explicit and local projections remain non-authoritative |
+| Shared capabilities accumulated business-specific logic | Product domains own business meaning and outcomes |
+| Co-owned capabilities created ambiguous accountability | One capability has one accountable domain |
 
 ## 5. Architecture Model
 
-### 5.1. Macro Capability Map
+### 5.1 Macro Capability Map
 
 ```mermaid
 graph LR
-    A([Scnehaux Cloud Service])
+    SEC([Scnehaux Enterprise Cloud])
 
-    A --> P[["Platform Plane<br/>(business-agnostic substrate)"]]
-    A --> B[["Business Plane<br/>(market-facing products)"]]
+    SEC --> BUS[Business Plane]
+    SEC --> PLAT[Platform Plane]
+    GOV[Governance & Assurance Overlay] -. governs .-> BUS
+    GOV -. governs .-> PLAT
 
-    P --> IAM[Identity Platform]
-    P --> UI[UI Platform]
-    P --> WS[Workspace Platform]
-    P --> WF[Workflow Platform]
-    P --> NT[Notification Platform]
-    P --> DOC[Document Platform]
-    P --> BILL[Billing Platform]
-    P --> INT[Integration Platform]
-    P --> AUDIT[Audit Platform]
-    P --> AI[AI Platform]
+    BUS --> TRAVEL[Travel Operations]
+    BUS --> BPO[Adjacent / BPO Service Domains]
+    BUS --> ENT[Enterprise Enablement Products]
 
-    B --> HCM[HCM]
-    B --> ERP[ERP]
-    B --> CRM[CRM]
-    B --> CMS[CMS]
-    B --> ITSM[ITSM]
-    B --> LMS[LMS]
-    B --> PM[Project Management]
-    B --> PROC[Procurement]
+    PLAT --> FC[Foundation & Control]
+    PLAT --> BEE[Business Execution & Enablement]
+    PLAT --> DKI[Data Knowledge & Intelligence]
+    PLAT --> EI[Experience & Interaction]
+    PLAT --> ER[Engineering & Runtime]
 
-    style A fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
-    style P fill:#2b6cb0,stroke:#63b3ed,stroke-width:2px,color:#fff
-    style B fill:#805ad5,stroke:#553c9a,stroke-width:2px,color:#fff
+    FC --> IAM[Identity & Access]
+    FC --> TEN[Organization Workspace & Tenancy]
+    FC --> APPTRUST[Application & Service Trust]
+    FC --> POLICY[Security Policy & Authorization]
+    FC --> ENTITLE[Subscription & Entitlement]
+    FC --> CONFIG[Configuration & Variation]
+    FC --> REG[Product / Capability Registry]
+    FC --> AUDIT[Audit & Evidence Foundation]
+    FC --> TRUST[Trust Services]
+
+    BEE --> EXEC[Work / Case / Queue / Assignment]
+    BEE --> WF[Workflow & Orchestration]
+    BEE --> RULES[Rules & Decisioning]
+    BEE --> SLA[SLA Escalation & Approval]
+    BEE --> DOC[Document & Evidence Handling]
+    BEE --> NOTIF[Notification & Communication]
+    BEE --> INT[Integration Enablement]
+
+    DKI --> DATA[Data Foundation]
+    DKI --> KNOW[Knowledge Foundation]
+    DKI --> SEARCH[Search & Retrieval]
+    DKI --> AI[AI Enablement]
+    DKI --> ANALYTICS[Analytics]
+    DKI --> OI[Operational Intelligence]
+
+    EI --> UI[UI Platform & Design System]
+    EI --> SHELL[Application Shell]
+    EI --> WORKSPACE[Workspace Framework]
+    EI --> ACCESS[Accessibility & Localization]
+    EI --> CHANNEL[Channel Foundations]
+
+    ER --> DEV[Developer Platform]
+    ER --> CATALOG[Software Catalog]
+    ER --> DELIVERY[Source Build & Delivery]
+    ER --> INFRA[Infrastructure Automation]
+    ER --> RUN[Application Runtime]
+    ER --> CONN[API & Service Connectivity]
+    ER --> MSG[Event & Messaging]
+    ER --> OBS[Observability]
+    ER --> REL[Reliability & Resilience]
+    ER --> TEST[Testing & Quality]
 ```
 
-The map is deliberately shallow (two planes, one level of domains). Depth is delegated downstream: a domain's internal capability tree lives in its PAD, never here. This keeps the enterprise map stable across years while products churn beneath it.
+The top-level groups are logical capability boundaries. They do not imply one deployable, database, platform product, or team for every box.
 
-### 5.2. Domain Ownership Matrix
+The Platform Plane groups reusable capability by enduring concern rather than current technology or organization structure:
 
-Every domain declares a single accountable owner, a strategic classification, an availability tier (the enterprise contract for how much downtime the domain may incur), and its core responsibility. Availability tiers are defined in the Strategic Domain Classification below.
+- **Foundation & Control** — authority, identity, context, trust, policy, configuration, and evidence
+- **Business Execution & Enablement** — reusable machinery for moving and coordinating operational work
+- **Data, Knowledge & Intelligence** — governed facts, knowledge, retrieval, analysis, and intelligence
+- **Experience & Interaction** — reusable human-interaction foundations without owning product-specific journeys
+- **Engineering & Runtime** — developer, delivery, runtime, connectivity, observability, reliability, and quality substrate
 
-| Domain | Classification | Owning Team | Availability Tier | Core Responsibility |
-| :-- | :-- | :-- | :-- | :-- |
-| Identity Platform | Core Platform | Identity Team | Tier-0 | IAM, Authentication, OAuth 2.0 Delegation, Public IdP, federation |
-| Workspace Platform | Core Platform | Workspace Team | Tier-0 | Tenant, organization, workspace, membership |
-| UI Platform | Shared Platform | UI Platform Team | Tier-1 | Design system, component and token foundation |
-| Workflow Platform | Shared Platform | Workflow Team | Tier-1 | Business process orchestration and automation |
-| Notification Platform | Shared Platform | Notification Team | Tier-1 | Email, SMS, push, and webhook delivery |
-| Integration Platform | Shared Platform | Integration Team | Tier-1 | API gateway, external connectivity, transformation |
-| Audit Platform | Shared Platform | Audit Team | Tier-1 | Immutable audit trail and compliance evidence |
-| AI Platform | Shared Platform † | AI Team | Tier-2 † | Inference, retrieval, and intelligent services |
-| Document Platform | Generic Platform | Document Team | Tier-1 | File storage, document lifecycle, rendering |
-| Billing Platform | Generic Platform | Billing Team | Tier-1 | Subscription, metering, invoicing |
-| HCM | Core Business | HCM Team | Tier-1 | Human capital management |
-| ERP | Core Business | ERP Team | Tier-1 | Enterprise resource planning |
-| CRM | Supporting Business | CRM Team | Tier-2 | Customer relationship management |
-| ITSM | Supporting Business | ITSM Team | Tier-2 | IT service management |
-| Procurement | Supporting Business | Procurement Team | Tier-2 | Sourcing and procurement |
-| Project Management | Supporting Business | PM Team | Tier-2 | Project and portfolio management |
-| CMS | Supporting Business | CMS Team | Tier-2 | Content management |
-| LMS | Supporting Business | LMS Team | Tier-2 | Learning management |
+A capability shown here may remain local to a product until reuse, authority, risk, or lifecycle evidence justifies shared ownership.
 
-### 5.3. Strategic Domain Classification
+### 5.2 Domain Ownership Matrix
 
-Classification drives investment posture. It fuses a **Wardley evolution axis** (how commoditized a capability is) with a **build/buy/adopt directive** and a concrete **availability tier**, so that funding and reliability engineering are allocated by strategic weight rather than by team volume.
-
-| Classification | Definition & Strategic Posture | Wardley Stage | Availability Tier (annual budget) |
+| Plane / Group | Domain or Capability Family | Authoritative Responsibility | Strategic Posture |
 | :-- | :-- | :-- | :-- |
-| **Core Platform** | Foundational substrate that nearly every product depends on. Failure here is enterprise-wide. Build in-house; invest in depth. | Product → Commodity, but strategically load-bearing | Tier-0: ≥ 99.99% (≤ 52.6 min/yr) |
-| **Shared Platform** | Reusable capability consumed by multiple products. Build once; optimize for reuse and contract stability. | Product | Tier-1: ≥ 99.95% (≤ 4.4 h/yr) |
-| **Generic Platform** | Standardized capability with no competitive advantage. Prefer buy/adopt over build; wrap behind an Anti-Corruption Layer. | Commodity | Tier-1: ≥ 99.95% (≤ 4.4 h/yr) |
-| **Core Business** | Primary value proposition and revenue driver. Build in-house; treat as a strategic bet. | Genesis → Custom | Tier-1: ≥ 99.95% (≤ 4.4 h/yr) |
-| **Supporting Business** | Complementary product that extends the ecosystem. Build pragmatically; fold into a Core Business domain when synergy is proven. | Custom → Product | Tier-2: ≥ 99.9% (≤ 8.8 h/yr) |
+| Business Plane | Human Capital Management | Employee, employment, HR organization, attendance, leave, payroll, talent | Supporting enterprise product |
+| Business Plane | BPO Service Management | Client/service lifecycle, workforce operations, quality, SLA, and operational commercial outcomes | Adjacent business family |
+| Business Plane | Travel Operations | Air, land/sea, travel-finance, and customer/consultant operational outcomes | Primary business transformation family |
+| Business Plane | Product Experience | Domain-specific journey, workspace semantics, and business interaction | Product-owned experience |
+| Foundation & Control | Identity & Access | Principal, authentication, federation, sessions, protocol trust, workload identity | Foundational control capability |
+| Foundation & Control | Organization, Workspace & Tenancy | Organization, tenant, workspace, membership, operating context | Foundational control capability |
+| Foundation & Control | Application & Service Trust | Application/client registration, service identity, and trust relationships | Foundational control capability |
+| Foundation & Control | Security Policy & Authorization | Cross-product security policy definition, policy distribution, contextual authorization support, and authorization decision evidence | Foundational control capability |
+| Foundation & Control | Subscription & Entitlement | Subscriber account, subscription, commercial grants, quotas, and shared capability grants where chartered | Foundational control capability |
+| Foundation & Control | Configuration & Variation | Governed shared, tenant-aware, environment-aware, and feature configuration | Foundational control capability |
+| Foundation & Control | Product / Capability Registry | Product/capability definitions, lifecycle metadata, and consumer relationships where required | Candidate control capability |
+| Foundation & Control | Audit & Evidence Foundation | Enterprise evidence references, retention metadata, and chain of custody | Assurance capability |
+| Foundation & Control | Trust Services | Keys, secrets, certificates, signing, and verification services | Prefer proven/managed substrate |
+| Business Execution & Enablement | Work / Case / Queue / Assignment | Reusable operational work coordination machinery | Shared execution candidate |
+| Business Execution & Enablement | Workflow & Orchestration | Reusable long-running human/system coordination | Shared execution candidate |
+| Business Execution & Enablement | Rules & Decisioning | Reusable deterministic decision and validation machinery | Shared execution candidate |
+| Business Execution & Enablement | SLA / Escalation / Approval | Reusable timers, thresholds, review, maker-checker, and escalation machinery | Shared execution candidate |
+| Business Execution & Enablement | Document / Evidence Handling | Reusable document, attachment, version, and evidence handling | Shared enabling candidate |
+| Business Execution & Enablement | Notification & Communication | Reusable notification, template, delivery-channel, and message context | Shared enabling candidate |
+| Business Execution & Enablement | Integration Enablement | Reusable internal, client, and industry connectivity mechanisms | Shared enabling candidate |
+| Data, Knowledge & Intelligence | Data Foundation | Governed analytical data, data products, contracts, metadata, and semantic models | Shared data capability |
+| Data, Knowledge & Intelligence | Knowledge Foundation | Governed knowledge, ontology/taxonomy, provenance, effective dates, and access | Shared knowledge capability |
+| Data, Knowledge & Intelligence | Search & Retrieval | Lexical, metadata, semantic, hybrid, and evidence-driven advanced retrieval | Shared intelligence capability |
+| Data, Knowledge & Intelligence | AI Enablement | Governed model access, context, tools, agents, guardrails, evaluation, and telemetry | Shared intelligence capability |
+| Data, Knowledge & Intelligence | Analytics & Operational Intelligence | Metrics, reporting, signals, recommendations, risk and operational insight | Shared intelligence capability |
+| Experience & Interaction | UI Platform & Design System | Design tokens, primitives, components, accessibility foundations, visual language | Shared experience capability |
+| Experience & Interaction | Application Shell & Workspace Framework | Reusable navigation, shell, layout, composition, and role/context-aware workspace primitives | Shared experience capability |
+| Experience & Interaction | Accessibility / Localization / Channel Foundations | Reusable interaction requirements and channel foundations | Shared experience capability |
+| Engineering & Runtime | Developer Platform & Software Catalog | Developer experience, ownership metadata, templates, paved roads, and discoverability | Shared engineering platform |
+| Engineering & Runtime | Source, Delivery & Infrastructure Automation | Build, test, release, artifact, infrastructure, and environment automation | Shared engineering platform |
+| Engineering & Runtime | Runtime / Connectivity / Messaging | Governed application execution and communication substrate | Adopt/build as justified |
+| Engineering & Runtime | Observability / Reliability / Testing / Supply Chain | Telemetry, resilience, quality, provenance, integrity, and engineering guardrails | Shared engineering capability |
 
-**† Tier is a default floor, not a rigid mapping.** A domain may be assigned a _lower_ availability tier by ADR when its interactions are off the critical path. The **AI Platform** is the sole standing exception: it is a Shared Platform by reuse, but is assigned **Tier-2** because inference and retrieval are best-effort and asynchronous — a product degrades gracefully (falls back to non-AI behavior) rather than fails when AI is unavailable. No consumer places the AI Platform on a synchronous critical path.
+Detailed capability trees and authority contracts belong in PADs after a capability is chartered. A row in this matrix does not authorize an independent service or platform product.
 
-### 5.4. Capability Evolution
+### 5.3 Strategic Domain Classification
 
-Every proposed capability passes through a deterministic placement decision before any team writes code. This prevents the two most expensive enterprise failure modes: capability duplication (a distributed monolith) and capability leakage (a platform absorbing business logic).
+| Classification | Definition | Default Posture |
+| :-- | :-- | :-- |
+| Foundational Control Capability | Cross-product authority or trust capability whose failure or compromise affects enterprise safety or isolation | Own architecture; adopt mature kernels/substrate where safer |
+| Core Business Product | Directly differentiates ATI service delivery and commercial outcomes | Build from operational evidence |
+| Supporting Enterprise Product | Supports ATI internal operations without defining primary market differentiation | Build pragmatically or integrate |
+| Shared Execution Capability | Reusable business machinery with multiple justified consumers | Charter only after reuse or constitutional need is proven |
+| Shared Intelligence Capability | Reusable data, knowledge, retrieval, AI, analytics, or intelligence capability | Build or adopt from measured consumer value |
+| Shared Experience Capability | Reusable interaction foundation that accelerates multiple products without owning domain journeys | Build/adopt based on leverage and consistency |
+| Shared Engineering Capability | Reusable developer, delivery, runtime, reliability, or quality substrate | Build/adopt based on leverage, risk, and lifecycle |
+| Commodity Substrate | Standard capability with high implementation risk and low differentiation | Prefer managed or proven technology |
+
+Classification determines investment posture, not physical topology.
+
+### 5.4 Capability Evolution
 
 ```mermaid
-flowchart TD
-    A([New Capability Proposal]) --> B{Encodes business-domain logic?}
-
-    B -->|No — technical / agnostic| C{Existing Platform covers it?}
-    B -->|Yes — bounded business context| D{Existing Business domain covers it?}
-
-    C -->|Yes| E[Extend existing Platform Service]
-    C -->|No| F[[Architecture Authority review:<br/>charter a new Platform]]
-
-    D -->|Yes| G[Extend existing Business Product]
-    D -->|No| H[[Domain discovery:<br/>charter a new Business Product]]
-
-    F --> I([Capability placed in exactly one domain])
-    E --> I
-    G --> I
-    H --> I
-
-    style A fill:#2d3748,stroke:#4a5568,color:#fff
-    style F fill:#dd6b20,stroke:#c05621,color:#fff
-    style H fill:#dd6b20,stroke:#c05621,color:#fff
-    style I fill:#276749,stroke:#68d391,color:#fff
+flowchart LR
+    I[Identified] --> C[Candidate]
+    C --> H{Charter Review}
+    H -->|Approved| CH[Chartered]
+    H -->|Insufficient evidence| I
+    CH --> A[Active]
+    A --> D[Deprecated]
+    D --> R[Retired]
 ```
 
-**Evolution rules (invariant):**
+A domain charter requires:
 
-1. Every capability resolves to exactly one owning domain. No capability may be co-owned.
-2. Business-agnostic capabilities are placed in the Platform plane; business-bounded capabilities in the Business plane.
-3. Business Products consume Platform Services; they never duplicate a shared capability.
-4. Cross-domain ownership is prohibited. A capability crossing a boundary is decomposed, not shared.
-5. Platform Services evolve on an independent cadence from the Business Products that consume them.
-6. Chartering a new Platform, or promoting a Supporting Business domain to Core, requires Architecture Authority approval via ADR.
-7. Domain ownership follows Conway's Law: the boundary and the owning team are defined together or not at all.
+- one accountable owner;
+- explicit authority and non-authority boundaries;
+- justified consumers or a constitutional control need;
+- defined enterprise relationships;
+- build/adopt rationale;
+- reliability and governance posture;
+- migration implications for existing authorities.
 
-### 5.5. Relationship Semantics
+A target capability is not implementation authorization.
 
-Every cross-domain relationship resolves to exactly one of four types. This vocabulary is authoritative and inherited by every PAD and SAD; downstream documents classify each relationship rather than using the ambiguous term "depends on". **Only a Synchronous Runtime Dependency creates an edge in the acyclic dependency graph of EAD-002.** The asynchronous types are decoupled through the Event Broker, and capability consumption is decoupled through locally-validated artifacts; neither forms a runtime dependency edge.
+### 5.5 Enterprise Glossary
 
-| Type | Meaning | Creates a dependency edge? |
+| Term | Enterprise Meaning | Owning Domain |
 | :-- | :-- | :-- |
-| **Synchronous Runtime Dependency** | A blocking request/response the caller cannot complete without the provider responding now (e.g. tenant-context read, synchronous inference). | **Yes** — must remain acyclic |
-| **Asynchronous Event Publication** | The domain publishes domain events to the Broker, carrying their context in the payload (e.g. audit evidence, notification triggers). | No — the publisher depends on the Broker, never on consumers |
-| **Asynchronous Event Subscription** | The domain consumes events from the Broker. | No — the subscriber depends on the Broker, never on the producer |
-| **Platform Capability Consumption** | The domain uses a platform's published capability via locally-validated artifacts (JWT/SPIFFE credential, UI package, cached token), degradable per the EAD-006 cached-validation contract. | No hard edge — degradable via cache |
-
-### 5.6. Enterprise Glossary
-
-Each contested term carries exactly one meaning bound to one owning context. This table is the single source; no PAD may redefine a term or claim a capability outside its row.
-
-| Term | Single Meaning | Owning Context |
-| :-- | :-- | :-- |
-| Tenant | The customer isolation boundary. | Workspace Platform |
-| Organization (Workspace) | The tenant's collaboration/organizational container within a workspace. | Workspace Platform |
-| HR Organization | Departments, positions, and reporting lines of the workforce. | HCM |
-| Membership | Relationship between a member and a workspace/organization. | Workspace Platform |
-| Workflow | A running orchestration instance. | Workflow Platform |
-| Process | The business-flow definition an instance executes. | Workflow Platform |
-| Document / File | A stored binary artifact and its lifecycle/rendering. | Document Platform |
-| Content (published) | Business-managed publishable content. | CMS |
-| Permission | An authorization grant evaluated at access time. | Identity Platform |
-| Entitlement | A commercial capability grant conferred by an active subscription. | Billing Platform |
-| Evidence | An immutable, tamper-evident record of an action. | Audit Platform |
-
----
+| Organization | Legal or business party participating in the ecosystem | Organization & Tenancy |
+| Subscriber Account | Commercial account purchasing an offering | Subscription & Entitlement |
+| Client Account | BPO service-delivery relationship | BPO Client & Contract domain |
+| Tenant | Technical isolation and operating boundary | Organization & Tenancy |
+| Workspace | Collaboration or operating context within a tenant | Organization & Tenancy |
+| Membership | Relationship between a Principal and a Tenant or Workspace | Organization & Tenancy |
+| Principal | Stable human, service, workload, or agent security subject | Identity & Access |
+| Product | Coherent business capability offered to users or customers | Product-owning domain |
+| Product Offering | Packageable or commercial form of a Product | Product & Offering Catalog |
+| Application | Software realization of a Product | Software Catalog |
+| Entitlement | Effective commercial Product, module, feature, or quota grant | Subscription & Entitlement |
+| Permission | Authorization grant concerning an action and resource | Product domain or Security Policy & Authorization |
+| Evidence | Immutable or tamper-evident record supporting accountability | Audit & Evidence |
 
 ## 6. Principles & Rules
 
-Each principle is paired with a machine-verifiable or audit-verifiable **fitness function**, upholding the GDC-000 maxim that a rule without an enforcement mechanism is only a suggestion.
+### 6.1 Single Domain Authority
 
-### 6.1. Platform First
+Every capability and enterprise fact has one accountable authority, including facts whose authority is external to ATI.
 
-Shared enterprise capabilities are implemented once as a Platform Service and consumed by contract.
+- **Fitness function:** PAD ownership review reports zero duplicate authoritative capability claims.
 
-- **Rationale:** Duplication of a shared capability across products produces divergent behavior, multiplied maintenance cost, and a distributed monolith.
-- **Fitness function:** Zero capabilities appear in more than one domain's capability tree (validated against the Domain Ownership Matrix during PAD review). Duplication count target: `0`.
+### 6.2 Product Owns Business Meaning
 
-### 6.2. Single Domain Authority
+Product domains own business state, business rules, and irreversible business outcomes. Shared platforms provide reusable machinery without absorbing domain meaning.
 
-Every capability has exactly one accountable owning domain.
+- **Fitness function:** platform PAD review reports zero unapproved product-specific authoritative aggregates.
 
-- **Rationale:** Shared accountability collapses to no accountability; incident response requires an unambiguous owner.
-- **Fitness function:** Every PAD declares a `governed_by` link resolving to a capability in this map; capabilities without a resolvable owner fail governance.
+### 6.3 Identity, Tenancy, Entitlement, and Permission Are Distinct
 
-### 6.3. Database per Domain
+Authentication identity, operating membership, commercial grant, and business authorization remain separate authorities.
 
-Each domain owns its persistence; cross-domain database access is prohibited.
+- **Fitness function:** domain-model audit reports zero cross-authority aggregate ownership.
 
-- **Rationale:** A shared database is the strongest form of coupling and silently destroys independent evolvability.
-- **Fitness function:** Cross-schema database grants across domain boundaries = `0` (enforced downstream in EAD-003 and SAD review).
+### 6.4 Organization, Subscriber Account, Client Account, and Tenant Are Distinct
 
-### 6.4. API / Event First
+Legal, commercial, service-delivery, and technical-isolation boundaries are modeled explicitly.
 
-Cross-domain communication occurs only through published APIs or events owned by the provider.
+- **Fitness function:** canonical data models require explicit references rather than inferred equivalence.
 
-- **Rationale:** Contract-mediated interaction is the only interaction that can be versioned, tested, and evolved independently.
-- **Fitness function:** Zero direct cross-domain code or database dependencies detected in downstream dependency audits.
+### 6.5 Capability Is Not a Deployable
 
-### 6.5. Independent Evolution
+A capability or domain does not automatically imply a microservice, database, team, or independent platform.
 
-Business Products and Platform Services deploy and version on independent cadences.
+- **Fitness function:** every new system boundary traces to an approved PAD and SAD rationale.
 
-- **Rationale:** Coupled release trains reintroduce the monolith at the process layer even when the code is decomposed.
-- **Fitness function:** No shared release train spanning two domains; each domain sustains DORA deployment frequency ≥ daily without cross-domain coordination.
+### 6.6 Target Landscape Is Not Build Authorization
 
-### 6.6. Conway Alignment
+Identified capabilities require a charter before independent implementation.
 
-Organizational boundaries mirror architectural boundaries.
+- **Fitness function:** every PAD traces to a chartered capability and accountable owner.
 
-- **Rationale:** Architecture and org structure converge regardless of intent; designing them together prevents accidental coupling.
-- **Fitness function:** Every domain in the Ownership Matrix maps to exactly one owning team in CODEOWNERS.
+### 6.7 External Authority Remains Explicit
 
----
+ATI-owned projections and execution state do not silently replace client or industry systems of record.
+
+- **Fitness function:** EAD-003 and affected PADs identify authority for every externally sourced critical fact.
+
+### 6.8 No Universal Synchronous Control-Plane Fan-In
+
+Cross-product control capabilities distribute trusted artifacts or bounded projections where feasible rather than requiring every product request to call a central service.
+
+- **Fitness function:** EAD-002 dependency graph contains no unapproved universal per-request control dependency.
+
+### 6.9 Platform First, Not Platform Prematurely
+
+A reusable capability is centralized only when constitutional need, reuse, ownership, and lifecycle justify the cost.
+
+- **Fitness function:** platform charter contains named consumers, owner, contracts, and adoption measure.
+
+### 6.10 Governance Is an Overlay
+
+Governance defines policy, decision rights, evidence, and lifecycle across all planes; it does not become a runtime business domain.
+
+- **Fitness function:** governance artifacts own no business transaction state.
 
 ## 7. Alternatives Considered
 
-The plane/domain model was chosen against rejected alternatives. Each rejection is a consciously accepted trade-off, not an oversight.
-
-| Alternative | Why Rejected | Debt Consciously Accepted |
+| Alternative | Why Rejected | Debt Accepted |
 | :-- | :-- | :-- |
-| **Modular monolith** (one deployable, module boundaries only) | Module boundaries are unenforced at runtime and erode under delivery pressure; a single release train recouples every team | Higher operational and integration cost (many deployables, network hops) in exchange for enforceable isolation |
-| **Deeper enterprise capability tree** (model sub-capabilities here) | Sub-capabilities churn at product cadence; encoding them here forces an enterprise-map revision on every product change | A coarse enterprise map that defers depth to PADs, at the cost of some navigability |
-| **Capability co-ownership** for genuinely shared concerns | Shared accountability collapses to none during incidents; change authority becomes ambiguous | A boundary-crossing capability must be _decomposed_ (more upfront modeling) rather than shared |
-| **Buy a COTS suite** (e.g., packaged ERP) for Core Business domains | Core Business is the revenue differentiator; COTS commoditizes the one thing we must own | Build cost and time for Core Business; Generic Platform domains still prefer buy/adopt |
-
-## 7.1. Trade-Offs & Lessons Summary
-
-- **Trade-off Analysis:** We prioritize independent deployability over operational simplicity. This forces domains to own their own cross-domain integration, which is complex, but avoids the systemic failure of a "distributed monolith" where one team's release can destabilize the entire platform.
-- **Learning from Failure:** We accept that initial domain boundaries will be imperfect. Instead of creating a monolithic, "perfect" map, we use the `Capability Evolution` gate (Section 5.4) to adjust boundaries iteratively as the business matures.
-
----
+| Preserve a generic SaaS-suite map | It overstates unvalidated ERP/CRM/ITSM-style product commitments | Product map remains intentionally coarse until discovery matures |
+| Treat Travel Operations as the enterprise root | It excludes enterprise applications, control capabilities, and future verticals | Travel remains a major product family under a broader enterprise cloud |
+| Put all cross-product concerns in IAM or one Workspace platform | It creates a control-plane god domain | Additional authority boundaries and contracts are required |
+| Charter every target capability immediately | It creates platform, team, and runtime sprawl before value is proven | Some capabilities remain identified or candidate |
+| One microservice per domain | It confuses logical ownership with physical deployment | Modular realizations may host multiple bounded contexts initially |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-At the capability level, two capabilities are universal dependencies and therefore enterprise-wide single points of failure by construction. This is an accepted consequence of goals G3/G4 and it obligates a defined degradation contract, enforced downstream (EAD-002, EAD-005, EAD-006).
-
-| Universal dependency | Blast radius if unavailable | Required degradation posture (enforced in PAD/SAD) |
+| Universal Capability | Enterprise Blast Radius | Required Direction |
 | :-- | :-- | :-- |
-| Identity (authN/authZ) | Enterprise-wide — every request | Fail-closed for writes; short-lived cached token validation permits read/degraded operation during an Identity outage rather than a full estate outage |
-| Workspace (tenant context) | Enterprise-wide — every tenant-scoped call | Cached tenant context with bounded TTL; deny new provisioning, preserve existing-tenant reads |
-| Single owning team per domain | That domain — keyman / ownership risk | CODEOWNERS + a documented secondary owner; an ownership vacancy blocks merges, never runtime |
+| Identity trust | New authentication and credential lifecycle | Existing valid artifacts remain locally verifiable; new trust establishment fails closed |
+| Tenant and membership context | New context and membership changes | Existing bounded context projections continue within declared freshness |
+| Cryptographic trust | New signing, encryption, and credential operations | Verification remains available; unsafe fallback is prohibited |
+| Messaging and evidence propagation | Delayed cross-domain state and evidence | Authoritative domains retain durable local facts for later delivery |
+| External systems of record | Affected travel or financial journeys | Unsafe irreversible actions pause; safe local work continues where declared |
 
-The universal-dependency risk is mitigated, never eliminated: Identity and Workspace are the **only** capabilities permitted an enterprise-wide synchronous fan-in, both are Tier-0, and both MUST publish a graceful-degradation mode in their PAD/SAD.
-
-- **Identity Provider Dependency**: All domains rely on the central identity platform. In the event of IAM failure, Edge Gateways MUST degrade gracefully by caching JWTs, allowing read-only access for 15 minutes.
-- **Enterprise Message Bus**: All asynchronous inter-domain events rely on the core message bus. If unavailable, domains MUST employ local outbox patterns to queue events until service restoration.
+Universal dependency is minimized; enterprise importance does not justify synchronous fan-in on every request.
 
 ## 9. Ownership
 
-| Responsibility                            | Accountable               | Consulted                    |
-| :---------------------------------------- | :------------------------ | :--------------------------- |
-| Enterprise Capability Map (this artifact) | Architecture Authority    | Domain Leads, Platform Leads |
-| Platform capability definitions           | Platform Teams            | Architecture Authority       |
-| Business capability definitions           | Product Teams             | Architecture Authority       |
-| Capability placement disputes             | Architecture Review Board | Affected Domain Leads        |
-| MECE integrity and classification review  | Architecture Authority    | Enterprise stakeholders      |
-
----
+| Responsibility                 | Accountable               | Consulted                                               |
+| :----------------------------- | :------------------------ | :------------------------------------------------------ |
+| Enterprise capability map      | Architecture Authority    | Product, Platform, Security, Data, and Operations leads |
+| Domain charter                 | Architecture Review Board | Proposed owner and consumers                            |
+| Product capability definition  | Product Domain Owner      | Operations SMEs and Architecture Authority              |
+| Platform capability definition | Platform Owner            | Consumer teams and Architecture Authority               |
+| Capability placement dispute   | Architecture Review Board | Affected owners                                         |
+| MECE and glossary integrity    | Architecture Authority    | Domain owners                                           |
 
 ## 10. Dependencies
 
-**Upstream:** None. This is the supreme root of the C4 Contractual Lineage; it attaches to no parent.
+**Strategic inputs:** enterprise strategy, ATI operational discovery, and the governance constitution.
 
-**Downstream (this document governs):**
-
-- EAD-002 Enterprise System Landscape — realizes capabilities as systems.
-- EAD-003 Enterprise Data Ownership & Topology — binds data to the domains defined here.
-- EAD-004 Enterprise Integration Architecture — governs contracts between these domains.
-- EAD-005 Enterprise Platform Architecture — provides the substrate the Platform plane runs on.
-- EAD-006 Enterprise Security Architecture — secures the trust boundaries between these domains.
-
----
+**Governed outputs:** the enterprise system landscape, data architecture, integration architecture, platform strategy, security strategy, and every downstream domain charter.
 
 ## 11. Traceability
 
-- **Realized by:** every Platform PAD and Business Product PAD (each PAD's capability MUST trace upward to a capability in this map).
-- **Cascades to:** every SAD and TDD indirectly, via their governing PAD.
-- **Root anchor for:** the enterprise traceability graph; an orphan PAD (one that cannot reach this map) fails the DAG integrity audit.
-
----
+- Root capability anchor for all PADs.
+- Domain ownership changes require an enterprise ADR and major version change.
+- EAD-002 through EAD-006 must use the same Business Plane, five-group Platform Plane, Governance Overlay, and enterprise glossary.
+- Every PAD must resolve to one domain in the ownership matrix.
 
 ## 12. Assumptions
 
-- Scnehaux operates as a multi-tenant cloud ecosystem with logical tenant isolation as a baseline requirement.
-- Domain boundaries are strategically stable, changing only on genuine business-strategy shifts (multi-year horizon).
-- Every Platform Service is genuinely reusable across at least two Business Products; single-consumer "platforms" are reclassified as product-internal.
-
----
+- ATI initially operates the ecosystem for internal and managed-service use.
+- Client and industry systems of record remain present through multiple phases.
+- Product discovery will refine the detailed BPO and Travel capability map.
+- Logical domains may initially share physical runtimes while preserving authority boundaries.
 
 ## 13. Constraints
 
-- A capability belongs to one and only one domain; co-ownership is structurally prohibited.
-- Cross-domain capability duplication is prohibited.
-- Changes to enterprise capability boundaries require Architecture Authority approval recorded as an ADR.
-- The map remains MECE at all times; introducing overlap or a gap is a rejected pull request.
-
----
+- Co-ownership of an authoritative capability is prohibited.
+- Cross-domain database access is prohibited.
+- A target capability cannot bypass the domain-charter process.
+- Business-specific state cannot move into a shared platform without a boundary decision.
+- Identity cannot own Tenant, Membership, Entitlement, Product, or business Permission.
 
 ## 14. Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 | :-- | :-- | :-- | :-- |
-| Capability duplication across domains | Medium | High — distributed monolith | Platform First rule + duplication fitness function at PAD review |
-| Incorrect or contested ownership | Medium | Medium — Conway mismatch, slow incident response | Single Domain Authority + CODEOWNERS enforcement |
-| Shared persistence between domains | Low | High — irreversible coupling | Database per Domain rule + zero cross-schema grant audit |
-| Platform capability leaking into a product | Medium | Medium — reuse erosion | Capability Evolution placement gate before code |
-| Supporting Business sprawl | Medium | Medium — maintenance cost | Classification review; fold into Core when synergy proven |
-
----
+| Capability inventory becomes an implementation backlog | High | High | Charter gate and accountable ownership |
+| Control domains overlap | Medium | Critical | Glossary, authority matrix, PAD review |
+| Product boundaries remain hypothetical | Medium | High | Discovery evidence before charter |
+| Shared platforms absorb business logic | Medium | High | Product-authority principle and review |
+| External projections become treated as canonical | Medium | Critical | EAD-003 authority classification |
+| Logical domains cause premature microservices | High | Medium | SAD evidence required for physical separation |
 
 ## 15. Future Direction
 
-The capability map evolves by refining domain boundaries as bounded contexts mature, not by adding depth. Anticipated moves: promotion of proven Supporting Business domains into Core Business, and graduation of internally-reused capabilities into chartered Shared Platforms. Any boundary change is a Major version bump and requires an ADR documenting the strategic trigger and the migration of affected downstream PADs.
-
----
+The enterprise map evolves through strategic boundary changes, not through implementation detail. Product families will be refined after operational discovery, and shared capabilities will be chartered only when constitutional need or proven reuse justifies enterprise ownership.
 
 ## 16. References
 
-- Domain-Driven Design — Eric Evans
-- Team Topologies — Matthew Skelton & Manuel Pais
-- Wardley Mapping — Simon Wardley
-- Data Mesh — Zhamak Dehghani
-- Platform Engineering: paved-road principles
-- Accelerate — Nicole Forsgren, Jez Humble, Gene Kim (DORA metrics)
+- GDC-000 — Governance Policy.
+- GDC-006 — EAD Guideline.
+- Domain-Driven Design — Eric Evans.
+- Team Topologies — Matthew Skelton and Manuel Pais.
+- Wardley Mapping — Simon Wardley.
+- Platform engineering and SaaS control-plane patterns.
