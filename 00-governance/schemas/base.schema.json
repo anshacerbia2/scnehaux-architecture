@@ -32,7 +32,8 @@
           "\\.copy\\.md$",
           "\\.template\\.md$",
           "-template\\.md$",
-          "[\\\\/]templates[\\\\/]"
+          "[\\\\/]templates[\\\\/]",
+          "[\\\\/]scratch[\\\\/]"
         ]
       },
       "max_directory_depth": 3
