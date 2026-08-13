@@ -1,21 +1,21 @@
 ---
 doc_meta:
   id: SAD-004
-  title: Scnehaux Organization & Tenancy Control
+  title: Scnehaux Organization Control
   owner: Core Platform Team
   version: 2.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by:
     - GDC-009
-    - ADR-TEN-001
+    - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
   last_reviewed: 2026-08-06
   parent_pad: PAD-PLT-002
 ---
 
-# Scnehaux Organization & Tenancy Control
+# Scnehaux Organization Control
 
 ## 1. Purpose & Scope
 
@@ -27,9 +27,9 @@ Realize PAD-PLT-002 through one authoritative control-plane runtime for Organiza
 
 The system provides:
 
-- Organization registry and tenancy-relevant relationships;
+- Organization registry and organization-relevant relationships;
 - Tenant and Workspace lifecycle;
-- Membership and tenancy-administrative roles;
+- Membership and organization-administrative roles;
 - invitation and onboarding coordination;
 - operating-context eligibility;
 - lifecycle event publication and snapshot bootstrap;
@@ -69,13 +69,13 @@ The system must become the only authoritative runtime for Tenant, Workspace, and
 - infrastructure provisioning implementation;
 - Product configuration values;
 - enterprise evidence retention;
-- Organization & Tenancy user-interface architecture — SAD-012.
+- Organization user-interface architecture — SAD-012.
 
 ## 2. Enterprise Traceability
 
 ### Realizes
 
-This system realizes PAD-PLT-002 and the boundary decision in ADR-TEN-001.
+This system realizes PAD-PLT-002 and the boundary decision in ADR-ORG-001.
 
 It inherits:
 
@@ -92,9 +92,9 @@ It inherits:
 ```mermaid
 graph LR
     ADMIN[Tenancy Administrators]
-    UI[Organization & Tenancy Experience]
+    UI[Organization Experience]
     EDGE[Ingress / API Gateway]
-    TEN[Organization & Tenancy Control]
+    TEN[Organization Control]
     DB[(Tenancy PostgreSQL)]
     IAMCTRL[Identity Control Service]
     IAM[Keycloak Identity Kernel]
@@ -144,7 +144,7 @@ External system dependencies are:
 
 The runtime contains one deployable application and one private database:
 
-1. **Organization & Tenancy Control Application** — Go HTTP/gRPC-capable control application containing Organization, Tenant, Workspace, Membership, invitation, projection, reconciliation, and offboarding modules.
+1. **Organization Control Application** — Go HTTP/gRPC-capable control application containing Organization, Tenant, Workspace, Membership, invitation, projection, reconciliation, and offboarding modules.
 2. **Tenancy PostgreSQL Database** — private authoritative persistence, outbox, idempotency, projection-consumer state, and migration state.
 
 Background delivery and reconciliation execute inside the same application deployment using bounded worker pools and database-backed coordination. Extraction requires a later SAD/ADR when independent scaling or failure isolation is demonstrated.
@@ -156,7 +156,7 @@ Background delivery and reconciliation execute inside the same application deplo
 ```mermaid
 graph TB
     LB[Managed Ingress / Load Balancer]
-    APP[Go Organization & Tenancy Control]
+    APP[Go Organization Control]
     DB[(Managed PostgreSQL HA)]
     BROKER[Managed Event Broker]
     IDCTRL[Go Identity Control Service]
@@ -216,8 +216,8 @@ POST   /v1/memberships/{membership_id}:revoke
 POST   /v1/memberships/{membership_id}:restore
 GET    /v1/principals/{principal_id}/contexts
 GET    /v1/context/{tenant_id}/{principal_id}:verify
-GET    /v1/projections/tenancy/snapshot
-POST   /v1/projections/tenancy:reconcile
+GET    /v1/projections/organization/snapshot
+POST   /v1/projections/organization:reconcile
 ```
 
 Exact schemas are defined by the API contract and versioned independently. Sensitive administrative commands require idempotency keys, optimistic version, reason, and authenticated actor context.
@@ -243,7 +243,7 @@ Worker concurrency is bounded by configuration. Duplicate work is handled throug
 sequenceDiagram
     actor A as Provider Administrator
     participant UI as Admin Experience
-    participant T as Tenancy Control
+    participant T as Organization Control
     participant DB as PostgreSQL
     participant P as Provisioning
     participant B as Event Broker
@@ -267,7 +267,7 @@ A Tenant is not active until required provisioning and policy prerequisites are 
 sequenceDiagram
     actor A as Tenant Administrator
     participant UI as Admin Experience
-    participant T as Tenancy Control
+    participant T as Organization Control
     participant DB as PostgreSQL
     participant B as Event Broker
     participant I as Identity Control Service
@@ -309,7 +309,7 @@ Neither token issuance nor Product request handling synchronously calls Tenancy 
 ```mermaid
 sequenceDiagram
     actor A as Administrator or Security
-    participant T as Tenancy Control
+    participant T as Organization Control
     participant DB as PostgreSQL
     participant B as Event Broker
     participant I as Identity Control Service
@@ -332,7 +332,7 @@ The security dashboard measures acceptance-to-enforcement delay per required con
 ```mermaid
 sequenceDiagram
     actor A as Administrator
-    participant T as Tenancy Control
+    participant T as Organization Control
     participant B as Event Broker
     participant I as Identity Control Service
     participant K as Keycloak
@@ -355,7 +355,7 @@ Invitation possession alone never proves identity.
 ```mermaid
 sequenceDiagram
     actor A as Provider Administrator
-    participant T as Tenancy Control
+    participant T as Organization Control
     participant B as Event Broker
     participant C as Consumer Domains
     participant P as Provisioning
@@ -478,7 +478,7 @@ membership.lifecycle.*
 membership.security.*
 tenancy.admin-role.*
 operating-context.*
-tenancy.projection.*
+organization.projection.*
 tenant.offboarding.*
 tenancy.reconciliation.*
 ```
@@ -606,7 +606,7 @@ Threats and controls include:
 
 ### 9.2 Blast Radius
 
-The maximum initial control-plane failure boundary is the Organization & Tenancy mutation plane. Existing IAM and Product request handling continues through bounded local projections. A cross-tenant authorization defect, corrupted authority restore, or invalid global suspension may affect multiple Tenants and is therefore treated as a Sev-1 enterprise incident.
+The maximum initial control-plane failure boundary is the Organization mutation plane. Existing IAM and Product request handling continues through bounded local projections. A cross-tenant authorization defect, corrupted authority restore, or invalid global suspension may affect multiple Tenants and is therefore treated as a Sev-1 enterprise incident.
 
 ### 9.3 Observability & Operations
 
@@ -727,7 +727,7 @@ Production uses immutable artifact promotion, rolling or canary deployment, auto
 
 This system is governed by:
 
-- ADR-TEN-001 — Separate Tenancy Authority and Keycloak Projection.
+- ADR-ORG-001 — Separate Tenancy Authority and Keycloak Projection.
 - ADR-GLB-001 — Modular Monolith.
 - ADR-GLB-002 — PostgreSQL RLS where applicable.
 - ADR-GLB-003 — Transactional Outbox.

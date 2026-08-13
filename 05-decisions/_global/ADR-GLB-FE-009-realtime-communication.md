@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-FE-009
   title: ADR-GLB-FE-009 Real-Time Communication and Push Strategy
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Principal Frontend Architect

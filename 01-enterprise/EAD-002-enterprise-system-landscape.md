@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise System Landscape
   owner: Architecture Authority
   version: 2.0.0
-  status: draft
+  status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
@@ -95,7 +95,7 @@ graph TB
     subgraph PLATFORM[Platform Plane Systems]
         subgraph FC[Foundation & Control]
             IAM[Identity & Access]
-            TEN[Organization Workspace & Tenancy]
+            TEN[Organization]
             TRUST[Application / Service Trust]
             POLICY[Security Policy & Authorization]
             ENTITLE[Subscription & Entitlement]
@@ -156,7 +156,7 @@ graph TB
 
 The diagram represents system roles and capability grouping, not deployment topology. One system may realize multiple logical capabilities when authority, lifecycle, and coupling remain explicit.
 
-### 5.2 Business vs Platform Topology
+### 5.2 Platform vs Product Topology
 
 | System Category | Primary Responsibility | Ownership Rule |
 | :-- | :-- | :-- |
@@ -215,7 +215,7 @@ The diagram expresses stable responsibility direction, not mandatory network hop
 
 #### Identity and Tenancy
 
-Identity & Access and Organization & Tenancy are peer authorities:
+Identity & Access and Organization are peer authorities:
 
 - Identity owns Principal and authentication trust.
 - Tenancy owns Tenant, Workspace, Membership, and operating context.

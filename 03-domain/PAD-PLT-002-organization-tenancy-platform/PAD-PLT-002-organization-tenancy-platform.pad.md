@@ -3,8 +3,8 @@ doc_meta:
   id: PAD-PLT-002
   title: Organization & Tenancy Platform
   owner: Core Platform Team
-  version: 1.0.0
-  status: draft
+  version: 2.0.0
+  status: approved
   classification: restricted
   governed_by:
     - GDC-008
@@ -23,11 +23,11 @@ doc_meta:
     - SAD-012
 ---
 
-# Organization & Tenancy Platform
+# Organization Platform
 
 ## 1. Purpose & Scope
 
-The **Organization & Tenancy Platform** is the enterprise authority for ecosystem organizations, technical tenants, workspaces, memberships, and trusted operating context within the **Scnehaux Enterprise Cloud**.
+The **Organization Platform** is the enterprise authority for ecosystem organizations, technical tenants, workspaces, memberships, and trusted operating context within the **Scnehaux Enterprise Cloud**.
 
 It establishes **which organizations participate**, **which tenant and workspace boundaries exist**, **which Principals or workloads may operate in those contexts**, and **how lifecycle changes are distributed to Identity, Products, Runtime, Data, and Assurance capabilities**.
 
@@ -37,11 +37,11 @@ The platform is a logical domain capability. It does not prescribe the language,
 
 The platform owns:
 
-- provider, customer, partner, and publisher Organization identity and tenancy-relevant lifecycle;
+- provider, customer, partner, and publisher Organization identity and organization-relevant lifecycle;
 - Tenant identity, lifecycle, operating status, and isolation-profile reference;
 - Workspace identity and lifecycle within one Tenant;
 - Membership between a Principal or workload and a Tenant or Workspace;
-- tenancy-administrative roles and delegated administration;
+- organization-administrative roles and delegated administration;
 - trusted operating-context eligibility and switching rules;
 - membership invitation intent and onboarding coordination;
 - tenant suspension, restoration, transfer, offboarding, and retirement coordination;
@@ -89,7 +89,7 @@ The platform promises that:
 
 The platform realizes:
 
-- **EAD-001:** Organization & Tenancy as a Core Control Platform with authority for Organization, Tenant, Workspace, Membership, and operating context.
+- **EAD-001:** Organization as a Core Control Platform with authority for Organization, Tenant, Workspace, Membership, and operating context.
 - **EAD-002:** the logical Tenancy system and bounded local context projections used by Identity and Products.
 - **EAD-003:** authoritative Organization/Tenant/Workspace/Membership data and governed non-authoritative references.
 - **EAD-004:** lifecycle events, projection bootstrap, revocation propagation, reconciliation, and long-running onboarding/offboarding coordination.
@@ -100,7 +100,7 @@ The platform realizes:
 
 ```mermaid
 graph LR
-    TEN[Organization & Tenancy Platform]
+    TEN[Organization Platform]
     IAM[Identity & Access]
     CAT[Software Catalog]
     ENT[Subscription & Entitlement]
@@ -157,7 +157,7 @@ Consumers use authoritative administration contracts, bounded Tenant/Membership 
 
 | Bounded Context | Owns | Does Not Own |
 | :-- | :-- | :-- |
-| Organization Registry | Organization identity, type, status, and tenancy-relevant relationships | Subscriber commercial state, Client Contract, HCM hierarchy |
+| Organization Registry | Organization identity, type, status, and organization-relevant relationships | Subscriber commercial state, Client Contract, HCM hierarchy |
 | Tenant Lifecycle | Tenant identity, status, sponsorship references, lifecycle, isolation/residency profile reference | physical infrastructure or Product data |
 | Workspace Lifecycle | Workspace identity, type, status, and parent Tenant | BPO workstream, HCM department, Product, Application |
 | Membership | Principal/workload relationship to Tenant or Workspace, status, validity, provenance, security version | Principal credentials, Product roles or permissions |
@@ -210,7 +210,7 @@ These contexts may be realized by one or more physical systems without changing 
 9. Suspending a Tenant blocks all operating contexts in that Tenant according to a declared propagation contract.
 10. Organization association does not imply Membership, Subscription, Entitlement, or Product permission.
 11. Membership does not imply Subscription, Entitlement, Product role, or business authorization.
-12. Tenancy-administrative roles grant only Organization & Tenancy administrative capabilities.
+12. Tenancy-administrative roles grant only Organization administrative capabilities.
 13. Workspace is not an alias for HCM department, BPO workstream, Product, or Application.
 14. Client-supplied Tenant or Workspace values are requested context, not proof of authority.
 15. Consumer projections are versioned, freshness-bounded, and reconciled.
@@ -256,7 +256,7 @@ The platform consumes logical contracts for:
 ### 4.3 Contract Principles
 
 - Normal token issuance and Product request handling use bounded local projections rather than synchronous Tenancy calls.
-- Administrative mutations target the authoritative Organization & Tenancy capability.
+- Administrative mutations target the authoritative Organization capability.
 - Principal creation or authentication remains an Identity journey; Membership activation remains a Tenancy journey.
 - Subscription activation and Membership activation are coordinated but independently authoritative.
 - Tenant lifecycle intent and physical provisioning outcome are correlated but independently authoritative.
@@ -285,7 +285,7 @@ Tenant context is a security boundary, not merely request metadata.
 
 ### 5.2 Identity Access
 
-Identity & Access authenticates the Principal or workload and establishes assurance. Organization & Tenancy decides whether that subject has an active Tenant or Workspace Membership and whether it may perform tenancy-administrative actions.
+Identity & Access authenticates the Principal or workload and establishes assurance. Organization decides whether that subject has an active Tenant or Workspace Membership and whether it may perform organization-administrative actions.
 
 A trusted operating context requires:
 
@@ -417,7 +417,7 @@ No fixed unit-cost target is approved until real demand is measured. Cost optimi
 
 ### 7.1 Team Ownership
 
-The **Core Platform Team** is the interim accountable owner until a dedicated Organization & Tenancy Platform Team is chartered.
+The **Core Platform Team** is the interim accountable owner until a dedicated Organization Platform Team is chartered.
 
 The owning team is accountable for:
 
@@ -434,8 +434,8 @@ It is not accountable for identity authentication, Subscription/Entitlement, Cli
 
 ### 7.2 Realizing Systems
 
-- **SAD-004 — Scnehaux Organization & Tenancy Control**
-- **SAD-012 — Scnehaux Organization & Tenancy Experience**
+- **SAD-004 — Scnehaux Organization Control**
+- **SAD-012 — Scnehaux Organization Experience**
 
 The former Enterprise Workspace Platform is superseded by this boundary after approval and migration.
 
@@ -465,7 +465,7 @@ The former Enterprise Workspace Platform is superseded by this boundary after ap
 
 ### 8.2 Constraints
 
-- Organization & Tenancy cannot own credentials, authentication, sessions, tokens, or OAuth clients.
+- Organization cannot own credentials, authentication, sessions, tokens, or OAuth clients.
 - Identity cannot remain authoritative for Tenant or Membership.
 - Subscriber Account and Client Account cannot be inferred from Tenant identifier alone.
 - Workspace cannot become a generic container for every business hierarchy.
@@ -484,7 +484,7 @@ Required or governing decisions include:
 - IAM projection and operating-context contract;
 - pre-authentication Realm/Tenant discovery boundary;
 - Tenant lifecycle versus provisioning-state boundary;
-- tenancy-administrative and cross-tenant authorization;
+- organization-administrative and cross-tenant authorization;
 - isolation and residency profiles;
 - invitation and onboarding coordination;
 - Tenant offboarding and data obligations;

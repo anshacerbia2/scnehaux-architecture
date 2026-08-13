@@ -4,7 +4,7 @@ doc_meta:
   title: Identity & Access Platform
   owner: Identity Platform Team
   version: 1.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by:
     - GDC-008
@@ -87,7 +87,7 @@ The platform promises that:
 The platform realizes:
 
 - **EAD-001:** Identity & Access as a Core Control Platform with narrow authority.
-- **EAD-002:** the logical enterprise Identity system and its relationships to Products, Organization & Tenancy, Software Catalog, Security & Trust, and external identity providers.
+- **EAD-002:** the logical enterprise Identity system and its relationships to Products, Organization, Software Catalog, Security & Trust, and external identity providers.
 - **EAD-003:** authoritative Principal, identifier, authenticator, session, federation, and protocol-trust data.
 - **EAD-004:** standards-based federation, identity lifecycle events, provisioning coordination, and bounded projections.
 - **EAD-005:** a trust-critical platform with local verification, explicit recovery, and independently governed realization systems.
@@ -98,7 +98,7 @@ The platform realizes:
 ```mermaid
 graph LR
     IAM[Identity & Access Platform]
-    TEN[Organization & Tenancy]
+    TEN[Organization]
     CAT[Software Catalog]
     ENT[Subscription & Entitlement]
     TRUST[Security & Trust Services]
@@ -117,7 +117,7 @@ graph LR
 
 Relationship rules:
 
-- Organization & Tenancy is authoritative for Tenant, Workspace, and Membership.
+- Organization is authoritative for Tenant, Workspace, and Membership.
 - Software Catalog is authoritative for Application identity and ownership.
 - Subscription & Entitlement is authoritative for commercial access.
 - Security & Trust Services is authoritative for enterprise key, secret, and certificate governance.
@@ -228,7 +228,7 @@ The exact API paths, event schemas, protocols, transport, and physical component
 
 The platform consumes:
 
-- Tenant, Workspace, and Membership projections from Organization & Tenancy.
+- Tenant, Workspace, and Membership projections from Organization.
 - Application and owner references from Software Catalog.
 - Entitlement state when a declared token or onboarding policy requires it.
 - key, secret, and certificate capabilities from Security & Trust Services.
@@ -385,7 +385,7 @@ A future split or consolidation of systems does not change this PAD unless the l
 ### Assumptions
 
 - The Scnehaux Enterprise Cloud initially serves ATI internal and managed-service users before broad external SaaS exposure.
-- Organization & Tenancy provides authoritative Membership contracts.
+- Organization provides authoritative Membership contracts.
 - Software Catalog provides Application and owner references.
 - Consumers can validate approved security artifacts locally.
 - A mature standards-compliant identity kernel may realize part of this capability.

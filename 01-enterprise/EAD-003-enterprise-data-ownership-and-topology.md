@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Data Ownership & Topology
   owner: Architecture Authority
   version: 1.0.0
-  status: draft
+  status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
@@ -100,7 +100,7 @@ The data architecture therefore treats authority as an explicit property of ever
 | Data Family | Canonical Authority |
 | :-- | :-- |
 | Principal, Identifier, Authenticator, Session, Protocol Trust | Identity & Access |
-| Organization, Tenant, Workspace, Membership | Organization & Tenancy |
+| Organization, Tenant, Workspace, Membership | Organization |
 | Product and Offering | Product-owning domain / Product & Offering Catalog |
 | Application and Application Owner | Software Catalog |
 | Subscription and Entitlement | Subscription & Entitlement |

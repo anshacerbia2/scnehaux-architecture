@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise System Resilience & Fault Tolerance Standard
   owner: Enterprise Architect
   version: 1.0.0
-  status: adopted
+  status: approved
   classification: public
   review_cycle_days: 180
   created_date: 2026-01-01

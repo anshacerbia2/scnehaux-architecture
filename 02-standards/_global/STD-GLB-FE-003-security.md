@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Frontend Security Standard
   owner: Enterprise Security Architect
   version: 2.0.0
-  status: adopted
+  status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01

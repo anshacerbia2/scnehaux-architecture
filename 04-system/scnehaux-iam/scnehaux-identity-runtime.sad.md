@@ -4,11 +4,11 @@ doc_meta:
   title: Scnehaux Identity Runtime
   owner: Identity Platform Team
   version: 2.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by:
     - GDC-009
-    - ADR-IAM-004
+    - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
   last_reviewed: 2026-08-06
@@ -44,7 +44,7 @@ The system must preserve PAD-PLT-001 authority boundaries, provide local consume
 
 - Keycloak is the adopted identity kernel.
 - Go is used for the Scnehaux Identity Control Service, not for reimplementing the protocol/session engine.
-- Organization & Tenancy remains authoritative for Tenant, Workspace, and Membership.
+- Organization remains authoritative for Tenant, Workspace, and Membership.
 - Software Catalog remains authoritative for Application and owner metadata.
 - Product authorization remains outside this system.
 - Direct writes to the Keycloak database are prohibited.
@@ -56,7 +56,7 @@ The system must preserve PAD-PLT-001 authority boundaries, provide local consume
 
 - Managed relational database, secret/key management, load balancing, object storage, event broker, and observability capabilities are available.
 - Product systems can validate signed access artifacts locally.
-- Organization & Tenancy and Software Catalog can publish or expose bounded lifecycle contracts.
+- Organization and Software Catalog can publish or expose bounded lifecycle contracts.
 - The existing Go IAM can operate temporarily during migration.
 
 ### Out of Scope
@@ -74,7 +74,7 @@ The system must preserve PAD-PLT-001 authority boundaries, provide local consume
 
 ### Realizes
 
-This system realizes PAD-PLT-001 and implements the decision proposed by ADR-IAM-004.
+This system realizes PAD-PLT-001 and implements the decision proposed by ADR-IAM-001.
 
 It inherits:
 
@@ -96,7 +96,7 @@ graph LR
     CTRL[Scnehaux Identity Control Service]
     KCDB[(Keycloak Private Database)]
     CTRLDB[(Control and Reconciliation Database)]
-    TEN[Organization & Tenancy]
+    TEN[Organization]
     CAT[Software Catalog]
     TRUST[Secret / Key Management]
     BROKER[Event Broker]
@@ -130,7 +130,7 @@ External dependencies include:
 - managed key/secret capability;
 - managed database and backup service;
 - event broker and Audit & Evidence consumer;
-- Organization & Tenancy and Software Catalog contracts.
+- Organization and Software Catalog contracts.
 
 ### Internal
 
@@ -142,6 +142,19 @@ Internal system containers are:
 4. **Keycloak Private Database** — internal Keycloak persistence, accessed only by Keycloak.
 5. **Control Database** — Scnehaux mappings, desired state, reconciliation cursors, migration state, and transactional outbox; no duplicate Principal secrets or sessions.
 6. **Verification Distribution** — discovery and public-key material exposed through Keycloak and safely cached by consumers.
+
+#### Source Realization
+
+This system is realized by two repositories with different toolchains and different release cadences:
+
+| Repository | Containers realized | Toolchain | Release cadence |
+| :-- | :-- | :-- | :-- |
+| `identity-kernel` | Keycloak Identity Kernel, Identity Event Adapter, realm configuration, login theme, digest-pinned image build | JVM and container | Bound to the pinned Keycloak release |
+| `identity-control` | Identity Control Service | Go | Independent |
+
+The split is required rather than preferred. A Keycloak upgrade forces a rebuild and a full compatibility suite across everything in `identity-kernel`; holding the Go service in the same repository would make every kernel upgrade block an unrelated control-plane release. Extension governance in §4.5 also requires each extension to declare its own source repository and supported Keycloak range.
+
+Both repositories consume the shared Go substrate described in the technical designs of `foundation-platform`. That substrate is a versioned library and not a deployed system, so it carries no SAD of its own.
 
 ## 4. Architecture Model
 
@@ -245,7 +258,7 @@ sequenceDiagram
     A->>A: Validate token and state
 ```
 
-`P` is Keycloak-local or Control-managed projection state. This flow does not synchronously call Organization & Tenancy.
+`P` is Keycloak-local or Control-managed projection state. This flow does not synchronously call Organization.
 
 #### Application Registration
 
@@ -266,7 +279,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant T as Organization & Tenancy
+    participant T as Organization
     participant S as Identity Control Service
     participant K as Keycloak
 
@@ -414,7 +427,7 @@ Exact paths and schemas belong in developer contracts/TDDs.
 
 ### 6.2 Consumed
 
-- Organization & Tenancy lifecycle events and snapshots.
+- Organization lifecycle events and snapshots.
 - Software Catalog Application lifecycle events and queries.
 - Security & Trust secret/key capabilities.
 - external IdP metadata and assertions.
@@ -446,7 +459,7 @@ identity.migration.*
 - Admin API operations are idempotent or guarded by desired-state/version checks.
 - External IdPs have independent timeout, retry, and circuit-breaker policies.
 - Control-plane reconciliation uses bounded retries and dead-letter/manual-repair state.
-- Authentication does not synchronously call Software Catalog or Organization & Tenancy.
+- Authentication does not synchronously call Software Catalog or Organization.
 - Event publication failure retains the canonical outbox fact.
 
 ## 7. Security & Trust Boundary
@@ -459,7 +472,7 @@ Keycloak owns authentication ceremonies and authenticator verification. The Cont
 
 - Keycloak authorizes protocol grants and Identity administration.
 - Identity Control Service authorizes Scnehaux control/provisioning operations.
-- Organization & Tenancy authorizes Membership context.
+- Organization authorizes Membership context.
 - Product domains authorize business actions.
 - Admin Console access is restricted and not the ordinary enterprise administration interface.
 
@@ -646,7 +659,7 @@ The pipeline must:
 
 ### Governing
 
-- ADR-IAM-004 — adopt Keycloak as identity protocol and authentication kernel.
+- ADR-IAM-001 — adopt Keycloak as identity protocol and authentication kernel.
 - ADR for Realm/issuer strategy — required before production approval.
 - ADR for signing-key custody — required before production approval.
 - ADR for Membership projection representation — required after fit-gap PoC.
@@ -695,4 +708,4 @@ The pipeline must:
 - Keycloak with full Tenant/role authority;
 - single-node Keycloak for production.
 
-The selected system architecture follows ADR-IAM-004 and retains alternatives as future replacement candidates if measured evidence invalidates the current decision.
+The selected system architecture follows ADR-IAM-001 and retains alternatives as future replacement candidates if measured evidence invalidates the current decision.

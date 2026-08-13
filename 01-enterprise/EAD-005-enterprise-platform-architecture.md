@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Platform Architecture
   owner: Architecture Authority
   version: 2.0.0
-  status: draft
+  status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
@@ -91,7 +91,7 @@ graph TB
     subgraph PLATFORM[Platform Plane]
         subgraph FC[Foundation & Control]
             IAM[Identity & Access]
-            TEN[Organization Workspace & Tenancy]
+            TEN[Organization]
             TRUST[Application & Service Trust]
             POLICY[Security Policy & Authorization]
             ENTITLE[Subscription & Entitlement]

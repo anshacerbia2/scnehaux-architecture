@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Capability & Domain Map
   owner: Architecture Authority
   version: 2.0.0
-  status: draft
+  status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
@@ -121,7 +121,7 @@ graph LR
     PLAT --> ER[Engineering & Runtime]
 
     FC --> IAM[Identity & Access]
-    FC --> TEN[Organization Workspace & Tenancy]
+    FC --> TEN[Organization]
     FC --> APPTRUST[Application & Service Trust]
     FC --> POLICY[Security Policy & Authorization]
     FC --> ENTITLE[Subscription & Entitlement]
@@ -184,7 +184,7 @@ A capability shown here may remain local to a product until reuse, authority, ri
 | Business Plane | Travel Operations | Air, land/sea, travel-finance, and customer/consultant operational outcomes | Primary business transformation family |
 | Business Plane | Product Experience | Domain-specific journey, workspace semantics, and business interaction | Product-owned experience |
 | Foundation & Control | Identity & Access | Principal, authentication, federation, sessions, protocol trust, workload identity | Foundational control capability |
-| Foundation & Control | Organization, Workspace & Tenancy | Organization, tenant, workspace, membership, operating context | Foundational control capability |
+| Foundation & Control | Organization | Organization, tenant, workspace, membership, operating context | Foundational control capability |
 | Foundation & Control | Application & Service Trust | Application/client registration, service identity, and trust relationships | Foundational control capability |
 | Foundation & Control | Security Policy & Authorization | Cross-product security policy definition, policy distribution, contextual authorization support, and authorization decision evidence | Foundational control capability |
 | Foundation & Control | Subscription & Entitlement | Subscriber account, subscription, commercial grants, quotas, and shared capability grants where chartered | Foundational control capability |
@@ -258,12 +258,12 @@ A target capability is not implementation authorization.
 
 | Term | Enterprise Meaning | Owning Domain |
 | :-- | :-- | :-- |
-| Organization | Legal or business party participating in the ecosystem | Organization & Tenancy |
+| Organization | Legal or business party participating in the ecosystem | Organization |
 | Subscriber Account | Commercial account purchasing an offering | Subscription & Entitlement |
 | Client Account | BPO service-delivery relationship | BPO Client & Contract domain |
-| Tenant | Technical isolation and operating boundary | Organization & Tenancy |
-| Workspace | Collaboration or operating context within a tenant | Organization & Tenancy |
-| Membership | Relationship between a Principal and a Tenant or Workspace | Organization & Tenancy |
+| Tenant | Technical isolation and operating boundary | Organization |
+| Workspace | Collaboration or operating context within a tenant | Organization |
+| Membership | Relationship between a Principal and a Tenant or Workspace | Organization |
 | Principal | Stable human, service, workload, or agent security subject | Identity & Access |
 | Product | Coherent business capability offered to users or customers | Product-owning domain |
 | Product Offering | Packageable or commercial form of a Product | Product & Offering Catalog |

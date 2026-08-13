@@ -35,6 +35,15 @@ technology_radar:
       owner: Architecture Authority
       rationale_adr: null
 
+    # The JVM/Quarkus runtime enters the portfolio with this entry and is scoped to
+    # it. EAD-005 section 5.3 keeps it out of the general server-side options, so it
+    # carries no radar entry of its own.
+    - name: keycloak
+      category: identity-kernel
+      date_adopted: "2026-08-11"
+      owner: Identity Platform Team
+      rationale_adr: ADR-IAM-001
+
   trial:
     - name: rust
       category: systems-language

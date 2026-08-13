@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-FE-008
   title: ADR-GLB-FE-008 Standardization on GraphQL as Primary Data Protocol
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Principal Frontend Architect

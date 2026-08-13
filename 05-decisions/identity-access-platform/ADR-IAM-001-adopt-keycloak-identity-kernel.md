@@ -1,9 +1,9 @@
 ---
 doc_meta:
-  id: ADR-IAM-004
+  id: ADR-IAM-001
   title: Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel
   adr_type: replacement
-  status: proposed
+  status: accepted
   created: 2026-08-06
   created_date: 2026-08-06
   created_by: Identity Platform Team
@@ -11,7 +11,7 @@ doc_meta:
     - PAD-PLT-001
 ---
 
-# ADR-IAM-004: Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel
+# ADR-IAM-001: Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel
 
 ## 1. Title
 
@@ -22,8 +22,11 @@ Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel.
 | Date | Status | ADR Type | Reviewers | Approver |
 | :-- | :-- | :-- | :-- | :-- |
 | 2026-08-06 | proposed | replacement | Identity, Security, Platform, Architecture | Architecture Authority — pending |
+| 2026-08-11 | accepted | replacement | Identity, Security, Platform, Architecture | Architecture Authority |
 
-Upon acceptance, this ADR supersedes the custom-engine implementation direction represented by ADR-IAM-001, ADR-IAM-002, ADR-IAM-003, and SAD-001 v1 wherever those artifacts prescribe Scnehaux-owned session, token-signing, password-engine, or OAuth/OIDC runtime internals. The historical records remain preserved.
+Three earlier identity decisions covering epoch-based sessions, token signing with an ephemeral development signer, and in-process credential hashing were withdrawn on acceptance. None had reached staging, so they were removed rather than retained as superseded records. This decision replaces them in full.
+
+Upon acceptance, this ADR replaces the custom-engine implementation direction wherever earlier artifacts prescribed Scnehaux-owned session, token-signing, password-engine, or OAuth/OIDC runtime internals, including SAD-001 v1.
 
 ## 3. Context
 
@@ -85,7 +88,7 @@ Keycloak is a component of the Scnehaux Identity & Access Platform. It is not th
 Scnehaux SHALL implement a bounded **Identity Control Service**, preferably in Go, for:
 
 - Software Catalog to protocol-registration orchestration;
-- Organization & Tenancy Membership/context projection;
+- Organization Membership/context projection;
 - desired-state configuration and policy validation;
 - drift detection and reconciliation;
 - canonical Scnehaux identity event translation;
@@ -104,7 +107,7 @@ Identity Platform / Keycloak
     Principal, identifier, authenticator, authentication,
     session, protocol trust, federation, workload client trust
 
-Organization & Tenancy
+Organization
     Organization, Tenant, Workspace, Membership, operating context
 
 Software Catalog
@@ -223,7 +226,7 @@ The existing Go IAM SHALL enter containment and migration mode:
 - A Scnehaux Control Service and Identity Experience system remain required.
 - Technology radar and vulnerability-management processes must include Keycloak and its extensions.
 - Every upgrade requires compatibility, conformance, migration, and rollback evidence.
-- Existing ADR-IAM-001 through ADR-IAM-003 require lifecycle transition to `superseded` after this ADR is accepted.
+- The three earlier identity decisions were withdrawn on acceptance, so no lifecycle transition remains outstanding.
 
 ## 7. Compliance Impact
 
@@ -239,7 +242,7 @@ The existing Go IAM SHALL enter containment and migration mode:
 
 ### Compliance Status
 
-Proposed and not yet authoritative.
+Accepted and authoritative.
 
 The adoption of Keycloak is consistent with the EAD strategy to own architecture while adopting mature kernels where safer. It is also a justified platform-level exception to the Go default, not a violation requiring a temporary waiver.
 
@@ -265,7 +268,7 @@ None at proposal time. Any preview feature, unsupported extension, or deviation 
 
 **Benefits:** modern API-first operation, strong native B2B organization/project model, Go-native implementation culture, simpler stateless runtime profile.
 
-**Rejected for the current boundary because:** its primary native differentiation overlaps more directly with Scnehaux Organization & Tenancy, project/application, and role-assignment authorities. Preserving Scnehaux's narrow IAM boundary would reduce those benefits and increase model translation. Licensing and vendor-model coupling also require additional consideration.
+**Rejected for the current boundary because:** its primary native differentiation overlaps more directly with Scnehaux Organization, project/application, and role-assignment authorities. Preserving Scnehaux's narrow IAM boundary would reduce those benefits and increase model translation. Licensing and vendor-model coupling also require additional consideration.
 
 ### Alternative D — Managed Proprietary Identity SaaS
 

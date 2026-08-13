@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Security Architecture
   owner: Architecture Authority
   version: 1.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by: [GDC-006]
   review_cycle_days: 180
@@ -85,7 +85,7 @@ graph TB
     ACTOR[Human / Workload / Agent]
     APP[Application or Client Trust]
     IAM[Identity & Authentication]
-    TEN[Organization & Tenancy]
+    TEN[Organization]
     ENT[Subscription & Entitlement]
     POLICY[Policy and Product Authorization]
     RESOURCE[Protected Product Resource]
@@ -114,7 +114,7 @@ Every request or action is evaluated from explicit trust signals. Network placem
 | :-- | :-- | :-- |
 | Identity | Who or what is acting? | Identity & Access |
 | Application Trust | Which application or workload requests access? | Identity protocol trust plus Software Catalog ownership |
-| Operating Context | In which Tenant or Workspace may the actor operate? | Organization & Tenancy |
+| Operating Context | In which Tenant or Workspace may the actor operate? | Organization |
 | Commercial Access | Which Product capabilities are active? | Subscription & Entitlement |
 | Resource Authorization | May this action occur on this resource? | Product domain and/or Policy authority |
 | Assurance | Is the authentication strength and recency sufficient? | Identity & Access plus Security policy |
@@ -176,7 +176,7 @@ Security controls are organized into enterprise families:
 | :-- | :-- | :-- |
 | Identity and Authentication | Strong, risk-appropriate authentication and recovery | Identity & Access |
 | Application and Workload Trust | Registered clients, resources, workloads, and credential lifecycle | Identity, Software Catalog, Security & Trust |
-| Tenant Isolation | Explicit context, scoped administration, data and runtime isolation | Organization & Tenancy, Products, Runtime |
+| Tenant Isolation | Explicit context, scoped administration, data and runtime isolation | Organization, Products, Runtime |
 | Authorization | Default deny; enforcement near resource; explicit separation of duties | Product domain / Policy authority |
 | Privileged Access | Dedicated privilege, strong assurance, limited duration, full attribution | Security Authority plus owning domain |
 | Cryptographic Trust | Managed custody, lifecycle, rotation, and recovery | Security & Trust Services |
@@ -389,7 +389,7 @@ Failure modes define which operations continue, degrade, or fail closed.
 | :-- | :-- | :-- |
 | Enterprise security architecture | Security Architecture Authority | Architecture, Platform, Product, Data |
 | Identity and protocol trust | Identity Platform Owner | Security and Application owners |
-| Tenant and Membership security | Organization & Tenancy Owner | Identity, Product, Security |
+| Tenant and Membership security | Organization Owner | Identity, Product, Security |
 | Product authorization | Product Domain Owner | Security and Policy owner |
 | Application ownership | Software Catalog Owner | Application team and Security |
 | Cryptographic custody | Security & Trust Owner | Identity, Runtime, Data |

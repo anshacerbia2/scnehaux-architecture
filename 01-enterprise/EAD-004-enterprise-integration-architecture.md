@@ -4,7 +4,7 @@ doc_meta:
   title: Enterprise Integration Architecture
   owner: Architecture Authority
   version: 1.0.0
-  status: draft
+  status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180

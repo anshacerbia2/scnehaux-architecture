@@ -1,21 +1,21 @@
 ---
 doc_meta:
   id: SAD-012
-  title: Scnehaux Organization & Tenancy Experience
+  title: Scnehaux Organization Experience
   owner: Core Platform Team
   version: 1.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by:
     - GDC-009
-    - ADR-TEN-001
+    - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
   last_reviewed: 2026-08-06
   parent_pad: PAD-PLT-002
 ---
 
-# Scnehaux Organization & Tenancy Experience
+# Scnehaux Organization Experience
 
 ## 1. Purpose & Scope
 
@@ -30,7 +30,7 @@ The system provides:
 - provider Organization/Tenant administration;
 - Tenant and Workspace administration;
 - Membership invitation, grant, suspension, revocation, expiry, and restoration;
-- tenancy-administrative role management;
+- organization-administrative role management;
 - context discovery and safe context switching;
 - projection freshness and reconciliation visibility;
 - Tenant activation, suspension, and offboarding workflow views;
@@ -39,7 +39,7 @@ The system provides:
 
 ### Requirement
 
-The experience must make administrative scope explicit, prevent accidental cross-tenant action, use Keycloak authentication without exposing Keycloak administration directly, and invoke only the governed Scnehaux Organization & Tenancy Control API.
+The experience must make administrative scope explicit, prevent accidental cross-tenant action, use Keycloak authentication without exposing Keycloak administration directly, and invoke only the governed Scnehaux Organization Control API.
 
 ### Constraint
 
@@ -48,14 +48,14 @@ The experience must make administrative scope explicit, prevent accidental cross
 - Keycloak is used for sign-in and administrative session assurance.
 - The browser never calls the Keycloak Admin API or Tenancy database.
 - Product roles and Product permissions are not administered here.
-- All mutations pass through the Organization & Tenancy Control API.
+- All mutations pass through the Organization Control API.
 - No access or refresh token is stored in browser local storage.
 - Initial production is single-region and multi-availability-zone.
 
 ### Assumption
 
 - Identity Runtime provides OIDC, step-up, logout, and session capabilities.
-- Organization & Tenancy Control exposes versioned protected APIs.
+- Organization Control exposes versioned protected APIs.
 - UI Platform packages and localization infrastructure are available.
 - Notification delivery is asynchronous and external.
 
@@ -95,7 +95,7 @@ graph LR
     BROWSER[Web Browser]
     APP[Next.js Tenancy Experience]
     KEYCLOAK[Keycloak Identity Kernel]
-    CONTROL[Organization & Tenancy Control API]
+    CONTROL[Organization Control API]
     UI[Scnehaux UI Platform]
     OBS[Observability]
 
@@ -112,7 +112,7 @@ graph LR
 External dependencies:
 
 - Keycloak Identity Runtime;
-- Organization & Tenancy Control API;
+- Organization Control API;
 - Scnehaux UI Platform packages;
 - Notification and Audit capabilities through backend workflows;
 - observability and deployment platform.
@@ -134,9 +134,9 @@ The application contains:
 ```mermaid
 graph TB
     EDGE[Managed Edge / Ingress]
-    WEB[Next.js Organization & Tenancy Experience]
+    WEB[Next.js Organization Experience]
     KC[Keycloak]
-    API[Go Organization & Tenancy Control]
+    API[Go Organization Control]
     UIP[UI Platform Packages]
     OBS[OpenTelemetry / Frontend Monitoring]
     SECRET[Secret Management]
@@ -206,7 +206,7 @@ sequenceDiagram
     actor A as Administrator
     participant W as Tenancy Experience
     participant K as Keycloak
-    participant T as Tenancy Control
+    participant T as Organization Control
 
     A->>W: Open protected route
     W-->>A: Redirect to Keycloak
@@ -228,7 +228,7 @@ The browser-provided context is revalidated by the server and Control API.
 sequenceDiagram
     actor A as Tenant Administrator
     participant W as Tenancy Experience
-    participant T as Tenancy Control
+    participant T as Organization Control
 
     A->>W: Open grant form
     W->>T: Read Tenant, Workspace and policy context
@@ -246,7 +246,7 @@ sequenceDiagram
     actor P as Provider Administrator
     participant W as Tenancy Experience
     participant K as Keycloak
-    participant T as Tenancy Control
+    participant T as Organization Control
 
     P->>W: Request Tenant suspension
     W->>W: Display provider scope and Blast Radius warning
@@ -263,7 +263,7 @@ sequenceDiagram
 sequenceDiagram
     actor A as Administrator
     participant W as Tenancy Experience
-    participant T as Tenancy Control
+    participant T as Organization Control
 
     A->>W: Upload governed import file
     W->>W: Client-side size/type check
@@ -282,7 +282,7 @@ sequenceDiagram
 sequenceDiagram
     actor A as Provider Administrator
     participant W as Tenancy Experience
-    participant T as Tenancy Control
+    participant T as Organization Control
 
     A->>W: Begin offboarding
     W->>W: Show scope, contractual prerequisites and irreversible stages
@@ -347,7 +347,7 @@ Uses supported OIDC endpoints for:
 
 The application does not call the Keycloak Admin API and does not model canonical Membership from Keycloak Organizations/Groups.
 
-### 7.2 Organization & Tenancy Control
+### 7.2 Organization Control
 
 All queries and commands use the versioned protected API. The BFF passes:
 
@@ -380,7 +380,7 @@ Server-side route and action guards validate:
 
 - active authenticated session;
 - current administrative context;
-- allowed tenancy-administrative operation;
+- allowed organization-administrative operation;
 - required assurance;
 - target Tenant/Workspace scope;
 - backend authorization result.
@@ -451,7 +451,7 @@ Cross-tenant bulk selection is prohibited unless the provider role and operation
 
 ### 9.2 Blast Radius
 
-Failure of this experience blocks Organization & Tenancy administration but does not block ordinary product use, existing token validation, or local context enforcement. A defective provider-scope user interface could expose multi-Tenant administrative actions, so provider-scope releases use canary rollout, explicit scope presentation, and immediate rollback.
+Failure of this experience blocks Organization administration but does not block ordinary product use, existing token validation, or local context enforcement. A defective provider-scope user interface could expose multi-Tenant administrative actions, so provider-scope releases use canary rollout, explicit scope presentation, and immediate rollback.
 
 ### 9.3 Observability & Operations
 
@@ -551,8 +551,8 @@ No production customer data or credentials are copied to lower environments.
 
 Governed by:
 
-- ADR-TEN-001 — Separate Tenancy Authority and Keycloak Projection.
-- ADR-IAM-004 — Adopt Keycloak Identity Kernel.
+- ADR-ORG-001 — Separate Tenancy Authority and Keycloak Projection.
+- ADR-IAM-001 — Adopt Keycloak Identity Kernel.
 - approved UI Platform ADRs and standards.
 
 ### Governing

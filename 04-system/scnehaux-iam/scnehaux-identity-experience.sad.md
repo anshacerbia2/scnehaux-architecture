@@ -4,11 +4,11 @@ doc_meta:
   title: Scnehaux Identity Experience
   owner: Identity Experience Team
   version: 2.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by:
     - GDC-009
-    - ADR-IAM-004
+    - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
   last_reviewed: 2026-08-06
@@ -38,7 +38,7 @@ The system realizes the user-facing aspects of PAD-PLT-001:
 ### Requirement
 
 - Authentication and protocol state remain owned by the Identity Runtime.
-- Tenant/Membership administration remains owned by Organization & Tenancy.
+- Tenant/Membership administration remains owned by Organization.
 - Product permissions remain outside the Identity Experience.
 - Privileged administration is default-deny, high-assurance, attributable, and evidenced.
 - User experiences target WCAG 2.2 AA.
@@ -72,7 +72,7 @@ The system realizes the user-facing aspects of PAD-PLT-001:
 
 ### Realizes
 
-This system realizes the Identity Experience portions of PAD-PLT-001 and is governed by the adopted-kernel decision in ADR-IAM-004.
+This system realizes the Identity Experience portions of PAD-PLT-001 and is governed by the adopted-kernel decision in ADR-IAM-001.
 
 It consumes UI Platform as a build-time capability and Identity Runtime as its trust and control backend.
 
@@ -120,6 +120,19 @@ graph LR
 3. **Identity Admin Portal** — Scnehaux application for identity, client, federation, session, and security operations.
 4. **Developer Identity Console** — application/client onboarding, redirect/audience configuration workflow, credential rotation request, and integration guidance.
 5. **Identity Experience BFF** — secure browser-facing backend that manages application sessions and calls Identity Control/Runtime interfaces.
+
+#### Source Realization
+
+This system is realized by two repositories, because one of its containers is rendered by Keycloak and the rest are not:
+
+| Repository | Containers realized | Toolchain | Release cadence |
+| :-- | :-- | :-- | :-- |
+| `identity-kernel` | Hosted Login Theme/Extension | Keycloak theme assets | Bound to the pinned Keycloak release |
+| `identity-experience` | Account Security Experience, Identity Admin Portal, Developer Identity Console, Identity Experience BFF | TypeScript | Independent |
+
+The hosted login pages are Keycloak-rendered through supported theme extension points, so they are versioned and upgrade-tested alongside the kernel that renders them. Placing them with the TypeScript applications would decouple them from the release whose template contract they depend on.
+
+The BFF is not optional. STD-IAM-001 §3.9 prohibits browser applications from persisting refresh tokens or equivalent long-lived bearer secrets, and directs privileged administrative experiences to server-managed session control. Every browser call to the Identity Control API passes through the BFF, and no browser holds a token issued for that API.
 
 ## 4. Architecture Model
 
@@ -506,7 +519,7 @@ The pipeline must:
 
 ### Governing
 
-- ADR-IAM-004 — Keycloak as identity kernel.
+- ADR-IAM-001 — Keycloak as identity kernel.
 - UI Platform standards and frontend ecosystem ADRs.
 - browser session/BFF decision — required before production approval.
 - hosted login customization strategy — required before production approval.

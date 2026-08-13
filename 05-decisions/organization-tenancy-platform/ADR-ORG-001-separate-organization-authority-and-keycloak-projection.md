@@ -1,9 +1,9 @@
 ---
 doc_meta:
-  id: ADR-TEN-001
-  title: Separate Organization and Tenancy Authority from Identity and Use Keycloak as a Projection Target
+  id: ADR-ORG-001
+  title: Separate Organization Authority from Identity and Use Keycloak as a Projection Target
   adr_type: replacement
-  status: proposed
+  status: accepted
   created: 2026-08-06
   created_date: 2026-08-06
   created_by: Core Platform Team
@@ -11,17 +11,20 @@ doc_meta:
     - PAD-PLT-002
 ---
 
-# ADR-TEN-001: Separate Organization and Tenancy Authority from Identity and Use Keycloak as a Projection Target
+# ADR-ORG-001: Separate Organization Authority from Identity and Use Keycloak as a Projection Target
 
 ## 1. Title
 
-Separate Organization and Tenancy authority from Identity and use Keycloak only as a bounded projection target for identity-context issuance.
+Separate Organization authority from Identity and use Keycloak only as a bounded projection target for identity-context issuance.
 
 ## 2. Status
 
 | Date | Status | ADR Type | Reviewers | Approver |
 | :-- | :-- | :-- | :-- | :-- |
 | 2026-08-06 | proposed | replacement | Architecture, Identity, Core Platform, Security, Product | Architecture Authority — pending |
+| 2026-08-11 | accepted | replacement | Architecture, Identity, Core Platform, Security, Product | Architecture Authority |
+
+On acceptance, the former Enterprise Workspace Platform boundary was retired. Its PAD and its SAD were removed from the active set, and PAD-PLT-002 now carries the Organization Platform.
 
 Upon acceptance, this ADR supersedes the authority model of the former Enterprise Workspace Platform and any IAM implementation decision that treats Tenant, Workspace, Membership, or Product permission as identity-owned state.
 
@@ -41,10 +44,10 @@ The enterprise EAD v2 model now distinguishes:
 
 ```text
 Principal             → Identity & Access
-Organization          → Organization & Tenancy
-Tenant                → Organization & Tenancy
-Workspace             → Organization & Tenancy
-Membership            → Organization & Tenancy
+Organization          → Organization
+Tenant                → Organization
+Workspace             → Organization
+Membership            → Organization
 Subscriber Account    → Subscription & Entitlement
 Client Account        → Client & Contract Management
 Application Owner     → Software Catalog
@@ -72,11 +75,11 @@ Keycloak is adopted as the Identity protocol and authentication kernel. Its Orga
 
 Scnehaux SHALL establish **PAD-PLT-002 Organization & Tenancy Platform** as the sole enterprise authority for:
 
-- Organization identity, classification, status, and tenancy-relevant relationship;
+- Organization identity, classification, status, and organization-relevant relationship;
 - Tenant identity and lifecycle;
 - Workspace identity and lifecycle;
 - Principal/workload Membership to Tenant and optional Workspace;
-- tenancy-administrative roles;
+- organization-administrative roles;
 - operating-context eligibility and contextual security version;
 - Tenant suspension, restoration, offboarding, and retirement coordination;
 - authoritative Tenant/Membership lifecycle events and projection obligations.
@@ -107,7 +110,7 @@ A Workspace SHALL NOT represent an HCM department, BPO Workstream, Product, or A
 
 Identity & Access SHALL remain authoritative for Principal, Realm, credentials, authentication, session, federation, and protocol trust.
 
-Organization & Tenancy SHALL store only stable Principal/workload references and lifecycle projections required for Membership integrity. It SHALL NOT store reusable credentials or duplicate the Principal source of truth.
+Organization SHALL store only stable Principal/workload references and lifecycle projections required for Membership integrity. It SHALL NOT store reusable credentials or duplicate the Principal source of truth.
 
 Suspending one Membership SHALL NOT suspend the Principal or unrelated Memberships. Principal suspension may prevent use of all Memberships through the Identity security contract.
 
@@ -115,21 +118,21 @@ Suspending one Membership SHALL NOT suspend the Principal or unrelated Membershi
 
 Keycloak Organizations, Groups, attributes, roles, or equivalent structures MAY represent the minimum context needed for login, token issuance, or identity administration.
 
-They SHALL be treated as non-authoritative projections of Organization & Tenancy state.
+They SHALL be treated as non-authoritative projections of Organization state.
 
 The projection path SHALL be:
 
 ```text
-Organization & Tenancy authoritative mutation
+Organization authoritative mutation
     → canonical event / snapshot
     → Scnehaux Identity Control Service
     → supported Keycloak Admin API
     → Keycloak-local projection
 ```
 
-Organization & Tenancy SHALL NOT write directly to Keycloak or its database.
+Organization SHALL NOT write directly to Keycloak or its database.
 
-Direct Keycloak mutation of controller-owned Tenant/Membership projection is prohibited except a governed emergency repair. Any drift SHALL be reconciled back to the Organization & Tenancy authority.
+Direct Keycloak mutation of controller-owned Tenant/Membership projection is prohibited except a governed emergency repair. Any drift SHALL be reconciled back to the Organization authority.
 
 ### 5.5 Realm Strategy
 
@@ -141,7 +144,7 @@ A Realm-per-Tenant design requires a separate ADR with evidence that projection 
 
 ### 5.6 Membership and Authorization
 
-Membership SHALL establish only contextual relationship and tenancy-administrative authority.
+Membership SHALL establish only contextual relationship and organization-administrative authority.
 
 Membership SHALL NOT imply:
 
@@ -155,7 +158,7 @@ Product domains or an approved policy authority remain responsible for business 
 
 ### 5.7 Runtime Consumption
 
-Normal IAM token issuance and Product request handling SHALL consume bounded local Tenant/Membership projection and SHALL NOT synchronously call Organization & Tenancy on every request.
+Normal IAM token issuance and Product request handling SHALL consume bounded local Tenant/Membership projection and SHALL NOT synchronously call Organization on every request.
 
 Each consumer SHALL declare:
 
@@ -170,7 +173,7 @@ Exceptional high-risk operations MAY request a fresh authoritative decision thro
 
 ### 5.8 Physical Realization
 
-Initial realization SHALL use one Go Organization & Tenancy Control application and one private PostgreSQL authority, with logical modules for Organization, Tenant, Workspace, Membership, projection, provisioning coordination, and offboarding.
+Initial realization SHALL use one Go Organization Control application and one private PostgreSQL authority, with logical modules for Organization, Tenant, Workspace, Membership, projection, provisioning coordination, and offboarding.
 
 The initial system SHALL publish through a transactional outbox and SHALL use the enterprise event envelope.
 
@@ -178,11 +181,11 @@ Independent microservices SHALL be extracted only after evidence of independent 
 
 ### 5.9 Administrative Experience
 
-Scnehaux SHALL provide a dedicated Organization & Tenancy administrative experience.
+Scnehaux SHALL provide a dedicated Organization administrative experience.
 
 The Keycloak Admin Console SHALL NOT be the enterprise UI for canonical Tenant or Membership management.
 
-The browser SHALL authenticate with Keycloak but all Organization/Tenancy mutations SHALL use the Scnehaux Organization & Tenancy Control API.
+The browser SHALL authenticate with Keycloak but all Organization/Tenancy mutations SHALL use the Scnehaux Organization Control API.
 
 ### 5.10 Migration
 
@@ -223,7 +226,7 @@ Dual authoritative writes are prohibited.
 
 ### Operational
 
-- Core Platform operates the Organization & Tenancy Control and Experience systems.
+- Core Platform operates the Organization Control and Experience systems.
 - Identity Platform operates the Keycloak projection adapter through the Identity Control Service.
 - Consumer teams own their local projection health and enforcement.
 - Security owns cross-tenant administration and incident requirements.
@@ -238,9 +241,9 @@ Dual authoritative writes are prohibited.
 - PAD-PLT-001 — Identity & Access Platform.
 - PAD-PLT-002 — Organization & Tenancy Platform.
 - SAD-001 — Scnehaux Identity Runtime.
-- SAD-004 — Scnehaux Organization & Tenancy Control.
-- SAD-012 — Scnehaux Organization & Tenancy Experience.
-- ADR-IAM-004 — Adopt Keycloak Identity Kernel.
+- SAD-004 — Scnehaux Organization Control.
+- SAD-012 — Scnehaux Organization Experience.
+- ADR-IAM-001 — Adopt Keycloak Identity Kernel.
 - ADR-GLB-001 — Modular Monolith.
 - ADR-GLB-002 — PostgreSQL RLS.
 - ADR-GLB-003 — Transactional Outbox.
@@ -249,7 +252,7 @@ Dual authoritative writes are prohibited.
 
 ### Compliance Status
 
-Proposed and not yet authoritative.
+Accepted and authoritative.
 
 The decision aligns with the EAD authority model and PAD/SAD boundary rules. No implementation-vendor detail is introduced into EAD.
 
