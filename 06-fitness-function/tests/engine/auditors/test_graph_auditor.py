@@ -45,6 +45,18 @@ def test_audit_orphans():
     )
 
 
+def test_audit_hierarchy_tiers_accepts_multiple_sad_parents():
+    meta = {
+        "TDD-foundation-001": {
+            "parent_sad": ["SAD-001", "SAD-004"],
+            "_filepath": "docs/designs/TDD-foundation-001.md",
+        }
+    }
+    sev = {"structural_integrity_violation": "CRITICAL"}
+
+    assert audit_hierarchy_tiers(meta, sev) == []
+
+
 def test_audit_traceability_graph_cycle_detected():
     meta = {
         "SAD-001": {"parent_pad": "PAD-001"},

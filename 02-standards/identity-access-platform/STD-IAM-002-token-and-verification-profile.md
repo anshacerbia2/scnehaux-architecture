@@ -3,13 +3,13 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-08-11
-  last_reviewed: 2026-08-11
+  last_reviewed: 2026-08-14
 ---
 
 # Enterprise Token and Verification Profile (STD-IAM-002)
@@ -108,6 +108,37 @@ carrying no such claim.
 - A claim not defined here or by an approved audience profile MUST NOT be added to a
   token.
 
+#### 3.2.1 Claim Projection Profiles
+
+The identity kernel MUST realize the table above through audience-specific client
+scopes rather than realm-wide default mappers:
+
+| Client scope | Required projected claims |
+| :-- | :-- |
+| `scnehaux-internal` | `principal_id`, `subject_type`, and active context/version claims |
+| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time` |
+| `scnehaux-workload` | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped |
+| `scnehaux-external` | Pairwise `sub`; enterprise and context claims prohibited |
+
+The client registration authority MUST attach exactly one of these profile scopes. A
+mapper carrying `principal_id` or context claims MUST NOT be a realm default because
+that would disclose enterprise correlation identifiers to external clients.
+
+#### 3.2.2 Signing Algorithm Allowlist
+
+- `PS256` with an RSA key of at least 3072 bits is REQUIRED for newly registered
+  `internal`, `privileged`, and `workload` profiles and is the default for `external`.
+- `RS256` MAY be used only for an external compatibility registration that records the
+  relying party, evidence that `PS256` is unsupported, an owner, and an expiry date.
+- No algorithm other than `PS256` or an explicitly registered `RS256` compatibility
+  case is permitted in the initial baseline. In particular, `none` and every symmetric
+  `HS*` algorithm are prohibited for enterprise-issued access tokens.
+- The registration fixes the permitted algorithm before a token is read. A verifier
+  MUST compare the token header to that allowlist and MUST NOT select an implementation
+  from the untrusted `alg` header alone.
+- The pinned identity-kernel compatibility suite MUST prove issuance and verification
+  of every permitted algorithm. Failure to issue `PS256` blocks that kernel candidate.
+
 ### 3.3 Token-Lifetime Classes
 
 Access token lifetime is derived from the revocation target declared for the risk
@@ -160,7 +191,8 @@ fail closed on any failure:
 
 1. Resolve the signing key by `kid` from approved discovery or JWKS material, and
    reject an unknown `kid` rather than fetching on demand from an unverified source.
-2. Verify the signature using an algorithm permitted by the approved algorithm policy.
+2. Verify the signature using the algorithm permitted by §3.2.2 and the audience
+   registration.
    An algorithm named only inside the token MUST NOT select the verification path.
 3. Verify `iss` against the expected issuer for the environment.
 4. Verify `aud` names this resource.
@@ -217,6 +249,10 @@ discovered afterwards.
 
 - Token contract tests asserting the claim set per audience class, executed against
   the pinned identity kernel release.
+- Negative token tests proving external clients never receive `principal_id`,
+  `subject_type`, Tenant, Workspace, or version claims.
+- Algorithm tests proving `PS256` issuance and verification and rejecting `none`,
+  symmetric algorithms, header-selected algorithms, and unregistered `RS256`.
 - Reference verifier conformance tests covering each rule in §3.5, including negative
   cases for absent `principal_id`, wrong `aud`, unknown `kid`, and a stale version
   claim.

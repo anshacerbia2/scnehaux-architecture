@@ -59,38 +59,32 @@ def gather_markdown_paths(
             abs_target = os.path.abspath(target)
             try:
                 rel_to_root = os.path.relpath(abs_target, repo_root_abs)
-                # CASE 3: Path Traversal Attack (Outside Repo)
-                # Input: target_dirs = ["../other-repo/secret.md"]
-                # Logic: os.path.relpath detects the ".." prefix. Fails closed (HARD CRASH) to prevent bypass.
-                if rel_to_root.startswith(".."):
-                    raise ValueError(
-                        f"Target '{target}' is outside the repository boundary. Execution blocked to prevent validation bypass."
-                    )
-
-                # CASE 2 & 5: Specific Internal Directory (Valid vs Unauthorized)
-                # Input: target_dirs = ["00-governance/designs"] (Valid) or ["docs/api"] (Unauthorized)
-                # Logic: Validates if the path starts with an allowed directory. If not, Fails closed.
-                if rel_to_root != ".":
-                    is_allowed = False
-                    norm_rel = os.path.normpath(rel_to_root)
-                    for allowed in allowed_root_dirs:
-                        allowed_path = os.path.normpath(allowed)
-                        if norm_rel == allowed_path or norm_rel.startswith(
-                            allowed_path + os.sep
-                        ):
-                            is_allowed = True
-                            break
-                    if not is_allowed:
-                        raise ValueError(
-                            f"Target '{target}' is not in allowed artifact directories. Execution blocked to prevent validation bypass."
-                        )
-            # CASE 4: Cross-Drive Traversal (Windows Specific)
-            # Input: target_dirs = ["C:/malicious.md"], repo_root = "D:/repo"
-            # Logic: os.path.relpath throws ValueError because C: and D: do not intersect. Fails closed.
-            except ValueError:
+            except ValueError as exc:
+                # Windows raises when target and repository are on different drives.
                 raise ValueError(
                     f"Target '{target}' is on a different drive than the repository. Execution blocked to prevent validation bypass."
+                ) from exc
+
+            # A target may be an allowed artifact directory, one of its descendants,
+            # or a parent used to select it (for example `docs` for `docs/designs`).
+            # Traversal below still strips files outside the exact allowed roots.
+            if rel_to_root == os.pardir or rel_to_root.startswith(os.pardir + os.sep):
+                raise ValueError(
+                    f"Target '{target}' is outside the repository boundary. Execution blocked to prevent validation bypass."
                 )
+
+            if rel_to_root != ".":
+                norm_rel = os.path.normpath(rel_to_root)
+                is_allowed = any(
+                    norm_rel == allowed_path
+                    or norm_rel.startswith(allowed_path + os.sep)
+                    or allowed_path.startswith(norm_rel + os.sep)
+                    for allowed_path in map(os.path.normpath, allowed_root_dirs)
+                )
+                if not is_allowed:
+                    raise ValueError(
+                        f"Target '{target}' is not in allowed artifact directories. Execution blocked to prevent validation bypass."
+                    )
 
         if os.path.isfile(target):
             if target.lower().endswith(".md") and not _is_ignored(target):

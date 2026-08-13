@@ -25,7 +25,7 @@ jobs:
       - name: Checkout Architecture Governance Repository
         uses: actions/checkout@v4
         with:
-          repository: scnehaux/scnehaux-architecture
+          repository: anshacerbia2/scnehaux-architecture
           ref: ${{ inputs.governance_ref }}
           path: .scnehaux-governance
 
@@ -39,5 +39,6 @@ jobs:
         run: pip install .scnehaux-governance
 
       - name: Execute Governance Engine
-        run: PYTHONPATH=.scnehaux-governance/06-fitness-function python .scnehaux-governance/06-fitness-function/engine/cli.py --target ${{ inputs.target_dir }}
-
+        env:
+          TARGET_DIR: ${{ inputs.target_dir }}
+        run: PYTHONPATH=.scnehaux-governance/06-fitness-function python .scnehaux-governance/06-fitness-function/engine/cli.py --target "$TARGET_DIR" --reference-root .scnehaux-governance
