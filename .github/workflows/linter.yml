@@ -25,7 +25,7 @@ jobs:
       - name: Checkout Architecture Governance Repository
         uses: actions/checkout@v4
         with:
-          repository: scnehaux/scnehaux-architecture
+          repository: anshacerbia2/scnehaux-architecture
           ref: ${{ inputs.governance_ref }}
           path: .scnehaux-governance
 
