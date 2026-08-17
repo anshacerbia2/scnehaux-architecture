@@ -1,397 +1,459 @@
 ---
 doc_meta:
   id: SAD-001
-  title: Scnehaux IAM Software Architecture (SAD)
+  title: Scnehaux Identity Runtime
   owner: Principal IAM Architect
-  version: 1.0.0
+  version: 2.0.0
   status: approved
   classification: restricted
-  governed_by: [GDC-000]
+  governed_by:
+    - EAD-006
+  parent_pad: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: '2026-05-18'
-  parent_pad: PAD-PLT-001
+  last_updated: 2026-08-18
+  last_reviewed: 2026-08-18
   technologies:
-    - name: postgresql
-      type: database
+    - name: keycloak
+      type: identity-provider
     - name: golang
       type: language
+    - name: postgresql
+      type: database
+    - name: kafka
+      type: event-broker
+    - name: atlas
+      type: schema-migration
+    - name: opentelemetry
+      type: observability
     - name: kubernetes
       type: orchestration
     - name: aws
       type: cloud-provider
 ---
 
-# Scnehaux IAM Software Architecture (SAD-001)
+# Scnehaux Identity Runtime (SAD-001)
+
+> **Version 2.0.0 replaces the architecture this document previously described.**
+>
+> Version 1 specified a single Go binary that was itself the identity provider: it hashed
+> credentials with Argon2id, signed its own tokens, held sessions in Redis, implemented
+> MFA and federation, and exposed `/api/v1/auth/login`. That is not what is being built,
+> and every technical design under this system had already moved away from it.
+>
+> The identity provider is **adopted, not built**. An authentication engine, session
+> engine, credential store, and OIDC provider written in-house is the weakest security
+> link an enterprise owns, and `EAD-006 §4.2` records a breach caused by exactly that.
+> What remains in-house is the part no vendor can hold: the canonical enterprise
+> identifier, and the control plane that governs the vendor.
+>
+> The Argon2id concurrency guard, envelope-encryption signing path, and refresh-token
+> theft detection described in version 1 were sound engineering for a system we no longer
+> operate. Their requirements survive as properties the kernel must exhibit, asserted by
+> the realm contract suite rather than implemented here.
 
 ---
 
 ## 1. Purpose & Scope
 
-This document outlines the software architecture for the Scnehaux IAM system. **Capability Realized**: This system realizes the Identity Platform capability defined in [identity-platform.pad.md](../../03-domain/PAD-PLT-001-identity-platform/PAD-PLT-001-identity-platform.pad.md) (PAD-PLT-001). It is the concrete physical execution unit for that logical capability.
+This document describes the Scnehaux Identity Runtime, the system that realizes the Identity Platform capability defined in PAD-PLT-001. The runtime is two containers with one trust boundary.
 
-### 1.1. Context & Objectives
+### 1.1 Objective
 
-- **Objective:** Deliver the identity capability as a low-latency, horizontally scalable service with strong tenant isolation enforcement and O(1) session revocation.
-- **System Context:** IAM sits behind the API Gateway at the enterprise trust edge. It operates as the **Unified Identity Provider** and **OAuth 2.0 Authorization Server**, serving both the internal Scnehaux Cloud Service and the external third-party ecosystem. It depends on PostgreSQL (tenant/session state, OAuth client registry), Redis (rate limiting and cache), and an external KMS (cryptographic data-key decryption), and publishes domain events to the enterprise broker. Internal business domains never call IAM synchronously per request — they verify JWTs locally against the published JWKS.
-- **Capability:** Identity management, authentication, OAuth 2.0 delegation & scope authorization, token lifecycle management, and platform administration (local RBAC).
-- **Requirement:** OIDC/OAuth2 brokering, MFA (TOTP + WebAuthn), refresh-token rotation, multi-tenant isolation enforcement, user consent management, third-party client registration, and an immutable audit trail.
-- **Constraint:** Single deployable Go binary (modular monolith); PostgreSQL and Redis are the only datastores; no synchronous third-party calls on the login hot path; cryptographic signing via external KMS.
-- **Assumption:** Downstream domains validate tokens locally; the gateway terminates external TLS and forwards mTLS; KMS is reachable at startup/rotation.
+Establish authenticated identity for the entire enterprise and every registered third party, and make the revocation of an authorization reach enforcement within a stated interval. Both containers exist to serve those two sentences.
+
+### 1.2 Capability
+
+Authentication and the hosted login experience; token issuance and the published verification material; the canonical Principal identifier and its creation path; protocol client and protected-resource registration; workload and bounded-agent identity; Membership context projection and session removal; account-security and investigation mediation; and identity lifecycle events.
+
+### 1.3 Constraint
+
+- **Authentication is adopted.** Credential material, authenticator enrollment, authentication ceremonies, session state, token signing, and the OIDC and OAuth 2.1 protocol surface belong to the identity kernel. No Scnehaux-authored code performs any of them.
+- **The canonical identifier is not adopted.** `principal_id` is minted by the control service and is the only identifier another domain persists, so exiting the vendor migrates credentials and protocol configuration rather than every foreign key in the estate.
+- **One credential holder.** The Keycloak administration credential exists in the control service and nowhere else.
+- **No writes to the Keycloak database by anything but Keycloak.** Every control-plane change transits the supported Admin REST API.
+- **Two deployables, two release cadences.** Each container is independently deployable, per `EAD-002 §6.2`.
+- **`Tier-0`.** Availability at or above 99.99%, RTO within 15 minutes, RPO within 1 minute, per `EAD-005 §5.4`.
+- **`PS256` only.** One signing algorithm, per `STD-IAM-002 §3.2.2`.
+
+### 1.4 Requirement
+
+Local token verification with no per-request callback into this system; four closed Principal creation paths; a stated enforcement interval for every revocation class; and complete, non-destructive capture of identity events.
+
+### 1.5 Assumption
+
+Consumers verify tokens locally against the published JWKS. The secret manager is reachable at startup and at rotation. The event broker is reachable, and its unavailability delays propagation rather than failing a mutation.
+
+---
 
 ## 2. Enterprise Traceability
 
-### Realizes
+| Relationship | Target |
+| :-- | :-- |
+| Realizes | PAD-PLT-001 — the Identity Platform capability, as the Ecosystem Root of Trust |
+| Governed by | EAD-006 — Zero Trust, centralized identity, least privilege, complete auditability |
+| Governed by | ADR-IAM-001 — adopt the Keycloak identity kernel; supported interfaces only |
+| Governed by | ADR-IAM-002 — key lifecycle and the single `PS256` baseline |
+| Governed by | ADR-ORG-001 — the Organization authority never writes here; projection is mediated by the control service |
+| Conforms to | STD-IAM-001 — identity security controls, realized per §7.5 below |
+| Conforms to | STD-IAM-002 — the token and verification profile this runtime issues against |
+| Consumed by | Every system in the estate, through locally verified tokens |
 
-This system realizes its parent capability (PAD-PLT-001).
+---
 
 ## 3. Solution Context
 
-Scnehaux IAM is architected as a **Modular Monolith** in **Golang** to deliver high-performance authentication with low operational complexity.
-
-## 4. Architecture Model
-
-The application is structured into isolated vertical domain slices coordinated strictly via an event-driven outbox, maintaining clear boundaries inside a single compile unit (a strict separation between synchronous user actions and asynchronous side effects). Container- and system-level structure is described here (C2); component- and class-level design (C3) lives in the downstream TDD.
+### 3.1 System Context
 
 ```mermaid
 graph TD
-    subgraph REST_gRPC [Interface / Delivery Layer]
-        HTTP["REST Endpoints (Chi Router)"]
-        gRPC["gRPC Services"]
-    end
+    USER([Human or workload]) --> GW[API Gateway]
+    GW --> KERNEL[Identity Kernel<br/>Keycloak, digest-pinned]
+    GW --> CONTROL[Identity Control Service<br/>Go]
 
-    subgraph App_Layer [Application Layer]
-        Commands["Commands (Write Operations)"]
-        Queries["Queries (Read Operations)"]
-    end
+    CONTROL -->|Admin REST API, sole credential holder| KERNEL
+    CONTROL --> CDB[(Control Database)]
+    KERNEL --> KDB[(Keycloak Database)]
 
-    subgraph Domain_Layer [Domain Layer]
-        Aggregates["Domain Aggregates (Pure Logic)"]
-        Events["Domain Events"]
-    end
+    BROKER[(Event Broker)] --> CONTROL
+    CONTROL --> BROKER
+    KERNEL -->|event listener| CONTROL
 
-    subgraph Infra_Layer [Infrastructure Layer]
-        Repos["Postgres/Redis Repositories"]
-        SQLC["SQLC Generated Core"]
-    end
+    CONSUMERS([Every other system]) -.->|verify locally against JWKS| KERNEL
 
-    HTTP & gRPC --> Commands & Queries
-    Commands --> Aggregates
-    Aggregates -.-> Events
-    Commands & Queries --> Repos
-    Repos --> SQLC
-    SQLC --> DB[("PostgreSQL 16 (Schemas + RLS)")]
-
-    style Domain_Layer fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style App_Layer fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#fff
-    style Infra_Layer fill:#0f172a,stroke:#64748b,stroke-width:1px,color:#fff
+    style KERNEL fill:#1a365d,stroke:#3182ce,color:#fff
+    style CONTROL fill:#2b6cb0,stroke:#63b3ed,color:#fff
 ```
 
-### 2.1 Architectural Boundary and Segregation
+The dashed edge is the one that matters for availability. Consumers verify tokens against cached signing material and do not call this system per request, so an outage here degrades new logins and privileged writes rather than the whole estate, per `EAD-006 §8`.
 
-- **Interface Layer**: An HTTP server (`go-chi`) for REST endpoints and a gRPC server for low-latency inter-service validations (the concrete API surface is documented in §5).
-- **Internal CQRS (Level 1)**: Commands and Queries are strictly segregated at the application layer into separate packages (`command/` and `query/`).
-  - **Commands**: Orchestrate state changes, interact with Domain Aggregates, and emit Outbox Events.
-  - **Queries**: Provide high-performance data retrieval by bypassing Domain Aggregates and executing direct, type-safe SQL via **SQLC** using idiomatic Go pointers for nullable fields.
-- **Core Module**: Business logic domains are separated cleanly into packages (`internal/auth`, `internal/tenant`, `internal/token`). Interaction between modules must pass through well-defined internal APIs.
+### 3.2 External Dependencies
 
-### 2.2 Modular Monolith Structure & Topologies
+The secret manager, at startup and at key rotation only — never on the authentication hot path. External identity providers for federation, mediated by the Integration Platform. Nothing else.
 
-To enforce structural integrity and compile-time boundaries, Scnehaux IAM employs a strict package topology:
+### 3.3 Internal Structure
 
-```text
-scnehaux-auth/
-├── cmd/server/                  # main.go, manual DI, graceful shutdown
-├── internal/
-├── platform/                # Cross-cutting infrastructure
-│   │   ├── bootstrap/           # Manual DI container & wiring
-│   │   ├── database/            # pgx pool, TxManager, Read/Write Splitting
-│   │   ├── cache/               # Redis client
-│   │   ├── http/                # Chi server, CORS, recovery
-│   │   ├── grpc/                # gRPC server, interceptors
-│   │   ├── middleware/          # Auth, tenant, tracing, logging
-│   │   ├── security/            # Argon2id Worker Pool, Envelope Key Decryptor
-│   │   ├── events/              # pglogrepl WAL listener, Kafka outbox CDC
-│   │   ├── resilience/          # Circuit breaker, timeouts
-│   │   ├── idgen/               # UUIDv7 generator
-│   │   ├── clock/               # Clock interface
-│   │   ├── errors/              # Error taxonomy
-│   │   └── health/              # Liveness & readiness
-│   ├── tenant/                  # Tenant Registry Module
-│   ├── identity/                # Identity Module (foundation)
-│   ├── token/                   # JWT local signing, JWK rotation
-│   ├── session/                 # Refresh token lifecycle & grace period checking
-│   ├── client/                  # OAuth2 client registry & Third-Party Management
-│   ├── consent/                 # User Consent Grants & Scope Delegation
-│   ├── federation/              # OIDC, PKCE, JIT provisioning
-│   ├── mfa/                     # TOTP, WebAuthn, backup codes
-│   ├── audit/                   # Hash-chained, append-only
-│   ├── policy/                  # Governance Policy Engine
-│   └── ratelimit/               # Redis sliding window
-```
+Two containers, each a modular monolith internally, per `ADR-GLB-001 §5.1`.
 
-**Compiler-enforced dependency rules**:
-
-```text
-identity   → no upstream dependency (foundation)
-tenant     → no upstream dependency (foundation)
-session    → may depend on identity/application
-token      → may depend on identity/application
-mfa        → may depend on identity/application
-federation → may depend on identity/application
-policy     → may depend on identity/application, tenant/application
-audit      → depends on nobody (write-only sink)
-ratelimit  → depends on nobody (standalone)
-```
-
-No module may import another module's `infrastructure/` or `domain/` repository types directly.
-
-### 2.3 Technology Baseline
-
-| Area | Choice | Rationale |
+| Container | Technology | Owns |
 | :-- | :-- | :-- |
-| **Language** | Go 1.25 | Concurrency, static typing, single-binary deployment. |
-| **HTTP Router** | Chi | Idiomatic `net/http`, clean middleware, stdlib-compatible. |
-| **SQL Engine** | SQLC | Type-safe code generation from raw SQL. No ORM. |
-| **Migrations** | Atlas | Schema-first declarative migrations. |
-| **Config** | envconfig | Strict 12-factor env-only config. |
-| **Logging** | Zerolog | Zero-allocation structured JSON logging. |
-| **Tracing** | OpenTelemetry | OTLP export to Jaeger/Grafana Tempo. |
-| **Metrics** | Prometheus | Counters for login, token issuance, rate limit hits. |
-| **ID Generation** | UUIDv7 | Time-sortable, no index fragmentation. |
-| **Password Hash** | Argon2id + Semaphore Guard | Memory=64MB, time=3, threads=4. Concurrency-isolated globally at `Runtime.NumCPU() - 1` using a Weighted Semaphore. Enforces fast-shedding 429 backpressure and context-cancellation (**ADR-IAM-003**). |
-| **MFA (TOTP)** | `pquerna/otp` | RFC 6238 compliant. |
-| **MFA (WebAuthn)** | `go-webauthn/webauthn` | FIDO2 / Passkey. |
-| **KMS / Token Keys** | AWS KMS / Vault Transit | Envelope encryption decryption of signing identity. Standardizes on Algorithmic Duality (internal ES256, external RS256) and a 4-state key lifecycle (Active, Retiring, Retired, Purged) (**ADR-IAM-002**). Fallback ephemeral software signer for local development. |
-| **Outbox Engine** | Polling & pglogrepl | Stage 1 (Pragmatic Default): Polling with `SKIP LOCKED` and partition purges. Stage 2 (Scale Optimization): WAL logical replication with `pglogrepl` (**ADR-GLB-003**). |
-| **CI Security** | gosec + gitleaks | SAST and secret scanning. |
+| Identity Kernel | Keycloak, pinned by digest, with owned extensions | Credentials, authenticators, sessions, token issuance, JWKS, federation, consent, hosted login |
+| Identity Control Service | Go | `principal_id` authority, the mapping table, context projection, session removal, registration, workload identity, security-state mediation, reconciliation |
+
+They are one system because they share one trust boundary and one release-compatibility surface: a kernel upgrade can change a claim the control service depends on, so the two are verified together before either is promoted. They are two containers because one is a configured vendor artifact and the other is authored code, and their release cadences differ.
+
+---
+
+## 4. Architecture Model
+
+### 4.1 Authority Split
+
+The split is the central decision of this architecture and is deliberate in both directions.
+
+| Fact | Physical system of record | Enterprise authority |
+| :-- | :-- | :-- |
+| The Principal row exists | Identity Kernel | Identity Kernel |
+| The canonical `principal_id` | Identity Kernel, as an immutable attribute | **Identity Control Service** |
+| Credential material | Identity Kernel | Identity Kernel |
+| Session existence | Identity Kernel | Identity Kernel |
+| Membership context projected into a token | Identity Kernel, non-authoritative | `organization-control`, per ADR-ORG-001 |
+
+The kernel stores the identifier and the control service is authoritative for it. Keycloak enforces no uniqueness on user attributes, so the uniqueness invariant lives in the Control Database. That asymmetry is what makes the attribute a recovery index rather than a second authority.
+
+### 4.2 Identity Event Capture
+
+Two requirements pull against each other, and the resolution is stated rather than left to the extension author.
+
+**Completeness**: every user, admin, and security event the kernel emits must reach the enterprise, because an event silently dropped is an audit gap that no later reconciliation can distinguish from an action that never happened.
+
+**Non-destruction**: a delivery failure in the listener must not erase or suppress the source event inside the kernel. An extension that consumes an event and then fails has destroyed the only record.
+
+The listener therefore captures without consuming: it writes to a durable local queue and acknowledges to the kernel independently of downstream delivery. Completeness is then proven by reconciliation against supported kernel event and admin state rather than asserted by the delivery path, so a dropped event is detected rather than lost.
+
+### 4.3 Realm Topology
+
+One realm serves the enterprise and its registered third parties.
+
+**Tenant count is not a splitting criterion.** A realm per Tenant multiplies realm configuration, issuer values, and key material by the number of customers, and every consumer would need to resolve which issuer to trust per request. Tenancy is a claim inside a token, not a realm boundary.
+
+A second realm is justified only by a genuinely separate trust anchor — a distinct issuer identity with its own key custody and its own administrative separation. Load, Tenant count, and organisational preference are not such justifications.
+
+### 4.4 Principal Creation Sequence
+
+```mermaid
+sequenceDiagram
+    participant C as Caller
+    participant P as Identity Control
+    participant D as Control Database
+    participant K as Identity Kernel
+
+    C->>P: Create principal, with idempotency key
+    P->>D: Claim key, mint principal_id, persist mapping as pending
+    P->>K: POST /admin/realms/{realm}/users with immutable attributes
+    K-->>P: 201 Created
+    P->>D: Record kernel identifier, mark active
+    P-->>C: principal_id
+```
+
+The identifier is fixed before the remote call and carried inside the creation payload, so the Principal never exists in the kernel without its canonical identifier. A crash between the call and the local commit leaves a `pending` row that recovery resolves by searching the kernel for the attribute.
+
+Four creation paths are closed by realm configuration rather than by policy: self-registration, federated first-login auto-create, direct Admin Console creation, and any write to the Keycloak database.
+
+### 4.5 Revocation Runtime Flow
+
+Four mechanisms bound revocation enforcement, and this system owns two of them.
+
+| Mechanism | Owner | Effect |
+| :-- | :-- | :-- |
+| Projected context removed | **Identity Control** | The next authentication cannot assert the revoked context |
+| Kernel sessions removed | **Identity Control** | A refresh cannot mint a fresh token past the removal |
+| Consumer read model updated | Each consumer | An already-issued token naming the revoked context is rejected |
+| Access token expiry | `STD-IAM-002 §3.3` | The residual interval, bounded by the lifetime class |
+
+Context removal runs before session removal. Reversing them leaves a window in which a session still exists and the context is still projected, so a refresh arriving inside it mints a token asserting the revoked context.
+
+---
 
 ## 5. State & Data Architecture
 
-### 3.1 Client Authentication & Token Issuance
+### 5.1 Storage
 
-This sequence shows a standard OIDC credential exchange. It uses **KMS-backed Envelope Encryption** where active keys are decrypted once at startup/rotation and cached in secure RAM, allowing local sub-millisecond dual-algorithm token signing (`ES256` internal, `RS256` external) under global concurrency constraints:
+Two databases, each private to its container.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as User Agent
-    participant Gateway as API Gateway
-    participant IAM as Scnehaux IAM Monolith
-    participant Redis as Redis Cache
-    participant KMS as External KMS
+**Control Database** (PostgreSQL) holds two schemas. `identity` carries the Principal mapping, the projection operations and accepted authority heads, the client and credential registrations, workload ownership and agent delegations, security operations, drift findings, and the **reconciliation cursors** this system's consumers track. `platform` carries the outbox, deduplication, dead-letter, and idempotency tables shipped by the shared substrate.
 
-    Note over IAM,KMS: At Startup / Key Rotation (Envelope Decryption):
-    IAM->>KMS: Decrypt Wrapped ECDSA/RSA Private Keys (API Call)
-    KMS-->>IAM: Return Decrypted Private Keys (Active / Retiring State)
-    IAM->>IAM: Cache Private Keys in Secure Heap Memory
+**Keycloak Database** is owned by the kernel. No Scnehaux code connects to it, reads it, or writes it. Its schema is the vendor's and changes with the vendor's releases, which is precisely why nothing depends on its shape.
 
-    Note over Client,Gateway: Critical Request Path (Dual-Algorithm Signing):
-    Client->>Gateway: POST /api/v1/auth/login
-    Gateway->>IAM: Forward Request (mTLS)
-    IAM->>IAM: Acquire Weighted Semaphore Concurrency Slot (Max NumCPU-1)
-    IAM->>IAM: Perform Bounded Argon2id CPU Hashing
-    IAM->>IAM: Release Semaphore Slot
-    IAM->>IAM: Sign Access Token Locally (ES256 internal or RS256 external)
-    IAM->>Redis: Store Session & Rotation State
-    IAM-->>Gateway: HTTP 200 OK (Access & Refresh JWT with unique kid)
-    Gateway-->>Client: Secure HTTP-Only Cookies
-```
+The two are never joined. A control-plane record references a kernel object by identifier, and that identifier never leaves the control service.
 
-### 3.2 Outbox Event Propagation Pipeline
+### 5.2 Schema Management
 
-Propagation of domain events asynchronously via the `auth_outbox` table, modelling both the **Stage 1 Polling Dispatcher** and **Stage 2 CDC Logical Replication** flows:
+Declarative under Atlas for the `identity` schema; the `platform` schema is applied from the shared module rather than re-declared, per `ADR-GLB-004 §5.3`. Migrations run under a role distinct from the runtime role, which holds no DDL privilege and owns no table.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as Client / User
-    participant Handler as Command Handler
-    participant DB as PostgreSQL Engine
-    participant Poller as Polling Dispatcher (Stage 1)
-    participant CDC as CDC pglogrepl Worker (Stage 2)
-    participant Sub as Event Subscriber (Audit/Email)
+### 5.3 Cache
 
-    Client->>Handler: Trigger Business Action
-    activate Handler
-    Handler->>DB: Begin Transaction
-    Handler->>DB: UPDATE Aggregate State
-    Handler->>DB: INSERT Outbox Record (JSONB payload, state='pending')
-    Handler->>DB: Commit Transaction
-    DB-->>Handler: TX Success (Atomic Write)
-    Handler-->>Client: 200 OK / 202 Accepted
-    deactivate Handler
+The control service caches nothing authoritative. Consumers cache signing material and their own projections; the authority does not cache itself.
 
-    alt Stage 1: Polling with SKIP LOCKED (Pragmatic Default)
-        Poller->>DB: SELECT FOR UPDATE SKIP LOCKED LIMIT BatchSize
-        DB-->>Poller: Return Independent Unlocked Event Batch
-        Poller->>Sub: Dispatch Event (json.RawMessage)
-        Sub-->>Poller: Acknowledge Processed
-        Poller->>DB: DELETE / Truncate Partitioned Processed Records
-    else Stage 2: CDC WAL Logical Replication (Optimization Phase)
-        DB->>DB: Append Transaction Commit to WAL
-        DB-->>CDC: Direct WAL Stream via pgoutput Replication Slot
-        CDC->>CDC: Decode WAL payload for auth_outbox inserts
-        CDC->>Sub: Dispatch Event (json.RawMessage)
-        Sub-->>CDC: Acknowledge Processed
-        CDC->>DB: Acknowledge LSN (advance slot state)
-    end
-```
+### 5.4 Signing Key Custody
 
-### 3.3 Refresh Token Theft Detection & Rotation
+Production signing keys are provisioned through an approved secret manager or keystore custody mechanism. **Keys generated per process in production are prohibited, including as a fallback.**
 
-Prevents token replay by rotating refresh tokens while ensuring reliability via a **10-second Cryptographic Rotation Grace Period** (mitigating mobile dropped-connection retries):
+The wording is *keystore or custody mechanism* deliberately. A keystore file delivered through the secret manager and a key held in a managed KMS both satisfy the requirement; what does not satisfy it is a key pair the process creates for itself, because two replicas would then advertise different verification material for the same issuer and a token signed by one would fail against the other.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Attacker
-    actor User as Legitimate User
-    participant IAM as Scnehaux IAM
-    participant Redis as Redis Cache
+One `kid` binds to one immutable key pair for its whole life. A retiring key remains published for at least the maximum lifetime of any artifact it signed, plus the maximum clock skew and the maximum JWKS cache lifetime, per `STD-IAM-002 §3.5`.
 
-    Note over User,IAM: Normal Flow: User exchanges RT-1
-    User->>IAM: POST /auth/refresh (RT-1)
-    IAM->>Redis: Check Blacklist (RT-1 JTI)
-    Redis-->>IAM: Not Blacklisted
-    IAM->>IAM: Generate RT-2
-    IAM->>Redis: Set active_jti=RT-2, blacklist RT-1 JTI with timestamp
-    IAM-->>User: 200 OK (AT-new + RT-2)
+### 5.5 Stateless Control Service
 
-    Note over User,IAM: Network Glitch: User retries dropped RT-1 within 10s grace
-    User->>IAM: POST /auth/refresh (RT-1) (automatic retry)
-    IAM->>Redis: Check Blacklist (RT-1 JTI)
-    Redis-->>IAM: Blacklisted (Rotated < 10s ago)
-    IAM->>IAM: Recognize retry within Grace Period
-    IAM-->>User: 200 OK (AT-new + RT-2) (resend cached credentials)
+The control service holds no state that survives a request. Kernel sessions are the kernel's, so control-service replicas are interchangeable and a replica loss signs nobody out.
 
-    Note over Attacker,IAM: Theft Flow: Attacker replays RT-1 after 10s grace
-    Attacker->>IAM: POST /auth/refresh (RT-1) (delayed replay)
-    IAM->>Redis: Check Blacklist (RT-1 JTI)
-    Redis-->>IAM: Blacklisted (Rotated > 10s ago)
-    IAM->>IAM: Classify as Theft Attempt (outside grace window)
-    IAM->>IAM: Revoke entire session family
-    IAM->>Redis: Delete base session key, blacklist all JTIs
-    IAM-->>Attacker: 401 Unauthorized
-```
-
-### 5.1 Data Architecture Details
-
-- **Engine & Access**: PostgreSQL 16 accessed exclusively via **SQLC** type-safe generated queries (no ORM, avoiding reflection and query-plan opacity). Declarative migrations via **Atlas**.
-- **Schema Boundaries**: Domain tables are isolated into separate logical PostgreSQL schemas (e.g., `iam_schema`, `audit_schema`) to prevent cross-module table joins and preserve domain purity. Direct cross-schema joins are forbidden.
-- **Caching**: Redis serves the rate-limit sliding window and session/rotation state. On Redis failure the system falls back to verifying sessions directly against PostgreSQL (read-replicas).
-- **Storage / Keys**: UUIDv7 primary keys (time-sortable, low index fragmentation). Signing keys are never persisted in plaintext — only KMS-wrapped (see §5/§6).
-- **Data Classification**: Restricted / PII (credentials, emails, profile metadata), encrypted at rest and in transit (TLS 1.3); tenant-scoped via Row-Level Security (§6).
-- _Physical table/column DDL and ERDs live in the downstream TDD, not here._
+---
 
 ## 6. Integration Contracts
 
-- **Inbound API (Published surface)**: REST (`go-chi`) for OIDC/OAuth2 and management endpoints; gRPC for low-latency inter-service token validation. IAM acts as the **OIDC Identity Provider (IdP)**. The public key set is **Published** at the JWKS endpoint (`/.well-known/jwks.json`), advertising active and retiring keys for rotation-safe verification (Physical realization of Cryptographic Trust).
-- **Consumed Dependencies**: External KMS/Vault (startup/rotation key decryption only — never on the hot path); no synchronous business-domain calls.
-- **Outbound Async Events (Published)**: Domain events propagate via a **Data Flow** (**ADR-GLB-003**):
-  - _Stage 1 (Pragmatic Default)_: Background workers poll the outbox using `SELECT FOR UPDATE SKIP LOCKED`, deleting processed rows in bulk via daily/weekly partitions to eliminate WAL autovacuum bloat.
-  - _Stage 2 (Scale Optimization)_: Direct WAL streaming via logical replication / change data capture (`pglogrepl`) to the enterprise broker, which **ADR-GLB-003 §5** fixes to the **Kafka protocol**.
-- **Event Consumers**: Downstream audit and email subscribers consume `json.RawMessage` events; delivery is at-least-once with idempotent handlers.
+### 6.1 Published API — Identity Kernel
+
+The OIDC and OAuth 2.1 protocol surface: authorization, token, introspection, revocation, UserInfo, and `/.well-known/jwks.json`. This is the vendor's surface, configured rather than authored, and it is the only interface in this system that end-user clients call directly.
+
+### 6.2 Published API — Identity Control Service
+
+REST over HTTP, path-versioned, with an OpenAPI 3.1 contract. A control-plane interface under `STD-GLB-006`: its volume is proportional to administrative actions, and it depends on `Idempotency-Key`, optimistic-concurrency preconditions, and `202 Accepted` with a polled operation resource.
+
+```text
+/v1/principals            mint, read, quarantine, retire, reconcile
+/v1/registrations         protocol clients and protected resources, credential rotation
+/v1/workloads             workload identity, ownership, orphan and unused findings
+/v1/agents/{id}/delegations   bounded agent delegation
+/v1/me/*                  self-service session, authenticator, and consent operations
+/v1/principals/{id}/*     privileged security state, containment, and investigation
+```
+
+Every mutation requires an idempotency key. Administrative mutations additionally require the expected version, a reason, and a correlation identifier. Errors are RFC 9457 problem documents from a compiled registry. A kernel identifier never appears in any response body.
+
+### 6.3 Published Events
+
+`com.scnehaux.identity.*` in the CloudEvents 1.0 envelope, through the transactional outbox. Principal lifecycle, reconciliation findings, privileged administration, and containment outcomes. Security-classified events route to the priority lane.
+
+### 6.4 Consumed Events
+
+`com.scnehaux.organization.membership.*` and `com.scnehaux.organization.tenant.*`. Every consumption passes the deduplication guard inside the same transaction as its durable effect.
+
+### 6.5 Consumed Contract
+
+`GET /v1/projections/organization/snapshot`, the published authority read the reconciler compares against. There is no database connection to the Organization Database anywhere in this system, and no privileged read path exists.
+
+---
 
 ## 7. Security & Trust Boundary
 
-- **Zero Silent Failure**: All errors in security paths are logged with stack traces and surfaced via custom errors to prevent information disclosure.
-- **Authentication & Credential Hardening (Argon2id Semaphore Guard)**: Passwords are hashed with Argon2id (`Memory=64MB, Iterations=3, Parallelism=4`), globally bounded by a Process-Level Weighted Semaphore capped at `Runtime.NumCPU() - 1` to prevent CPU-exhaustion DoS (**ADR-IAM-003**). Fast-shedding backpressure rejects saturated requests (HTTP 429); context cancellation terminates aborted connections.
-- **Authorization & Schema Isolation**: Database modular boundaries are strictly enforced; direct cross-schema joins are forbidden; all access passes through clean package interfaces.
-- **Encryption & KMS Memory Key Security**: ECDSA/RSA private keys decrypted at startup are held in secure heap references, protected by IAM boundaries, and cleared from swap/RAM via explicit memory wiping.
-- **Row-Level Security (RLS)**: PostgreSQL tables are protected by tenant RLS policies:
-  ```sql
-  ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
-  CREATE POLICY tenant_isolation_policy ON sessions
-    USING (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
-  ```
-- **Secrets**: No secrets in source; envconfig 12-factor injection; gitleaks in CI.
-- **Audit**: Hash-chained, append-only audit log in an isolated schema.
-- **Anti-Brute Force**: Redis sliding-window rate limiter (max `5 failed login attempts per minute per IP`).
-- **Constant-Time Comparisons**: `subtle.ConstantTimeCompare` on all cryptographic verify routines.
-- **Entropy Source**: `crypto/rand` exclusively; `math/rand` prohibited.
+### 7.1 Telemetry and Event Redaction
+
+No event, log line, span attribute, metric label, or problem document emitted by this system contains a password, a passkey private value, a TOTP secret, a refresh token, an access token, or a client secret.
+
+The rule is absolute rather than best-effort because this is the one system where such values exist in memory, and an identity event stream is copied to more places than any database in the estate. `principal_id` appears in structured logs; the kernel's user identifier does not.
+
+### 7.2 Administrative Interfaces
+
+**The Keycloak Admin Console is not the enterprise administration interface.** Access is restricted to a named break-glass group, is time-bounded, and every session in it is evidenced.
+
+Ordinary administration happens through the Identity Control API, because that is where enterprise authorization, canonical identifier resolution, last-authenticator guards, idempotency, reason capture, and evidence publication live. A console change bypasses all six, and the registration reconciler treats an unmanaged client or an out-of-band configuration change as a security finding rather than as drift to repair silently.
+
+### 7.3 Authentication and Authorization
+
+Authentication is performed by the kernel using Authorization Code with PKCE `S256`. The control service authenticates no one: it verifies a presented token locally per `STD-IAM-002 §3.5`, including that `principal_id` is present for an internal or privileged audience, and then applies its own authorization to every command.
+
+A valid token is an authenticated identity and never an authorization decision.
+
+### 7.4 Credential Containment
+
+The control service holds the Keycloak administration credential under the narrowest role set that permits its operations: user creation, attribute write, user search, user enable and disable, context projection, session enumeration and removal, client management, and credential rotation. It holds no realm administration and no credential read authority.
+
+No other system in the estate holds that credential. `ADR-ORG-001 §5.4` makes the prohibition structural for the Organization authority by giving it neither the credential nor a network route.
+
+### 7.5 Where the Identity Security Controls Are Realized
+
+`STD-IAM-001` states properties. Adopting the kernel changed where each is realized, not whether it holds. Recording the mapping here is what stops a control from being assumed present in a container that cannot implement it.
+
+| Control | Realized in | Asserted by |
+| :-- | :-- | :-- |
+| Argon2id credential hashing with defined parameters | Kernel configuration | Realm contract suite, on every candidate release |
+| Access token lifetime ceiling | Kernel client scope, per lifetime class | Realm contract suite and registration constraints |
+| Refresh token rotation and replay handling | Kernel session engine | Kernel compatibility suite |
+| Signing algorithm and key lifecycle | Kernel, keys from the secret manager | §5.4 above and the upgrade suite |
+| Session revocation | **Control service**, by removing context then sessions | Measured propagation tests |
+| Immutable audit of identity operations | Audit Platform, fed by §6.3 | Evidence completeness reconciliation |
+| Security headers on external interfaces | Gateway and the hosted login theme | Theme conformance suite |
+
+Two controls in `STD-IAM-001` describe a mechanism rather than a property: the process-level Argon2id semaphore, and the `session_epoch` counter with a Redis-cached comparison. Neither is implemented here, because the credential hashing and the session engine that would host them belong to the kernel. The properties they existed to guarantee — bounded hashing concurrency, and revocation that does not require an N-row scan — are the kernel's to exhibit and are asserted by the contract suite. That standard needs restructuring to state those two as properties; the gap is recorded here rather than resolved by pretending this system implements them.
+
+### 7.6 Artifact Integrity
+
+The kernel image is built from a digest-pinned upstream release and is itself pinned by digest wherever it is referenced. A tag is mutable, so an image built from one is not reproducible and the day it changes there is no commit to show for it.
+
+Owned extensions are built from source in a repository we control and are signed. A binary extension of unknown provenance running inside the identity kernel has the kernel's privileges over every credential in the enterprise.
+
+Provenance attestation links the built image digest to the commit that produced it, and a digest without a passing release record cannot be promoted.
+
+---
 
 ## 8. NFR
 
-### 8.1 Resilience & Failure Modes
+### 8.1 Blast Radius
 
-#### Blast Radius
+| Failure | Impact | Blast radius | Degradation |
+| :-- | :-- | :-- | :-- |
+| Identity Kernel unavailable | No new authentication | **Enterprise-wide for new logins.** Existing sessions continue; consumers verify cached tokens locally | Read and degraded operation continues; new logins and privileged writes fail closed, per `EAD-006 §8` |
+| Control Database unavailable | No Principal minting, no projection, no registration | Provisioning and enforcement, not authentication | Readiness reports unhealthy; the replica leaves the load balancer. Writes fail closed |
+| Control Service unavailable | Projection and session removal paused | **Revocation not enforced within budget.** Authentication is unaffected | Operations remain durable in the Control Database and apply on recovery. Bounded by each consumer's staleness policy |
+| Secret manager unavailable at startup | New kernel replicas cannot start | Deployment blocked; running replicas serve on loaded keys | Fail fast and halt rather than generate a key, per §5.4 |
+| Event broker unavailable | Identity events undelivered | Delayed audit and delayed downstream projection | Rows remain in the outbox; priority rows return to the pool with escalating backoff and are never dead-lettered for unavailability |
+| Keycloak Database unavailable | Kernel cannot serve | Same as kernel unavailable | Per-tier restore; the Control Database is unaffected and the mapping survives |
 
-See below for component-specific blast radius analysis.
+Losing the kernel and losing the control service are different incidents with different pages. The first stops new authentication; the second stops enforcement while authentication continues, which is the more dangerous of the two and the less obvious.
 
-- **PostgreSQL Outage (Database Failure)**:
-  - _Impact_: All authentication writes and active transactional flows fail.
-  - _Blast Radius_: **Entire Platform Authentication Outage**. Existing sessions remain valid (JWTs/Redis), but no new logins or mutations.
-  - _Handling (Graceful Degradation)_: The health probe immediately reports `unhealthy`, removing the instance from the load balancer. The system fails-closed to prevent unauthorized sessions.
-- **Redis Cache Outage**:
-  - _Impact_: Refresh Token Rotation (RTR) validations fail.
-  - _Blast Radius_: **Performance Degradation & Refresh Failure**. Active sessions survive; token refresh becomes bottlenecked.
-  - _Handling (Graceful Degradation)_: Degrades gracefully, falling back to verifying active sessions directly against PostgreSQL via read-replicas to prevent primary exhaustion.
-- **Outbox Dispatcher Failure (Stage 1 / Stage 2)**:
-  - _Impact_: Asynchronous event propagation is paused.
-  - _Blast Radius_: **Delayed Event Delivery**. Synchronous user flows continue; downstream audit/email are delayed.
-  - _Handling_: Stage 1 keeps unsent events in `auth_outbox`, resuming via `SKIP LOCKED` on restart. Stage 2 preserves events in the WAL replication slot, resuming from the last acknowledged LSN. Both ensure zero data loss.
-- **KMS/Vault Startup Decryption Failure**:
-  - _Impact_: Application bootstrap crashes in production.
-  - _Blast Radius_: **Deployment Blocker**. New instances fail to start; existing instances serve traffic using cached keys.
-  - _Handling_: Local dev falls back to an ephemeral P-256 software signer; production/staging logs a fatal error and halts startup (fail-fast) to prevent weak-key signing, triggering SRE alerts.
-- **KMS/Vault Key Rotation Failure**:
-  - _Impact_: Retires the active key but cannot decrypt the new private key.
-  - _Blast Radius_: **Future Security Degradation**. Current tokens remain valid; rotation to a new key boundary fails.
-  - _Handling_: Falls back to the previous key for the remaining 7-day retirement window, firing a P1 alert for manual reconciliation.
+### 8.2 Latency
 
-### 8.2 Observability & Operations
+Token verification imposes no load on this system. Principal creation p95 within 500 ms excluding kernel latency. Projection dispatch-to-applied within 2 seconds. Security command inline budget 2 seconds, after which the API returns `202` with an operation resource rather than holding a connection.
 
-- **Metrics (SLI baseline)**: Prometheus RED metrics at `/metrics` — `auth_login_total{tenant_id, status}`, `auth_token_issued_total{type}`, `auth_cdc_replication_lag_bytes`, `auth_ratelimit_rejected_total{route}`, `http_request_duration_seconds` / `db_query_duration_seconds`. These SLIs back the availability and latency SLOs of PAD-PLT-001.
-- **Distributed Tracing**: OpenTelemetry on every DB query, internal module invocation, and KMS startup call; `trace_id` propagated to WAL spans and outbox event headers.
-- **Logging**: Structured JSON to `STDOUT` with mandatory context (`trace_id`, `span_id`, `tenant_id`, `actor_id`).
-- **Alerting**: Abnormal error spikes in authentication pipelines page SRE (S1); KMS rotation failures fire P1.
-- **Runbook**: Standard operational runbooks cover database failover, KMS reconciliation, and outbox backlog drain.
+### 8.3 Scalability
+
+Both containers scale horizontally. The reconciliation and projection sweeps are rate-limited so that reconciliation cannot consume capacity reserved for authentication — a sweep that starves the login path has traded a detective control for an availability incident.
+
+### 8.4 Timeout, Retry, and Circuit Breaker
+
+Cascaded timeouts from the edge inward, each strictly below its caller's remaining budget. One Admin API attempt is bounded at 500 ms, with three immediate attempts inside the operation budget and exponential backoff with jitter thereafter. An ambiguous outcome — a timeout after the request left the process — is resolved by reading the kernel state back before retrying, never by assuming the side effect failed.
+
+### 8.5 Observability, Telemetry, Alerting, and Runbook
+
+OpenTelemetry traces spanning the control service, the Admin API call, and the consumed event; RED metrics; structured JSON logs carrying `deployable`, `system`, `correlation_id`, and `principal_id`.
+
+Alerting is on the properties, not the components: duplicate canonical identifier, unmapped Principal, unmanaged kernel client, unresolved containment operation, `extra` drift finding, and revocation not enforced within budget. Each is critical on any occurrence, because each is a security state rather than a capacity signal.
+
+Runbooks required before production: unmapped-Principal triage, duplicate-identifier containment, pending-mapping recovery, administration credential rotation, key ceremony and emergency rotation, projection drift repair, unresolved operation replay, collateral containment review, revocation not enforced within budget, and a consumer reporting an unknown `kid`.
+
+---
 
 ## 9. Deployment Strategy
 
-Scnehaux IAM is deployed as a cloud-native, stateless containerized service:
+### 9.1 Environment and Infrastructure
 
-- **Environment / Runtime**: Kubernetes (K8s) across multiple availability zones using ArgoCD for GitOps deployment.
-- **Horizontal Auto-Scaling**: CPU-based HPA targeting `80% CPU Utilization`, scaling replicas from `3 to 10 instances` dynamically.
-- **Infrastructure (Data tier)**: PostgreSQL with one primary writer and two read-replicas. Reads (e.g., JWKS lookups) route to replicas; writes (e.g., session generation) target the primary.
-- **CI/CD & Release**: Standard GitLab CI pipeline enforcing linting, testing, and container builds. SAST/secret scanning (gosec + gitleaks) gate deployment; canary rollout is mandatory for any change to the authentication flow.
+Kubernetes across multiple availability zones. `Tier-0` means at least three replicas of each container and no single-zone dependency. PostgreSQL with one primary and read replicas per database; authority reads target the primary.
+
+### 9.2 Configuration
+
+Environment only, read once at each composition root. The administration credential and the signing key references come from the secret manager and are never present in configuration or in an image.
+
+### 9.3 Migration Job
+
+Schema application and partition maintenance run as a job under the migration role, separate from the runtime role.
+
+### 9.4 Artifact Pinning, Rollback, and Drift
+
+**Every artifact is referenced by digest**, upstream and built alike, and the digest promoted to production is the digest the release suite evaluated.
+
+**Rollback boundaries are explicit.** A kernel release that alters realm state in a way an earlier release cannot read is not rollback-safe, and it is identified as such before promotion rather than discovered during an incident. Where a change is not reversible, the release record states so and the deployment is gated accordingly.
+
+**Configuration drift is caught before an upgrade, not during one.** The realm definition is rendered from source and diffed against the running instance on every pipeline run. An unmanaged Admin Console change to controller-owned configuration is a finding, because an upgrade applied on top of undeclared drift produces a state no artifact describes.
+
+The upgrade compatibility suite applies the realm to a clean instance, asserts the declared contract, asserts the four closed creation paths, and rehearses rollback. A candidate that changes the issuer form, drops a claim from a covered surface, reopens a creation path, or cannot issue the baseline algorithm fails before promotion.
+
+### 9.5 CI/CD
+
+Every gate blocks a merge. For the control service: formatting, static analysis, build, tests under the race detector, a coverage floor, package-graph boundary assertion per `STD-GLB-BE-001`, schema integrity and the destructive gate per `ADR-GLB-004 §5.1`, event schema compatibility, dependency tidiness, and a scheduled vulnerability scan. For the kernel: reproducible image build, extension signing, realm render and diff, the realm contract suite, and the upgrade compatibility suite.
+
+Canary rollout is mandatory for any change to authentication, token issuance, or the revocation path.
+
+---
 
 ## 10. Architecture Decisions
 
+### Accepted
+
+Adopt the kernel, keep the identifier — `ADR-IAM-001`. One `PS256` baseline and a four-state key lifecycle — `ADR-IAM-002`. The Organization authority never writes here — `ADR-ORG-001`. Transactional outbox over the Kafka protocol — `ADR-GLB-003`.
+
 ### Rejected
 
-#### 10.1 Active GORM/Hibernate reflection ORM
+#### 10.1 Building the identity provider in-house
 
-- _Rejected_: Injects slow reflect-based execution, query-plan opacity, and bypasses database-level RLS policies, complicating security audits.
+Rejected, reversing version 1 of this document. An authentication engine, credential store, session engine, and OIDC provider are a large, adversarially-tested surface where the cost of being subtly wrong is a breach rather than a defect. `EAD-006 §4.2` records a product-local authentication implementation becoming the weakest link. The engineering in version 1 was sound; the decision to own that surface was not.
 
-### 10.2 Direct App-Layer / Broker-In-Transaction publishing
+#### 10.2 Persisting the kernel's user identifier as the enterprise reference
 
-- _Rejected_: Direct external broker dispatches during SQL transactions introduce "dual-write" consistency concerns and connection exhaustion under broker network spikes.
+Rejected. It would make exiting the vendor a referential migration across Membership, HCM, audit, evidence, and every analytical store, rather than a migration of credentials and protocol configuration. The canonical `principal_id` exists to keep that cost bounded.
 
-### 10.3 Pure Outbox Polling Without Concurrency Protections or Partitioning
+#### 10.3 Letting the kernel hold Membership authority
 
-- _Rejected_: Polling without `SKIP LOCKED` causes heavy row locks; without partitioning it leads to massive autovacuum write amplification.
-- _Accepted trade-off (Stage 1)_: A concurrency-protected polling outbox using `SKIP LOCKED` + partition truncation — accepting polling latency as deliberate technical debt until Stage 2 CDC.
+Rejected. Membership carries versions, effective dates, invitation provenance, and offboarding state that a directory does not model, and authority in a vendor store couples enterprise recovery to vendor recovery. Argued in `ADR-ORG-001 §8` Alternative B.
 
-### 10.4 Direct Synchronous KMS Key API signing
+#### 10.4 A second realm per Tenant
 
-- _Rejected_: Synchronous Cloud KMS/Vault calls on every login add an unacceptable 15-50ms latency penalty and rate-limit risk under peak traffic.
+Rejected, per §4.3. It multiplies issuer identity and key custody by customer count and pushes issuer resolution into every consumer. Tenancy is a claim, not a trust anchor.
 
-### 10.5 Microservices split
+#### 10.5 Administration through the Keycloak Admin Console
 
-- _Rejected_: Substantial RPC overhead, DevOps complexity, and distributed-transaction costs for small teams; revisit at scale.
+Rejected as the ordinary path, per §7.2. The console bypasses enterprise authorization, canonical identifier resolution, idempotency, reason capture, and evidence. It remains available as an evidenced break-glass path.
 
-### 10.6 Database-Per-Tenant isolation
+#### 10.6 A session_epoch counter and cache-backed epoch comparison in the control service
 
-- _Rejected_: Unviable infrastructure footprint and migration complexity for thousands of concurrent small tenants; RLS chosen instead.
+Rejected. The mechanism presumes ownership of the session engine, which belongs to the kernel. Implementing a parallel epoch would create a second session authority that the kernel does not consult, so a token rejected by one would be accepted by the other. Revocation is achieved by removing the projected context and the kernel sessions, which the kernel does consult.
 
-## 11. Assumptions
+#### 10.7 An in-process ephemeral signing key as a development convenience
 
-- Hardware scaling (vertical/horizontal) is handled transparently by the managed Kubernetes cluster.
-- The PostgreSQL managed instance handles connection pooling at the PaaS level or via pgBouncer.
+Rejected in every environment that issues a token anyone relies on, per §5.4. A local development fallback that generates a key is permitted only where the issuer is not trusted by any other system, and it is prohibited from appearing in a configuration path a staging or production deployment can select.
 
-## 12. Compatibility Strategy
+---
 
-- The API is strictly versioned via URL path (`/v1`, `/v2`).
-- Deprecations require a 6-month notice period.
+## 11. Compatibility Strategy
+
+The Identity Control API is versioned in the path, and events are versioned in the type with major-version promotion for a breaking change, per `ADR-GLB-006`.
+
+**The kernel's compatibility surface is the token contract, not its version.** A change to the issuer value, the removal of a claim from a covered surface, a change to the signing algorithm, or the reopening of a closed creation path is a breaking change to every consumer in the estate, regardless of whether the vendor calls it a patch. Such a change requires a deprecation window of at least 90 days or two consumer release cycles, whichever is longer, and the upgrade suite fails a candidate that makes one silently.
+
+The supported kernel range is the pinned release and the next candidate once the compatibility suite has verified it. Running two kernel versions that advertise different claim sets for one issuer is prohibited.
+
+---
+
+## 12. Assumptions
+
+- The vendor continues to support the supported-interface set this architecture depends on: Admin REST user and client management, session listing and removal, credential listing and removal, consent listing and revocation, federated-identity listing, and application-initiated actions.
+- The secret manager provides versioned key material and is reachable at startup and rotation.
+- Consumers implement local verification correctly, which the reference verifier conformance suite exists to make checkable rather than assumed.
