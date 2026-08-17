@@ -3,10 +3,12 @@ doc_meta:
   id: ADR-IAM-003
   title: ADR-IAM-003 Argon2id CPU Concurrency and Backpressure Mitigation
   adr_type: foundational
-  status: accepted
+  status: deprecated
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
+  last_updated: 2026-08-18
+  governed_by: [PAD-PLT-001]
 ---
 
 # ADR-IAM-003: Enforcing Bounded Concurrency, Fast-Shedding Backpressure, and Throttling for Cryptographic Password Hashing
@@ -19,9 +21,26 @@ Enforcing Bounded Concurrency, Fast-Shedding Backpressure, and Throttling for Cr
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status     | ADR Type     | Reviewers                 | Approver             |
+| ---------- | ---------- | ------------ | ------------------------- | -------------------- |
+| 2026-05-01 | accepted   | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-08-18 | deprecated | foundational | Architecture Review Board | Enterprise Architect |
+
+**Deprecated 2026-08-18.** This decision bounded Argon2id hashing concurrency inside a
+Scnehaux-authored process. `ADR-IAM-001` adopts Keycloak as the identity kernel, so
+credential hashing happens inside a component this enterprise configures rather than
+writes, and a process-level weighted semaphore in Go has no surface left to protect.
+
+**The property survives and is not deprecated.** `STD-IAM-001 §3.3` now requires that
+credential hashing be bounded so concurrent authentication cannot exhaust host CPU, and
+that a saturated authentication path reject with HTTP 429 rather than queue without bound.
+That requirement is stated as an observable property, so it is assertable against a
+configured component. The reasoning below remains the clearest available explanation of
+*why* the bound is required, which is why this record is deprecated rather than deleted.
+
+The analysis is also still directly applicable to any future Scnehaux-authored service that
+performs a deliberately expensive computation on an unauthenticated path. Nothing in it was
+wrong; the component it applied to is no longer ours.
 
 ## 3. Context
 
