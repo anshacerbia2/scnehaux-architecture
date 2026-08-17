@@ -85,96 +85,96 @@ The Master Fitness Function resides entirely within the `06-fitness-function/` d
 <!-- BEGIN_ENGINE_TOPOGRAPHY -->
 ```text
 scnehaux-architecture/
-└── 06-fitness-function/
-│       ├── engine/              # (Core automated execution logic)
-│       │   ├── INDEX.md
-│       │   ├── auditors/         # (External environment validators)
-│       │   │   ├── dependency_scanner.py
-│       │   │   ├── git_auditor.py
-│       │   │   ├── graph_auditor.py
-│       │   │   └── waiver_auditor.py
-│       │   ├── cli.py            # (The Master Fitness Function Entrypoint)
-│       │   ├── config/           # (Engine configuration & environment variables)
-│       │   │   ├── constants.py
-│       │   │   ├── loader.py
-│       │   │   └── severity.py
-│       │   ├── fs/               # (File system utilities & workspace traversal)
-│       │   │   └── crawler.py
-│       │   ├── parsing/          # (Data extraction from raw files)
-│       │   │   └── markdown_ast.py
-│       │   ├── reporting/        # (CLI output formatting & CI/CD error logs)
-│       │   │   └── reporter.py
-│       │   └── validators/       # (The core policy sandbox)
-│       │       ├── base.py
-│       │       ├── domains/      # (Federated domain-specific triad scripts)
-│       │       │   ├── adr_validator.py
-│       │       │   ├── ead_validator.py
-│       │       │   ├── gdc_validator.py
-│       │       │   ├── pad_validator.py
-│       │       │   ├── sad_validator.py
-│       │       │   ├── std_validator.py
-│       │       │   └── tdd_validator.py
-│       │       ├── global_rules.py # (Foundational Python rules for all documents)
-│       │       ├── metadata_rules.py
-│       │       ├── registry.py
-│       │       ├── schema_extensions.py
-│       │       └── structure_rules.py
-│       ├── generators/          # (Dynamic docs and topography autobuilders)
-│       │   ├── INDEX.md
-│       │   ├── generate_adr_index.py
-│       │   ├── generate_engine_topography.py
-│       │   ├── generate_functions_doc.py
-│       │   ├── generate_maturity_dashboard.py
-│       │   ├── generate_pad_sad_index.py
-│       │   ├── generate_rules_doc.py
-│       │   └── generate_traceability_graph.py
-│       ├── scnehaux_linter.egg-info/
-│       │   ├── PKG-INFO
-│       │   ├── SOURCES.txt
-│       │   ├── dependency_links.txt
-│       │   ├── entry_points.txt
-│       │   ├── requires.txt
-│       │   └── top_level.txt
-│       ├── scratch/
-│       ├── scripts/             # (Git hooks and manual CI/CD utilities)
-│       │   ├── INDEX.md
-│       │   ├── codeowners-validator.py
-│       │   ├── install-hooks.py
-│       │   └── waiver-expiry-check.py
-│       └── tests/               # (High-coverage pytest suite)
-│           ├── INDEX.md
-│           ├── conftest.py
-│           └── engine/          # (Core automated execution logic)
-│               ├── auditors/    # (External environment validators)
-│               │   ├── test_dependency_scanner.py
-│               │   ├── test_git_auditor.py
-│               │   ├── test_graph_auditor.py
-│               │   └── test_waiver_auditor.py
-│               ├── config/      # (Engine configuration & environment variables)
-│               │   └── test_loader.py
-│               ├── fs/          # (File system utilities & workspace traversal)
-│               │   └── test_crawler.py
-│               ├── parsing/     # (Data extraction from raw files)
-│               │   └── test_markdown_ast.py
-│               ├── reporting/   # (CLI output formatting & CI/CD error logs)
-│               ├── test_cli.py
-│               ├── test_cli_extra.py
-│               └── validators/  # (The core policy sandbox)
-│                   ├── domains/ # (Federated domain-specific triad scripts)
-│                   │   ├── test_adr_validator.py
-│                   │   ├── test_all_domains.py
-│                   │   ├── test_ead_validator.py
-│                   │   ├── test_gdc_validator.py
-│                   │   ├── test_pad_validator.py
-│                   │   ├── test_sad_validator.py
-│                   │   ├── test_std_validator.py
-│                   │   └── test_tdd_validator.py
-│                   ├── test_base.py
-│                   ├── test_global_rules.py
-│                   ├── test_metadata_rules.py
-│                   ├── test_registry.py
-│                   ├── test_schema_extensions.py
-│                   └── test_structure_rules.py
+â””â”€â”€ 06-fitness-function/
+â”‚       â”œâ”€â”€ engine/              # (Core automated execution logic)
+â”‚       â”‚   â”œâ”€â”€ INDEX.md
+â”‚       â”‚   â”œâ”€â”€ auditors/         # (External environment validators)
+â”‚       â”‚   â”‚   â”œâ”€â”€ dependency_scanner.py
+â”‚       â”‚   â”‚   â”œâ”€â”€ git_auditor.py
+â”‚       â”‚   â”‚   â”œâ”€â”€ graph_auditor.py
+â”‚       â”‚   â”‚   â””â”€â”€ waiver_auditor.py
+â”‚       â”‚   â”œâ”€â”€ cli.py            # (The Master Fitness Function Entrypoint)
+â”‚       â”‚   â”œâ”€â”€ config/           # (Engine configuration & environment variables)
+â”‚       â”‚   â”‚   â”œâ”€â”€ constants.py
+â”‚       â”‚   â”‚   â”œâ”€â”€ loader.py
+â”‚       â”‚   â”‚   â””â”€â”€ severity.py
+â”‚       â”‚   â”œâ”€â”€ fs/               # (File system utilities & workspace traversal)
+â”‚       â”‚   â”‚   â””â”€â”€ crawler.py
+â”‚       â”‚   â”œâ”€â”€ parsing/          # (Data extraction from raw files)
+â”‚       â”‚   â”‚   â””â”€â”€ markdown_ast.py
+â”‚       â”‚   â”œâ”€â”€ reporting/        # (CLI output formatting & CI/CD error logs)
+â”‚       â”‚   â”‚   â””â”€â”€ reporter.py
+â”‚       â”‚   â””â”€â”€ validators/       # (The core policy sandbox)
+â”‚       â”‚       â”œâ”€â”€ base.py
+â”‚       â”‚       â”œâ”€â”€ domains/      # (Federated domain-specific triad scripts)
+â”‚       â”‚       â”‚   â”œâ”€â”€ adr_validator.py
+â”‚       â”‚       â”‚   â”œâ”€â”€ ead_validator.py
+â”‚       â”‚       â”‚   â”œâ”€â”€ gdc_validator.py
+â”‚       â”‚       â”‚   â”œâ”€â”€ pad_validator.py
+â”‚       â”‚       â”‚   â”œâ”€â”€ sad_validator.py
+â”‚       â”‚       â”‚   â”œâ”€â”€ std_validator.py
+â”‚       â”‚       â”‚   â””â”€â”€ tdd_validator.py
+â”‚       â”‚       â”œâ”€â”€ global_rules.py # (Foundational Python rules for all documents)
+â”‚       â”‚       â”œâ”€â”€ metadata_rules.py
+â”‚       â”‚       â”œâ”€â”€ registry.py
+â”‚       â”‚       â”œâ”€â”€ schema_extensions.py
+â”‚       â”‚       â””â”€â”€ structure_rules.py
+â”‚       â”œâ”€â”€ generators/          # (Dynamic docs and topography autobuilders)
+â”‚       â”‚   â”œâ”€â”€ INDEX.md
+â”‚       â”‚   â”œâ”€â”€ generate_adr_index.py
+â”‚       â”‚   â”œâ”€â”€ generate_engine_topography.py
+â”‚       â”‚   â”œâ”€â”€ generate_functions_doc.py
+â”‚       â”‚   â”œâ”€â”€ generate_maturity_dashboard.py
+â”‚       â”‚   â”œâ”€â”€ generate_pad_sad_index.py
+â”‚       â”‚   â”œâ”€â”€ generate_rules_doc.py
+â”‚       â”‚   â””â”€â”€ generate_traceability_graph.py
+â”‚       â”œâ”€â”€ scnehaux_linter.egg-info/
+â”‚       â”‚   â”œâ”€â”€ PKG-INFO
+â”‚       â”‚   â”œâ”€â”€ SOURCES.txt
+â”‚       â”‚   â”œâ”€â”€ dependency_links.txt
+â”‚       â”‚   â”œâ”€â”€ entry_points.txt
+â”‚       â”‚   â”œâ”€â”€ requires.txt
+â”‚       â”‚   â””â”€â”€ top_level.txt
+â”‚       â”œâ”€â”€ scratch/
+â”‚       â”œâ”€â”€ scripts/             # (Git hooks and manual CI/CD utilities)
+â”‚       â”‚   â”œâ”€â”€ INDEX.md
+â”‚       â”‚   â”œâ”€â”€ codeowners-validator.py
+â”‚       â”‚   â”œâ”€â”€ install-hooks.py
+â”‚       â”‚   â””â”€â”€ waiver-expiry-check.py
+â”‚       â””â”€â”€ tests/               # (High-coverage pytest suite)
+â”‚           â”œâ”€â”€ INDEX.md
+â”‚           â”œâ”€â”€ conftest.py
+â”‚           â””â”€â”€ engine/          # (Core automated execution logic)
+â”‚               â”œâ”€â”€ auditors/    # (External environment validators)
+â”‚               â”‚   â”œâ”€â”€ test_dependency_scanner.py
+â”‚               â”‚   â”œâ”€â”€ test_git_auditor.py
+â”‚               â”‚   â”œâ”€â”€ test_graph_auditor.py
+â”‚               â”‚   â””â”€â”€ test_waiver_auditor.py
+â”‚               â”œâ”€â”€ config/      # (Engine configuration & environment variables)
+â”‚               â”‚   â””â”€â”€ test_loader.py
+â”‚               â”œâ”€â”€ fs/          # (File system utilities & workspace traversal)
+â”‚               â”‚   â””â”€â”€ test_crawler.py
+â”‚               â”œâ”€â”€ parsing/     # (Data extraction from raw files)
+â”‚               â”‚   â””â”€â”€ test_markdown_ast.py
+â”‚               â”œâ”€â”€ reporting/   # (CLI output formatting & CI/CD error logs)
+â”‚               â”œâ”€â”€ test_cli.py
+â”‚               â”œâ”€â”€ test_cli_extra.py
+â”‚               â””â”€â”€ validators/  # (The core policy sandbox)
+â”‚                   â”œâ”€â”€ domains/ # (Federated domain-specific triad scripts)
+â”‚                   â”‚   â”œâ”€â”€ test_adr_validator.py
+â”‚                   â”‚   â”œâ”€â”€ test_all_domains.py
+â”‚                   â”‚   â”œâ”€â”€ test_ead_validator.py
+â”‚                   â”‚   â”œâ”€â”€ test_gdc_validator.py
+â”‚                   â”‚   â”œâ”€â”€ test_pad_validator.py
+â”‚                   â”‚   â”œâ”€â”€ test_sad_validator.py
+â”‚                   â”‚   â”œâ”€â”€ test_std_validator.py
+â”‚                   â”‚   â””â”€â”€ test_tdd_validator.py
+â”‚                   â”œâ”€â”€ test_base.py
+â”‚                   â”œâ”€â”€ test_global_rules.py
+â”‚                   â”œâ”€â”€ test_metadata_rules.py
+â”‚                   â”œâ”€â”€ test_registry.py
+â”‚                   â”œâ”€â”€ test_schema_extensions.py
+â”‚                   â””â”€â”€ test_structure_rules.py
 ```
 <!-- END_ENGINE_TOPOGRAPHY -->
 
@@ -202,7 +202,7 @@ The engine evaluates JSON Schema configuration files mapped by Document Type.
 | Document Type | Ruleset File | Scope / Responsibilities |
 | :-- | :-- | :-- |
 | **Global Baseline** | `schemas/base.schema.json` | The universal parent. Enforces generic syntax, minimum word counts, banned vocabulary, and overarching layout structures. |
-| **Domain-Specific Rulesets** | `schemas/[doc_type].schema.json` | To adhere to the Open-Closed Principle, domain-specific JSON schemas are documented exclusively within their respective guidelines:<br>• [GDC](GDC-005-gdc-guideline.md)<br>• [EAD](GDC-006-ead-guideline.md)<br>• [STD](GDC-007-std-guideline.md)<br>• [PAD](GDC-008-pad-guideline.md)<br>• [SAD](GDC-009-sad-guideline.md)<br>• [ADR](GDC-010-adr-guideline.md)<br>• [TDD](GDC-011-tdd-guideline.md) |
+| **Domain-Specific Rulesets** | `schemas/[doc_type].schema.json` | To adhere to the Open-Closed Principle, domain-specific JSON schemas are documented exclusively within their respective guidelines:<br>â€¢ [GDC](GDC-005-gdc-guideline.md)<br>â€¢ [EAD](GDC-006-ead-guideline.md)<br>â€¢ [STD](GDC-007-std-guideline.md)<br>â€¢ [PAD](GDC-008-pad-guideline.md)<br>â€¢ [SAD](GDC-009-sad-guideline.md)<br>â€¢ [ADR](GDC-010-adr-guideline.md)<br>â€¢ [TDD](GDC-011-tdd-guideline.md) |
 
 #### 2.3.1 Global Baseline Rules (`schemas/base.schema.json`)
 
@@ -212,7 +212,7 @@ The global baseline applies universally to all architecture documents across the
 >
 > **DO NOT EDIT THIS TABLE MANUALLY.** This table is automatically generated from the JSON Schema (`schemas/base.schema.json`). If you need to update a rule, modify the schema file and run: `python 06-fitness-function/generators/generate_rules_doc.py`
 
-<!-- lint_disable_start: prohibited_word (reason: governance engine documentation) -->
+<!-- lint_disable_start: prohibited_words (reason: governance engine documentation) -->
 <!-- AUTO-GENERATED-RULES:START -->
 
 | Rule Category      | Parameter                | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -225,7 +225,7 @@ The global baseline applies universally to all architecture documents across the
 | **Content Rules** | Min Content Length Chars | **Value**: `50`<br>**Error Message**: `Section '{section_name}' content length ({length} chars) is below minimum of {min_length} chars.` |
 | **Content Rules** | Prohibited Words | **Patterns**: <ul><li>`\bmaybe\b`</li><li>`\bprobably\b`</li><li>`\bshould consider\b`</li><li>`\bTBD\b`</li><li>`\bcoming soon\b`</li><li>`\band so on\b`</li><li>`\bseamless(?:ly)?\b`</li><li>`\bobviously\b`</li><li>`\bblazingly\b`</li><li>`\btrivially\b`</li></ul><br>**Error Message**: `Prohibited boilerplate or hesitant word detected. Use definitive, professional language.` |
 | **Content Rules** | Ambiguity Rules | **Patterns**: <ul><li>`\b(highly\|very\|extremely\|super\|incredibly)\s+(scalable\|fast\|secure\|reliable\|available\|performant\|robust\|efficient)\b`</li></ul><br>**Error Message**: `Vague claim detected. Must be quantified with metrics.` |
-| **Severity Levels** | 0. Engine Execution Domain (System Fatality) | **Unreadable Artifact**: `CRITICAL`<br>**Corrupt Frontmatter**: `CRITICAL`<br>**Unknown Document Type**: `CRITICAL`<br>**Missing Validator**: `CRITICAL`<br>**Missing Domain Schema**: `CRITICAL` |
+| **Severity Levels** | 0. Engine Execution Domain (System Fatality) | **Unreadable Artifact**: `CRITICAL`<br>**Corrupt Frontmatter**: `CRITICAL`<br>**Unknown Document Type**: `CRITICAL`<br>**Missing Validator**: `CRITICAL`<br>**Missing Domain Schema**: `CRITICAL`<br>**Invalid Lint Disable**: `ERROR` |
 | **Severity Levels** | 1. Topology & Identity Domain (Graph & Lineage) | **Circular Dependency**: `CRITICAL`<br>**Cross Reference Missing**: `ERROR`<br>**Duplicate Id**: `CRITICAL`<br>**Inline Reference Missing**: `WARNING`<br>**Orphan Document**: `ERROR`<br>**Traceability Violation**: `ERROR`<br>**Broken Internal Link**: `ERROR` |
 | **Severity Levels** | 2. Structural Compliance Domain (Shape & Completeness) | **Missing Metadata**: `ERROR`<br>**Missing Required Subsection**: `ERROR`<br>**Missing Section**: `ERROR`<br>**Missing Section Keyword**: `ERROR`<br>**Schema Validation Failed**: `CRITICAL`<br>**Subsection Order Violation**: `WARNING` |
 | **Severity Levels** | 3. Semantic & Quality Domain (Meaning & Language) | **Ambiguity Rules**: `WARNING`<br>**Nfr Taxonomy Violation**: `ERROR`<br>**Prohibited Words**: `ERROR`<br>**Structural Integrity Violation**: `CRITICAL`<br>**Stylistic Deviation**: `WARNING`<br>**Vague Claim In Nfr**: `ERROR` |
@@ -243,6 +243,7 @@ The global baseline applies universally to all architecture documents across the
 | `unknown_document_type` | **CRITICAL** |
 | `missing_validator` | **CRITICAL** |
 | `missing_domain_schema` | **CRITICAL** |
+| `invalid_lint_disable` | **ERROR** |
 
 #### 1. Topology & Identity Domain (Graph & Lineage)
 | Error Code | Severity (CI Action) |
@@ -301,7 +302,7 @@ The global baseline applies universally to all architecture documents across the
 | **Common Metadata Fields** | Common Metadata Fields | <ul><li>id (string)</li><li>title (string)</li><li>status (string)</li><li>created_date (string)</li></ul> |
 
 <!-- AUTO-GENERATED-RULES:END -->
-<!-- lint_disable_end: prohibited_word -->
+<!-- lint_disable_end: prohibited_words -->
 
 #### 2.3.2 The Universal Schema Generator
 
@@ -374,11 +375,11 @@ A `lint_disable` directive suppresses a specific **non-blocking** finding on a d
 <!-- lint_disable: vague_claim, prohibited_word (reason: ARB waiver per ADR-GLB-009) -->
 ```
 
-The directive is **governed** — it is not an unconditional override:
+The directive is **governed** â€” it is not an unconditional override:
 
 1. **CRITICAL findings cannot be silenced.** A directive targeting a `CRITICAL`-severity category (e.g. `structural_integrity_violation`, `security_isolation_violation`, `technology_hold_violation`) is _rejected_: the finding still fires, and the attempt is recorded in the CI audit under **Rejected Disables**.
 2. **Code is not a directive.** Directives inside fenced code blocks or inline code spans are ignored, so documentation _examples_ of `lint_disable` are never parsed as live suppressions.
-3. **Reasons are captured.** A directive lacking a `(reason: …)` clause is reported as `UNDOCUMENTED` in the audit summary for reviewer scrutiny.
+3. **Reasons are captured.** A directive lacking a `(reason: â€¦)` clause is reported as `UNDOCUMENTED` in the audit summary for reviewer scrutiny.
 
 All honored and rejected disables are collected and printed in the final CI audit summary.
 
@@ -396,23 +397,23 @@ Once an architectural decision (such as an ADR) reaches the `approved` status, i
 
 ## 3. Technology Lifecycle Governance
 
-The compliance engine enforces the enterprise **Technology Radar** (`tech-radar.yaml`) and **Standards Maturity Model**. The authoritative policies — maturity phases, sunset strategy, applicability criteria, and exception waiver procedures — are defined and maintained in **[GDC-004 — Technology Lifecycle & Standards Governance](GDC-004-tech-lifecycle.md)**.
+The compliance engine enforces the enterprise **Technology Radar** (`tech-radar.yaml`) and **Standards Maturity Model**. The authoritative policies â€” maturity phases, sunset strategy, applicability criteria, and exception waiver procedures â€” are defined and maintained in **[GDC-004 â€” Technology Lifecycle & Standards Governance](GDC-004-tech-lifecycle.md)**.
 
 This section documents only the **automated enforcement mechanics** that GDC-001 provides to execute those policies:
 
 ### 3.1 Automated Hold Enforcement
 
-The linter automatically rejects any Pull Request containing references to technologies that have reached the `Hold` phase and exceeded their grace window. This triggers a `technology_hold_violation` at `CRITICAL` severity, producing a Hard CI Block (Exit 1). The 3-Stage Sunset Strategy (recommendation → grace window → hard block) is defined in [GDC-004 §2.2](GDC-004-tech-lifecycle.md).
+The linter automatically rejects any Pull Request containing references to technologies that have reached the `Hold` phase and exceeded their grace window. This triggers a `technology_hold_violation` at `CRITICAL` severity, producing a Hard CI Block (Exit 1). The 3-Stage Sunset Strategy (recommendation â†’ grace window â†’ hard block) is defined in [GDC-004 Â§2.2](GDC-004-tech-lifecycle.md).
 
 ### 3.2 Automated Waiver Expiration
 
-The CI engine performs temporal validation on Exception ADRs. If an `accepted` waiver ADR reaches its `expiry_date`, the linter triggers a Hard CI Block with an `exception_expired` ERROR. The procedural resolution paths (resolve debt, evolve standard, or renew waiver) are defined in [GDC-004 §4.2](GDC-004-tech-lifecycle.md) and [GDC-010 §2.4.3](GDC-010-adr-guideline.md).
+The CI engine performs temporal validation on Exception ADRs. If an `accepted` waiver ADR reaches its `expiry_date`, the linter triggers a Hard CI Block with an `exception_expired` ERROR. The procedural resolution paths (resolve debt, evolve standard, or renew waiver) are defined in [GDC-004 Â§4.2](GDC-004-tech-lifecycle.md) and [GDC-010 Â§2.4.3](GDC-010-adr-guideline.md).
 
 ## 4. Severity & Exception Waivers
 
-The authoritative definitions for applicability criteria and the exception waiver procedure are maintained in **[GDC-004 §4](GDC-004-tech-lifecycle.md)**. The approval authority matrix, time-bound review commitments, and auditing rules live there as the single source of truth.
+The authoritative definitions for applicability criteria and the exception waiver procedure are maintained in **[GDC-004 Â§4](GDC-004-tech-lifecycle.md)**. The approval authority matrix, time-bound review commitments, and auditing rules live there as the single source of truth.
 
-GDC-001's role is enforcement: the engine validates waiver metadata (`approved_by`, `expiry_date`, `risk_classification`) against the schema defined in `schemas/adr.schema.json` and executes the temporal checks described in §3.2 above.
+GDC-001's role is enforcement: the engine validates waiver metadata (`approved_by`, `expiry_date`, `risk_classification`) against the schema defined in `schemas/adr.schema.json` and executes the temporal checks described in Â§3.2 above.
 
 ## 5. Linter Execution Flow (CI/CD Automated Gate)
 

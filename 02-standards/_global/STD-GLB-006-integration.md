@@ -3,12 +3,14 @@ doc_meta:
   id: STD-GLB-006
   title: Enterprise Integration Architecture Standard
   owner: Principal Software Architect
-  version: 1.0.0
+  version: 1.1.0
   status: adopted
   classification: restricted
+  governed_by: [EAD-004]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-22
+  last_updated: 2026-08-18
+  last_reviewed: 2026-08-18
 ---
 
 # Enterprise Integration Architecture Standard (STD-GLB-006)
@@ -38,7 +40,12 @@ To prevent cascading service failures and tightly coupled dependencies:
   - _Orchestration (Saga Pattern)_: Complex multi-step transactions requiring synchronous control loops (e.g., identity provisioning across active systems) must use a centralized orchestrator service. The orchestrator must manage state, call downstream APIs, and execute compensating transactions if a step fails.
 - **Service-to-Service Invariants**:
   - _No Circular Dependencies_: Service-to-service call graphs must be acyclic. Circular call patterns (Service A calling Service B, which calls Service A) are strictly prohibited.
-  - _Transport Standard_: Synchronous internal calls must utilize type-safe **gRPC** protocols over HTTP/2. REST/JSON is restricted to public client-to-service ingress paths.
+  - _Transport Standard_: The synchronous transport is selected by traffic class rather than by network position, and the class MUST be declared in the providing system's design.
+    - **gRPC over HTTP/2 is REQUIRED** for internal service-to-service calls on a request hot path: per-request authorization checks, per-request context reads, inference calls, and any interface whose expected volume is proportional to end-user traffic. Type safety and framing matter most exactly where call volume is highest.
+    - **REST/JSON is PERMITTED** for public client-to-service ingress, and for control-plane and administrative interfaces whose volume is proportional to operator actions rather than to end-user traffic.
+    - A control-plane interface MUST NOT be exposed over both transports. Two surfaces over one authority produce two authorization paths, and the weaker one is the one an attacker uses.
+
+    The exemption for control-plane interfaces is not a convenience. `EAD-004 §5.3` mandates RFC 9457 Problem Details for the error model, and the control-plane contracts across this estate depend on `Idempotency-Key`, optimistic-concurrency preconditions, and `202 Accepted` with a polled operation resource. Those are HTTP semantics with registered meanings; carrying them over gRPC means re-encoding each one in metadata and status details, which replaces a standard every client already implements with a convention each client must be told about.
 
 ---
 

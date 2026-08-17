@@ -22,6 +22,12 @@ Establishing Algorithmic Duality and Continuous Key Lifecycle Management for Sec
 | Date       | Status   | ADR Type     | Reviewers                 | Approver             |
 | ---------- | -------- | ------------ | ------------------------- | -------------------- |
 | 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-08-18 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+
+**Amended 2026-08-18: the algorithm profile in §4.1 is replaced by a single `PS256`
+baseline.** The four-state key lifecycle in §4.2 and the storage duality in §4.3 are
+unchanged and remain the operative decision. The replacement and its reasoning are in
+§4.1; `STD-IAM-002 §3.2.2` is the operative profile.
 
 ## 3. Context
 
@@ -45,13 +51,23 @@ When a key is rotated, any client holding a token signed by the old key will ins
 
 We officially establish **Algorithmic Duality** and a **Four-State Key Lifecycle** as the standards for secure token signing, public key exposure, and trust continuity.
 
-### 4.1 Algorithmic Duality (Context-Driven Signing)
+### 4.1 Signing Algorithm: a Single `PS256` Baseline
 
-Token signing is divided based on integration context:
+**Amended 2026-08-18.** The original algorithmic duality — `ES256` internal, `RS256` external, dual-algorithm JWKS — is replaced by one baseline:
 
-1.  **Internal Ecosystem & Mobile Clients**: We standardize on **`ES256`** (ECDSA P-256) to optimize payload size, CPU signing speed, and edge bandwidth utilization.
-2.  **Public OIDC & B2B Federation**: We standardize on **`RS256`** (RSA 2048-bit) to guarantee maximum interoperability and frictionless B2B onboarding.
-3.  **Dual-Algorithm JWKS**: The enterprise JWKS endpoint (`/.well-known/jwks.json`) must dynamically advertise both active RSA and ECDSA public verification keys, mapped to distinct Key IDs (`kid`).
+1.  **Every audience class**: tokens are signed with **`PS256`** (RSASSA-PSS with SHA-256), with an RSA modulus of at least **3072 bits**.
+2.  **Single-algorithm JWKS**: the enterprise JWKS endpoint advertises active and retiring `PS256` keys only.
+3.  **`RS256` by exception**: permitted for an `external` registration whose relying party cannot verify `PS256`, and only with a named accountable owner, a recorded reason, and an expiry date. `ES256` is not adopted.
+
+Three findings drove the replacement, and each contradicts a premise of the original.
+
+**`RS256` is prohibited by the profile we are aligning to.** The Financial-grade API profile — the most rigorously reviewed OAuth security profile in production, and the one open banking is audited against — permits `PS256` and `ES256` and forbids `RS256`. PKCS#1 v1.5 signature padding, which `RS256` uses, carries no security proof; PSS does. The original decision made `RS256` the external default on interoperability grounds, which selected the one algorithm the reference profile rejects.
+
+**The bandwidth premise does not hold in this estate.** The original argued that `ES256` saves 30–40% of header size across billions of internal requests. `EAD-006 §5.4` establishes that service-to-service calls inside the runtime are authenticated by mutual TLS with workload identity, not by a bearer token. Internal tokens are presented at the edge and to protected resources, not on every internal hop, so the volume the saving was computed against is not there.
+
+**A second algorithm is a second attack surface, and the original said so.** Its own Consequences list names "Downstream Parsing Complexity" and "Double Key Management" as costs. Algorithm confusion — a verifier selecting the algorithm from the token rather than from its own configuration — is an exploited defect class, and it lives in exactly the branch a dual profile requires every verifier to carry. One algorithm removes the branch, halves key custody, and leaves nothing for a verifier to select.
+
+The operative profile is `STD-IAM-002 §3.2.2`, which fixes the allowlist and the exception form. `none` and every symmetric algorithm remain prohibited, and a verifier determines the expected algorithm from its own configuration rather than from the token.
 
 ### 4.2 Four-State Key Lifecycle State Machine
 
@@ -141,5 +157,21 @@ None.
 - **Pros**: Zero database or storage requirements.
 - **Cons**: Container restarts invalidate all active user refresh sessions, forcing hundreds of thousands of users to log out.
 - **Why Rejected**: Completely unacceptable user experience and high operational instability.
+
+### Alternative C: Retain the ES256 and RS256 Duality
+
+_Evaluated at the 2026-08-18 amendment._
+
+- **Pros**: the compact-token argument for internal traffic, and `RS256` acceptance by every relying party without an exception record.
+- **Cons**: `RS256` is prohibited by the Financial-grade API profile, so the external half selects the one algorithm the reference profile rejects. Two algorithms require two key lifecycles, two rotation schedules, and an algorithm branch in every verifier, which is where algorithm confusion lives. The bandwidth saving is computed against a request volume that mutual TLS under `EAD-006 §5.4` means does not exist.
+- **Why Rejected**: it pays a real cost in key custody and verifier surface for a saving the architecture does not realise, while mandating a padding scheme that carries no security proof.
+
+### Alternative D: EdDSA (Ed25519) as the Baseline
+
+_Evaluated at the 2026-08-18 amendment._
+
+- **Pros**: the strongest modern signature choice — compact, fast, deterministic, and free of the nonce-reuse failure mode that makes ECDSA implementations fragile.
+- **Cons**: relying-party and gateway support across the OIDC ecosystem remains materially thinner than for RSA, and an external B2B party unable to verify it has no fallback inside a single-algorithm profile.
+- **Why Rejected**: the better choice cryptographically and the wrong one for a profile that must also serve external federation. Revisit when relying-party support is no longer the limiting factor.
 
 ---

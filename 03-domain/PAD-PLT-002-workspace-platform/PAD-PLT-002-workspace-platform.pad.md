@@ -13,9 +13,11 @@ doc_meta:
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-07-06
+  last_updated: 2026-08-18
+  last_reviewed: 2026-08-18
   fulfilled_by:
     - SAD-004
+    - SAD-012
 ---
 
 # Enterprise Workspace Platform

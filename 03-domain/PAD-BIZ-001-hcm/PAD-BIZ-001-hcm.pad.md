@@ -105,7 +105,7 @@ HCM realizes the enterprise Human Capital Management capability defined by the E
 
 ### 2.3. Consumed By
 
-Other Business Products consume HCM's published workforce events (Asynchronous Event Subscription) via the Event Broker — never a direct runtime dependency: ERP, CRM, Procurement, Project Management, ITSM, LMS, CMS.
+Other Business Products consume HCM's published workforce events (Asynchronous Event Subscription) via the Event Broker â€” never a direct runtime dependency: ERP, CRM, Procurement, Project Management, ITSM, LMS, CMS.
 
 ---
 
@@ -320,4 +320,4 @@ The Architecture Authority governs enterprise architectural boundaries and integ
 - AI capabilities shall be consumed exclusively through the AI Platform.
 - Breaking integration contracts requires Architecture Authority approval.
 
-<!-- lint_disable: cross_reference_missing, inline_reference_missing, pad_fulfilled_by_exists -->
+<!-- lint_disable: cross_reference_missing, inline_reference_missing, traceability_violation -->

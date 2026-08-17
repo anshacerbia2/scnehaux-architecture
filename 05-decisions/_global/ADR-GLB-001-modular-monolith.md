@@ -22,6 +22,11 @@ Standardizing on the Modular Monolith Pattern as the Default Architecture for Co
 | Date       | Status   | ADR Type     | Reviewers                 | Approver             |
 | ---------- | -------- | ------------ | ------------------------- | -------------------- |
 | 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-08-18 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+
+**Amended 2026-08-18: §5.1 states the scope this decision always had.** It governs the
+internal structure of one system and not the enterprise topology, which `EAD-001` and
+`EAD-002` own. The pattern, its drivers, and its consequences are unchanged.
 
 ## 3. Context
 
@@ -36,6 +41,23 @@ Adopting the modular monolith allows us to scale development velocity and simpli
 We officially establish the **Modular Monolith** pattern as the default, mandatory architecture for all new core platform systems at Scnehaux, including the Identity Provider (IAM) and the Ledger system.
 
 Core modules (e.g., `internal/auth`, `internal/tenant`, `internal/token` in IAM) must compile and build into a single execution binary, while maintaining complete logical separation (no direct cross-package structural coupling or database table joining).
+
+### 5.1 Scope: Within a System, Never Across Systems
+
+_Amended 2026-08-18._
+
+This decision governs the **internal** structure of one system: one bounded context, one deployable, modules separated at compile time. It does not govern the enterprise topology.
+
+`EAD-001 §7` rejects the modular monolith as an **enterprise** pattern, and `EAD-002 §6.2` requires every system to deploy on its own pipeline without a coordinated enterprise release. Those statements and this decision are compatible, and read as contradictory only when the word "monolith" is applied at both scales at once.
+
+| Scale | Rule | Owner |
+| :-- | :-- | :-- |
+| Inside one system | One deployable, modules enforced by the compiler | This decision |
+| Across systems | Independently deployable, acyclic, contract-mediated | `EAD-001`, `EAD-002` |
+
+A deployable containing two bounded contexts is therefore prohibited by `STD-GLB-BE-001` Rule 1, and splitting one bounded context across two deployables is prohibited by this decision. The estate consequence is explicit: the Identity Platform capability is realised by more than one deployable — an identity kernel, a control service, and an experience — because those are separate systems with separate release cadences, and each of them individually is a modular monolith.
+
+The original text named "the Identity Provider (IAM)" as a single system. That was accurate when one repository held the whole capability. It is read today as naming whichever system is under discussion, not as a requirement that the capability collapse back into one deployable.
 
 ## 6. Consequences
 

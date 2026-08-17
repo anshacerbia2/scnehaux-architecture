@@ -12,7 +12,7 @@ doc_meta:
   last_reviewed: 2026-05-17
 ---
 
-<!-- lint_disable: vague_claim (reason: standard docs) -->
+<!-- lint_disable: vague_claim_in_nfr (reason: standard docs) -->
 
 # Documentation Quality Framework
 

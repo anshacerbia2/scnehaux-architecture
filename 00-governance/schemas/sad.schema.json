@@ -50,7 +50,8 @@
                 "status": {
                   "title": "Allowed Statuses",
                   "type": "string",
-                  "enum": ["draft", "approved", "deprecated"]
+                  "description": "chartered = the capability is chartered and no system is in build yet; the document is a placeholder with no age pressure. draft = a system is being designed now, and the 30-day age rule applies so active work cannot stall. approved = the design is complete. deprecated = the system is being retired.",
+                  "enum": ["chartered", "draft", "approved", "deprecated"]
                 },
                 "governed_by": {
                   "title": "Governed By",
