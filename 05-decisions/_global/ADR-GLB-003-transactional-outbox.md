@@ -22,6 +22,9 @@ Mandating the Transactional Outbox Pattern for Secure Asynchronous Domain Event 
 | Date       | Status   | ADR Type     | Reviewers                 | Approver             |
 | ---------- | -------- | ------------ | ------------------------- | -------------------- |
 | 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-08-17 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+
+The 2026-08-17 entry records the broker product being fixed to the Kafka protocol in section 5. The original text named a different product in passing without ever deciding one, and the transactional-outbox decision itself is unchanged.
 
 ## 3. Context
 
@@ -64,7 +67,27 @@ For early-stage monolith/modular monolith applications (including current Phase 
 As transaction volume scales and the operational maturity of the platform team justifies the infrastructure overhead:
 
 - We will migrate to **Change Data Capture (CDC) via WAL Logical Replication Streaming**.
-- A background CDC Outbox Worker will establish a direct PostgreSQL replication connection (using `pglogrepl`), subscribe to a dedicated replication slot (using the standard `pgoutput` plugin), decode WAL stream inserts into the `auth_outbox` table, and publish them immediately to the enterprise message broker (NATS JetStream).
+- A background CDC Outbox Worker will establish a direct PostgreSQL replication connection (using `pglogrepl`), subscribe to a dedicated replication slot (using the standard `pgoutput` plugin), decode WAL stream inserts into the `auth_outbox` table, and publish them immediately to the enterprise message broker.
+
+### Broker Product: the Kafka Protocol
+
+Both stages publish into the same broker, and that broker is fixed here because the dispatcher is written against one delivery contract rather than against a family of them.
+
+**We commit to the Kafka protocol, not to a single Kafka distribution.** The protocol is the contract; the implementation is an operational choice per environment:
+
+| Environment | Implementation |
+| :-- | :-- |
+| Production | A managed Kafka service with a replication factor of `3` spread across availability zones |
+| Local development and CI | A single-binary Kafka-API broker, or Kafka in KRaft mode |
+
+Four properties decided it:
+
+1. **Log semantics with replay by position.** The outbox assigns a monotonic stream position and consumers reconcile against a snapshot high-water mark. That requires an append-only log addressable by offset. A queue broker, which acknowledges and discards, cannot answer "replay everything after position N" without an additional store.
+2. **The reserved priority lane is a separate topic.** Security events and lifecycle events occupy distinct topics with distinct consumer groups, partition counts, and capacity. A lifecycle backlog therefore cannot produce head-of-line blocking ahead of a revocation.
+3. **A schema registry exists off the shelf.** `STD-GLB-004` mandates a centralized schema registry with build-time compatibility validation. The Kafka ecosystem supplies one as a deployable component, so that mandate is met by configuration rather than by a bespoke service.
+4. **The analytical replication path in `EAD-003` uses the same backbone.** Change Data Capture into the analytical estate is a first-class, widely deployed Kafka capability, so Stage 2 and the analytical estate share one transport instead of two.
+
+**Ordering is per partition, never global.** The stream position allocated by the outbox is monotonic within a publisher, and Kafka preserves order only inside one partition. Producers therefore partition by `aggregate_id`, which yields per-aggregate ordering — the guarantee consumers depend on. Consumers reconcile authority through version comparison and deduplicate on `event_id`, so a later position arriving before an earlier one is a handled case rather than a defect. A producer that partitions on any other key silently removes the per-aggregate guarantee while every test continues to pass.
 
 ---
 
@@ -89,7 +112,7 @@ As transaction volume scales and the operational maturity of the platform team j
 ### Operational Impact
 
 - **Stage 1**: Requires monitoring outbox table size and configuring automatic pruning jobs on partitioned tables.
-- **Stage 2**: Requires monitoring logical replication slot size, WAL disk space utilization, and NATS JetStream publisher connection states.
+- **Stage 2**: Requires monitoring logical replication slot size, WAL disk space utilization, and Kafka producer connection and in-flight batch states.
 
 ### Security Impact
 
@@ -136,6 +159,8 @@ err = pglogrepl.StartReplication(ctx, conn, "scnehaux_outbox_slot", startLSN, pg
 ### Related Standards
 
 - [Enterprise Application Architecture Strategy (EAD-004)](../../01-enterprise/EAD-004-enterprise-integration-architecture.md)
+- [Enterprise Event-Driven Architecture & Messaging Standard (STD-GLB-004)](../../02-standards/_global/STD-GLB-004-event-driven.md) — carries the broker product decision into normative rules
+- [Enterprise Data Ownership & Topology (EAD-003)](../../01-enterprise/EAD-003-enterprise-data-ownership-and-topology.md) — the analytical replication path sharing this backbone
 - [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
 
 ### Compliance Status
@@ -159,5 +184,17 @@ None.
 - **Pros**: Straightforward, no persistent database outbox table required.
 - **Cons**: Dual-write consistency hazards. If the broker is unreachable, commits succeed but events are permanently lost, leading to silent state drift across downstream systems.
 - **Why Rejected**: Unacceptable risk of state inconsistencies in core transactional domains.
+
+### Alternative C: NATS JetStream as the Broker Product
+
+- **Pros**: A single Go binary with no JVM and no external coordination service, the lowest operational footprint of the candidates. Streams provide replay by sequence, subject hierarchies map onto the priority-lane split, and durable consumers carry a native retry-backoff array and delivery ceiling.
+- **Cons**: No schema registry exists as a deployable component, so the centralized registry mandated by `STD-GLB-004` would remain a bespoke build indefinitely. The analytical replication path in `EAD-003` would require a hand-built connector rather than an existing one. JetStream is materially younger than the alternative, and its clustered stream-state recovery has a shorter production record than a Tier-0 revocation path warrants.
+- **Why Rejected**: Two standing enterprise mandates — a centralized schema registry and Change Data Capture into the analytical estate — are satisfied by existing components under the Kafka protocol and by bespoke work here. The operational saving is real, and it is smaller than the cost of building and owning both.
+
+### Alternative D: RabbitMQ as the Broker Product
+
+- **Pros**: The longest production record of the candidates as a message broker, mature routing topologies, native dead-letter exchanges, per-queue priority, and quorum queues for high availability. The Streams feature supplies an append-only log with offset-based consumption, so the replay requirement is reachable.
+- **Cons**: Reaching the replay requirement means adopting Streams alongside classic queues, which places two delivery models in one deployment. The schema-registry and Change Data Capture ecosystems are markedly smaller than the Kafka protocol's, so both enterprise mandates again become bespoke work.
+- **Why Rejected**: Capable of the mechanics, and it carries the same two ecosystem gaps as Alternative C while adding a second delivery model to operate.
 
 ---

@@ -33,7 +33,7 @@ This document outlines the software architecture for the Scnehaux IAM system. **
 ### 1.1. Context & Objectives
 
 - **Objective:** Deliver the identity capability as a low-latency, horizontally scalable service with strong tenant isolation enforcement and O(1) session revocation.
-- **System Context:** IAM sits behind the API Gateway at the enterprise trust edge. It operates as the **Unified Identity Provider** and **OAuth 2.0 Authorization Server**, serving both the internal Scnehaux Cloud Service and the external third-party ecosystem. It depends on PostgreSQL (tenant/session state, OAuth client registry), Redis (rate limiting and cache), and an external KMS (cryptographic data-key decryption), and publishes domain events to the NATS event bus. Internal business domains never call IAM synchronously per request — they verify JWTs locally against the published JWKS.
+- **System Context:** IAM sits behind the API Gateway at the enterprise trust edge. It operates as the **Unified Identity Provider** and **OAuth 2.0 Authorization Server**, serving both the internal Scnehaux Cloud Service and the external third-party ecosystem. It depends on PostgreSQL (tenant/session state, OAuth client registry), Redis (rate limiting and cache), and an external KMS (cryptographic data-key decryption), and publishes domain events to the enterprise broker. Internal business domains never call IAM synchronously per request — they verify JWTs locally against the published JWKS.
 - **Capability:** Identity management, authentication, OAuth 2.0 delegation & scope authorization, token lifecycle management, and platform administration (local RBAC).
 - **Requirement:** OIDC/OAuth2 brokering, MFA (TOTP + WebAuthn), refresh-token rotation, multi-tenant isolation enforcement, user consent management, third-party client registration, and an immutable audit trail.
 - **Constraint:** Single deployable Go binary (modular monolith); PostgreSQL and Redis are the only datastores; no synchronous third-party calls on the login hot path; cryptographic signing via external KMS.
@@ -111,7 +111,7 @@ scnehaux-auth/
 │   │   ├── grpc/                # gRPC server, interceptors
 │   │   ├── middleware/          # Auth, tenant, tracing, logging
 │   │   ├── security/            # Argon2id Worker Pool, Envelope Key Decryptor
-│   │   ├── events/              # pglogrepl WAL listener, NATS outbox CDC
+│   │   ├── events/              # pglogrepl WAL listener, Kafka outbox CDC
 │   │   ├── resilience/          # Circuit breaker, timeouts
 │   │   ├── idgen/               # UUIDv7 generator
 │   │   ├── clock/               # Clock interface
@@ -290,7 +290,7 @@ sequenceDiagram
 - **Consumed Dependencies**: External KMS/Vault (startup/rotation key decryption only — never on the hot path); no synchronous business-domain calls.
 - **Outbound Async Events (Published)**: Domain events propagate via a **Data Flow** (**ADR-GLB-003**):
   - _Stage 1 (Pragmatic Default)_: Background workers poll the outbox using `SELECT FOR UPDATE SKIP LOCKED`, deleting processed rows in bulk via daily/weekly partitions to eliminate WAL autovacuum bloat.
-  - _Stage 2 (Scale Optimization)_: Direct WAL streaming via logical replication / change data capture (`pglogrepl`) to **NATS JetStream**.
+  - _Stage 2 (Scale Optimization)_: Direct WAL streaming via logical replication / change data capture (`pglogrepl`) to the enterprise broker, which **ADR-GLB-003 §5** fixes to the **Kafka protocol**.
 - **Event Consumers**: Downstream audit and email subscribers consume `json.RawMessage` events; delivery is at-least-once with idempotent handlers.
 
 ## 7. Security & Trust Boundary
