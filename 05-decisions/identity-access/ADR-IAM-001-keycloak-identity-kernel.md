@@ -194,7 +194,44 @@ development. The pipeline diffs the rendered definition against the running inst
 every run, and an out-of-band change is a finding rather than a state to absorb — an upgrade
 applied on top of undeclared drift produces a state no artifact describes.
 
-### 5.8 Preview Features Are Disabled
+### 5.8 The First Principal Is Created by an Evidenced Ceremony
+
+§5.5 makes the Identity Control API the sole path to an enterprise identity operation, and
+`TDD-identity-control-001` closes every other Principal creation path by realm configuration.
+Both are correct and together they leave a realm with no way to reach its first Principal: the
+API requires a caller holding a `principal_id`, and only the API issues one. The cycle has no
+entry point, and this was found by standing the service up rather than by reading it.
+
+**The entry point is a single-use ceremony performed by the Identity Control Service itself.**
+It is a command on the deployable, not an endpoint, and it satisfies four requirements:
+
+1. **It can succeed at most once per Control Database, enforced by the database.** The ceremony
+   claims a row whose primary key admits exactly one value. Two concurrent ceremonies produce
+   one Principal, and a second ceremony after the first is refused by a constraint rather than
+   by a check the code could be rewritten to skip.
+2. **It refuses to run against a populated registry.** Emptiness of `principal_mapping` is
+   asserted in the claiming transaction, so the ceremony cannot be used later to insert a
+   Principal into a running estate.
+3. **It names the human who ran it and why, and that record is immutable.** The evidence row is
+   insert-only: the runtime role holds no `UPDATE` and no `DELETE` on it. A retry reuses the
+   recorded operator and reason rather than supplying new ones, so the second attempt cannot
+   rewrite who is on record.
+4. **It creates the Principal through the ordinary path.** The ceremony calls the same
+   provisioning sequence the API calls, under an idempotency key stored in the evidence row, so
+   a crash mid-ceremony recovers rather than producing a second Principal, and the identifier is
+   issued by the authority that owns it.
+
+The ceremony holds no credential. It creates the kernel user with a mandatory credential-setting
+action, so the first human interaction establishes the credential and the ceremony never handles
+one — consistent with §5.2.
+
+**This is an entry point, not an exception.** No standing capability is created, nothing is
+exempted from authorization afterwards, and the ordinary path is unchanged. An out-of-band
+`INSERT` into `principal_mapping` remains prohibited, and `ADR-ORG-001 §5.3` is why: an
+identifier that entered the canonical registry without a recorded decision is indistinguishable
+from one an attacker placed there.
+
+### 5.9 Preview Features Are Disabled
 
 Every Keycloak preview and experimental feature is disabled. Enabling any one requires its
 own approved decision record naming the feature, the reason, and the accepted upgrade risk.
@@ -298,3 +335,11 @@ process-level guard has no surface to protect.
 - **Pros**: hard configuration isolation between customers, and a per-Tenant blast radius for realm-level misconfiguration.
 - **Cons**: multiplies issuer identity and key custody by customer count, forces per-request issuer resolution into every consumer, and makes realm upgrades a per-customer operation.
 - **Why Rejected**: tenancy is a claim, not a trust anchor. Fixed in §5.4.
+
+### Alternative F: A Standing Break-Glass Identity for the First Principal
+
+Provision a reserved identity with the realm, holding a fixed `principal_id`, and use it to create the first real operator. This was the first candidate considered for §5.8.
+
+- **Pros**: needs no new code — the ordinary API creates the first Principal like any other, and §7.2 of `SAD-001` already establishes an evidenced break-glass posture for the Admin Console, so the concept is not new to the estate.
+- **Cons**: it creates a credential that can create Principals *forever*, which is a permanent standing authority in exchange for solving a problem that occurs once. Its `principal_id` is in no registry, so every downstream consumer must tolerate an identifier the authority cannot resolve. And because it must exist before the service does, it can only be placed by the out-of-band write this architecture prohibits — the problem is relocated, not solved.
+- **Why Rejected**: a one-time problem does not justify a standing capability. The console break-glass in `SAD-001 §7.2` is not a precedent for this: it is time-bounded, group-scoped, and evidenced per session, and it operates on the kernel rather than minting canonical identifiers. §5.8 keeps the property that matters — a legitimate entry point — while the capability expires by construction after one use.

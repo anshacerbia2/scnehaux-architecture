@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-001
   title: Scnehaux Identity Runtime
   owner: Principal IAM Architect
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
   parent_pad: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_updated: 2026-08-18
+  last_updated: 2026-08-21
   last_reviewed: 2026-08-18
   technologies:
     - name: keycloak
@@ -296,6 +296,10 @@ The rule is absolute rather than best-effort because this is the one system wher
 **The Keycloak Admin Console is not the enterprise administration interface.** Access is restricted to a named break-glass group, is time-bounded, and every session in it is evidenced.
 
 Ordinary administration happens through the Identity Control API, because that is where enterprise authorization, canonical identifier resolution, last-authenticator guards, idempotency, reason capture, and evidence publication live. A console change bypasses all six, and the registration reconciler treats an unmanaged client or an out-of-band configuration change as a security finding rather than as drift to repair silently.
+
+**The one exception is the bootstrap ceremony, and it is an entry point rather than an exception to authorization.** The API requires a caller holding a `principal_id` and is the only path that issues one, so a fresh realm cannot reach its first Principal. `ADR-IAM-001 §5.8` gives that entry point to a single-use command on the Identity Control Service itself: it can succeed at most once per Control Database, refuses a populated registry, records the human who ran it in a row the runtime role cannot modify, and creates the Principal through the ordinary provisioning path so the identifier is issued by the authority that owns it. It holds no credential — the kernel is told to demand one on first authentication.
+
+This is distinct from the console break-glass above. That path is time-bounded, group-scoped, and evidenced per session, and it operates on the kernel; the ceremony mints a canonical identifier and expires by construction after one use.
 
 ### 7.3 Authentication and Authorization
 
