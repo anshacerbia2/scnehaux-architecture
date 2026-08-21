@@ -3,13 +3,13 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-08-11
-  last_reviewed: 2026-08-14
+  last_reviewed: 2026-08-22
 ---
 
 # Enterprise Token and Verification Profile (STD-IAM-002)
@@ -67,6 +67,27 @@ claim set, the lifetime class, and the subject form.
 - A protected resource MUST reject a token whose `aud` does not name it.
 - A token MUST NOT be issued for more than one audience class.
 
+#### 3.1.1 Privileged Scope Forms
+
+The `privileged` class covers two operations with incompatible context requirements, and
+conflating them made the class unimplementable. A token MUST declare exactly one form.
+
+| Form | Meaning | Context claim |
+| :-- | :-- | :-- |
+| `tenant-scoped` | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant | `tenant_id` MUST, with both version claims |
+| `provider-scope` | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST; `tenant_id` MUST NOT |
+
+`provider_scope` names the bounded authority the operation runs under, and it exists because
+the alternative was to put a Tenant identifier on a token whose action does not belong to a
+Tenant. The claim MUST name a registered provider scope or an explicit bounded Tenant set; a
+value meaning "all Tenants" MUST NOT be issued, because an unbounded scope is what
+`PAD-PLT-002 §5.2` requires cross-tenant administration never to be.
+
+A provider-scope token MUST take lifetime class `L0`, MUST carry `acr` and `auth_time`, and its
+issuance MUST be evidenced with the actor, the scope, and the reason. Creating a Principal is
+provider-scope: it is irreversible, it belongs to no Tenant, and it is the operation from which
+every later Membership is derived.
+
 ### 3.2 Claim Set
 
 | Claim | `internal` | `privileged` | `workload` | `external` |
@@ -77,12 +98,17 @@ claim set, the lifetime class, and the subject form.
 | `iat`, `exp` | MUST | MUST | MUST | MUST |
 | `principal_id` | MUST | MUST | MUST | MUST NOT |
 | `subject_type` | MUST | MUST | MUST | MUST NOT |
-| `tenant_id` | MUST | MUST | MUST when tenant-scoped | MUST NOT |
+| `tenant_id` | MUST | MUST when `tenant-scoped`; MUST NOT when `provider-scope` | MUST when tenant-scoped | MUST NOT |
 | `workspace_id` | MAY | MAY | MAY | MUST NOT |
-| `membership_version` | MUST when `tenant_id` present | MUST | MUST when `tenant_id` present | MUST NOT |
-| `tenant_security_version` | MUST when `tenant_id` present | MUST | MUST when `tenant_id` present | MUST NOT |
+| `membership_version` | MUST when `tenant_id` present | MUST when `tenant_id` present | MUST when `tenant_id` present | MUST NOT |
+| `tenant_security_version` | MUST when `tenant_id` present | MUST when `tenant_id` present | MUST when `tenant_id` present | MUST NOT |
+| `provider_scope` | MUST NOT | MUST when `provider-scope`; MUST NOT otherwise | MUST NOT | MUST NOT |
 | `acr`, `auth_time` | MAY | MUST | MUST NOT | MAY |
 | `workload_owner` | MUST NOT | MUST NOT | MUST | MUST NOT |
+
+The two version claims are conditional on `tenant_id` in every class, including `privileged`.
+An earlier revision made them unconditional there, which was unsatisfiable for a
+provider-scope token: it required a Membership version for a Principal acting in no Tenant.
 
 A workload is a Principal. PAD-PLT-001 defines a Principal as a stable human, service,
 workload, or governed-agent security subject, and Membership binds a `principal_id`
@@ -97,7 +123,7 @@ carrying no such claim.
   enterprise foreign key by any Scnehaux domain.
 - `principal_id` is the enterprise reference and MUST be the identifier internal
   domains persist.
-- A token MUST carry exactly one active Tenant context and at most one Workspace
+- A token that carries Tenant context MUST carry exactly one active Tenant and at most one Workspace
   context. The set of Memberships held by a Principal MUST NOT be placed in a token,
   bounded or otherwise.
 - Product permissions, entitlements, business roles, and quota state MUST NOT appear
@@ -116,7 +142,8 @@ scopes rather than realm-wide default mappers:
 | Client scope | Required projected claims |
 | :-- | :-- |
 | `scnehaux-internal` | `principal_id`, `subject_type`, and active context/version claims |
-| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time` |
+| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` with both version claims |
+| `scnehaux-provider` | `principal_id`, `subject_type`, `provider_scope`, `acr`, `auth_time`; `tenant_id` and version claims prohibited |
 | `scnehaux-workload` | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped |
 | `scnehaux-external` | Pairwise `sub`; enterprise and context claims prohibited |
 
@@ -155,7 +182,7 @@ degraded propagation path does not silently invalidate the derived lifetime.
 
 | Class | Revocation target | Access token lifetime | Applies to |
 | :-- | :-- | :-- | :-- |
-| `L0` | 5 minutes | 4 minutes | `privileged`; any surface performing irreversible, financial, or cross-tenant operations |
+| `L0` | 5 minutes | 4 minutes | `privileged` in both scope forms; any surface performing irreversible, financial, or cross-tenant operations |
 | `L1` | 10 minutes | 9 minutes | `internal` product APIs handling tenant-scoped business data |
 | `L2` | 16 minutes | 15 minutes | `external` and partner profiles, bounded by the STD-IAM-001 §3.2 ceiling |
 | `L3` | 10 minutes | 9 minutes | `workload`, unless a shorter class is declared by the workload profile |
@@ -200,11 +227,20 @@ fail closed on any failure:
 6. Verify `iat` and `exp` with a clock-skew allowance no greater than 60 seconds.
 7. Reject an `internal`, `privileged`, or `workload` token whose `principal_id` is
    absent, and reject a `workload` token whose `workload_owner` is absent.
-8. Compare `membership_version` and `tenant_security_version` against the local
-   projection, and reject a token whose version is lower than the locally known
-   version.
-9. Enforce Product authorization locally. A valid signature is one input and is never
-   the authorization decision.
+8. Where `tenant_id` is present, compare `membership_version` and
+   `tenant_security_version` against the local projection, and reject a token whose
+   version is lower than the locally known version. Where `tenant_id` is present and
+   either version claim is absent, reject the token: a context asserted without a
+   version cannot be compared against a revocation, so accepting it would make the
+   revocation contract unenforceable while every check appeared to pass.
+9. Reject a `privileged` token that carries neither `tenant_id` nor `provider_scope`,
+   and reject one that carries both. A privileged token whose scope form cannot be
+   determined has no bounded authority, and the safe reading of an ambiguous scope is
+   not the narrow one — it is refusal.
+10. Reject a `provider_scope` value that is not a registered scope or an explicit
+    bounded Tenant set.
+11. Enforce Product authorization locally. A valid signature is one input and is never
+    the authorization decision.
 
 - Introspection or an equivalent online check MAY be used where opaque-token or
   active-state semantics require it, and MUST NOT be placed on an ordinary request

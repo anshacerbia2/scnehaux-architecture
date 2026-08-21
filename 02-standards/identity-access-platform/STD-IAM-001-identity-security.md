@@ -3,12 +3,12 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-10
+  last_reviewed: 2026-08-22
 ---
 
 # Enterprise Identity Security Standard (STD-IAM-001)
@@ -43,6 +43,9 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 ### 3.2 OAuth 2.0 / OpenID Connect Security Profile
 
 - Authorization Code flow with PKCE using `S256` is REQUIRED for public browser and native clients
+- **The Resource Owner Password Credentials grant is PROHIBITED for every client, confidential clients included.** OAuth 2.1 removes it, and the reason is structural rather than stylistic: the grant requires a client to receive and forward the Principal's password, which places credential material in a process that this standard §3.1 forbids from holding any. It also defeats MFA, WebAuthn, step-up, and every abuse control the kernel's authentication ceremony applies, because none of them are on the path
+- A client MAY enable the grant in a local development environment that holds no production credential and issues no token another environment accepts. That exemption is a property of the environment, not of the client, and MUST NOT be carried into a shared environment by configuration
+- Being a confidential client is not an exemption. Client authentication proves which application is asking; it says nothing about how the Principal proved who they are
 - Redirect URIs MUST be explicitly registered and matched according to the approved client profile; open redirect patterns are prohibited
 - Access tokens MUST be audience-bound and short-lived according to the approved token-lifetime class
 - An access token MUST NOT exceed a 15-minute lifetime unless an approved token-lifetime class defines a longer bound for a named audience; any longer lifetime MUST be carried into the revocation enforcement delay of every affected revocation class
@@ -122,3 +125,4 @@ Deviation from this standard requires formal exception approval under GDC-000 wi
 - browser security and secret-scanning checks
 - administrative audit-event assertions
 - architecture fitness functions preventing Identity ownership of Tenant, Membership, Product Permission, or business state
+- client-registration assertion that no client in a shared environment enables the Resource Owner Password Credentials grant

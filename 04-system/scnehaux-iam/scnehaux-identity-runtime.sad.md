@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-001
   title: Scnehaux Identity Runtime
   owner: Identity Platform Team
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-08-06
+  last_reviewed: 2026-08-22
   parent_pad: PAD-PLT-001
 ---
 
@@ -508,6 +508,74 @@ This is distinct from restricted Admin Console access. That path operates on the
 - extensions are built from owned source and signed artifacts.
 - dependency and vulnerability scanning applies to Keycloak image, JVM extensions, Go Control Service, and deployment manifests.
 - critical security updates follow a documented emergency upgrade process.
+
+### 7.7 Revocation Classes and Enforcement
+
+`PAD-PLT-001` invariant 9 names six revocation classes, and `STD-IAM-001 §3.4` requires each to
+declare its enforcing mechanisms and a measurable maximum enforcement delay. This section is that
+declaration. Without it the platform can accept a revocation and report success while no artifact
+states when the access actually stops, which is the failure mode the invariant exists to prevent.
+
+**The delay is derived, never chosen.** `STD-IAM-001 §3.4` fixes the formula and
+`STD-IAM-002 §3.3` supplies both terms:
+
+```text
+maximum_enforcement_delay  =  propagation_budget  +  remaining_access_token_lifetime
+```
+
+The propagation budget is 60 seconds as the planning figure, against an operational target below
+10 seconds. The lifetime term is the class of the audience the revoked subject holds tokens for,
+and where a subject reaches several audiences the delay is the **worst** class, not the typical
+one. A stated delay that assumed the common case would be wrong exactly when it mattered.
+
+| Class | Enforcing mechanisms, in order | Lifetime term | Maximum delay |
+| :-- | :-- | :-- | :-- |
+| Session | kernel session removal | class of that session's audience | 60s + class |
+| Principal | kernel user disable → remove every kernel session → remove projected context → quarantine the control-plane mapping | worst class the Principal holds | 60s + worst class |
+| Authenticator | kernel authenticator removal | none for future ceremonies | 60s, and the Session delay in addition when the removal is a compromise response |
+| Client or grant | client disable → grant revocation → refresh invalidation | class of that client's audience | 60s + class |
+| Workload | workload credential disable → grant and session removal | `L3`, 9 minutes | 10 minutes |
+| Contextual Membership | Organization priority event → Identity Control removes projected context → kernel session removal → consumer projection update | `L1`, 9 minutes | 10 minutes |
+
+**Ordering inside the Principal and Membership classes is load-bearing.** The projected context
+is removed before the kernel sessions. Reversed, a refresh landing between the two steps mints a
+fresh token asserting the context that was just revoked, and the new token outlives the
+revocation by a full lifetime class. This is the property the withdrawn `session_epoch` mechanism
+was originally introduced to guarantee; `ADR-IAM-001` records why the mechanism was dropped and
+the property kept.
+
+**Contextual Membership can enforce earlier than the formula.** `STD-IAM-002 §3.5` rule 8 makes a
+consumer reject a token whose `membership_version` is below the version its local projection
+holds. A consumer that has already applied the priority event therefore rejects the outstanding
+token immediately rather than at expiry. The 10-minute figure is the ceiling for a consumer that
+has not yet applied it, not the expected case.
+
+**Acknowledgement is not enforcement.** Per `STD-IAM-001 §3.4`, accepting a revocation means the
+change is durable and queued. The platform MUST NOT report it as enforced until the mechanisms
+above have applied, and the security dashboard measures acceptance-to-enforcement separately from
+acceptance.
+
+**Long-lived connections are outside the token term.** A connection authenticated once and held
+open receives no further request to reject, so `STD-IAM-002 §3.4` requires each to be registered
+against the Principal and Tenant context that authorized it and closed by a priority revocation.
+An unregistered connection is closed rather than retained, because a connection that cannot be
+matched to a context cannot be revoked at all.
+
+#### 7.7.1 What Is Not Yet Enforced
+
+Three mechanisms above are declared and not yet realized, and the resulting delay is **unbounded**
+rather than merely longer. Recorded here because a table of intentions that reads like a table of
+controls is worse than no table:
+
+| Mechanism | Blocked on | Consequence today |
+| :-- | :-- | :-- |
+| Consumer projection update | the event broker and `SAD-004` | a Membership revocation reaches no consumer; only token expiry limits it |
+| Long-lived connection termination | a connection registry in the consuming system | a held connection survives every revocation class |
+| Projected context removal | the Keycloak projection path in `TDD-identity-control-002` | Principal and Membership revocation currently rely on kernel session removal alone |
+
+Until each lands, the Identity Runtime MUST NOT report a maximum enforcement delay for the
+Contextual Membership class, and the production gate MUST include measured
+acceptance-to-enforcement evidence for every class in the table above.
 
 ## 8. NFR
 
