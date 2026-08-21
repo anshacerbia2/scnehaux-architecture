@@ -22,11 +22,11 @@ generate-docs:
 
 # Run the core architecture linter to validate document compliance (C4, NFRs, etc.)
 lint:
-	python 06-fitness-function/engine/cli.py --target .
+	PYTHONPATH=06-fitness-function python -m engine.cli --target .
 
 # Run the architecture linter and output the results in SARIF format (for GitHub Code Scanning)
 lint-sarif:
-	python 06-fitness-function/engine/cli.py --format sarif > linter.sarif
+	PYTHONPATH=06-fitness-function python -m engine.cli --target . --format sarif > linter.sarif
 
 # Check for expired architecture exception waivers based on the current date
 check-waivers:

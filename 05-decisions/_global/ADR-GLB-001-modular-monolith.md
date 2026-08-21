@@ -6,6 +6,7 @@ doc_meta:
   status: accepted
   created: 2026-01-01
   created_date: 2026-01-01
+  last_updated: 2026-08-12
   created_by: Enterprise Architect
 ---
 
@@ -19,14 +20,16 @@ Standardizing on the Modular Monolith Pattern as the Default Architecture for Co
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
-| 2026-08-18 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status            | ADR Type     | Reviewers                        | Approver                        |
+| ---------- | ----------------- | ------------ | -------------------------------- | ------------------------------- |
+| 2026-05-01 | accepted          | foundational | Architecture Review Board        | Enterprise Architect            |
+| 2026-08-12 | accepted, amended | foundational | Architecture, Platform, Identity | Architecture Authority          |
 
-**Amended 2026-08-18: §5.1 states the scope this decision always had.** It governs the
-internal structure of one system and not the enterprise topology, which `EAD-001` and
-`EAD-002` own. The pattern, its drivers, and its consequences are unchanged.
+### Amendment Record
+
+**2026-08-12 — scope correction.** The original decision named the Identity Provider and a Ledger system as mandatory modular monoliths. ADR-IAM-001 adopts an external identity kernel that runs the runtime its vendor requires, and no Ledger system exists anywhere in the enterprise landscape. Section 5 is amended to scope the mandate to Scnehaux-owned cohesive transactional and control applications and to name the categories that fall outside it. Consequences asserting Kubernetes as the deployment substrate, an unmeasured extraction duration, and application to the retired `scnehaux-iam` monorepo are corrected in the same amendment. Package layout, previously illustrated here with modules from that retired system, is now governed by ADR-GLB-008.
+
+This decision is amended rather than superseded because its direction is unchanged: prefer a cohesive modular application over premature distribution. Only the breadth of the mandate and factual claims that ceased to be true are corrected. Sections 3, 4, and the Positive, Negative, and Tradeoffs consequences are retained as the original reasoning of record.
 
 ## 3. Context
 
@@ -38,26 +41,19 @@ Adopting the modular monolith allows us to scale development velocity and simpli
 
 ## 5. Decision
 
-We officially establish the **Modular Monolith** pattern as the default, mandatory architecture for all new core platform systems at Scnehaux, including the Identity Provider (IAM) and the Ledger system.
+We establish the **Modular Monolith** pattern as the default initial realization for **Scnehaux-owned cohesive transactional and control applications**, where the relevant bounded contexts can safely share ownership, lifecycle, reliability profile, and runtime.
 
-Core modules (e.g., `internal/auth`, `internal/tenant`, `internal/token` in IAM) must compile and build into a single execution binary, while maintaining complete logical separation (no direct cross-package structural coupling or database table joining).
+The default does **not** mandate one binary, one database, or one deployment model for every enterprise capability. The following are outside this mandate:
 
-### 5.1 Scope: Within a System, Never Across Systems
+- adopted vendor kernels, including the approved identity kernel, which run the runtime their vendor requires;
+- managed databases, brokers, caches, key-management services, object storage, and other commodity substrate;
+- build-time libraries, UI packages, schemas, and generated artifacts;
+- data, analytical, AI, batch, and integration workloads whose runtime profile differs materially;
+- components deployed independently on evidence of lifecycle, scale, fault isolation, security, residency, compliance, or ownership.
 
-_Amended 2026-08-18._
+Within a Scnehaux-owned modular application, logical domain boundaries remain explicit even when modules share a process or a database. Cross-module access follows declared contracts, and ownership leakage is prohibited. Package layout and machine-enforced layer separation are governed by ADR-GLB-008.
 
-This decision governs the **internal** structure of one system: one bounded context, one deployable, modules separated at compile time. It does not govern the enterprise topology.
-
-`EAD-001 §7` rejects the modular monolith as an **enterprise** pattern, and `EAD-002 §6.2` requires every system to deploy on its own pipeline without a coordinated enterprise release. Those statements and this decision are compatible, and read as contradictory only when the word "monolith" is applied at both scales at once.
-
-| Scale | Rule | Owner |
-| :-- | :-- | :-- |
-| Inside one system | One deployable, modules enforced by the compiler | This decision |
-| Across systems | Independently deployable, acyclic, contract-mediated | `EAD-001`, `EAD-002` |
-
-A deployable containing two bounded contexts is therefore prohibited by `STD-GLB-BE-001` Rule 1, and splitting one bounded context across two deployables is prohibited by this decision. The estate consequence is explicit: the Identity Platform capability is realised by more than one deployable — an identity kernel, a control service, and an experience — because those are separate systems with separate release cadences, and each of them individually is a modular monolith.
-
-The original text named "the Identity Provider (IAM)" as a single system. That was accurate when one repository held the whole capability. It is read today as naming whichever system is under discussion, not as a requirement that the capability collapse back into one deployable.
+Extraction from a modular application requires evidence rather than preference. A SAD or a replacement decision documents the independent lifecycle, scaling, reliability, security, operational, or organisational reason for the extraction.
 
 ## 6. Consequences
 
@@ -66,7 +62,7 @@ The original text named "the Identity Provider (IAM)" as a single system. That w
 - **High Development Velocity**: Single repository deployment simplifies CI/CD pipelines, database migration runs, and local dev setups.
 - **Sub-millisecond Local Calls**: Direct in-memory method invocation replaces slower gRPC or REST calls for internal operations.
 - **compiler Boundary Safeguards**: Enforced via Go internal package boundaries, ensuring no domain cross-pollution.
-- **Future Extraction Path**: Because database tables and domains are kept strictly separate, any module can be extracted into an independent microservice in less than 48 hours if high-scale needs arise.
+- **Future Extraction Path**: Because database tables and domains are kept strictly separate, a module can be extracted into an independently deployed system without redesigning its aggregates or migrating its schema. Extraction cost is a packaging and wiring change, and is not estimated here.
 
 ### Negative
 
@@ -79,7 +75,7 @@ The original text named "the Identity Provider (IAM)" as a single system. That w
 
 ### Operational Impact
 
-- Drastically simplifies operations: requires only 1 database connection pool, 1 set of Kubernetes pods, and unified OpenTelemetry configuration.
+- Simplifies operations: one deployment unit, one migration path, and one telemetry configuration per application.
 
 ### Security Impact
 
@@ -87,11 +83,11 @@ The original text named "the Identity Provider (IAM)" as a single system. That w
 
 ### Scalability Impact
 
-- Standardized scaling is achieved by horizontally scaling identical replicas of the monolith using Kubernetes HPAs.
+- Scaling is achieved by running identical replicas of the application. The orchestration mechanism is a runtime decision governed by EAD-005 and is not fixed by this ADR.
 
 ### Operational
 
-- Applied in the implementation of the `scnehaux-iam` project monorepo in Go.
+- Applied to Scnehaux-owned control-plane applications. The former `scnehaux-iam` monorepo is retired under ADR-IAM-001 and is no longer a reference implementation.
 - Database access within each module must use independent, non-overlapping tables.
 
 ## 7. Compliance Impact
@@ -99,7 +95,10 @@ The original text named "the Identity Provider (IAM)" as a single system. That w
 ### Related Standards
 
 - [Technology Architecture Strategy (EAD-005)](../../01-enterprise/EAD-005-enterprise-platform-architecture.md)
-- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- [Scnehaux Identity Runtime (SAD-001)](../../04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md)
+- [ADR-GLB-008 Go Project Structure and Layer Enforcement](ADR-GLB-008-go-project-structure.md) — governs package layout and layer enforcement inside a modular application.
+- [ADR-GLB-010 Application Mechanics In-Process](ADR-GLB-010-application-mechanics-in-process.md) — governs where cross-cutting mechanics are placed relative to the application boundary.
+- [ADR-IAM-001 Adopt Keycloak Identity Kernel](../identity-access-platform/ADR-IAM-001-adopt-keycloak-identity-kernel.md) — the adopted vendor kernel excluded by Section 5.
 
 ### Compliance Status
 

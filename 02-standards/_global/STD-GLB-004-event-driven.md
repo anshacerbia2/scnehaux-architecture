@@ -3,14 +3,12 @@ doc_meta:
   id: STD-GLB-004
   title: Enterprise Event-Driven Architecture & Messaging Standard
   owner: Enterprise Architect
-  version: 2.0.0
-  status: adopted
+  version: 1.1.0
+  status: approved
   classification: public
-  governed_by: [EAD-004]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_updated: 2026-08-17
-  last_reviewed: 2026-08-17
+  last_reviewed: 2026-08-14
 ---
 
 # Enterprise Event-Driven Architecture & Messaging Standard (STD-GLB-004)
@@ -21,7 +19,7 @@ doc_meta:
 
 This standard establishes the mandatory message structures, publishing mechanisms, delivery guarantees, consumer retry behaviors, and schema evolution models for all asynchronous messaging systems within the Scnehaux enterprise.
 
-It applies to all publish-subscribe configurations, message queue integrations, and event streaming architectures across the enterprise. The broker product is no longer open to per-system selection: section 3 mandates the Kafka protocol.
+It applies to all publish-subscribe configurations, message queue integrations, and event streaming architectures utilizing Apache Kafka, RabbitMQ, or equivalent brokers.
 
 ---
 
@@ -30,18 +28,6 @@ It applies to all publish-subscribe configurations, message queue integrations, 
 Asynchronous event pipelines must guarantee at-least-once delivery with idempotent consumers. Event schemas are immutable contracts governed by strict versioning to prevent downstream consumer breakage.
 
 ## 3. Normative Rules
-
-### Broker Protocol and Topology
-
-Every asynchronous event in the enterprise transits one broker protocol. A per-system choice would produce divergent delivery, retention, and replay semantics behind a shared publication contract.
-
-- **Protocol**: Services MUST publish to and consume from a broker exposing the **Kafka protocol**. Selecting a different broker protocol for a new system is PROHIBITED.
-- **Implementation Freedom**: The Kafka distribution is an operational choice per environment and MUST NOT appear in application code. Production deployments MUST use a managed Kafka service; local development and CI MAY use any single-binary Kafka-API broker or Kafka in KRaft mode.
-- **Durability**: Production topics MUST carry a replication factor of at least `3`, distributed across availability zones.
-- **Priority Separation**: Security-classified events MUST occupy a topic distinct from lifecycle events, with its own consumer group and its own partition allocation. Publishing both classes to one topic is PROHIBITED, because a lifecycle backlog would then delay a security event through head-of-line blocking.
-- **Partition Key**: Producers MUST partition by the aggregate identifier. Kafka preserves order only within a partition, so any other partition key silently removes the per-aggregate ordering that consumers depend on.
-- **Global Ordering**: Consumers MUST NOT assume ordering across partitions. Cross-aggregate convergence is achieved by comparing the authoritative version carried in the payload, not by arrival order.
-- **Retention**: Topics carrying events used for consumer reconstruction MUST retain messages for at least the maximum consumer reconciliation interval, so a recovering consumer can replay from its last committed offset.
 
 ### Event Payload Schema Specification
 
@@ -55,6 +41,10 @@ To ensure interoperability across heterogeneous services, all asynchronous event
   - `time`: RFC 3339 UTC timestamp.
   - `datacontenttype`: Must be `"application/json"`.
   - `data`: The domain-specific event payload.
+- **Ordered Projection Extension**: A publisher whose events support snapshot bootstrap
+  or ordered projection must add the CloudEvents extension `streamposition` as a
+  positive integer. The value is monotonic within one declared publisher stream, may
+  contain gaps, and must not be treated as an entity identifier or broker offset.
 - **Example Compliant Payload**:
   ```json
   {
@@ -64,6 +54,7 @@ To ensure interoperability across heterogeneous services, all asynchronous event
     "id": "f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
     "time": "2026-05-22T10:00:00Z",
     "datacontenttype": "application/json",
+    "streamposition": 10482,
     "data": {
       "user_id": "usr_99a82f",
       "tenant_id": "ten_1028a",
@@ -85,6 +76,10 @@ To prevent dual-write inconsistencies, services must never write to a database a
   - `payload`: JSONB.
   - `published`: Boolean (indexed).
   - `created_at`: Timestamp.
+- **Projection Position**: An outbox serving an ordered projection must allocate its
+  row sequence and envelope `streamposition` from the same value in one database
+  statement. A snapshot high-water mark must be read in the same database snapshot as
+  the authoritative rows it describes.
 - **Relay Processing**: An independent outbox relay processor must poll the outbox table (e.g., using Change Data Capture / CDC or transactional polling), publish events to the broker, and update the table state.
 
 ---
@@ -95,7 +90,22 @@ Messaging must guarantee delivery while protecting consumers from duplicate mess
 
 - **Delivery Guarantee**: The system guarantees **At-Least-Once** delivery. Exactly-Once processing must be achieved at the consumer level through application-level deduplication.
 - **Consumer Idempotency**: Consumers must track processed event IDs in an idempotent storage table (e.g. `processed_events` with a unique index on `event_id`).
-- **Deduplication Check**: Before processing an event, the consumer must verify if the `event_id` exists in the deduplication storage. If present, the message must be acknowledged and ignored.
+- **Authority Versioning**: A stream that can be reordered by a priority lane and can
+  grant or remove authority must carry the aggregate's monotonic authority version in
+  every state event. Consumers must compare that version with their accepted desired
+  state and mark an older operation superseded. Neither arrival order nor
+  `streamposition` may authorize an older state to overwrite a newer one.
+- **Deduplication Check**: Before applying an event, the consumer must verify whether
+  `event_id` exists in deduplication storage. If present, the message must be
+  acknowledged and ignored. For an external side effect that cannot share this database
+  transaction, the consumer must atomically persist a local operation and the
+  deduplication mark, acknowledge the broker message, and execute the operation through
+  an idempotent retry worker.
+- **Snapshot Bootstrap**: A projection consumer must establish its durable subscription
+  before requesting a snapshot, buffer deliveries, load the snapshot and its high-water
+  mark, then apply only buffered events whose `streamposition` is greater than the mark.
+  This ordering is mandatory unless a broker adapter proves an equivalent atomic
+  snapshot-to-offset mapping.
 
 ---
 
@@ -103,8 +113,17 @@ Messaging must guarantee delivery while protecting consumers from duplicate mess
 
 Transient processing errors must not block event stream consumption or cause message loss.
 
-- **Initial Retry Phase**: Failing consumer executions must be retried locally up to `3` times using exponential backoff.
-- **DLQ Routing**: If all local retries fail, the consumer must write the message along with failure metadata (exception details, time, consumer group) to a designated Dead Letter Queue (DLQ). The Kafka protocol provides no built-in dead-letter primitive, so a DLQ MUST be realized as a dedicated topic owned by the consuming system, and the original message key, headers, and offset MUST be preserved on it so the failure remains traceable to its source partition.
+- **Ownership Boundary**: Producer outbox retries cover publication to the broker only.
+  They never satisfy retry requirements for a consumer handler or its downstream side
+  effects.
+- **Initial Retry Phase**: A failing consumer operation must be retried by the consuming
+  adapter or its durable operation worker up to `3` immediate attempts using exponential
+  backoff. Broker acknowledgement must follow the consumer's declared durability point.
+- **DLQ Routing**: If all immediate attempts fail, the consumer must persist or route the
+  message together with failure metadata, attempt count, timestamps, consumer identity,
+  and replay status to its designated DLQ. Security-priority operations must remain
+  unresolved and alerted until successful replay or reconciliation proves the intended
+  state.
 - **DLQ Monitoring**: DLQ volumes must trigger alerts. Human operator evaluation or automated reconciliation scripts must process DLQ messages.
 
 ---
@@ -130,7 +149,7 @@ To prevent downstream consumer failures during schema changes, services must adh
     }
     ```
   - Publishers must continue to populate both fields until all dependent downstream consumer services have updated their code to read the new property.
-- **Centralized Schema Registry**: Every event schema must be registered in the enterprise Schema Registry. The registry must validate every schema check-in for backward compatibility before permitting compilation. The registry MUST be a deployed component of the Kafka ecosystem rather than a bespoke service, and its compatibility mode MUST be set to backward. Until that component is operational, a publishing repository MAY hold its schemas in source control provided the same compatibility check runs in its build pipeline against the committed history; this interim state MUST be recorded as debt in the owning repository.
+- **Centralized Schema Registry**: Every event schema must be registered in the enterprise Schema Registry. The registry must validate every schema check-in for backward compatibility before permitting compilation.
 
 ---
 
@@ -142,5 +161,4 @@ None. All event-driven architecture rules apply unconditionally. Deviations requ
 
 1. **Schema Registry Validation**: Build validation pipelines must check event models against the centralized schema registry. Schema modifications that break backward compatibility rules must block the build.
 2. **Consumer Group Audit**: All services running consumer groups must register their offsets and lagging metrics under the enterprise observability stack.
-3. **Broker Conformance Audit**: Deployment pipelines must assert that every declared topic carries a replication factor of at least `3`, that security and lifecycle events resolve to distinct topics, and that no application artifact names a specific Kafka distribution. A producer configuration whose partition key is not the aggregate identifier must block the build.
-4. **Exception Waivers**: Deviations from these event-driven architecture requirements require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.
+3. **Exception Waivers**: Deviations from these event-driven architecture requirements require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.

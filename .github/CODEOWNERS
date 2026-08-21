@@ -40,25 +40,29 @@
 # ----------------------------------------------------------------------------
 /02-standards/                     @scnehaux/arb-team
 /02-standards/_global/             @scnehaux/arb-team
-/02-standards/identity-access/     @scnehaux/iam-core-team
-/02-standards/ui-platform/         @scnehaux/ui-platform-team
+/02-standards/identity-access-platform/  @scnehaux/iam-core-team
+/02-standards/ui-platform/               @scnehaux/ui-platform-team
 
 # ----------------------------------------------------------------------------
 # 5. ARCHITECTURAL DECISION RECORDS (ADRs)
 # ----------------------------------------------------------------------------
 /05-decisions/                     @scnehaux/arb-team
 /05-decisions/_global/             @scnehaux/arb-team
-/05-decisions/identity-access/     @scnehaux/iam-core-team
-/05-decisions/ui-platform/         @scnehaux/ui-platform-team
+/05-decisions/identity-access-platform/     @scnehaux/iam-core-team
+/05-decisions/organization-tenancy-platform/ @scnehaux/core-platform-team
+/05-decisions/ui-platform/                  @scnehaux/ui-platform-team
 
 # ----------------------------------------------------------------------------
 # 6. DOMAIN & SYSTEM DECENTRALIZATION (PAD & SAD)
 # ----------------------------------------------------------------------------
 # Explicit Domain Overrides (Identity)
-/03-domain/identity-platform/         @scnehaux/iam-core-team
-/04-system/scnehaux-iam/              @scnehaux/iam-core-team
-/04-system/scnehaux-iam-dashboard/    @scnehaux/iam-core-team
+/03-domain/PAD-PLT-001-identity-access-platform/       @scnehaux/iam-core-team
+/04-system/scnehaux-iam/                               @scnehaux/iam-core-team
+
+# Explicit Domain Overrides (Organization & Tenancy)
+/03-domain/PAD-PLT-002-organization-tenancy-platform/  @scnehaux/core-platform-team
+/04-system/scnehaux-organization/                      @scnehaux/core-platform-team
 
 # Explicit Domain Overrides (UI Platform)
-/03-domain/scnehaux-ui-platform/      @scnehaux/ui-platform-team
-/04-system/scnehaux-ui-platform/      @scnehaux/ui-platform-team
+/03-domain/PAD-PLT-003-scnehaux-ui-platform/   @scnehaux/ui-platform-team
+/04-system/scnehaux-ui-platform/               @scnehaux/ui-platform-team

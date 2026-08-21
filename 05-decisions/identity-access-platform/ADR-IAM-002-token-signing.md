@@ -1,4 +1,4 @@
----
+﻿---
 doc_meta:
   id: ADR-IAM-002
   title: ADR-IAM-002 Token Signing Algorithm and Key Lifecycle Management

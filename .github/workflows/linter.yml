@@ -52,5 +52,6 @@ jobs:
         run: pip install .scnehaux-governance
 
       - name: Execute Governance Engine
-        run: PYTHONPATH=.scnehaux-governance/06-fitness-function python .scnehaux-governance/06-fitness-function/engine/cli.py --target ${{ inputs.target_dir }}
-
+        env:
+          TARGET_DIR: ${{ inputs.target_dir }}
+        run: PYTHONPATH=.scnehaux-governance/06-fitness-function python .scnehaux-governance/06-fitness-function/engine/cli.py --target "$TARGET_DIR" --reference-root .scnehaux-governance

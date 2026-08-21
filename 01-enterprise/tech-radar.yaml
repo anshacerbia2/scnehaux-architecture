@@ -1,7 +1,7 @@
 # tech-radar.yaml — Enterprise Technology Radar
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
-# Last updated: 2026-08-18
+# Last updated: 2026-07-06
 
 technology_radar:
   adopt:
@@ -35,37 +35,14 @@ technology_radar:
       owner: Architecture Authority
       rationale_adr: null
 
-    # The identity kernel. Adopted rather than built: EAD-006 centralises identity, and an
-    # authentication engine, session engine, credential store, and OIDC provider written
-    # in-house would be the weakest security link the enterprise owns.
+    # The JVM/Quarkus runtime enters the portfolio with this entry and is scoped to
+    # it. EAD-005 section 5.3 keeps it out of the general server-side options, so it
+    # carries no radar entry of its own.
     - name: keycloak
-      category: identity-provider
-      date_adopted: "2026-08-18"
-      owner: Identity Team
+      category: identity-kernel
+      date_adopted: "2026-08-11"
+      owner: Identity Platform Team
       rationale_adr: ADR-IAM-001
-
-    # The event backbone. ADR-GLB-003 fixes the protocol rather than a distribution, so a
-    # managed service and a single-binary local broker are both conformant.
-    - name: kafka
-      category: event-broker
-      date_adopted: "2026-08-18"
-      owner: Integration Team
-      rationale_adr: ADR-GLB-003
-
-    # Declarative schema management. The destructive gate it was adopted for now runs
-    # partly outside the tool, per ADR-GLB-004 §5.1.
-    - name: atlas
-      category: schema-migration
-      date_adopted: "2026-08-18"
-      owner: Architecture Authority
-      rationale_adr: ADR-GLB-004
-
-    # Vendor-neutral instrumentation, mandated by STD-GLB-003.
-    - name: opentelemetry
-      category: observability
-      date_adopted: "2026-08-18"
-      owner: SRE Team
-      rationale_adr: null
 
   trial:
     - name: rust

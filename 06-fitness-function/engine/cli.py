@@ -55,6 +55,22 @@ from engine.validators.registry import detect_doc_type, get_validator
 logger = logging.getLogger(__name__)
 
 
+def _merge_reference_registry(local_registry, reference_registry):
+    """Merge a downstream registry with a read-only architecture reference registry."""
+    local_ids, local_metadata, local_duplicates = local_registry
+    reference_ids, reference_metadata, reference_duplicates = reference_registry
+
+    duplicates = {**reference_duplicates, **local_duplicates}
+    for doc_id in local_ids & reference_ids:
+        duplicates[doc_id] = [
+            reference_metadata[doc_id].get("_filepath", "reference"),
+            local_metadata[doc_id].get("_filepath", "local"),
+        ]
+
+    metadata = {**reference_metadata, **local_metadata}
+    return local_ids | reference_ids, metadata, duplicates
+
+
 def _validate_execution_root(cwd: str) -> None:
     """
     Ensure the linter is executed strictly from a repository root.
@@ -338,6 +354,10 @@ def main() -> None:
         help="Target directories or files to lint (default: current directory)",
     )
     parser.add_argument(
+        "--reference-root",
+        help="Optional governance repository root used to resolve cross-repository architecture IDs",
+    )
+    parser.add_argument(
         "--verbose", action="store_true", help="Enable DEBUG-level logging"
     )
 
@@ -418,13 +438,29 @@ def main() -> None:
     TARGET_REPO_ROOT = cwd
     
     try:
-        all_doc_ids, all_doc_metadata, duplicate_ids = build_metadata_registry(
+        local_registry = build_metadata_registry(
             TARGET_REPO_ROOT,
             TARGET_REPO_ROOT,
             allowed_root_dirs,
             ignored_files_lower,
             ignored_patterns,
         )
+        local_doc_ids, local_doc_metadata, duplicate_ids = local_registry
+        all_doc_ids, all_doc_metadata = local_doc_ids, local_doc_metadata
+
+        if args.reference_root:
+            reference_root = os.path.abspath(args.reference_root)
+            _validate_execution_root(reference_root)
+            reference_registry = build_metadata_registry(
+                reference_root,
+                reference_root,
+                allowed_root_dirs,
+                ignored_files_lower,
+                ignored_patterns,
+            )
+            all_doc_ids, all_doc_metadata, duplicate_ids = _merge_reference_registry(
+                local_registry, reference_registry
+            )
     except ValueError as e:
         logger.error("FATAL: %s", str(e))
         sys.exit(1)
@@ -596,19 +632,19 @@ def main() -> None:
     # Step 4: Repo-level audits (only meaningful across the full registry)
     repo_findings: list[tuple[str, str, str]] = []
     repo_findings.extend(audit_duplicate_ids(duplicate_ids, severity_levels))
-    repo_findings.extend(audit_hierarchy_tiers(all_doc_metadata, severity_levels))
-    repo_findings.extend(audit_orphans(all_doc_metadata, severity_levels))
-    repo_findings.extend(audit_version_bump(all_doc_metadata, severity_levels))
+    repo_findings.extend(audit_hierarchy_tiers(local_doc_metadata, severity_levels))
+    repo_findings.extend(audit_orphans(local_doc_metadata, severity_levels))
+    repo_findings.extend(audit_version_bump(local_doc_metadata, severity_levels))
 
-    for fpath, sev, msg in audit_waiver_expirations(all_doc_metadata, severity_levels):
+    for fpath, sev, msg in audit_waiver_expirations(local_doc_metadata, severity_levels):
         repo_findings.append((sev, msg, fpath))
 
     for fpath, sev, msg in audit_circular_dependencies(
-        all_doc_metadata, severity_levels
+        local_doc_metadata, severity_levels
     ):
         repo_findings.append((sev, msg, fpath))
 
-    for category, msg in audit_traceability_graph(all_doc_metadata):
+    for category, msg in audit_traceability_graph(local_doc_metadata):
         repo_findings.append(
             (severity_levels[category], msg, "TRACEABILITY-GRAPH")
         )

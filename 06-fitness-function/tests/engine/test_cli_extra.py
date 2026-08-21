@@ -3,7 +3,35 @@ import os
 import sys
 from pathlib import Path
 
-from engine.cli import _validate_execution_root, main
+from engine.cli import _merge_reference_registry, _validate_execution_root, main
+
+
+def test_merge_reference_registry_resolves_cross_repo_ids_and_duplicates():
+    local = (
+        {"TDD-service-001", "SAD-001"},
+        {
+            "TDD-service-001": {"_filepath": "docs/designs/TDD-service-001.md"},
+            "SAD-001": {"_filepath": "docs/designs/SAD-001.md"},
+        },
+        {},
+    )
+    reference = (
+        {"SAD-001", "PAD-PLT-001"},
+        {
+            "SAD-001": {"_filepath": "04-system/SAD-001.md"},
+            "PAD-PLT-001": {"_filepath": "03-domain/PAD-PLT-001.md"},
+        },
+        {},
+    )
+
+    ids, metadata, duplicates = _merge_reference_registry(local, reference)
+
+    assert ids == {"TDD-service-001", "SAD-001", "PAD-PLT-001"}
+    assert metadata["PAD-PLT-001"]["_filepath"].startswith("03-domain")
+    assert duplicates["SAD-001"] == [
+        "04-system/SAD-001.md",
+        "docs/designs/SAD-001.md",
+    ]
 
 def test_validate_execution_root_fails_without_git(tmp_path, monkeypatch):
     # tmp_path does not have a .git folder
@@ -108,7 +136,6 @@ def test_main_json_and_sarif_format(tmp_path, monkeypatch):
     with pytest.raises(SystemExit) as exc:
         main()
     assert exc.value.code == 0
-
 
 
 

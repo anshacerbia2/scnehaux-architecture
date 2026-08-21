@@ -3,83 +3,85 @@ doc_meta:
   id: STD-GLB-FE-003
   title: Enterprise Frontend Security Standard
   owner: Enterprise Security Architect
-  version: 1.0.0
-  status: adopted
+  version: 2.0.0
+  status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-18
+  last_reviewed: 2026-08-10
 ---
 
-# Enterprise Frontend Security Standard (STD-GLB-FE-005)
-
----
+# Enterprise Frontend Security Standard (STD-GLB-FE-003)
 
 ## 1. Objective & Scope
 
-This standard defines the mandatory security controls, runtime mitigations, and multi-tenant isolation rules for all browser-executed Single Page Applications (SPAs) within the Scnehaux enterprise ecosystem. It establishes the browser not merely as a presentation layer, but as a critical execution runtime requiring zero-trust discipline.
+Define mandatory browser and frontend security controls for Scnehaux web applications across privileged/admin, internal, client-facing, and public application profiles.
 
-The scope of this standard applies to all client-side storage, outbound API communications, rendering logic, and local data persistence.
-
----
+The browser is an untrusted execution environment. Frontend controls improve safety and user experience but never become the final authority for authentication, Tenant/Membership truth, entitlement, or business authorization.
 
 ## 2. Design Principles
 
-Frontend security is defense-in-depth: strict Content Security Policies, input sanitization at the boundary, and secure credential storage are non-negotiable. Client-side code must never trust user input or expose sensitive tokens in client state.
+- **Server authority** — authentication/session and business authorization are enforced by trusted server-side components
+- **Least bearer exposure** — avoid exposing long-lived bearer credentials to browser JavaScript
+- **Requested context is not authority** — tenant/workspace values supplied by the browser are hints that must be validated against authoritative or trusted projected context
+- **Cache isolation** — user, tenant, and workspace changes invalidate or partition cached data deterministically
+- **Defense in depth** — CSP, output encoding, secure cookies, dependency controls, and safe DOM practices reduce browser compromise impact
 
 ## 3. Normative Rules
 
-### Multi-Tenant Isolation
+### 3.1 Application Security Profiles
 
-Cross-tenant data leakage on the client side is a critical security vulnerability. All frontends must enforce structural boundaries to prevent contamination.
+- Privileged and administrative applications SHOULD use a BFF or server-managed session profile when practical
+- Server-managed session cookies MUST be `HttpOnly`, `Secure`, and use an appropriate `SameSite`, path, domain, and expiry policy
+- Direct browser OAuth clients MAY be used when justified but MUST use Authorization Code + PKCE `S256`, no client secret, and the approved public-client token profile
+- Refresh tokens or equivalent long-lived bearer secrets MUST NOT be stored in `localStorage`
+- Sensitive authentication/session material MUST NOT be logged, persisted in analytics payloads, or exposed through client error telemetry
 
-- **Tenant-Scoped Storage**: Global browser storage (`sessionStorage`, `localStorage`) is shared across the origin. Therefore, all sensitive state keys (tokens, preferences) must be dynamically prefixed with the active tenant ID (e.g., `auth_token:{tenant_id}`).
-- **Query Cache Purging**: To guarantee complete eviction of stale data, the application's central data fetching cache (e.g., React Query's `QueryClient`) must be programmatically cleared upon any tenant context switch (`queryClient.clear()`).
-- **Header Injection**: All outgoing HTTP requests must automatically inject the `Scnehaux-Account` header identifying the active tenant context.
-- **Query Key Segregation**: All internal cache keys must include the `tenantId` as the first segment to prevent accidental cross-tenant cache hits (e.g., `[tenantId, 'users', 'list']`).
+### 3.2 Tenant & Operating-Context Isolation
 
----
+- Browser-supplied tenant, workspace, account, or operating-context identifiers are **requested context**, not authorization proof
+- The backend MUST resolve and validate requested context against trusted token claims, server session, or bounded authoritative projection
+- Switching Principal, Tenant, Workspace, or other authority context MUST invalidate or partition server-state caches and sensitive client state
+- Query/cache keys for tenant-scoped data MUST include the validated context boundary where client caching is used
+- Sensitive cross-context data MUST NOT remain renderable after a context switch
 
-### Token & Session Security
+### 3.3 Authorization in the UI
 
-- **Token Refresh Mutex Queue**: To prevent Refresh Token Rotation (RTR) theft-detection false positives, HTTP interceptors must implement a single-flight mutex lock. Concurrent 401 Unauthorized responses must be queued behind a single refresh network request, and replayed once the new token is acquired.
-- **Epoch Validation**: Frontends must parse the `epc` (epoch) claim in JWTs and gracefully terminate the session if the backend signals a global epoch revocation.
-- **Storage Preference**: Access tokens must prioritize in-memory storage. If persistence is required for cross-tab continuity, it must be restricted to `sessionStorage` (never `localStorage`) and scoped to the tenant.
+- Client-side permission checks are UX and defense-in-depth only
+- Protected backend actions MUST independently authorize the authenticated Principal and validated operating context
+- UI gates MUST fail closed while permission/context state is unresolved
+- The frontend MUST NOT infer business permission solely from route, menu visibility, hidden controls, or untrusted local state
 
----
+### 3.4 Browser Storage
 
-### Authorization & Policy Execution
+- `localStorage` MUST NOT hold access tokens, refresh tokens, passwords, recovery codes, private keys, or equivalent bearer secrets
+- `sessionStorage` MAY hold non-secret ephemeral UI state; storing access tokens requires an explicitly approved direct-browser token profile
+- IndexedDB or other persistent browser storage containing sensitive domain data requires explicit data-classification, encryption/lifecycle, and offline-access justification
+- Preference storage MUST be partitioned where cross-tenant leakage could reveal sensitive context
 
-- **Policy Evaluator Bounds**: Client-side authorization logic must utilize a bounded cache (e.g., LRU Cache) for permission decisions to prevent memory leaks in long-running administrative sessions.
-- **Explicit DENY-First**: The policy engine must evaluate explicit `DENY` rules before checking `ALLOW` grants or roles.
-- **Render-Nothing-While-Loading**: Authorization gate components (e.g., `PermissionGate`) must return `null` while evaluating permissions. Optimistic rendering of protected UI elements is strictly prohibited to prevent authorization state leakage.
+### 3.5 Browser Defenses
 
----
+- Applications MUST deploy a restrictive, application-specific Content Security Policy
+- Clickjacking protection MUST use CSP `frame-ancestors` and/or equivalent approved controls
+- `X-Content-Type-Options: nosniff` and an approved `Referrer-Policy` are required for external web applications
+- Unsafe HTML insertion is prohibited unless content is sanitized by an approved boundary
+- Dependencies and build artifacts MUST pass software-supply-chain security checks
 
-### Network & Resource Management
+### 3.6 Network & Resource Safety
 
-- **Lifecycle Binding**: All outbound HTTP requests must be bound to the lifecycle of the initiating UI component using `AbortController` signals. If a component unmounts, its associated pending network requests must be immediately aborted.
-- **No Hardcoded Timeouts**: Repositories must not use hardcoded `AbortSignal.timeout()`. They must accept and propagate the signal provided by the calling hook or orchestration layer.
-- **Request Deduplication**: The architecture must utilize a request deduplication engine (like React Query) to prevent duplicate identical GET requests during rapid component mounting phases.
-
----
-
-### Browser Defenses
-
-All SPAs must be served with the following hardened HTTP security headers:
-
-- **Content-Security-Policy (CSP)**: `default-src 'none'; script-src 'self'; connect-src 'self' api.scnehaux.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self';`
-- **X-Frame-Options**: `DENY` (prevents Clickjacking).
-- **Referrer-Policy**: `strict-origin-when-cross-origin`.
-- **XSS Prevention**: Direct DOM manipulation and `dangerouslySetInnerHTML` are prohibited unless wrapping a strictly validated Markdown sanitizer (e.g., DOMPurify).
-
----
+- Requests SHOULD support cancellation where stale in-flight work could update invalid UI state
+- Retries MUST be bounded and based on operation semantics, idempotency, and business risk
+- Authentication/session renewal MUST use one coordinated mechanism appropriate to the application's security profile
+- Frontend network code MUST NOT implement a second independent identity/session engine
 
 ## 4. Exceptions
 
-None. All frontend security rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
+Deviations require formal exception approval under GDC-000 with threat model, compensating controls, and explicit ownership.
 
 ## 5. Enforcement Mechanism
 
-- **Linting Rules**: ESLint configurations must prohibit direct, unscoped access to `window.sessionStorage` and `window.localStorage`.
-- **Integration Testing**: E2E testing pipelines (e.g., Playwright) must include explicit "Tenant Isolation" suites that simulate logging into Tenant A, switching to Tenant B, and verifying that no data from Tenant A renders on the screen.
+- ESLint/static checks for prohibited browser credential storage and unsafe DOM usage
+- E2E suites for Principal/Tenant/Workspace switching and cache isolation
+- security-header and CSP tests
+- browser OAuth/BFF profile conformance tests
+- backend authorization tests proving UI controls are non-authoritative

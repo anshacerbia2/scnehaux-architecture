@@ -95,7 +95,7 @@ scnehaux-architecture/
 
 | Metadata Field | Type | Description / Purpose |
 | --- | --- | --- |
-| `id` | String | Unique identifier (e.g., `ADR-IAM-001`). |
+| `id` | String | Unique identifier (e.g., `ADR-IAM-000`). |
 | `title` | String | Descriptive title of the document. |
 | `adr_type` | Enum | The intent of the decision (must match Allowed Types in §2.1). |
 | `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |

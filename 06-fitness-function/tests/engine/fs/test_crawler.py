@@ -1,3 +1,4 @@
+import os
 import pytest
 from unittest.mock import patch
 from engine.fs.crawler import build_metadata_registry, gather_markdown_paths
@@ -97,6 +98,38 @@ def test_gather_markdown_paths_skipped_targets(tmp_path):
         )
 
 
+def test_gather_markdown_paths_allows_parent_of_artifact_root(tmp_path):
+    repo = tmp_path / "repo"
+    designs = repo / "docs" / "designs"
+    api = repo / "docs" / "api"
+    designs.mkdir(parents=True)
+    api.mkdir()
+    expected = designs / "TDD-service-001.md"
+    expected.write_text("# Design")
+    (api / "reference.md").write_text("# Not an architecture artifact")
+
+    files = gather_markdown_paths(
+        str(repo / "docs"),
+        repo_root=str(repo),
+        allowed_root_dirs={os.path.join("docs", "designs")},
+    )
+
+    assert files == [str(expected)]
+
+
+def test_unauthorized_target_keeps_accurate_error(tmp_path):
+    repo = tmp_path / "repo"
+    target = repo / "docs" / "api"
+    target.mkdir(parents=True)
+
+    with pytest.raises(ValueError, match="not in allowed artifact directories"):
+        gather_markdown_paths(
+            str(target),
+            repo_root=str(repo),
+            allowed_root_dirs={os.path.join("docs", "designs")},
+        )
+
+
 def test_gather_markdown_paths_outside_repo(tmp_path):
     """
     Validates boundary enforcement against external path traversal attacks.
@@ -148,4 +181,3 @@ def test_gather_markdown_paths_unallowed_directory_in_tree(tmp_path):
     files = gather_markdown_paths(str(repo), repo_root=str(repo), allowed_root_dirs={"00-governance"})
     assert any("gdc.md" in f for f in files)
     assert not any("extra.md" in f for f in files)
-

@@ -12,7 +12,7 @@ doc_meta:
   last_reviewed: 2026-05-17
 ---
 
-<!-- lint_disable: vague_claim_in_nfr (reason: standard docs) -->
+<!-- lint_disable: ambiguity_rules (reason: standard docs) -->
 
 # Documentation Quality Framework
 
@@ -47,7 +47,7 @@ All architecture documents are evaluated against 10 critical parameters. Each pa
 | **7** | **Trade-Offs & Alternatives** | Radical honesty in engineering. | A comprehensive "Alternatives Considered" section explaining exactly _why_ other patterns were rejected, and detailing the technical debt consciously accepted. | Proposing a "perfect" solution without acknowledging its inherent weaknesses, costs, or maintenance burden. |
 | **8** | **Risk & Graceful Degradation** | Chaos readiness and blast radius containment. | Explicitly maps SPOFs (Single Points of Failure) and details the Graceful Degradation strategy (e.g., "If the caching layer dies, the service returns stale data rather than crashing"). | Designing under the assumption that dependencies (databases, 3rd party APIs, network) will never fail. |
 | **9** | **Lifecycle & Deprecation Strategy** | Safe forward and backward evolution. | Clear deprecation timelines are established. The _Ephemeral TDD Fate Matrix_ is executed (obsolete TDDs are actively archived). | Introducing a v2 API/Schema without a concrete timeline and automated strategy to sunset v1, or leaving stale TDDs rotting in the active directory. |
-| **10** | **Governance & Namespace Hygiene** | Structural integrity for automation. | Files strictly conform to the scalable federated namespace (e.g., `ADR-IAM-001`) to prevent global namespace collisions and enable Policy-as-Code linter parsing. | Arbitrary file naming, missing YAML metadata headers, or bypassing structural templates. |
+| **10** | **Governance & Namespace Hygiene** | Structural integrity for automation. | Files strictly conform to the scalable federated namespace (e.g., `ADR-IAM-000`) to prevent global namespace collisions and enable Policy-as-Code linter parsing. | Arbitrary file naming, missing YAML metadata headers, or bypassing structural templates. |
 
 ### 2.2 Document-Specific Quality Focus & Lifespan Expectancy
 

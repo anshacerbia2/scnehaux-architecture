@@ -138,15 +138,15 @@ def audit_hierarchy_tiers(
 
         # Check TDD
         if doc_id.startswith("TDD-"):
-            parent = meta.get("parent_sad")
-            if parent and not parent.startswith("SAD-"):
-                findings.append(
-                    (
-                        sev,
-                        f"Hierarchy violation: TDD '{doc_id}' must attach to a SAD, but parent_sad is '{parent}'.",
-                        filepath,
+            for parent in _as_list(meta.get("parent_sad")):
+                if not isinstance(parent, str) or not parent.startswith("SAD-"):
+                    findings.append(
+                        (
+                            sev,
+                            f"Hierarchy violation: TDD '{doc_id}' must attach to a SAD, but parent_sad contains '{parent}'.",
+                            filepath,
+                        )
                     )
-                )
 
         # Check SAD
         elif doc_id.startswith("SAD-"):

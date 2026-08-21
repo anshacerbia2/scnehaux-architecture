@@ -15,11 +15,18 @@ graph LR
     PAD-BIZ-001 -.realizes.-> EAD-001
     PAD-PLT-001[PAD-PLT-001]:::pad
     PAD-PLT-001 -.realizes.-> EAD-001
+    PAD-PLT-001 -.realizes.-> EAD-002
+    PAD-PLT-001 -.realizes.-> EAD-003
+    PAD-PLT-001 -.realizes.-> EAD-004
     PAD-PLT-001 -.realizes.-> EAD-005
     PAD-PLT-001 -.realizes.-> EAD-006
     PAD-PLT-002[PAD-PLT-002]:::pad
     PAD-PLT-002 -.realizes.-> EAD-001
+    PAD-PLT-002 -.realizes.-> EAD-002
+    PAD-PLT-002 -.realizes.-> EAD-003
+    PAD-PLT-002 -.realizes.-> EAD-004
     PAD-PLT-002 -.realizes.-> EAD-005
+    PAD-PLT-002 -.realizes.-> EAD-006
     PAD-PLT-003[PAD-PLT-003]:::pad
     PAD-PLT-003 -.realizes.-> EAD-001
     PAD-PLT-003 -.realizes.-> EAD-005
@@ -56,20 +63,22 @@ graph LR
     SAD-008 --> PAD-PLT-009
     SAD-101[SAD-101]:::sad
     SAD-101 --> PAD-BIZ-001
-    SAD-001[SAD-001]:::sad
-    SAD-001 --> PAD-PLT-001
     SAD-002[SAD-002]:::sad
     SAD-002 --> PAD-PLT-001
+    SAD-001[SAD-001]:::sad
+    SAD-001 --> PAD-PLT-001
     SAD-007[SAD-007]:::sad
     SAD-007 --> PAD-PLT-006
     SAD-005[SAD-005]:::sad
     SAD-005 --> PAD-PLT-005
+    SAD-004[SAD-004]:::sad
+    SAD-004 --> PAD-PLT-002
+    SAD-012[SAD-012]:::sad
+    SAD-012 --> PAD-PLT-002
     SAD-003[SAD-003]:::sad
     SAD-003 --> PAD-PLT-003
     SAD-006[SAD-006]:::sad
     SAD-006 --> PAD-PLT-004
-    SAD-004[SAD-004]:::sad
-    SAD-004 --> PAD-PLT-002
     classDef ead fill:#059669,stroke:#047857,color:#fff
     classDef pad fill:#2563eb,stroke:#1d4ed8,color:#fff
     classDef sad fill:#7c3aed,stroke:#6d28d9,color:#fff

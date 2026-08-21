@@ -121,7 +121,7 @@ A column added to a shared table and a change to the function that queries it ar
 ### Related Standards
 
 - [Enterprise Data Architecture Strategy (EAD-003)](../../01-enterprise/EAD-003-enterprise-data-ownership-and-topology.md)
-- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
+- [Scnehaux Identity Runtime (SAD-001)](../../04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md)
 
 ### Compliance Status
 
