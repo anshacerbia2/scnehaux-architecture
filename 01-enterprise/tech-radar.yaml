@@ -44,6 +44,27 @@ technology_radar:
       owner: Identity Platform Team
       rationale_adr: ADR-IAM-001
 
+    # The three entries below carry no new runtime into the portfolio; each is the
+    # implementation of a decision already accepted, and a radar that omits an adopted
+    # technology cannot answer what the estate runs.
+    - name: kafka
+      category: event-broker
+      date_adopted: "2026-08-21"
+      owner: Platform Engineering
+      rationale_adr: ADR-GLB-003
+
+    - name: atlas
+      category: schema-migration
+      date_adopted: "2026-08-21"
+      owner: Platform Engineering
+      rationale_adr: ADR-GLB-004
+
+    - name: opentelemetry
+      category: observability
+      date_adopted: "2026-08-21"
+      owner: Platform Engineering
+      rationale_std: STD-GLB-003
+
   trial:
     - name: rust
       category: systems-language

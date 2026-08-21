@@ -199,6 +199,31 @@ The existing Go IAM SHALL enter containment and migration mode:
 - migrate consumers and data through a governed dual-run/cutover plan;
 - retire the custom protocol engine after acceptance evidence and rollback criteria are met.
 
+### 5.10 Credential Containment and the Sole Administration Credential
+
+The Keycloak administration credential SHALL exist in the Identity Control Service and nowhere else in the estate. It SHALL be scoped to the narrowest role set permitting its operations — user creation, attribute write, user search, enable and disable, context projection, session enumeration and removal, client management, and credential rotation — and SHALL carry no realm administration and no credential-read authority.
+
+Every enterprise identity operation SHALL transit the Identity Control API rather than the kernel directly, because that is where enterprise authorization, canonical identifier resolution, last-authenticator guards, idempotency, reason capture, and evidence publication live. A caller reaching the kernel directly bypasses all six.
+
+`ADR-ORG-001` makes the prohibition structural for the Organization authority by giving it neither the credential nor a network route to the kernel.
+
+**Clarifying §5.5.** The prohibition on a second Go-owned Principal database bars a second credential store, authenticator store, or session store. It does not bar the Control Database, which holds the canonical `principal_id`, its uniqueness invariant, the binding to a kernel user, and the payload needed to reconstruct an interrupted creation. That table holds no credential, no authenticator, and no session, and the kernel remains the physical system of record for all three. Recorded because the clause as written reads as forbidding the mapping table that `TDD-identity-control-001` specifies.
+
+### 5.11 The First Principal Is Created by an Evidenced Ceremony
+
+§5.10 makes the Identity Control API the sole path to an enterprise identity operation, and `TDD-identity-control-001` closes every other Principal creation path by realm configuration. Both are correct, and together they leave a realm with no way to reach its first Principal: the API requires a caller holding a `principal_id`, and only the API issues one. The cycle has no entry point, and this was found by standing the service up rather than by reading it.
+
+**The entry point is a single-use ceremony performed by the Identity Control Service itself.** It is a command on the deployable, not an endpoint, and it satisfies four requirements:
+
+1. **It can succeed at most once per Control Database, enforced by the database.** The ceremony claims a row whose primary key admits exactly one value. Two concurrent ceremonies produce one Principal, and a second ceremony after the first is refused by a constraint rather than by a check the code could be rewritten to skip.
+2. **It refuses to run against a populated registry.** Emptiness of `principal_mapping` is asserted in the claiming transaction, so the ceremony cannot be used later to insert a Principal into a running estate.
+3. **It names the human who ran it and why, and that record is immutable.** The evidence row is insert-only: the runtime role holds no `UPDATE` and no `DELETE` on it. A retry reuses the recorded operator and reason rather than supplying new ones, so the second attempt cannot rewrite who is on record.
+4. **It creates the Principal through the ordinary path.** The ceremony calls the same provisioning sequence the API calls, under an idempotency key stored in the evidence row, so a crash mid-ceremony recovers rather than producing a second Principal, and the identifier is issued by the authority that owns it.
+
+The ceremony holds no credential. It creates the kernel user with a mandatory credential-setting action, so the first human interaction establishes the credential and the ceremony never handles one.
+
+**This is an entry point, not an exception.** No standing capability is created, nothing is exempted from authorization afterwards, and the ordinary path is unchanged. An out-of-band `INSERT` into `principal_mapping` remains prohibited, and `ADR-ORG-001` is why: an identifier that entered the canonical registry without a recorded decision is indistinguishable from one an attacker placed there.
+
 ## 6. Consequences
 
 ### Positive
@@ -275,3 +300,11 @@ None at proposal time. Any preview feature, unsupported extension, or deviation 
 **Benefits:** reduced infrastructure operation, support, rapid capability availability.
 
 **Rejected for the current phase because:** cost, data/control requirements, product lock-in, and enterprise integration strategy have not been justified. This remains a future option if operational capacity becomes the dominant constraint.
+
+### Alternative E — A Standing Break-Glass Identity for the First Principal
+
+Provision a reserved identity with the realm, holding a fixed `principal_id`, and use it to create the first real operator. This was the first candidate considered for §5.11.
+
+- **Pros**: needs no new code — the ordinary API creates the first Principal like any other, and `SAD-001` already establishes an evidenced break-glass posture for the Admin Console, so the concept is not new to the estate.
+- **Cons**: it creates a credential that can create Principals *forever*, which is a permanent standing authority in exchange for solving a problem that occurs once. Its `principal_id` is in no registry, so every downstream consumer must tolerate an identifier the authority cannot resolve. And because it must exist before the service does, it can only be placed by the out-of-band write this architecture prohibits — the problem is relocated, not solved.
+- **Why Rejected**: a one-time problem does not justify a standing capability. The console break-glass in `SAD-001` is not a precedent for this: it is time-bounded, group-scoped, and evidenced per session, and it operates on the kernel rather than minting canonical identifiers. §5.11 keeps the property that matters — a legitimate entry point — while the capability expires by construction after one use.

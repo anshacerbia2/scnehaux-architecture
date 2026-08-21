@@ -1,4 +1,4 @@
-﻿---
+---
 doc_meta:
   id: ADR-IAM-002
   title: ADR-IAM-002 Token Signing Algorithm and Key Lifecycle Management
@@ -132,9 +132,9 @@ copy(sigBytes[64-len(sBytes):64], sBytes)
 
 ### Related Standards
 
-- [Identity Platform Domain Strategy (PAD-PLT-001)](../../03-domain/PAD-PLT-001-identity-platform/PAD-PLT-001-identity-platform.pad.md)
-- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-iam.sad.md)
-- [ADR-IAM-001 (Adopt the Keycloak Identity Kernel)](ADR-IAM-001-keycloak-identity-kernel.md) - The kernel holds the signing keys this lifecycle governs.
+- [Identity Platform Domain Strategy (PAD-PLT-001)](../../03-domain/PAD-PLT-001-identity-access-platform/PAD-PLT-001-identity-access-platform.pad.md)
+- [Scnehaux IAM System Architecture Document (SAD-001)](../../04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md)
+- [ADR-IAM-001 (Adopt the Keycloak Identity Kernel)](ADR-IAM-001-adopt-keycloak-identity-kernel.md) - The kernel holds the signing keys this lifecycle governs.
 
 ### Compliance Status
 

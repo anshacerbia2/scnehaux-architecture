@@ -476,6 +476,10 @@ Keycloak owns authentication ceremonies and authenticator verification. The Cont
 - Product domains authorize business actions.
 - Admin Console access is restricted and not the ordinary enterprise administration interface.
 
+**The bootstrap ceremony is the one entry point, and it is not an exception to the above.** The Identity Control API requires a caller holding a `principal_id` and is the only path that issues one, so a fresh Realm cannot reach its first Principal. `ADR-IAM-001 §5.11` gives that entry point to a single-use command on the Identity Control Service itself: it can succeed at most once per Control Database, refuses a populated registry, records the human who ran it in a row the runtime role cannot modify, and creates the Principal through the ordinary provisioning path. It holds no credential — the kernel is told to demand one on first authentication.
+
+This is distinct from restricted Admin Console access. That path operates on the kernel and is bounded by who may reach it; the ceremony mints a canonical identifier and is bounded by construction, expiring after one use.
+
 ### 7.3 Encryption and Secrets
 
 - TLS protects all external and internal network paths carrying identity data.
