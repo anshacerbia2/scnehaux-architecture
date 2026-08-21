@@ -6,7 +6,7 @@ doc_meta:
   status: accepted
   created: 2026-01-01
   created_date: 2026-01-01
-  last_updated: 2026-08-12
+  last_updated: 2026-08-22
   created_by: Enterprise Architect
 ---
 
@@ -24,6 +24,7 @@ Mandating PostgreSQL Row-Level Security (RLS) as the Primary Multi-Tenant Isolat
 | ---------- | ----------------- | ------------ | ------------------------------ | ---------------------- |
 | 2026-05-01 | accepted          | foundational | Architecture Review Board      | Enterprise Architect   |
 | 2026-08-12 | accepted, amended | foundational | Architecture, Security, Data   | Architecture Authority |
+| 2026-08-22 | accepted, amended | foundational | Architecture, Security, Data   | Architecture Authority |
 
 ### Amendment Record
 
@@ -34,6 +35,12 @@ The original decision applied to "all relational databases inside the Scnehaux p
 More seriously, the original decision mandated RLS without the controls that make it effective. `FORCE ROW LEVEL SECURITY` was never required, and the runtime role was never prohibited from owning the protected tables. PostgreSQL does not apply row-level policies to a table's owner unless `FORCE` is set, so an implementation that satisfied this ADR completely could enable RLS and have it apply to nothing. Section 5 now carries the full mechanism, and the audit method in Section 6 is corrected: it previously verified only that RLS had been enabled, which returns a passing result for an inert control.
 
 This decision is amended rather than superseded because its direction is unchanged: database-enforced tenant isolation remains the default defense in depth. Only its breadth and the completeness of its mechanism are corrected. Sections 3, 4, and the Negative and Tradeoffs consequences are retained as the original reasoning of record.
+
+**2026-08-22 — the migration shape in Section 6 did not satisfy Section 5.** Three defects, found while implementing `TDD-organization-control-001` against it.
+
+The example policy carried `USING` alone, so reads were isolated and `INSERT` and `UPDATE` were not: a bound caller could write a row into another Tenant. It read the binding with `missing_ok = true` behind `NULLIF`, which is the silent-failure mode the Positive consequence had mistakenly recorded as a benefit. And it named a session setting, `app.current_tenant`, that exists in no implementation — `foundation-platform` ships `app.tenant_id` in its schema and both its designs use it.
+
+Section 5.2 now requires `WITH CHECK` and `missing_ok = false` explicitly, names both settings, and states why a provider path uses a second role rather than `BYPASSRLS`. Section 6 carries a shape that satisfies Section 5, which the previous one did not.
 
 ## 3. Context
 
@@ -68,7 +75,11 @@ Where RLS is used, **all** of the following are required. Enabling policies with
 - **Schema migration executes under a role distinct from the runtime role**, and the runtime role holds no DDL privilege.
 - Tenant context is bound through a **trusted server-side path** at the start of each transaction, derived from validated identity and membership rather than from client input.
 - Tenant-scoped tables carry an index on the tenant discriminator.
+- **Every policy carries `WITH CHECK` mirroring its `USING` clause.** A policy with `USING` alone restricts reads and leaves `INSERT` and `UPDATE` open, so a tenant-scoped caller can write a row into another Tenant. It is a quiet defect: reads look correctly isolated while writes are not.
+- **The tenant binding is read with `missing_ok = false`.** An unset binding MUST raise rather than evaluate to `NULL`. A `NULL` predicate is false, so an unbound connection returns zero rows — and an empty result is routinely read as "no data" rather than as a failed control.
 - **Isolation tests execute as the actual runtime role** and prove cross-tenant denial. A test executed on an administrative or owning connection is not isolation evidence.
+
+The session settings are `app.tenant_id` for a tenant-scoped transaction and `app.provider_scope` for a deliberately cross-Tenant provider transaction. A provider path uses its own role and its own policy reading `app.provider_scope`, never `BYPASSRLS`: a cross-tenant read must remain attributable at the connection level, and a role holding `BYPASSRLS` is indistinguishable in the catalog from one that never needed it.
 
 ### 5.3 Verification
 
@@ -78,13 +89,15 @@ Compliance is verified by reading `pg_class.relforcerowsecurity` in addition to 
 
 ### Positive
 
-- **Hardened Security Boundary**: Prevents cross-tenant data leaks at the engine level. An empty or null tenant context evaluates to false and returns zero rows, provided the policy applies to the connecting role under §5.2.
+- **Hardened Security Boundary**: Prevents cross-tenant data leaks at the engine level, provided the policy applies to the connecting role under §5.2.
+
+  An earlier revision of this bullet named "an empty or null tenant context evaluates to false and returns zero rows" as the benefit. It is the opposite: a control that fails by returning an empty result presents as ordinary absence of data, and an operator reading an empty page has nothing to investigate. §5.2 therefore requires `missing_ok = false`, so an unbound connection raises and the failure is visible.
 - **Second Line of Defence**: An accidental omission of a tenant predicate does not by itself expose data. This does not remove the obligation to authorize in the application; a system that relies on RLS as its only tenant control has one mechanism, not two.
 - **Verifiable Compliance**: Auditable for SOC 2 and ISO 27001 through the catalog query in §5.3, which reads forced status and effective role privilege rather than the enable flag alone.
 
 ### Negative
 
-- **Dynamic Connection Binding**: Requires connection pools to set the active context via `SET LOCAL app.current_tenant = '...'` before every transaction, introducing a minor query overhead.
+- **Dynamic Connection Binding**: Requires every transaction to bind its scope with `SET LOCAL app.tenant_id = '...'` before its first statement, introducing a minor query overhead. `SET LOCAL` rather than `SET`: it reverts at commit or rollback, so a pooled connection cannot carry one request's Tenant into the next.
 - **Bypass Requirements**: Schema migrations and administrative operations require specialized database credentials to bypass RLS policies securely.
 
 ### Tradeoffs
@@ -111,10 +124,24 @@ The migration shape required by §5.2 is:
 
 ```sql
 ALTER TABLE <schema>.<table> ENABLE ROW LEVEL SECURITY;
-ALTER TABLE <schema>.<table> FORCE ROW LEVEL SECURITY;
+ALTER TABLE <schema>.<table> FORCE  ROW LEVEL SECURITY;
 
-CREATE POLICY tenant_isolation ON <schema>.<table>
-  USING (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
+-- Tenant-scoped. WITH CHECK mirrors USING so a bound caller cannot write into another
+-- Tenant, and missing_ok = false makes an unbound connection raise instead of reading empty.
+CREATE POLICY <table>_tenant_scope ON <schema>.<table>
+    FOR ALL
+    TO <runtime_role>
+    USING      (tenant_id = current_setting('app.tenant_id', false)::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id', false)::uuid);
+
+-- Provider-scoped, where a deliberately cross-Tenant path exists. A separate role and a
+-- session setting rather than BYPASSRLS, so the access stays attributable and still fails
+-- closed when unbound.
+CREATE POLICY <table>_provider_scope ON <schema>.<table>
+    FOR ALL
+    TO <provider_role>
+    USING      (current_setting('app.provider_scope', false)::boolean)
+    WITH CHECK (current_setting('app.provider_scope', false)::boolean);
 ```
 
 ## 7. Compliance Impact
