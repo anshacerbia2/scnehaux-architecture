@@ -15,21 +15,8 @@ on:
         type: string
 
 jobs:
-  # TEMPORARILY DISABLED.
-  #
-  # Two parallel rewrites of the governance layer diverged from 928014f, and merging them
-  # produces a tree with two ADR-IAM-001 and two ADR-ORG-001 documents plus two directory
-  # conventions. Every downstream repository calls this workflow at @main, so leaving
-  # enforcement on would fail seven repositories for a state nobody has decided yet.
-  #
-  # Disabled here rather than in each caller: one switch, and the seven `architecture.yml`
-  # files stay correct so re-enabling is deleting this condition rather than editing seven
-  # repositories back.
-  #
-  # RE-ENABLE by removing the `if: false` below, once the duplicate identifiers are resolved.
   lint-architecture:
     name: "Enforce GDC Compliance"
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Downstream Repository

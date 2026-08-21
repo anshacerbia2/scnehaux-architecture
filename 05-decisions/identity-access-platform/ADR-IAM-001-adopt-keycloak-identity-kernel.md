@@ -152,6 +152,26 @@ Product permissions such as refund, payroll approval, quality override, rate-car
 
 Keycloak Authorization Services SHALL NOT become the universal enterprise PDP without a replacement architecture decision.
 
+**A provider scope is an Organization grant projected into the kernel, never a kernel-owned authority.**
+
+`STD-IAM-002 §3.1.1` requires a provider-scope token to carry a `provider_scope` claim naming a bounded provider authority. The claim is permitted here as "a claim required by an approved consumer contract", and the authority behind it is not this platform's to create: `PAD-PLT-002 §3.1` places provider cross-tenant scope in the Tenancy Administration context, and `ADR-ORG-001 §5.1` makes organization-administrative roles the Organization Platform's sole authority.
+
+The grant therefore travels the path `ADR-ORG-001 §5.4` already fixes for Membership:
+
+```text
+Organization authoritative grant
+    → canonical event / snapshot
+    → Scnehaux Identity Control Service
+    → supported Keycloak Admin API
+    → Keycloak-local attribute, projected into the claim
+```
+
+Granting a provider scope by writing the kernel attribute directly is prohibited, for the same reason a direct Membership write is: it would make the kernel a second authority for a fact Organization owns, and `PAD-PLT-002 §3.3` invariant 22 requires cross-tenant administration to carry explicit scope, elevated assurance, and evidence — none of which a kernel attribute records.
+
+**The bootstrap ceremony is the one exception, and it is bounded by its own record.** §5.11 creates the first Principal before any Organization authority can exist, and a first Principal holding no provider scope could call nothing: the ceremony would produce an identity that cannot reach the API that issues every later one. The ceremony therefore grants exactly one provider scope to exactly one Principal, recorded in the same immutable row that names the operator and the reason. Every grant after it is Organization's.
+
+Recording this rather than deciding it later matters because the alternative was already in the working harness: a script setting the attribute directly, which is indistinguishable from the prohibited path once it is normal.
+
 ### 5.7 Extension Policy
 
 Preferred mechanisms:
