@@ -1,290 +1,186 @@
 ---
 doc_meta:
   id: PAD-PLT-009
-  title: Enterprise Document Platform
-  owner: Document Team
-  version: 1.0.0
+  title: Enterprise Artifact & Document Platform
+  owner: Artifact Platform Team
+  version: 2.0.0
   status: approved
   classification: restricted
   governed_by:
     - GDC-008
+    - EAD-001
+    - EAD-003
+    - EAD-005
   realizes_capability:
     - EAD-001
+    - EAD-003
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-07-06
+  last_reviewed: 2026-08-23
   fulfilled_by:
     - SAD-008
 ---
 
-# Enterprise Document Platform
-
----
+# Enterprise Artifact & Document Platform
 
 ## 1. Purpose & Scope
 
-The Document Platform provides centralized document and file lifecycle management capabilities for the entire enterprise. It governs file and blob storage, lifecycle management, rendering, versioning, metadata management, and file services (OCR, conversion, thumbnails) while remaining independent of business ownership. Published business content is owned by CMS and is outside this platform's boundary.
+The Artifact & Document Platform provides reusable lifecycle management for governed files, documents, media, spreadsheets, generated outputs, and other immutable/versioned digital artifacts.
 
-Business domains own document meaning and business context, whereas the Document Platform owns the file and blob lifecycle and file services.
+It owns artifact content/version/lifecycle mechanics. Product domains own business meaning, business acceptance, and domain retention obligations.
 
-### 1.1. Out of Scope
+### 1.1 Out Of Scope
 
-- Business document ownership.
-- Business approval workflows.
-- Authentication and authorization.
-- Business record management.
-- Business retention policies.
-- Notification delivery.
-- Business search.
-- Business process orchestration.
-
----
+- Product business record/meaning
+- Product approval/workflow
+- knowledge truth or retrieval indexes
+- enterprise evidence authority
+- Product authorization semantics
+- generic object-store technology selection
+- notification delivery
+- AI inference
+- Product-specific document templates/business schemas unless explicitly registered as Product-owned artifacts
 
 ## 2. Enterprise Traceability
 
-```mermaid
-graph TD
-    subgraph Platform["Platform Plane"]
-        NOT[Notification Platform]
-        AUD[Audit Platform]
-        INT[Integration Platform]
-        AIP[AI Platform]
-        IDP[Identity Platform]
-        EDP[Enterprise Document Platform]
-    end
+### 2.1 Realizes
 
-    subgraph Business["Business Plane"]
-        PM[Project Management]
-        CMS[CMS]
-        CRM[CRM]
-        ERP[ERP]
-        PRC[Procurement]
-        LMS[LMS]
-        HCM[HCM]
-        ITSM[ITSM]
-    end
+- EAD-001 Artifact / Document enabling capability
+- EAD-003 artifact/provenance lifecycle
+- EAD-005 shared storage/content-service posture
 
-    EDP -->|SRD: external doc services egress| INT
-    EDP -. AEP: document audit events .-> AUD
-    EDP -. PCC: local Identity token validation .-> IDP
+### 2.2 Relationships
 
-    NOT -->|SRD: attachment retrieval| EDP
-    AIP -->|SRD: knowledge retrieval| EDP
-    HCM -->|SRD: document read| EDP
-    ERP -->|SRD: document read| EDP
-    CRM -->|SRD: document read| EDP
-    PRC -->|SRD: document read| EDP
-    PM -->|SRD: document read| EDP
-    ITSM -->|SRD: document read| EDP
-    CMS -->|SRD: document read| EDP
-    LMS -->|SRD: document read| EDP
+- **Products** own artifact business meaning and accepted references
+- **Knowledge & Retrieval** ingests governed immutable artifact versions as sources
+- **AI Enablement** may read/produce content but accepted output is registered through Artifact contracts
+- **Notification** consumes immutable attachment references
+- **Workflow / Work Management** reference artifact versions without owning binary lifecycle
+- **Audit & Evidence** stores evidence references/records separately
+- **Trust/Security** govern content protection and keys
 
-    style EDP fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
-    style INT fill:#2b6cb0,stroke:#63b3ed,color:#fff
-```
+### 2.3 Consumed By
 
-The Document Platform owns the enterprise file and blob lifecycle: consumers call it synchronously to read documents, while it validates Identity-issued tokens locally and publishes its own lifecycle and audit events.
-
-### 2.1. Realizes
-
-- EAD-001 Enterprise Capability & Domain Map — the document and file lifecycle capability (storage, versioning, rendering).
-- EAD-005 Enterprise Platform Architecture — the substrate it operates on.
-
-### 2.2. Relationships
-
-- **Synchronous Dependencies (SRD):** Integration Platform — external document services are reached through the Integration ACL egress.
-- **Publishes Events (AEP):** document lifecycle events and document audit events (e.g. `DocumentUploaded`, `VersionCreated`, `DocumentArchived`) to the Event Broker; document audit events are consumed by the Audit Platform.
-- **Subscribes To Events (AES):** none on the critical path.
-- **Consumes Platform Capabilities (PCC):** validates Identity-issued tokens **locally** for ownership and access identity; it does not call Identity at runtime.
-
-### 2.3. Consumed By
-
-Business Products and Platform Services consume the Document Platform synchronously (SRD reads): every Business Product (HCM, ERP, CRM, Procurement, Project Management, ITSM, CMS, LMS) reads documents; the Notification Platform reads documents for attachment retrieval; and the AI Platform reads documents for knowledge retrieval.
-
----
+Travel, HCM, future ERP, Notification, Knowledge & Retrieval, AI, Workflow, Work Management, and other Products handling governed files/media/generated artifacts.
 
 ## 3. Domain & Context Model
 
-The Document Platform is decomposed into multiple independent bounded contexts.
+### 3.1 Bounded Context
 
-### 3.1. Bounded Context
+- Artifact Registry
+- Binary / Text Content Lifecycle
+- Artifact Versioning
+- Metadata
+- Checksum / Integrity
+- Provenance
+- Upload / Download
+- Rendering / Preview
+- Conversion
+- OCR / Extraction Service
+- Malware / Content Scan
+- Archive
+- Retention Enforcement
+- Artifact Reference
 
-- Document Lifecycle
-- Document Storage
-- Document Versioning
-- Content Rendering
-- Metadata Management
-- Document Conversion
-- Digital Signature
-- Content Protection
-- Archive Management
-- Document Governance
+### 3.2 Ubiquitous Language
 
-### 3.2. Ubiquitous Language
+| Term | Meaning |
+| :-- | :-- |
+| Artifact | Governed digital content unit independent of business meaning |
+| Artifact Version | Immutable revision/reference of Artifact content and metadata |
+| Content | Binary/textual/media payload |
+| Checksum | Integrity identity for content |
+| Provenance | Traceable source/producer/transformation lineage |
+| Derivative | Generated representation linked to a source version |
+| Artifact Reference | Stable opaque reference consumed by another domain |
+| Retention Instruction | Governed lifecycle instruction originating from policy/Product authority |
+| Archive | Preserved lifecycle state under retention/access controls |
 
-| Term              | Description                                                 |
-| ----------------- | ----------------------------------------------------------- |
-| Document          | Managed digital content owned by a business domain.         |
-| Document Version  | Immutable revision of a document.                           |
-| Content           | Binary or textual representation of a document.             |
-| Metadata          | Descriptive information associated with a document.         |
-| Archive           | Long-term preserved document.                               |
-| Retention         | Lifecycle policy controlling document preservation.         |
-| Rendering         | Generation of viewable representations.                     |
-| Conversion        | Transformation between document formats.                    |
-| Watermark         | Visual ownership indicator applied to a document.           |
-| Digital Signature | Cryptographic proof of document integrity and authenticity. |
+### 3.3 Domain Policies
 
-### 3.3. Domain Policies
-
-- Business domains own document meaning.
-- The Document Platform owns document lifecycle.
-- Every document is versioned.
-- Documents are immutable once published.
-- Binary content and metadata are managed independently.
-- Document retention follows enterprise governance.
-- Every document operation is auditable.
-- Content services remain independent from storage technology.
-
----
+- published/accepted Artifact Versions are immutable
+- Product meaning remains Product-owned
+- checksum/provenance accompany governed versions
+- derived conversion/rendering/OCR artifacts preserve source lineage
+- retention semantics originate from Product/governance; Platform enforces declared policy
+- malware/content scan state is explicit
+- binary content and business metadata are minimized/separated
+- consumers reference versions rather than directly reading storage internals
 
 ## 4. Integration Contracts
 
-### 4.1. Integration Provided
+### 4.1 Integration Provided
 
-The Document Platform provides:
+- artifact registration/upload/download
+- immutable version creation
+- metadata/checksum/provenance
+- rendering/preview
+- conversion
+- OCR/extraction service
+- malware/content scan
+- derivative linking
+- archive/retention enforcement
+- artifact lifecycle events
+- signed/bounded retrieval/reference contracts
 
-- Document Storage
-- Document Upload
-- Document Download
-- Document Versioning
-- Metadata Management
-- Content Rendering
-- Thumbnail Generation
-- Document Conversion
-- OCR Processing
-- Watermarking
-- Digital Signature
-- Virus Scanning
-- Archive Management
-- Retention Management
-- Document Events
+### 4.2 Integration Consumed
 
-### 4.2. Integration Consumed
-
-The Document Platform consumes:
-
-- Integration Platform (Synchronous Runtime Dependency) for external document services, mediated through the ACL.
-
-It validates Identity-issued tokens **locally** for ownership and access identity (a platform capability consumed via local validation, not a runtime call). It **publishes** document lifecycle and audit events to the Event Broker, which the Audit Platform consumes for immutable audit records.
-
-Implementation technologies and storage infrastructure are defined by the realizing SAD.
-
----
+- Identity / Organization / Product authorization context
+- Trust Services
+- optional Integration for external content services
+- Audit & Evidence
+- Event & Messaging
+- Observability
 
 ## 5. Trust & Data Boundaries
 
-### 5.1. Trust Boundary
+### 5.1 Trust Boundary
 
-The Document Platform governs enterprise document lifecycle but never owns business meaning.
+Artifact Platform is authoritative for artifact binary/text content lifecycle, versions, checksums, provenance, derivatives, and platform retention state.
 
-Business domains remain authoritative for every document's business context and lifecycle decisions.
+It is not authoritative for Product business meaning or Enterprise Evidence truth.
 
-### 5.2. Identity Access
+### 5.2 Identity Access
 
-Authentication and enterprise identity are delegated to the Identity Platform.
+- upload/read/version/archive operations require caller and Product/Tenant scope
+- Product authorization determines business access where Product semantics are involved
+- signed download/access capability is bounded and expiring where used
+- privileged retention/legal-hold operations are evidenced
 
-The Document Platform governs:
+### 5.3 Data Classification
 
-- Document ownership metadata
-- Content integrity
-- Version integrity
-- Retention enforcement
-- Archive governance
+May contain public through restricted/regulated content according to Product classification.
 
-Business domains govern business-level access policies.
-
-### 5.3. Data Classification
-
-The platform manages:
-
-- Binary Content
-- Document Metadata
-- Version Metadata
-- Archive Metadata
-- Rendering Metadata
-- Conversion Metadata
-- Signature Metadata
-- Retention Metadata
-
-The platform does not own:
-
-- Business Transactions
-- Employee Records
-- Financial Records
-- Customer Records
-- Product-specific business entities
-
----
+Metadata/logging must minimize sensitive content. Encryption/residency/retention apply to content, derivatives, backups, and support access.
 
 ## 6. Capability NFR
 
-### 6.1. Reliability & Availability
-
-- Enterprise-grade document availability.
-- Durable document preservation.
-- No document loss during lifecycle operations.
-
-### 6.2. Performance & Scalability
-
-- Horizontally scalable document services.
-- Efficient handling of large binary objects.
-- High-throughput upload and retrieval.
-
-### 6.3. Security & Compliance
-
-- Document integrity protection.
-- Secure content storage.
-- Enterprise retention compliance.
-- Regulatory document governance.
-
-### 6.4. Auditability
-
-Every document lifecycle event shall be traceable, including:
-
-- Upload
-- Download
-- Version creation
-- Metadata modification
-- Conversion
-- Rendering
-- Signature
-- Watermarking
-- Archive
-- Retention
-- Deletion
-
----
+- **Availability:** mature service >=99.95% for artifact metadata/reference/read control path
+- **Durability:** accepted Artifact Versions shall not be silently lost; durability target is declared by storage profile
+- **RTO:** <=1h for C1 artifact services
+- **RPO:** <=15m for metadata; immutable content durability profile may require stronger target
+- **Integrity:** checksum validation for stored/retrieved versions
+- **Scalability:** large-content transfer is decoupled from control-plane saturation; bounded quotas per Tenant/Product
+- **Security:** malware scan and content-policy states are explicit before Product-defined publish/use
+- **Audit:** lifecycle, privileged retention, legal-hold, access/export admin operations traceable
+- **Interoperability:** consumer references do not expose storage vendor topology
+- **Cost Target:** storage/egress/processing attributable by Product/Tenant/artifact class
 
 ## 7. Ownership & Governance
 
-### 7.1. Team Ownership
+### 7.1 Team Ownership
 
-The Document Platform Team owns platform document and file lifecycle management capabilities and file services (OCR, rendering, conversion).
+Artifact Platform Team owns artifact lifecycle mechanics and file/media processing services.
 
-The Document storage services must comply with enterprise residency requirements.
+Products own business meaning/acceptance. Governance defines retention/evidence obligations. Knowledge owns knowledge representation.
 
-The Architecture Authority governs enterprise document standards and lifecycle policies.
+### 7.2 Realizing Systems
 
-### 7.2. Realizing Systems
+- SAD-008 Artifact & Document Platform
 
-- SAD-008 Enterprise Document Platform
+### 7.3 Governance Rules
 
-### 7.3. Governance Rules
-
-- Business domains shall never implement independent document storage.
-- Every enterprise document shall be managed through the Document Platform.
-- Document versions are immutable.
-- Binary storage technology shall remain replaceable without affecting business domains.
-- Breaking document contracts require Architecture Authority approval.
+- Artifact storage SHALL NOT become Product record authority
+- Knowledge ingestion SHALL preserve immutable source/version provenance
+- Audit evidence and artifact content SHALL remain distinct authorities

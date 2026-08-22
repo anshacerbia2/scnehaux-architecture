@@ -3,58 +3,73 @@ doc_meta:
   id: EAD-005
   title: Enterprise Platform Architecture
   owner: Architecture Authority
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
   created_date: 2026-08-06
-  last_reviewed: 2026-08-10
+  last_reviewed: 2026-08-23
 ---
 
 # Enterprise Platform Architecture
 
 ## 1. Purpose
 
-Define the enterprise platform strategy for the **Scnehaux Enterprise Cloud**, including the five Platform Plane capability groups and the runtime, delivery, reliability, operational, and technology posture used to realize them.
+Define how reusable Platform capabilities are grouped, qualified, product-managed, realized, operated, and evolved across the **Scnehaux Enterprise Cloud**.
 
-**Decision question:** _How are reusable platform capabilities grouped, and what paved road, technology posture, runtime model, reliability classes, and operational principles govern how they are realized?_
-
-EAD-005 is the sole EAD permitted to define the enterprise technology portfolio at macro level. It does not define application containers, exact infrastructure topology, library versions, pipeline steps, or system-specific production runbooks.
+**Decision question:** _Which reusable responsibilities belong in the Platform Plane, when should they become shared Platform Products, and what platform/runtime posture minimizes total system complexity?_
 
 ## 2. Scope
 
-**In scope:**
+**In scope**
 
-- Platform Plane capability grouping at macro level.
-- Platform-as-product and internal developer platform direction.
-- Engineering-platform and runtime topology.
-- Enterprise technology and runtime portfolio.
-- Workload and tenant-deployment profiles at macro level.
-- Reliability, resilience, observability, operational, and FinOps strategy.
-- Environment, artifact, and delivery principles.
+- Five Platform Plane concern families
+- Platform qualification and Platform-as-a-Product doctrine
+- Workspace Experience, Work Management, Rules, Knowledge & Retrieval, AI, Artifact, Scheduling, and Background Job capability posture
+- Runtime/workload profiles
+- Technology portfolio at macro level
+- Reliability, observability, resilience, capacity, and FinOps direction
 
-**Out of scope:**
+**Out of scope**
 
-- Detailed business-domain or platform-capability design — PADs.
-- System/container topology — SADs.
-- Detailed CI/CD pipeline, infrastructure code, and deployment manifests — SADs/TDDs.
-- Exact library/framework versions — standards and technology lifecycle artifacts.
-- System-specific SLOs, scaling, and recovery procedures — PADs/SADs.
-- Security policy detail — EAD-006 and standards.
-
-This document binds every reusable platform capability and system within the Scnehaux Enterprise Cloud at the macro platform-strategy level.
+- Product-specific business semantics
+- System/container topology
+- Concrete graph/vector/model/provider technology choice
+- Exact framework/library versions
+- Product-specific SLO/runbook
+- Detailed security policy
 
 ## 3. Enterprise Context
 
-ATI must deliver urgent platform foundations without adopting prestige architecture or premature distributed-system complexity. The enterprise therefore uses the **simplest sufficient runtime**, managed commodity services where appropriate, and explicit extraction criteria for independent platforms and services.
+Platform architecture exists to reduce total enterprise complexity and repeated friction while preserving clear authority.
 
-Platform architecture serves both:
+The enterprise deliberately avoids both extremes:
 
-- current internal and managed-service delivery; and
-- future multi-product, multi-tenant, and selective SaaS growth.
+```text
+top-down platform catalog without demand
+and
+duplicate foundational capability everywhere until extraction hurts
+```
 
-Target reliability, current service objectives, and external commercial commitments remain separate concepts.
+Platform discovery is dual-directional:
+
+```text
+Enterprise structural / constitutional need
+              +
+Product friction / repeated machinery / runtime evidence
+              ↓
+Capability candidate
+              ↓
+Authority boundary
+              ↓
+Platform qualification
+              ↓
+Platform Product
+              ↓
+Adoption / runtime evidence / feedback
+              ↺
+```
 
 ## 4. Architectural Drivers & Lessons
 
@@ -62,23 +77,23 @@ Target reliability, current service objectives, and external commercial commitme
 
 | ID | Driver | Platform Consequence |
 | :-- | :-- | :-- |
-| D1 | Rapid delivery with limited platform capacity | Managed services and modular realizations are preferred initially |
-| D2 | Multiple product teams need consistent foundations | Paved roads, software catalog, UI platform, and reusable delivery capabilities |
-| D3 | Identity and tenancy are trust-critical | Reliability and recovery are defined by business journey and criticality |
-| D4 | Multi-tenant maturity will vary by customer | Pooled, bridge, silo, and regional profiles remain governed options |
-| D5 | Travel integrations and AI create variable workload | Workload isolation, backpressure, observability, and cost controls are required |
-| D6 | Architecture documents previously overclaimed maturity | Current SLO and evidence remain distinct from target reliability |
+| D1 | HCM, Travel, future ERP, and vertical AI Products need shared foundations | Cross-product capabilities have stable logical contracts |
+| D2 | Models/providers change faster than Product semantics | AI provider abstraction and evaluation are first-class |
+| D3 | Enterprise knowledge is strategic and cross-product | Knowledge & Retrieval is separate from AI execution |
+| D4 | Human operational work spans Products | Work Management and Workspace Experience are explicit capabilities |
+| D5 | Durable background execution recurs everywhere | Background Job Execution receives a standard/paved road before an independent Platform Product |
+| D6 | Shared services add dependency and blast radius | Platformization must lower total system complexity |
 
 ### 4.2 Lessons Incorporated
 
 | Lesson | Platform Response |
 | :-- | :-- |
-| Kubernetes and microservices were treated as maturity goals | Runtime complexity requires operational evidence |
-| Logical domains were mapped one-to-one to deployables | Multiple realization forms are allowed |
-| Backup existence was treated as recoverability | Recovery is proven through restore exercises |
-| CPU and logs were treated as sufficient observability | Business journey, freshness, reconciliation, and cost are observed |
-| Platform teams built without measuring adoption | Platform capabilities are managed as products |
-| CI validated documents but not executable systems | Software supply-chain and code gates are mandatory downstream |
+| Platform root was mistaken for a Platform Product | Root, capability, Platform Product, system, deployable, and team remain distinct |
+| Mechanism vs meaning was framed too absolutely | Platform owns its own bounded semantics; Product owns Product semantics/outcomes |
+| Platform discovery looked waterfall/top-down | Structural need and bottom-up evidence converge |
+| Cognitive load was secondary | DevEx/adoption are first-class Platform Product metrics |
+| Canonical authority overlap was justified as resilience | Projections/replicas may overlap; canonical authority remains singular |
+| AI gateway threatened to become a god-platform | Knowledge, AI execution, Product workflow, and Product authorization remain separate |
 
 ## 5. Architecture Model
 
@@ -86,53 +101,59 @@ Target reliability, current service objectives, and external commercial commitme
 
 ```mermaid
 graph TB
-    CONSUMERS[Business Products, Platform Consumers, Engineering Teams]
+    CONSUMERS[Business Products / Platform Consumers / Engineering Teams]
 
-    subgraph PLATFORM[Platform Plane]
-        subgraph FC[Foundation & Control]
-            IAM[Identity & Access]
-            TEN[Organization]
-            TRUST[Application & Service Trust]
-            POLICY[Security Policy & Authorization]
-            ENTITLE[Subscription & Entitlement]
-            CONFIG[Configuration & Variation]
-            AUDIT[Audit & Evidence Foundation]
-        end
+    subgraph FC[Foundation & Control]
+        IAM[Identity & Access]
+        ORG[Organization & Tenancy]
+        TRUST[Application & Service Trust]
+        POLICY[Security Policy & Authorization]
+        ENT[Subscription & Entitlement]
+        BILL[Usage Metering & Billing]
+        CONFIG[Configuration & Variation]
+        AUDIT[Audit & Evidence]
+        SECRETS[Trust Services]
+    end
 
-        subgraph BEE[Business Execution & Enablement]
-            EXEC[Work / Case / Queue / Assignment]
-            FLOW[Workflow & Orchestration]
-            RULES[Rules & Decisioning]
-            DOC[Document & Evidence Handling]
-            NOTIF[Notification & Communication]
-            INTEGRATION[Integration Enablement]
-        end
+    subgraph BEE[Business Execution & Enablement]
+        WORK[Work Management]
+        FLOW[Workflow & Orchestration]
+        RULES[Rules & Decisioning]
+        APPROVAL[Approval & Review capability]
+        SLA[SLA & Escalation capability]
+        ART[Artifact & Document]
+        NOTIF[Notification]
+        INT[Integration Enablement]
+    end
 
-        subgraph DKI[Data Knowledge & Intelligence]
-            DATA[Data Foundation]
-            KNOW[Knowledge Foundation]
-            SEARCH[Search & Retrieval]
-            AI[AI Enablement]
-            OI[Analytics & Operational Intelligence]
-        end
+    subgraph DKI[Data Knowledge & Intelligence]
+        DATA[Data Foundation]
+        KNOW[Knowledge & Retrieval]
+        AI[AI Enablement]
+        ANALYTICS[Analytics]
+        OI[Operational Intelligence]
+    end
 
-        subgraph EI[Experience & Interaction]
-            UI[UI Platform & Design System]
-            SHELL[Application Shell]
-            WORKSPACE[Workspace Framework]
-            ACCESS[Accessibility / Localization / Channels]
-        end
+    subgraph EI[Experience & Interaction]
+        UI[UI Platform]
+        WX[Workspace Experience]
+        CHANNEL[Channel Foundations]
+        ACCESS[Accessibility & Localization]
+    end
 
-        subgraph ER[Engineering & Runtime]
-            DEV[Developer Platform & Software Catalog]
-            DELIVERY[Source Build Delivery & Infrastructure Automation]
-            RUNTIME[Application Runtime]
-            CONNECT[API & Service Connectivity]
-            MESSAGE[Event & Messaging]
-            OBS[Observability]
-            REL[Reliability & Resilience]
-            QUALITY[Testing & Quality]
-        end
+    subgraph ER[Engineering & Runtime]
+        DEV[Developer Platform]
+        CATALOG[Software Catalog]
+        DELIVERY[Source Build Delivery]
+        INFRA[Infrastructure Automation]
+        RUNTIME[Application Runtime]
+        JOB[Background Job & Task Execution]
+        SCHED[Temporal Scheduling & Trigger Dispatch]
+        CONNECT[API & Service Connectivity]
+        MSG[Event & Messaging]
+        OBS[Observability]
+        REL[Reliability & Resilience]
+        TEST[Testing & Quality]
     end
 
     CONSUMERS --> FC
@@ -142,364 +163,318 @@ graph TB
     CONSUMERS --> ER
 ```
 
-The topology represents reusable capability responsibilities, not five mandatory platform products and not one implementation per box.
+The five roots are stable concern families, not mandatory deployables.
 
-The five groups answer different architectural questions:
-
-- **Foundation & Control** — who or what may exist, act, trust, and operate in what context
-- **Business Execution & Enablement** — how operational work moves, coordinates, validates, and executes
-- **Data, Knowledge & Intelligence** — what the ecosystem knows, retrieves, measures, analyzes, and infers
-- **Experience & Interaction** — how people interact consistently with products without moving domain semantics into the platform
-- **Engineering & Runtime** — how the ecosystem is built, delivered, connected, operated, observed, and evolved
-
-A capability may remain product-local until reuse, cross-product authority, risk, lifecycle, or operational evidence justifies shared ownership.
-
-#### Realization Forms
-
-A capability may be realized as:
-
-- a versioned library or package
-- a module inside a cohesive system
-- a managed cloud service
-- a shared internal service
-- an independently deployed platform
-- an external SaaS product behind an enterprise contract
-
-Physical extraction requires evidence of independent lifecycle, scale, security isolation, compliance, ownership, or reuse.
-
-The following structural laws apply:
+### 5.2 Platform Doctrine
 
 ```text
-Capability Group != Team
-Capability != Service
-Target Capability != Build Commitment
-Shared Platform != Centralized Deployment
-Reusable != Must Be Shared
+Platform Plane Root
+!= Capability
+!= Shared Platform Product
+!= System
+!= Deployable
+!= Team
 ```
 
-### 5.2 Internal Developer Platform Strategy
+A Platform owns meaningful semantics within its own bounded capability. Consuming Products retain their authoritative business semantics and outcomes.
 
-The Internal Developer Platform is a product for engineering teams. It provides discoverable, supported, and measurable paved roads rather than hiding every infrastructure choice.
+### 5.3 Three Paths to Platformization
 
-Minimum enterprise capabilities include:
+1. **Constitutional / Authority Driven**
+   - Identity
+   - Organization
+   - Trust
+   - Audit/Evidence
 
-- Software Catalog and accountable ownership.
-- Project/service templates and reference implementations.
-- Build, test, security, and delivery integration.
-- Environment and configuration provisioning.
-- API, event, and data-contract discovery.
-- operational readiness and service metadata.
-- documentation and support.
+2. **Friction / Reuse Driven**
+   - Work Management
+   - Workflow
+   - Rules
+   - Artifact
+   - Notification
+   - Integration
+   - Knowledge & Retrieval
 
-#### Platform Product Principles
+3. **Runtime Economics Driven**
+   - Event & Messaging
+   - Observability
+   - CI/CD
+   - Runtime
+   - Scheduling
+   - Background Job execution patterns
 
-- Teams may leave the paved road through an approved decision, not silent divergence.
-- Platform adoption, lead time, failure rate, support burden, and consumer satisfaction are measured.
-- A single-consumer capability remains product-internal unless constitutional need justifies centralization.
-- Self-service does not remove ownership, approval, security, or cost controls.
+A capability may have multiple drivers.
 
-### 5.3 Runtime Strategy
+### 5.4 Platform Qualification
 
-#### Technology Portfolio
+```text
+Shared Platform Justification
+=
+Enterprise Responsibility
++ Authority Need
++ Consumer Friction
++ Reuse Evidence
++ Lifecycle Independence
++ Operational Economics
++ Risk Reduction
 
-| Concern | Enterprise Direction |
+-
+
+Shared Dependency Cost
+- Cognitive Load Introduced
+- Platform Operating Cost
+- Blast Radius
+- Migration Cost
+```
+
+A capability becomes shared only when the total system becomes simpler/safer to operate.
+
+### 5.5 Workspace Experience
+
+Workspace Experience is a reusable **human digital work environment**, not the Organization-owned Workspace operating context.
+
+It may provide:
+
+- application shell and navigation
+- Product composition and deep-linking
+- active context presentation/switching through Organization contracts
+- My Work and work surfaces through Work Management contracts
+- notification/search/knowledge/copilot composition slots
+- shared chrome and experience policies
+
+It does not own Organization/Tenant/Workspace/Membership facts.
+
+### 5.6 Work Management
+
+Work Management owns reusable work-management semantics such as Work Item, Case, Queue, Assignment, Claim, Priority, generic review state, and work history.
+
+Workflow owns durable multi-step process position/coordination. Product owns what the work means and the final business outcome.
+
+### 5.7 Rules & Decisioning
+
+Rules & Decisioning owns reusable rule-definition/evaluation/version/testing/explanation lifecycle. Product domains own domain rule meaning and resulting business decision.
+
+### 5.8 Knowledge & Retrieval
+
+Knowledge & Retrieval owns governed Knowledge Asset lifecycle, provenance, ontology mechanics, graph/vector/lexical/metadata index lifecycle, authorized retrieval, and evidence/citation assembly.
+
+Graph is first-class but not mandatory for every query. The Platform supports lexical, vector, metadata, graph, and hybrid retrieval selected by profile and evidence.
+
+### 5.9 AI Enablement
+
+AI Enablement provides:
+
+- Model & Provider Gateway
+- Provider Access Profiles
+- Model Catalog and Capability Profiles
+- routing and policy
+- inference runtime
+- agent runtime
+- tool/MCP interoperability
+- prompt/skill/AI-asset runtime lifecycle
+- evaluation and release
+- guardrail enforcement
+- usage/quota/cost
+- AI telemetry
+
+AI Enablement does not own Product workflow, Product business authorization, Product prompt semantics, or enterprise Knowledge authority.
+
+#### Provider Access Profiles
+
+Supported conceptual modes include:
+
+- workload API credential
+- cloud workload identity
+- delegated user OAuth where supported
+- enterprise SSO/seat-bound interactive access where supported
+- local/self-hosted runtime
+
+Interactive human access and machine workload access are different authority classes.
+
+#### Governed Portability
+
+Provider/model switching is based on capability compatibility plus evaluation evidence. Semantic equivalence is never assumed.
+
+### 5.10 Artifact & Document
+
+Artifact is the broader reusable abstraction covering file/document/image/video/audio/spreadsheet/generated outputs.
+
+Artifact Platform owns content/version/checksum/provenance/lifecycle/conversion/rendering/scan/archive mechanics. Product owns business meaning.
+
+### 5.11 Background Job & Task Execution
+
+Background Job Execution is an **Engineering & Runtime capability**, not yet an independent Platform Product.
+
+The enterprise first standardizes:
+
+- Job identity
+- durable acceptance when required
+- attempt/lease/claim
+- retry/backoff
+- timeout/cancellation
+- progress
+- dead-letter/replay
+- bounded concurrency
+- tenant/workload context
+- telemetry
+
+Product/Platform handler code remains with the owner. Scheduling owns future time. Workflow owns multi-step process state.
+
+### 5.12 Runtime Strategy
+
+Enterprise workload profiles include:
+
+- request/response
+- background job/worker
+- scheduled/batch
+- durable workflow
+- integration connector
+- event/stream processing
+- data/knowledge indexing
+- retrieval
+- AI inference
+- agent execution
+- evaluation batch
+- sandboxed tool execution
+- frontend/static
+- build-time library/package
+
+### 5.13 Technology Portfolio
+
+| Concern | Direction |
 | :-- | :-- |
-| Server-side transactional and control systems | Go as the primary default where team capability and workload fit |
-| Adopted vendor kernels | The runtime required by the adopted product, scoped to that product and operated by its owning team. JVM/Quarkus is in portfolio solely as the runtime of the adopted identity kernel and does not become a general server-side option |
-| Web applications, frontend tooling, and BFFs | TypeScript as the primary default |
-| Data, AI, scientific, and automation workloads | Python where ecosystem leverage justifies it |
-| Server packaging | OCI-compatible containers or managed runtime artifacts |
-| Transactional persistence | Managed relational database as the default; PostgreSQL-compatible capability preferred |
-| Ephemeral acceleration | Managed cache; never the sole durable authority |
-| Object and document storage | Managed object storage with classification and lifecycle controls |
-| Messaging | Managed broker/stream capability selected by workload and delivery requirements |
-| Cryptographic custody | Managed KMS/HSM and secret-management capability |
-| Telemetry | OpenTelemetry-compatible instrumentation and vendor-neutral export |
-| Infrastructure provisioning | Declarative, version-controlled infrastructure automation |
+| Transactional/control server | Go as primary default where fit |
+| Web/BFF | TypeScript |
+| Data/AI/scientific workloads | Python where ecosystem leverage justifies |
+| Adopted vendor kernels | Vendor runtime scoped to adopted product |
+| Transactional persistence | Managed relational, PostgreSQL-compatible preferred |
+| Object/artifact storage | Managed object storage |
+| Messaging | Managed broker/stream |
+| Cryptographic custody | Managed KMS/HSM and secret management |
+| Telemetry | OpenTelemetry-compatible |
+| Infrastructure | Declarative/version-controlled |
+| Graph/vector/search/model provider | **Not selected at EAD level; selected downstream based on PAD/SAD evidence** |
 
-Exact technologies, versions, exceptions, and lifecycle status belong in standards and the technology radar.
-
-#### Workload Profiles
-
-Enterprise runtime supports distinct profiles:
-
-- request/response services;
-- background and queue workers;
-- scheduled and batch workloads;
-- durable workflow/orchestration;
-- integration connectors;
-- event and stream processing;
-- data and analytical pipelines;
-- AI inference and agent workloads;
-- static/frontend applications;
-- shared libraries and build-time artifacts.
-
-Each system selects the smallest sufficient profile in its SAD.
-
-#### Environment and Artifact Direction
-
-- Source, configuration, infrastructure, and architecture contracts are version controlled.
-- A built artifact is promoted between environments rather than rebuilt for production.
-- Production secrets and configuration remain external to artifacts.
-- Environments have explicit purpose, access, data policy, and lifecycle.
-- Preview and test environments do not silently receive production-sensitive data.
-
-#### Multi-Tenant Deployment Profiles
-
-| Profile  | Direction                                                              |
-| :------- | :--------------------------------------------------------------------- |
-| Pooled   | Shared runtime and data infrastructure with logical isolation          |
-| Bridge   | Shared runtime with selected dedicated resources or data boundaries    |
-| Silo     | Dedicated runtime/data boundary for one tenant or customer profile     |
-| Regional | Placement constrained by residency, latency, or regulatory requirement |
-
-Profile selection follows risk, commercial commitment, scale, and residency. Client-specific code forks are not an isolation strategy.
-
-### 5.4 Operational Model
-
-#### Reliability Classes
+### 5.14 Reliability Classes
 
 | Class | Meaning | Target Availability Direction | Default RTO | Default RPO |
 | :-- | :-- | :-- | :-- | :-- |
-| C0 Trust / Safety Critical | Failure compromises identity, isolation, security, or irreversible correctness | ≥ 99.99% for the relevant mature journey | ≤ 15 min | ≤ 1 min |
-| C1 Mission-Critical Operations | Failure blocks core service delivery or material client operations | ≥ 99.95% | ≤ 1 h | ≤ 15 min |
-| C2 Business Important | Failure degrades important business capability | ≥ 99.9% | ≤ 4 h | ≤ 1 h |
-| C3 Assistive / Best Effort | Failure has an acceptable manual or non-AI fallback | Defined by consumer journey | ≤ 24 h | By data class |
+| C0 | Trust / safety critical | >=99.99% | <=15m | <=1m |
+| C1 | Mission-critical operations | >=99.95% | <=1h | <=15m |
+| C2 | Business important | >=99.9% | <=4h | <=1h |
+| C3 | Assistive / best effort | Consumer-journey defined | <=24h | By data class |
 
-These are enterprise target directions. Every PAD/SAD declares current SLO and commercial SLA separately.
+AI Products may require a higher reliability profile than an assistive copilot. Criticality is declared by consumer journey, not “AI” as a blanket label.
 
-#### Reliability Dimensions
+### 5.15 Internal Developer Platform Strategy
 
-Reliability includes:
+The Internal Developer Platform is a Platform Product for engineering teams. It provides discoverable, measured paved roads for:
 
-- availability and latency;
-- correctness and integrity;
-- durability and recoverability;
-- freshness and reconciliation;
-- tenant isolation;
-- security containment;
-- capacity and backpressure;
-- external dependency behavior.
+- software/catalog ownership
+- project/service templates
+- build/test/security/delivery
+- environment/configuration provisioning
+- API/event/data/AI contract discovery
+- observability/readiness metadata
+- background Job reference patterns
+- documentation/support
 
-A high availability percentage does not compensate for incorrect or unreconciled business outcomes.
+Teams may leave paved roads through governed decisions. Platform success is measured through adoption, lead time, failure rate, support burden, cognitive load, and consumer satisfaction.
 
-#### Resilience Direction
+### 5.16 Operational Model
 
-Critical systems use appropriate combinations of:
+Every active Platform Product declares:
 
-- timeouts and bounded retries;
-- idempotency and duplicate protection;
-- circuit breaking and bulkheads;
-- durable queues and outbox patterns;
-- backpressure and admission control;
-- graceful degradation;
-- redundancy and failover;
-- backup and tested restore;
-- reconciliation and manual recovery paths.
+- accountable owner and consumers
+- reliability/service profile and current SLO
+- capacity/backpressure and Tenant isolation
+- incident/on-call/support model appropriate to criticality
+- adoption and consumer-friction metrics
+- unit cost/FinOps attribution where meaningful
+- recovery/reconciliation evidence
+- lifecycle/deprecation/exit conditions
 
-Specific patterns and thresholds belong downstream.
-
-#### Observability and Operations
-
-Every active system exposes enough telemetry to understand:
-
-- business journey success and failure;
-- system health, latency, errors, and saturation;
-- tenant/client impact;
-- dependency and external-provider health;
-- projection freshness and reconciliation;
-- security and privileged events;
-- unit cost and capacity.
-
-Alerts have an owner, actionable condition, and response path. Service ownership, on-call expectations, incident review, and problem management follow criticality.
-
-#### Capacity and FinOps
-
-- Capacity has explicit limits and scaling policy.
-- Autoscaling has upper bounds and cost guardrails.
-- Unit economics are measured per meaningful product or platform unit.
-- Tenant, client, product, integration, data, and AI costs can be attributed at an appropriate level.
-- Cost optimization cannot weaken security, durability, isolation, or recovery.
-
-#### Software Supply Chain
-
-Enterprise delivery requires downstream controls for:
-
-- compilation and automated tests;
-- dependency and vulnerability assessment;
-- secret detection;
-- artifact provenance and integrity;
-- architecture and contract validation;
-- environment and deployment authorization;
-- rollback and recovery evidence.
-
-Detailed gates and commands belong in standards and system delivery designs.
+A shared Platform that persistently increases total-system complexity more than the value it creates is refined, split, merged, retired, or returned local.
 
 ## 6. Principles & Rules
 
 ### 6.1 Platform Is a Product
+- **Fitness function:** every approved shared Platform PAD identifies owner, consumers, NFR, support/lifecycle, and adoption outcome
 
-Shared platform capabilities have owners, consumers, support, lifecycle, and adoption measures.
+### 6.2 Shared Capability Must Lower Total System Complexity
+- **Fitness function:** new independent Platform PAD includes reuse/authority/economics justification and negative externalities
 
-- **Fitness function:** every chartered platform has an owner, consumer set, service catalog entry, and adoption metric.
+### 6.3 Platform Owns Platform Semantics, Product Owns Product Semantics
+- **Fitness function:** platform PAD review finds zero Product-specific authoritative outcome ownership
 
-### 6.2 Simplest Sufficient Runtime
+### 6.4 Distinct Primary Concerns
+- **Fitness function:** every critical fact and primary responsibility has one accountable authority
 
-Teams do not adopt distributed or orchestration complexity without evidence.
+### 6.5 Platform Discovery Is Evolutionary
+- **Fitness function:** Platform roadmap includes consumer/runtime feedback and explicit refine/retire path
 
-- **Fitness function:** SAD review records rationale for independent services, Kubernetes, service mesh, or multi-region topology.
+### 6.6 Simplest Sufficient Runtime
+- **Fitness function:** independent distributed runtime choices carry SAD/ADR evidence
 
-### 6.3 Managed First for Commodity Substrate
+### 6.7 Background Job Is Not a Universal Worker Platform
+- **Fitness function:** background-job standard prohibits arbitrary central Product code ownership
 
-Commodity runtime, data, messaging, and cryptographic capabilities prefer managed or proven products.
+### 6.8 AI and Knowledge Remain Separate Authorities
+- **Fitness function:** AI PAD does not own Knowledge Asset/Graph truth; Knowledge PAD does not own model execution
 
-- **Fitness function:** build decisions for commodity substrate require an ADR.
+### 6.9 Human SSO Is Not Machine Authority
+- **Fitness function:** provider access profile inventory distinguishes interactive and workload identities
 
-### 6.4 Logical Isolation Before Physical Sprawl
-
-Authority and access boundaries are enforced even when infrastructure is shared.
-
-- **Fitness function:** every system declares domain ownership and data-access boundary.
-
-### 6.5 Immutable Artifact Promotion
-
-The same verified artifact moves between environments.
-
-- **Fitness function:** delivery evidence identifies one artifact digest across promotion stages.
-
-### 6.6 Reliability Is Journey-Based
-
-SLOs and dependency budgets reflect user/business journeys.
-
-- **Fitness function:** critical PAD/SAD journeys declare current SLO, target reliability, RTO, RPO, and degradation.
-
-### 6.7 Current SLO Is Not Target or SLA
-
-Architecture targets, measured operation, and external commitments remain distinct.
-
-- **Fitness function:** active systems record all three separately.
-
-### 6.8 Backup Is Proven by Restore
-
-A backup without a successful restore exercise is not accepted recovery evidence.
-
-- **Fitness function:** critical systems have current restore-test evidence.
-
-### 6.9 Observability Is Part of the Runtime Contract
-
-Business, technical, security, freshness, and cost signals are available before production acceptance.
-
-- **Fitness function:** production-readiness review verifies required telemetry and owner.
-
-### 6.10 No Client-Specific Forks
-
-Tenant variation uses configuration, policy, connector, workflow, or deployment profile before custom code.
-
-- **Fitness function:** client-specific fork count equals zero unless covered by an expiring waiver.
-
-### 6.11 Code Gates Accompany Document Gates
-
-Architecture compliance does not replace executable-system quality controls.
-
-- **Fitness function:** every active code repository has build, test, and security gates.
-
-### 6.12 Multi-Region Is Evidence-Driven
-
-Regional complexity follows business continuity, residency, and commercial requirements.
-
-- **Fitness function:** multi-region designs trace to criticality and recovery objectives.
+### 6.10 Model Portability Is Evaluated
+- **Fitness function:** model/provider promotions resolve to evaluation/release evidence
 
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected | Debt Accepted |
-| :-- | :-- | :-- |
-| Kubernetes and microservices by default | Operational complexity exceeds current evidence | Some systems begin as modular or managed realizations |
-| One standard runtime for every workload | Different workloads have materially different needs | A bounded technology portfolio requires governance |
-| Build all platform substrate internally | Commodity implementations add risk without differentiation | Vendor and managed-service dependencies |
-| Single-region forever | It cannot meet future criticality and residency needs | Regional expansion is deferred until justified |
-| Maximum availability for every system | Cost and complexity are misallocated | Reliability varies by business journey |
+| Alternative | Why Rejected |
+| :-- | :-- |
+| Platformize every reusable idea | Creates support and dependency cost without leverage |
+| Keep every repeated mechanism Product-local | Multiplies correctness/operational burden |
+| Central Worker Platform now | Prematurely centralizes arbitrary Product execution |
+| AI Platform owns graph/RAG truth | Conflates knowledge authority with execution |
+| Graph-only retrieval | Makes one representation mandatory |
+| Provider-specific Product integration | Prevents governed portability and multiplies security/cost controls |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Capability | Blast Radius | Required Direction |
+| Capability | Blast Radius | Posture |
 | :-- | :-- | :-- |
-| Cloud/region | Systems placed only in that failure domain | Recovery and regional strategy follow criticality |
-| Transactional data service | Affected authoritative systems | Tested restore, redundancy, and bounded recovery |
-| Messaging service | Delayed asynchronous work | Durable local state and replay |
-| KMS/secret service | New credential and signing operations | Verification continues where safe; unsafe fallback prohibited |
-| Developer platform | New builds and provisioning | Running systems continue independently |
-| Observability service | Reduced detection | Local safeguards remain; restore telemetry urgently |
-| External provider | Affected journey | Circuit isolation and declared fallback |
+| Identity / Organization | Trust/context changes | Local artifacts/projections where permitted |
+| Event & Messaging | Async ecosystem | Durable producers/replay |
+| Scheduling | Future work | Durable state/misfire |
+| Workspace Experience | Shared work surface | Direct Product entry where required |
+| Knowledge & Retrieval | Search/RAG | Explicit degraded mode |
+| AI Enablement | AI features | Evaluated provider fallback/non-AI fallback according to Product profile |
+| Shared Work/Workflow | Operational coordination | Durable state and bounded isolation |
 
 ## 9. Ownership
 
-| Responsibility | Accountable | Consulted |
-| :-- | :-- | :-- |
-| Enterprise platform strategy | Architecture Authority | Product, Platform, Security, Data, Operations |
-| Foundation & Control capability | Respective accountable capability owner | Security, product consumers, Architecture Authority |
-| Business Execution & Enablement capability | Respective shared-capability owner | Business domains, Operations SMEs, Architecture Authority |
-| Data, Knowledge & Intelligence capability | Respective Data / Knowledge / AI capability owner | Product consumers, Security, Architecture Authority |
-| Experience & Interaction capability | Experience / UI Platform Owner | Product experience teams, Accessibility, Architecture Authority |
-| Developer Platform & Software Catalog | Developer Platform Owner | Product and Platform teams |
-| Runtime, connectivity, messaging | Runtime / Infrastructure Owner | System owners and Security |
-| Observability, reliability, testing | Respective engineering capability owner | System owners and Operations |
-| Technology lifecycle | Architecture Authority | Platform owners and Security |
-| FinOps and capacity policy | Platform / FinOps Authority | Product and Finance owners |
+- Architecture Authority owns Platform Plane taxonomy and qualification doctrine
+- Platform Product owners own approved PAD capability outcomes
+- Product teams own Product business semantics
+- Engineering Platform owns common runtime/paved-road capabilities
+- Governance authorities define non-negotiable controls and evidence requirements
 
 ## 10. Dependencies
 
-**Strategic inputs:** enterprise capability, system, data, and interaction architecture.
-
-**Governed outputs:** security implementation context, technology standards, platform/domain NFRs, and system runtime designs.
+- EAD-001 capability map
+- EAD-002 landscape
+- EAD-003 data/knowledge authority
+- EAD-004 integration
+- EAD-006 security
+- EAD-007 governance/assurance
 
 ## 11. Traceability
 
-- Every active system maps to a workload and criticality profile in its SAD.
-- Every chartered platform maps to an EAD-001 domain and PAD.
-- Technology exceptions map to ADRs and the technology lifecycle.
-- Reliability targets map to measured SLO evidence downstream.
-
-## 12. Assumptions
-
-- Managed cloud capabilities are available for the initial operating regions.
-- Team capability grows incrementally with product demand.
-- Some logical domains share physical systems initially.
-- Product and external-system volumes will refine capacity targets.
-
-## 13. Constraints
-
-- Production secrets cannot be embedded in code or artifacts.
-- Ephemeral caches cannot be sole durable authority.
-- Independent services require operational ownership.
-- Current SLO cannot be represented as target reliability without evidence.
-- Platform standardization cannot override Product authority.
-- Environment promotion cannot silently rebuild production artifacts.
-
-## 14. Risks
-
-| Risk | Likelihood | Impact | Mitigation |
-| :-- | :-- | :-- | :-- |
-| Prestige architecture delays product delivery | High | High | Simplest-sufficient-runtime gate |
-| Shared infrastructure weakens logical isolation | Medium | Critical | Private authority and access boundaries |
-| Target reliability is claimed without evidence | High | High | Separate target, SLO, and SLA |
-| Managed-service dependency creates lock-in | Medium | Medium | Contract abstraction and exit assessment |
-| Platform investment lacks adoption | Medium | High | Platform-as-product measures |
-| Recovery fails despite backups | Medium | Critical | Restore exercises and RTO/RPO evidence |
-| AI/integration workload causes unbounded cost | Medium | High | Admission, attribution, and cost guardrails |
-
-## 15. Future Direction
-
-Platform capability will grow from minimum safe paved roads toward repeatable product delivery, reusable operational platforms, and regional multi-product operation. Physical complexity is introduced only when reliability, scale, security, compliance, or lifecycle evidence requires it.
-
-## 16. References
-
-- EAD-001 — Enterprise Capability & Domain Map.
-- EAD-002 — Enterprise System Landscape.
-- EAD-003 — Enterprise Data Ownership & Topology.
-- EAD-004 — Enterprise Integration Architecture.
-- GDC-000 — Governance Policy.
-- GDC-006 — EAD Guideline.
-- AWS Well-Architected Framework.
-- Google SRE principles.
-- Platform engineering and internal developer platform practices.
-- Team Topologies.
+- PAD-PLT-012 Workspace Experience
+- PAD-PLT-013 Work Management
+- PAD-PLT-014 Rules & Decisioning
+- PAD-PLT-015 Knowledge & Retrieval
+- PAD-PLT-008 AI rebaseline
+- PAD-PLT-009 Artifact & Document rebaseline
+- ADR-GLB-012 and ADR-GLB-013
+- STD-GLB-011 Background Job Execution

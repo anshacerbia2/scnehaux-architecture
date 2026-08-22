@@ -1,231 +1,197 @@
 ---
 doc_meta:
   id: SAD-009
-  title: Billing Platform SAD
+  title: Usage Metering & Billing Platform SAD
   owner: Architecture Authority
-  version: 0.1.0
+  version: 0.2.0
   status: chartered
   classification: internal
   governed_by:
     - EAD-001
-    - EAD-003
+    - EAD-005
   parent_pad: PAD-PLT-010
   review_cycle_days: 180
   created_date: 2026-07-06
-  last_updated: 2026-08-18
-  last_reviewed: 2026-08-18
+  last_updated: 2026-08-23
+  last_reviewed: 2026-08-23
 ---
 
-# Billing Platform Software Architecture (SAD-009)
+# Usage Metering & Billing Platform SAD
 
-> **Status: chartered.** The capability is chartered by PAD-PLT-010 and no system is in build.
-> Every statement below is inherited from an enterprise document that has already decided
-> it. Nothing here is a system-specific design choice, because those are made when the
-> system enters build and this document moves to `draft`.
->
-> EAD-001 section 5.4 is explicit that a target capability is not implementation
-> authorization. This document records the constraints a build inherits on day one so that
-> they are not rediscovered or renegotiated then.
-
----
+> **Status: chartered.** The parent PAD is approved, but no physical system design is approved. This document records inherited constraints only. Implementation against this placeholder is rejected until the SAD moves to `draft` and contains a reviewed physical design.
 
 ## 1. Purpose & Scope
 
-This document records the architectural constraints the Billing Platform inherits from the enterprise architecture. It is the placeholder that a full system design replaces.
-
 ### 1.1 Objective
 
-Realize the capability PAD-PLT-010 charters, within the constraints below, without re-implementing a capability another platform owns.
+Record the physical-design entry constraints for the system that may realize PAD-PLT-010.
 
 ### 1.2 Capability
 
-Subscription, metering, invoicing, and commercial Entitlement.
+Reusable usage metering, rating, charge, billing-cycle, bill/commercial-invoice, adjustment, reconciliation, and export mechanics.
 
 ### 1.3 Constraint
 
-These are inherited and not open to per-system renegotiation:
-
-- **One owning domain, one operational store.** This system owns the Billing Database and no other system reads it directly, per EAD-003 section 5.1.
-- **No shared operational database and no cross-domain query.** Other domains obtain this system's data through its published API or its events, per EAD-003 section 6.5.
-- **Tier-1.** Availability at or above 99.95%, RTO within 1 hour, RPO within 5 minutes, per EAD-005 section 5.4.
-- **Independently deployable** on its own pipeline, with no coordinated enterprise release, per EAD-002 section 6.2.
-- **Identity is consumed, never implemented.** Authentication and token issuance belong to the Identity Platform, per EAD-006 section 6.2.
-- **Zero Trust.** Every request is authenticated and authorized regardless of origin, and every internal call is mutually authenticated, per EAD-006 sections 5.1 and 5.4.
-- **UUIDv7 primary keys, Row-Level Security for tenant-scoped tables, and declarative schema management**, per STD-GLB-002 and ADR-GLB-002.
-- **The transactional outbox** for every published domain event, per ADR-GLB-003.
+- Subscription & Entitlement remains separate grant authority
+- Product owns usage semantics and pricing intent
+- future ERP/Finance owns ledger/accounting/payment settlement
+- Billing owns accepted metering/rating/charge/bill lifecycle only
+- no billing/payment technology is selected by this charter
 
 ### 1.4 Requirement
 
-The capability requirements are held by PAD-PLT-010 until a system design exists. This document adds none of its own.
+The future design SHALL realize the parent PAD without re-owning a capability assigned to another Product or Platform.
 
 ### 1.5 Assumption
 
-The platform substrate described by EAD-005 is available: a managed runtime, brokered secrets, telemetry collection, and the event broker.
-
----
+No database, broker, graph store, vector store, model provider, framework, runtime topology, or deployment product is selected by this charter.
 
 ## 2. Enterprise Traceability
 
 | Relationship | Target |
 | :-- | :-- |
-| Realizes | PAD-PLT-010 |
-| Governed by | EAD-001 — capability ownership and strategic classification |
-| Governed by | EAD-003 — data ownership and the operational store assignment |
-| Conforms to | EAD-002 — the dependency direction and its acyclic constraint |
-| Conforms to | EAD-006 — the mandatory security controls every system inherits |
-| Conforms to | STD-GLB-BE-001 — internal package structure and boundary assertion |
-
----
+| Parent PAD | PAD-PLT-010 |
+| Capability authority | EAD-001 |
+| Data authority | EAD-003 |
+| Integration | EAD-004 |
+| Platform/runtime posture | EAD-005 |
+| Security | EAD-006 |
+| Governance & Assurance | EAD-007 |
 
 ## 3. Solution Context
 
 ### 3.1 System Context
 
-Event-driven metering. Business Products publish usage events; this platform aggregates and invoices.
-
-Dependencies point inward and downward toward stable substrate and never form a cycle, per EAD-002 section 5.3. This system may depend on Platform Services and MUST NOT be depended upon by one.
+The physical System Context is intentionally undecided. Consumers interact through the parent PAD's logical contracts.
 
 ### 3.2 External Dependencies
 
-Every external vendor is mediated by the Integration Platform acting as an Anti-Corruption Layer. No vendor SDK or vendor payload model appears inside this system, per EAD-002 section 6.4.
+External provider/runtime dependencies are selected only during system design and must preserve Natural Owner, authority, security, and portability rules.
 
-### 3.3 Internal Structure
+### 3.3 Internal Dependencies
 
-A modular monolith: one bounded context, one deployable, modules separated at compile time, per ADR-GLB-001 section 5.1 and STD-GLB-BE-001 Rule 1.
-
----
+Consumed logical capabilities: Product usage contracts, Subscription & Entitlement, Organization, Product/Offering references, Artifact & Document, Notification, Integration, Audit & Evidence, Event & Messaging, future ERP/Finance.
 
 ## 4. Architecture Model
 
-### 4.1 Container View
+### 4.1 Container
 
-One deployable service and its operational store. The container decomposition is a system design decision and is made when this document moves to `draft`.
+No Container topology has been selected.
 
-### 4.2 Component View
+### 4.2 Component
 
-Components follow the layer direction STD-GLB-BE-001 Rule 2 fixes: adapter depends on app, app depends on domain, and the domain depends on neither. Internal edges are declared in a manifest and asserted against the package graph on every build.
+No Component decomposition has been selected.
 
-### 4.3 Event Flow
+### 4.3 Sequence / Runtime Flow
 
-Domain events are appended to the outbox inside the transaction that mutates the aggregate, and a dispatcher publishes them to the broker. A consumer deduplicates on the event identifier inside the same transaction as its effect, which is what makes at-least-once delivery safe.
+Critical Sequence and Runtime Flow diagrams are authored when the SAD moves to `draft`.
 
----
+### 4.4 Event Flow
+
+Event Flow is defined only where the parent PAD contract and system design justify asynchronous publication/consumption.
 
 ## 5. State & Data Architecture
 
 ### 5.1 Storage
 
-The Billing Database holds subscriptions, metering records, and invoices. It is private to this domain: no other system holds a connection to it, and no cross-domain join exists, per EAD-003 sections 5.1 and 6.5.
+Storage technology and topology are not selected. Any authoritative operational state remains private to this system capability.
 
-### 5.2 Schema
+### 5.2 Cache
 
-Declarative under Atlas, with migrations generated deterministically and applied by a job running under a migration role distinct from the runtime role, per ADR-GLB-004. The runtime role holds no DDL privilege.
+Cache is not selected and can never become sole durable authority.
 
-### 5.3 Cache
+### 5.3 Schema
 
-Any cache carries a bounded lifetime and an explicit staleness behaviour. A cached authorization decision is never used to permit an action.
+Schema/DDL is a TDD concern after physical persistence is selected.
 
-### 5.4 Stateless Runtime
+### 5.4 Stateless
 
-The process holds no state that survives a request, so replicas are interchangeable and scale horizontally, per EAD-005 section 5.3.
-
----
+The future runtime may be Stateless where possible, but durable state required by the parent PAD must survive process restart through an approved storage design.
 
 ## 6. Integration Contracts
 
-### 6.1 Published API
+### 6.1 API
 
-A versioned contract owned by this system, published before implementation, per EAD-004 section 6.3. REST with an OpenAPI 3.1 document for control-plane and client-facing interfaces; gRPC for internal request-hot-path interfaces, per STD-GLB-006. Errors are RFC 9457 problem documents.
+Concrete API protocols/endpoints are selected in the draft SAD and must implement versioned parent-PAD contracts.
 
-### 6.2 Published Events
+### 6.2 Event
 
-CloudEvents 1.0 in JSON, registered in the enterprise schema registry, with backward compatibility enforced in the build, per STD-GLB-004 and ADR-GLB-006. A breaking change promotes the major version inside the event type.
+Concrete Event contracts are selected only where asynchronous interaction is justified.
 
-### 6.3 Consumed Events and Capabilities
+### 6.3 Consumed
 
-Consumed contracts belong to their publishing domains. This system depends on the contract and never on a publisher's internal model.
+Product usage contracts, Subscription & Entitlement, Organization, Product/Offering references, Artifact & Document, Notification, Integration, Audit & Evidence, Event & Messaging, future ERP/Finance
 
----
+### 6.4 Published
+
+Billing lifecycle events according to parent PAD
 
 ## 7. Security & Trust Boundary
 
-**Authentication** is delegated to the Identity Platform. Tokens are verified locally against the published JWKS, per STD-IAM-002 section 3.5, and a token for an internal audience without `principal_id` is rejected.
+**Authentication** uses enterprise Identity; this system does not issue user credentials.
 
-**Authorization** is applied by this system to every command. A valid token is an authenticated identity and never an authorization decision.
+**Authorization** remains split according to EAD-006 and the parent PAD. Product business authorization is not inferred from platform access.
 
-**Encryption**: TLS 1.3 in transit and AES-256 at rest, per EAD-006 section 5.5.
+**Encryption** must satisfy enterprise data classification and transport/storage requirements once technology is selected.
 
-**Secrets** are brokered from the managed store and never present in source or in an image, per EAD-006 section 5.5.
+**Secrets** use managed custody; no production secret may be embedded in source, image, browser bundle, or architecture artifact.
 
-**Audit**: every security-sensitive action publishes an immutable evidence event to the Audit Platform, per EAD-006 section 6.6.
-
----
+**Audit** evidence is emitted for privileged and consequential capability operations as required by Governance & Assurance.
 
 ## 8. NFR
 
 ### 8.1 Blast Radius
 
-Metering ingestion is buffered, so an outage delays aggregation rather than losing usage. Payment provider failure is isolated behind the Integration Platform and does not block usage recording.
-
-The reliability tier is inherited rather than chosen: Tier-1 at or above 99.95%, with RTO within 1 hour and RPO within 5 minutes. An error budget derived from that target gates feature work when exhausted, per EAD-005 section 5.4.
+Failure can delay commercial metering/rating/billing but must not corrupt Product operation, Entitlement authority, or ERP financial truth. Accepted usage/billing state must remain durable and reconcilable.
 
 ### 8.2 Observability and Telemetry
 
-OpenTelemetry traces, RED metrics, and structured JSON logs to stdout, every line carrying the trace and span identifiers and the tenant identifier where one applies, per STD-GLB-003. No vendor agent is coupled into application code.
+The draft design must define OpenTelemetry-compatible or enterprise-approved Telemetry, actionable Alerting, and a production Runbook appropriate to its reliability class.
 
-### 8.3 Timeout, Retry, and Circuit Breaker
+### 8.3 Scalability
 
-The cascaded timeout hierarchy, three retries with exponential backoff and jitter for transient classes only, bulkhead isolation per downstream dependency, and priority-based load shedding, all per STD-GLB-005 and ADR-GLB-005.
+Capacity, Throughput, RPS or work-rate, and Concurrency targets are derived from parent-PAD consumers before approval.
 
-### 8.4 Runbook
+### 8.4 Timeout, Retry, Circuit Breaker, Failover
 
-Runbooks are written before production and are a release gate rather than a follow-up. Their contents depend on the system design and are authored with it.
-
----
+Timeout, bounded Retry, Circuit Breaker, backpressure, and Failover behavior are defined per dependency once a physical design exists.
 
 ## 9. Deployment Strategy
 
 ### 9.1 Environment and Infrastructure
 
-The standardised containerised runtime on Kubernetes across multiple availability zones, provisioned declaratively through the Internal Developer Platform. Direct resource creation through a cloud console is prohibited, per STD-GLB-009.
+Environment and Infrastructure topology are not selected by this charter.
 
 ### 9.2 CI/CD
 
-The Golden Path pipeline, with every gate blocking a merge: formatting, static analysis, build, tests under the race detector, a coverage floor, package-graph boundary assertion, schema migration integrity and the destructive gate, event schema compatibility, dependency tidiness, secret scanning, and a scheduled vulnerability scan.
-
-Deployment is zero-downtime and progressive, and any deployment is reversible within five minutes, per EAD-005 section 5.3.
-
----
+The future deployable uses the enterprise CI/CD paved road and must pass architecture, security, contract, test, provenance, and deployment gates appropriate to the selected technologies.
 
 ## 10. Architecture Decisions
 
 ### Accepted
 
-Every inherited constraint in section 1.3, each traced to the enterprise document that decided it. This document makes no independent decision, which is the property that distinguishes a chartered placeholder from a design.
+Only the logical authority and boundary decisions already approved by the parent PAD and EADs.
 
 ### Rejected
 
-#### 10.1 Storing payment instrument data in a Scnehaux datastore
-
-Rejected. EAD-006 section 5.5 places payment data in PCI DSS scope and requires it to be tokenised at the provider, so only tokens transit the estate. Holding card data would extend PCI scope across every backup and replica this platform owns.
-
-#### 10.2 Re-implementing a capability another platform owns
-
-Rejected by EAD-001 section 6.1. A shared capability implemented twice produces divergent behaviour and multiplied cost, and the duplication is invisible until the two versions disagree in production.
-
-#### 10.3 Beginning implementation against this document
-
-Rejected. A chartered placeholder is not an implementation authorization. A build starts when this document holds a system design, has moved to `draft`, and has passed design review.
-
----
+- beginning implementation against a `chartered` placeholder
+- selecting a technology solely because an existing ATI project happened to use it
+- creating a second canonical authority for a fact owned elsewhere
+- turning a shared capability into a universal runtime hop without evidence
 
 ## 11. Assumptions
 
-- The capability remains chartered and is not folded into another domain before build.
-- The enterprise substrate and the platform capabilities this system consumes are available at build time.
-
----
+- Consumer demand and operating profile will be validated before physical design approval
+- Platform qualification can be revisited if total shared-system complexity exceeds the value created
 
 ## 12. Compatibility Strategy
 
-APIs are versioned in the path and events in the type. A breaking change requires a new major version and a deprecation window of at least 90 days or two consumer release cycles, whichever is longer, per EAD-004 section 5.3.
+The future system must preserve parent-PAD logical contracts across implementation replacement.
+
+## 13. Migration Strategy
+
+Existing Product-local implementations are migration evidence only; they are not reference architecture. Migration occurs after the target SAD is approved.
+
+## 14. Alternatives
+
+Technology and topology alternatives remain open until `draft`.

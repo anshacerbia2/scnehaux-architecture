@@ -1,270 +1,172 @@
 ---
 doc_meta:
   id: PAD-PLT-007
-  title: Enterprise Audit Platform
-  owner: Audit Team
-  version: 1.0.0
+  title: Enterprise Audit & Evidence Platform
+  owner: Audit & Evidence Platform Team
+  version: 2.0.0
   status: approved
   classification: restricted
   governed_by:
     - GDC-008
+    - EAD-001
+    - EAD-003
+    - EAD-007
   realizes_capability:
     - EAD-001
-    - EAD-005
+    - EAD-003
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-07-06
+  last_reviewed: 2026-08-23
   fulfilled_by:
     - SAD-010
 ---
 
-# Enterprise Audit Platform
-
----
+# Enterprise Audit & Evidence Platform
 
 ## 1. Purpose & Scope
 
-The Audit Platform provides centralized, immutable audit capabilities across the enterprise. It records business-significant events as tamper-evident evidence for governance, compliance, security investigations, and regulatory reporting.
+The Audit & Evidence Platform preserves durable, attributable, integrity-verifiable enterprise evidence produced by Business Products and Platforms.
 
-Business domains remain responsible for generating business events, while the Audit Platform governs audit persistence, integrity, retention, and evidence retrieval.
+Governance & Assurance defines which evidence is required and what it proves. Audit & Evidence owns evidence ingestion, lifecycle, integrity, retention enforcement, authorized retrieval, and export.
 
-### 1.1. Out of Scope
+### 1.1 Out Of Scope
 
-- Application logging.
-- Infrastructure logging.
-- Monitoring and observability.
-- Metrics collection.
-- Distributed tracing.
-- Business analytics.
-- Authentication and authorization.
-- Business workflow orchestration.
-
----
+- defining enterprise policy/compliance requirements
+- approving Product or Platform decisions
+- application/infrastructure observability logs
+- Product business state
+- Product analytics
+- authentication/authorization authority
+- document/artifact business meaning
+- runtime governance gateway
 
 ## 2. Enterprise Traceability
 
-```mermaid
-graph TD
-    subgraph Platform["Platform Plane"]
-        EAP[Enterprise Audit Platform]
-        WSP[Workspace Platform]
-        NOT[Notification Platform]
-        INT[Integration Platform]
-        AIP[AI Platform]
-        BIL[Billing Platform]
-        IDP[Identity Platform]
-        WFP[Workflow Platform]
-        DOC[Document Platform]
-    end
+### 2.1 Realizes
 
-    subgraph Business["Business Plane"]
-        PM[Project Management]
-        CMS[CMS]
-        CRM[CRM]
-        ERP[ERP]
-        PRO[Procurement]
-        LMS[LMS]
-        HCM[HCM]
-        ITSM[ITSM]
-    end
+- EAD-001 Audit & Evidence Foundation
+- EAD-003 Evidence Data authority
 
-    Broker([Event Broker])
-    Domains([All Domains])
+### 2.2 Relationships
 
-    EAP -->|SRD: external compliance export| INT
-    Domains -. AEP: audit events (actor & tenant context embedded) .-> Broker
-    Broker -. AES .-> EAP
+- **Source Products/Platforms** produce evidence facts and retain responsibility until accepted where required
+- **Governance & Assurance** defines evidence obligations/control claims
+- **Identity / Organization / Application Trust** provide actor/context facts carried or referenced in evidence
+- **Artifact & Document** may supply immutable artifacts referenced by evidence
+- **Event & Messaging** may carry evidence events
+- **Trust Services** provide integrity/signing/custody substrate where required
 
-    style EAP fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
-    style INT fill:#2b6cb0,stroke:#63b3ed,color:#fff
-```
+### 2.3 Consumed By
 
-The Audit Platform is an enterprise write-sink: all domains publish audit events that it subscribes to, with actor identity and tenant context embedded in the event payload, so it does not synchronously depend on Identity or Workspace.
-
-### 2.1. Realizes
-
-- EAD-001 Enterprise Capability & Domain Map — the audit and evidence capability (immutable evidence, compliance, integrity verification).
-- EAD-005 Enterprise Platform Architecture — the substrate it operates on.
-
-### 2.2. Relationships
-
-- **Synchronous Dependencies (SRD):** Integration Platform — external compliance export is mediated through the Integration ACL.
-- **Publishes Events (AEP):** none significant — the Audit Platform is a sink, not a publisher.
-- **Subscribes To Events (AES):** subscribes to audit-event streams published by all domains; actor identity and tenant context are embedded in the event payload.
-- **Consumes Platform Capabilities (PCC):** validates the retrieval-requester identity locally.
-
-### 2.3. Consumed By
-
-Every Platform Service and Business Product publishes audit evidence (AEP) that the Audit Platform ingests: Notification, Billing, Document, Workflow, and AI Platforms, together with HCM, ERP, CRM, Procurement, Project Management, ITSM, CMS, and LMS, all emit audit events that Audit subscribes to as a write-sink.
-
----
+Security investigations, compliance/audit functions, Product/Platform operations, incident/recovery reviews, architecture assurance, and authorized business stakeholders.
 
 ## 3. Domain & Context Model
 
-The Audit Platform is decomposed into several independent bounded contexts.
+### 3.1 Bounded Context
 
-### 3.1. Bounded Context
-
-- Audit Event Collection
-- Evidence Storage
+- Evidence Intake
+- Evidence Record
+- Evidence Integrity
+- Chain of Custody
+- Evidence Retention Enforcement
 - Evidence Retrieval
-- Retention Management
-- Compliance Reporting
-- Integrity Verification
-- Audit Governance
+- Evidence Search
+- Evidence Export
+- Evidence Access Audit
+- Evidence Reconciliation
 
-### 3.2. Ubiquitous Language
+### 3.2 Ubiquitous Language
 
-| Term                   | Description                                            |
-| ---------------------- | ------------------------------------------------------ |
-| Audit Event            | Immutable business evidence generated by a system.     |
-| Evidence               | Permanent proof of an action or business event.        |
-| Audit Trail            | Chronological chain of business evidence.              |
-| Retention Policy       | Rules governing audit preservation.                    |
-| Integrity Verification | Validation that audit evidence has not been altered.   |
-| Compliance Report      | Regulatory report generated from audit evidence.       |
-| Evidence Query         | Authorized retrieval of audit records.                 |
-| Tamper Evidence        | Cryptographic indication of unauthorized modification. |
+| Term | Meaning |
+| :-- | :-- |
+| Evidence Event | Source-produced fact intended to support accountability |
+| Evidence Record | Accepted durable evidence representation |
+| Evidence Claim | What a piece of evidence is intended to demonstrate |
+| Chain of Custody | Traceable lifecycle of evidence handling |
+| Integrity Verification | Proof/detection that evidence was not silently altered |
+| Evidence Reference | Stable reference to external Artifact/source evidence |
+| Retention Policy Reference | Governance-owned rule reference enforced by the Platform |
 
-### 3.3. Domain Policies
+### 3.3 Domain Policies
 
-- Audit records are immutable.
-- Audit evidence cannot be modified or deleted.
-- Business domains publish audit events.
-- The Audit Platform governs evidence persistence.
-- Audit retention follows enterprise governance.
-- Audit retrieval is strictly authorized.
-- Every evidence record is cryptographically verifiable.
-- Audit storage remains technology independent.
-
----
+- evidence records are append-oriented/immutable according to evidence class
+- governance defines obligation; Audit does not invent policy
+- source domain remains authoritative for current business state
+- accepted evidence cannot be edited to match later business state
+- evidence retrieval/export is strictly authorized and itself evidenced
+- retention/legal hold are enforced from governed policy references
+- source-to-evidence acceptance/reconciliation behavior is explicit for critical evidence
 
 ## 4. Integration Contracts
 
-### 4.1. Integration Provided
+### 4.1 Integration Provided
 
-The Audit Platform provides:
+- evidence intake/acceptance
+- immutable evidence record
+- integrity verification
+- chain-of-custody
+- retention/legal-hold enforcement
+- authorized evidence query/search
+- export
+- evidence reconciliation/status
+- evidence-access audit
 
-- Audit Event Recording
-- Immutable Evidence Storage
-- Evidence Retrieval
-- Audit Trail Management
-- Integrity Verification
-- Retention Management
-- Compliance Reporting
-- Audit Search
-- Audit Events
+### 4.2 Integration Consumed
 
-### 4.2. Integration Consumed
-
-The Audit Platform consumes:
-
-- Identity context, received inside subscribed audit events (AES payload) — actor identity travels within the event, not through a synchronous call.
-- Workspace tenant context, received inside subscribed audit events (AES payload) — tenant context travels within the event, not through a synchronous call.
-- Integration Platform (Synchronous Runtime Dependency) for external compliance export.
-
-Implementation protocols, storage engines, indexing technologies, and cryptographic mechanisms are defined by the realizing SAD.
-
----
+- source Product/Platform evidence contracts
+- Event & Messaging
+- Identity / Organization / Application Trust context
+- Trust Services
+- Artifact & Document references
+- Governance-owned retention/control references
+- Observability
 
 ## 5. Trust & Data Boundaries
 
-### 5.1. Trust Boundary
+### 5.1 Trust Boundary
 
-The Audit Platform governs enterprise evidence but never owns business entities.
+Audit & Evidence is authoritative for accepted evidence lifecycle and integrity. It is not authoritative for current Product business state or governance policy.
 
-Business domains remain authoritative for business state, while the Audit Platform preserves historical evidence.
+### 5.2 Identity Access
 
-### 5.2. Identity Access
+- evidence submission authenticates source application/workload and context
+- retrieval/export requires explicit scope, purpose, and strong assurance where sensitive
+- cross-Tenant/provider access is separately authorized and evidenced
+- evidence access does not grant access to live Product resources
 
-Authentication is delegated to the Identity Platform.
+### 5.3 Data Classification
 
-The Audit Platform governs:
+Evidence may contain sensitive metadata and bounded snapshots/references. Data minimization, classification, residency, retention, legal hold, and redaction/tokenization apply by evidence class.
 
-- Evidence integrity
-- Audit authorization
-- Retention enforcement
-- Compliance access
-- Audit governance
-
-Only authorized personnel may retrieve audit evidence.
-
-### 5.3. Data Classification
-
-The platform manages:
-
-- Audit Events
-- Evidence Metadata
-- Audit Trails
-- Compliance Records
-- Retention Metadata
-- Integrity Metadata
-- Verification Metadata
-
-The platform does not own:
-
-- Business Transactions
-- Operational State
-- Application Logs
-- Monitoring Metrics
-- Distributed Traces
-- Business Entities
-
----
+Secrets are never intentionally recorded.
 
 ## 6. Capability NFR
 
-### 6.1. Reliability & Availability
-
-- Enterprise-grade evidence durability.
-- No audit event loss.
-- Immutable audit persistence.
-
-### 6.2. Performance & Scalability
-
-- Horizontally scalable audit ingestion.
-- Efficient evidence retrieval.
-- High-volume audit recording.
-
-### 6.3. Security & Compliance
-
-- Tamper-evident storage.
-- Cryptographic integrity verification.
-- Regulatory compliance support.
-- Tenant-isolated audit evidence.
-
-### 6.4. Auditability
-
-Every audit operation shall itself produce audit evidence, including:
-
-- Evidence creation
-- Evidence retrieval
-- Compliance reporting
-- Integrity verification
-- Retention execution
-- Authorized export
-- Administrative actions
-
----
+- **Reliability class:** C0/C1 by evidence class; critical evidence ingestion target >=99.99% where required by security/isolation journeys, otherwise >=99.95%
+- **Durability:** accepted critical evidence shall not be silently lost
+- **RTO:** <=1h for core evidence service; critical security profiles may require <=15m
+- **RPO:** <=15m by default; stronger critical profile may require <=1m
+- **Integrity:** every governed evidence class has verification mechanism
+- **Scalability:** ingestion independent from expensive search/export workloads
+- **Audit:** every administrative/retrieval/export/integrity/retention action is itself attributable
+- **Privacy:** evidence minimization and purpose-bound retrieval
+- **Interoperability:** source contracts are versioned and vendor-neutral
+- **Cost Target:** retention/storage/query cost attributable by evidence class/source/Tenant
 
 ## 7. Ownership & Governance
 
-### 7.1. Team Ownership
+### 7.1 Team Ownership
 
-The Audit Platform Team owns platform audit capabilities, evidence lifecycle, and compliance governance.
+Audit & Evidence Platform Team owns evidence lifecycle, durability, integrity, retrieval, export, and support.
 
-The Architecture Authority governs enterprise audit policies and evidence standards.
+Governance/Compliance/Security/Product authorities define what must be evidenced and retention/control obligations.
 
-### 7.2. Realizing Systems
+### 7.2 Realizing Systems
 
-- SAD-010 Enterprise Audit Platform
+- SAD-010 Audit & Evidence Platform
 
-### 7.3. Governance Rules
+### 7.3 Governance Rules
 
-- Business domains shall never implement independent audit repositories.
-- Application logs shall never be used as compliance evidence.
-- Audit records are immutable after creation.
-- Audit evidence shall be cryptographically verifiable.
-- Retention is enforced per enterprise governance (EAD-003).
-- Audit contracts are centrally governed and versioned.
-- Breaking audit contracts require Architecture Authority approval.
+- Audit Platform SHALL NOT become enterprise policy authority
+- current Product truth SHALL NOT be reconstructed by mutating historical evidence
+- critical evidence loss/rejection SHALL surface explicitly to the source/assurance process

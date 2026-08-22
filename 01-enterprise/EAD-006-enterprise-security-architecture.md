@@ -3,54 +3,50 @@ doc_meta:
   id: EAD-006
   title: Enterprise Security Architecture
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: restricted
   governed_by: [GDC-006]
   review_cycle_days: 180
   created_date: 2026-08-06
-  last_reviewed: 2026-08-06
+  last_reviewed: 2026-08-23
 ---
 
 # Enterprise Security Architecture
 
 ## 1. Purpose
 
-Define the enterprise trust model, identity strategy, security-control architecture, and data-protection direction for the **Scnehaux Enterprise Cloud**.
+Define enterprise trust, authorization, data-protection, workload, AI/agent, retrieval, and provider-access security boundaries.
 
-**Decision question:** _How is trust established, constrained, enforced, monitored, and recovered across users, workloads, applications, tenants, products, data, and external systems?_
-
-This document defines enterprise security intent and macro boundaries. It does not define token claims, protocol endpoints, cryptographic algorithms, browser controls, database policies, route middleware, or system-specific incident procedures.
+**Decision question:** _How is authority established and constrained across humans, workloads, agents, Products, Platforms, tenants, data/knowledge, tools, and external model providers?_
 
 ## 2. Scope
 
-**In scope:**
+**In scope**
 
-- Zero Trust boundaries and trust relationships.
-- Enterprise IAM and workload-identity strategy.
-- Separation of identity, application trust, membership, entitlement, and Product authorization.
-- Security-control families and accountable authorities.
-- Privileged access, external trust, audit, detection, and incident-containment direction.
-- Data protection, privacy, residency, and cryptographic-custody principles.
+- Identity, application/workload trust, tenant context, entitlement, Product authorization
+- AI Provider Access Profiles and workload/interactive distinction
+- Agent delegated authority and tool execution
+- Retrieval authorization and prompt-injection boundaries
+- Data/classification/provider egress
+- Secrets and credential custody
+- Human oversight for high-impact AI actions
+- Evidence requirements
 
-**Out of scope:**
+**Out of scope**
 
-- Detailed authentication, token, session, and federation design — Identity PAD, standards, and SADs.
-- Product-specific authorization rules — Product PADs.
-- Tenant-isolation implementation — Tenancy PAD, standards, and SADs.
-- Network, runtime, database, frontend, and API control implementation — standards and SADs.
-- Detailed threat models and security tests — PADs, SADs, TDDs, and security assessments.
-- Regulatory control mappings — compliance standards and evidence catalogs.
-
-This document binds every product, platform, workload, user, partner, and external integration in the Scnehaux Enterprise Cloud.
+- Concrete token claims and algorithms
+- Provider-specific credential configuration
+- Model-specific safety configuration
+- Product-specific authorization rules
+- Concrete sandbox/runtime technology
+- System-specific threat models
 
 ## 3. Enterprise Context
 
-Scnehaux Enterprise Cloud will serve ATI workforce, client and partner users, product customers, machine workloads, integrations, and AI agents across multiple tenant and external-system boundaries.
+Scnehaux supports humans, services, workers, connectors, AI agents, external model providers, and Product tools across multiple Tenant and external boundaries.
 
-Trust cannot be inferred from network location, possession of a tenant identifier, or successful authentication alone. Effective access is composed from independent authorities and enforced near the protected resource.
-
-Security must support urgent internal delivery while preserving an evolution path toward managed services and selective SaaS exposure. Target controls are not represented as implemented until realizer and evidence exist.
+AI does not receive a special trust exemption. Model inference, retrieval, tool invocation, and agent iteration all remain inside the same Zero Trust architecture.
 
 ## 4. Architectural Drivers & Lessons
 
@@ -58,404 +54,250 @@ Security must support urgent internal delivery while preserving an evolution pat
 
 | ID | Driver | Security Consequence |
 | :-- | :-- | :-- |
-| S1 | Multi-tenant and cross-client ATI workforce | Principal identity and contextual Membership remain separate |
-| S2 | Multiple applications and future third parties | Application ownership and protocol trust are explicit |
-| S3 | Client and industry integrations | External trust is scoped by provider, purpose, tenant, and data class |
-| S4 | Travel and financial actions are high impact | Strong assurance, separation of duties, evidence, and containment |
-| S5 | AI and automation may invoke tools | Agents receive bounded delegated authority, not unrestricted user power |
-| S6 | Identity implementation is urgent but incomplete | Security capability status requires implementation and test evidence |
+| S1 | AI Products can invoke consequential tools | Delegated authority, side-effect classification, and human approval are explicit |
+| S2 | Knowledge crosses sensitive Product boundaries | Retrieval authorization precedes context assembly |
+| S3 | Providers support API, workload, OAuth, SSO/seat, and local modes | Access profiles are typed, scoped, attributable, and lifecycle-managed |
+| S4 | Provider/model routing is dynamic | Policy constrains data egress, classification, and allowed providers |
+| S5 | Agent/tool ecosystems ingest untrusted content | Prompt/tool injection and sandbox boundaries are explicit |
+| S6 | Workloads/jobs are pervasive | Human credentials are never shared as workload authority |
 
 ### 4.2 Lessons Incorporated
 
-| Lesson | Security Response |
+| Lesson | Response |
 | :-- | :-- |
-| Central identity was interpreted as central business authorization | IAM authority is narrowed; Product domains retain resource decisions |
-| Tenant headers were treated as trusted context | Context requires validated identity, application, and Membership |
-| Signed token was treated as complete authorization | Signature is one input; audience, scope, context, policy, and resource rules still apply |
-| Security controls were declared without realizers | Control status and evidence are explicit downstream |
-| Shared human credentials were used for services | Workloads and agents receive distinct identities |
-| Key and session behavior was assumed rather than tested | Custody, lifecycle, containment, and recovery are evidence-backed |
+| Human SSO seat was treated as backend credential | Interactive and machine authority are distinct |
+| AI agent inherited unrestricted user power | Delegation is bounded by tool, scope, time, risk, and purpose |
+| Knowledge filtering occurred after model input | Retrieval is authorized before disclosure |
+| Provider key lived in Product code | Credential custody stays in Trust Services |
+| Tool protocol was treated as authorization | MCP/API transport does not grant Product permission |
+| Model output was treated as approval | High-impact effects retain Product authorization/human control |
 
 ## 5. Architecture Model
 
 ### 5.1 Zero Trust Boundary
 
-```mermaid
-graph TB
-    ACTOR[Human / Workload / Agent]
-    APP[Application or Client Trust]
-    IAM[Identity & Authentication]
-    TEN[Organization]
-    ENT[Subscription & Entitlement]
-    POLICY[Policy and Product Authorization]
-    RESOURCE[Protected Product Resource]
-    DATA[Protected Data]
-    EXTERNAL[External Trust Provider]
-    AUDIT[Audit, Detection and Response]
+| Dimension | Authority |
+| :-- | :-- |
+| Principal identity | Identity & Access |
+| Application/workload trust | Identity + Software Catalog / Application Trust |
+| Tenant/Workspace context | Organization |
+| Commercial grant | Subscription & Entitlement |
+| Product resource authorization | Product + Security Policy support |
+| Knowledge access | Source/Product policy + Knowledge Retrieval enforcement |
+| AI provider access | AI Platform policy + Trust Services credential custody |
+| Tool business authorization | Tool-owning Product/Platform |
+| Evidence | Source system + Audit & Evidence |
 
-    ACTOR --> IAM
-    APP --> IAM
-    EXTERNAL --> IAM
-    IAM --> RESOURCE
-    TEN --> RESOURCE
-    ENT --> RESOURCE
-    POLICY --> RESOURCE
-    RESOURCE --> DATA
-    RESOURCE --> AUDIT
-    IAM --> AUDIT
-    TEN --> AUDIT
+### 5.2 AI Provider Access Profiles
+
+```text
+Provider Access Profile
+├─ Workload API Credential
+├─ Cloud Workload Identity
+├─ Delegated User OAuth
+├─ Enterprise SSO / Seat Interactive Access
+└─ Local / Self-Hosted Runtime
 ```
 
-Every request or action is evaluated from explicit trust signals. Network placement alone grants no privilege.
+Properties include provider, access mode, owner, purpose, data classes, Tenant/application scope, credential/session lifecycle, permitted capabilities, and evidence.
 
-#### Trust Dimensions
+A human interactive SSO/session credential SHALL NOT be converted into pooled machine authority unless the provider exposes an explicit supported delegated machine contract and enterprise policy permits it.
 
-| Dimension | Question | Authority |
-| :-- | :-- | :-- |
-| Identity | Who or what is acting? | Identity & Access |
-| Application Trust | Which application or workload requests access? | Identity protocol trust plus Software Catalog ownership |
-| Operating Context | In which Tenant or Workspace may the actor operate? | Organization |
-| Commercial Access | Which Product capabilities are active? | Subscription & Entitlement |
-| Resource Authorization | May this action occur on this resource? | Product domain and/or Policy authority |
-| Assurance | Is the authentication strength and recency sufficient? | Identity & Access plus Security policy |
-| Evidence | Can the decision and action be reconstructed? | Source domain and Audit & Evidence |
+### 5.3 Agent and Tool Authorization
 
-Effective access is the intersection of these dimensions, not the output of one god-platform.
+```mermaid
+graph LR
+    USER[Human / Workflow / Workload]
+    AGENT[Agent Run]
+    TOOLGW[Tool Mediation]
+    PRODUCT[Owning Product Tool/API]
+    AUTHZ[Product Authorization]
+    EVID[Evidence]
 
-### 5.2 Enterprise IAM Strategy
+    USER --> AGENT
+    AGENT --> TOOLGW
+    TOOLGW --> PRODUCT
+    PRODUCT --> AUTHZ
+    PRODUCT --> EVID
+```
 
-The enterprise IAM strategy establishes:
+Agent runtime may constrain available tools but does not replace Product authorization.
 
-- stable Principals for humans, services, workloads, and governed agents;
-- explicit Identity Realms and correlation boundaries;
-- governed identifiers and authenticators;
-- authentication assurance and recovery;
-- session and credential lifecycle;
-- standards-based authentication, federation, and delegated-access protocols;
-- registered application and protected-resource trust;
-- locally verifiable security artifacts;
-- machine and workload identity;
-- identity-security event publication.
+### 5.4 Tool Risk Classes
 
-#### Identity Boundary
+Tools are classified by side effect, reversibility, data sensitivity, financial/operational impact, and required assurance.
 
-Identity owns Principal and authentication trust. It does not own:
+High-impact tools require explicit authorization and, where policy requires, human approval before irreversible execution.
 
-- Tenant, Workspace, or Membership;
-- Product, Application ownership, or Subscription;
-- Entitlement or business permission;
-- Product resource state;
-- enterprise-wide immutable evidence.
+### 5.5 Retrieval Security Boundary
 
-#### Identity Populations
+```text
+Caller Identity
++ Application Trust
++ Tenant/Workspace
++ Product Authorization
++ Purpose
++ Classification
+        ↓
+Authorized Retrieval Scope
+        ↓
+Retrieved Knowledge
+        ↓
+Model Context
+```
 
-The strategy supports distinct realm policies for:
+Filtering after model disclosure is not an authorization mechanism.
 
-- ATI workforce;
-- customer workforce;
-- partner identities;
-- external consumers;
-- federated enterprise identities;
-- service, workload, and agent identities.
+### 5.6 Prompt/Content Injection Boundary
 
-The same human may hold one stable workforce Principal across many Tenant Memberships, while customer or partner identities may remain realm-scoped where correlation is not justified.
+Untrusted documents, messages, web content, provider responses, and tool output are treated as data, not authority.
 
-#### Application and Workload Trust
+Agent/tool runtime shall distinguish:
 
-Applications are owned by the Software Catalog domain. Identity owns their protocol-security registration and credential trust. Workloads use non-human identities and do not reuse human credentials.
+- system/platform policy
+- Product-owned instructions
+- user intent
+- retrieved/untrusted content
+- tool/provider output
 
-#### Local Verification
+Untrusted content cannot expand available tool authority.
 
-Products validate approved security artifacts locally during normal operation. Online identity or policy checks are reserved for decisions whose freshness or risk requires them.
+### 5.7 Provider Egress
 
-### 5.3 Security Control Architecture
+AI/model provider routing is constrained by:
 
-Security controls are organized into enterprise families:
+- data classification and residency
+- Tenant/customer policy
+- provider contractual status
+- purpose
+- retention/training policy
+- approved model capability
+- cost/risk limits
 
-| Control Family | Enterprise Direction | Primary Authority |
-| :-- | :-- | :-- |
-| Identity and Authentication | Strong, risk-appropriate authentication and recovery | Identity & Access |
-| Application and Workload Trust | Registered clients, resources, workloads, and credential lifecycle | Identity, Software Catalog, Security & Trust |
-| Tenant Isolation | Explicit context, scoped administration, data and runtime isolation | Organization, Products, Runtime |
-| Authorization | Default deny; enforcement near resource; explicit separation of duties | Product domain / Policy authority |
-| Privileged Access | Dedicated privilege, strong assurance, limited duration, full attribution | Security Authority plus owning domain |
-| Cryptographic Trust | Managed custody, lifecycle, rotation, and recovery | Security & Trust Services |
-| Data Protection | Classification, minimization, encryption, residency, retention | Data, Security, Privacy, Domain owners |
-| Application Security | Secure design, supply chain, testing, and runtime protection | Application owner plus Security |
-| Network and Runtime Security | Segmentation, workload trust, hardened runtime, monitored exposure | Runtime and Security owners |
-| Integration Security | Provider trust, credential isolation, input validation, and scoped data exchange | Natural business owner plus Integration/Security |
-| Audit and Detection | Durable events, correlation, monitoring, response, and evidence | Source domains, Security Operations, Audit |
-| Resilience and Recovery | Containment, backup, restore, failover, and tested recovery | System owners plus Reliability/Security |
-| AI Security | Data controls, tool authorization, evaluation, human oversight, bounded autonomy | AI, Product, Security, and Data owners |
+Unsupported egress fails closed for the affected operation.
 
-#### Distributed Authorization
+### 5.8 Workload Identity
 
-Authorization is layered:
+Services, workers, scheduled consumers, jobs, connectors, and agents use attributable non-human identities. Shared human credentials are prohibited for unattended execution.
 
-- protocol delegation defines which client may request which scope for which resource;
-- Membership defines valid Tenant/Workspace context;
-- Entitlement defines commercial capability;
-- Product policy defines actions, resources, relationships, and business invariants;
-- risk and assurance may require stronger authentication or human approval.
+### 5.9 Enterprise IAM Strategy
 
-A universal synchronous Policy Decision Point is not required. Shared policy capability may distribute or evaluate policy where justified, while the Product domain remains accountable for the final business decision.
+Identity & Access owns Principal, authenticator, authentication, federation, session, protocol trust, workload/agent identity, and authentication assurance.
 
-#### Privileged Access and Break-Glass
+It does not own Tenant/Workspace/Membership, Subscription/Entitlement, Product resource permission, Product business state, or enterprise evidence.
 
-Privileged access is separate from ordinary user access and includes:
+Normal consumers validate approved identity artifacts locally where freshness permits.
 
-- dedicated administrative authority;
-- strong and recent authentication;
-- explicit scope and duration;
-- approval or separation of duties for high-risk actions;
-- complete attribution and evidence;
-- periodic review and revocation.
+### 5.10 Security Control Architecture
 
-Break-glass access may be claimed only when a dedicated mechanism, owner, scope, evidence path, automatic expiry, and tested recovery procedure exist.
+Enterprise control families include:
 
-#### Security Control Status
+- identity/authentication
+- application/workload trust
+- Tenant isolation
+- distributed Product authorization
+- privileged access
+- cryptographic trust
+- data/knowledge protection
+- application/runtime security
+- integration/provider security
+- audit/detection
+- resilience/recovery
+- AI/agent/tool security
 
-Downstream security controls distinguish:
+Each control names policy authority, implementing owner, evidence, failure posture, and lifecycle.
 
-- designed;
-- assigned;
-- implemented;
-- tested;
-- monitored;
-- retired.
+### 5.11 Data Protection
 
-An approved architecture does not make a control implemented.
+Protection applies to authoritative data, projections, artifacts, events, logs, backups, analytics, Knowledge Graph/indexes/embeddings, AI context/output, provider egress, and evidence.
 
-### 5.4 Data Protection
-
-#### Protection Principles
-
-- Data is classified and minimized by purpose.
-- Sensitive data is protected in transit, at rest, in backups, in events, in logs, and in analytical/AI copies.
-- Cryptographic keys and secrets use managed custody appropriate to risk.
-- Tenant, client, classification, purpose, residency, and retention context are preserved.
-- Public verification material is separated from restricted identity and key material.
-- Derived analytics, knowledge, and AI context inherit source restrictions.
-- Data-subject rights, legal hold, evidence, and contractual obligations are reconciled rather than applied as blind deletion.
-
-#### Cryptographic Trust
-
-Enterprise cryptographic direction requires:
-
-- explicit key and certificate authority;
-- managed production custody;
-- unique and stable key identity;
-- controlled activation, rotation, retirement, recovery, and destruction;
-- separation of duties for high-impact key operations;
-- no silent production fallback to ephemeral keys;
-- tested continuity across failure and recovery.
-
-Detailed algorithms and lifetimes belong in standards and SADs.
-
-#### Privacy and Correlation
-
-- Identity correlation is limited to justified realm and purpose.
-- External applications receive only required attributes.
-- Pairwise or scoped identifiers are used when global correlation is unnecessary.
-- Consent does not override prohibited processing.
-- Cross-tenant search, support, analytics, and administration require explicit authorization and evidence.
-
-#### Residency and Sovereignty
-
-Residency and sovereignty apply to authoritative stores, projections, messages, backups, support access, analytics, AI processing, and evidence. Unsupported requirements block the affected use rather than silently violating policy.
-
-#### Security Telemetry and Evidence
-
-Critical security events identify actor, application/workload, Tenant context, action, result, assurance, correlation, and evidence state without exposing secrets. Source systems retain durable facts until enterprise evidence is delivered.
+Classification, minimization, purpose, encryption, residency, retention, legal hold, and support access follow the source obligation. Derived representations do not weaken source restrictions.
 
 ## 6. Principles & Rules
 
-### 6.1 Explicit Trust, No Network Inheritance
-
-Every actor, application, workload, context, and resource establishes trust explicitly.
-
-- **Fitness function:** protected-system review reports zero network-location-only trust paths.
+### 6.1 Explicit Trust
+- **Fitness function:** protected paths report zero network-location-only trust
 
 ### 6.2 Identity Has Narrow Authority
+- **Fitness function:** Identity domain has no Tenant/Membership/Product permission authority
 
-IAM does not own Membership, Entitlement, Application ownership, or Product permission.
+### 6.3 Product Authorization Is Enforced Near Resource
+- **Fitness function:** tool/business APIs enforce resource authorization independently of AI/tool gateway
 
-- **Fitness function:** Identity PAD and data-model audit report zero prohibited authoritative aggregates.
+### 6.4 Workloads Have Distinct Identities
+- **Fitness function:** workload inventory records owner, identity, audience, credential lifecycle
 
-### 6.3 Realm and Operating Context Are Explicit
+### 6.5 Interactive SSO Is Not Shared Machine Authority
+- **Fitness function:** provider-access inventory has zero unattended jobs using shared human interactive sessions without supported delegation
 
-Identity correlation and Tenant context follow governed realm and Membership policies.
+### 6.6 Retrieval Authorization Precedes Model Context
+- **Fitness function:** cross-Tenant/forbidden knowledge negative tests verify exclusion before model invocation
 
-- **Fitness function:** every authentication and context journey identifies realm and context authority.
+### 6.7 Agents Receive Bounded Delegation
+- **Fitness function:** agent runs record permitted tools, scopes, budgets, identity, and delegation source
 
-### 6.4 Default Deny
+### 6.8 Untrusted Content Cannot Expand Authority
+- **Fitness function:** prompt/tool-injection test suite covers untrusted retrieval/tool/provider inputs
 
-Access is denied unless required trust and authorization are positively established.
+### 6.9 Secrets Use Managed Custody
+- **Fitness function:** Product/AI configuration contains references, not raw production provider credentials
 
-- **Fitness function:** route and policy tests verify unauthenticated and unauthorized denial.
+### 6.10 Provider Egress Is Policy-Constrained
+- **Fitness function:** restricted data/provider combinations are denied by tested policy
 
-### 6.5 Signature Is Not Authorization
+### 6.11 High-Risk AI Actions Require Appropriate Human/Policy Control
+- **Fitness function:** high-risk action inventory maps authorization, approval, evidence, and rollback/compensation
 
-A valid cryptographic artifact does not by itself authorize a Product action.
-
-- **Fitness function:** protected resources validate audience/context and enforce Product policy.
-
-### 6.6 Authorization Is Enforced Near the Resource
-
-The owning Product remains accountable for business authorization.
-
-- **Fitness function:** Product PADs identify authorization owner and high-risk decisions.
-
-### 6.7 Membership, Entitlement, and Permission Are Distinct
-
-Context, commercial access, and action authorization do not imply one another.
-
-- **Fitness function:** contract and domain review reports zero conflated authority.
-
-### 6.8 Production Cryptographic Material Uses Managed Custody
-
-Keys and secrets have explicit owner, lifecycle, and recovery.
-
-- **Fitness function:** critical SADs provide custody and rotation evidence.
-
-### 6.9 Workloads Have Distinct Identities
-
-Services, jobs, connectors, and agents do not use shared human credentials.
-
-- **Fitness function:** workload inventory reports owner, identity, credential lifecycle, and audience.
-
-### 6.10 Privilege Is Attributable and Time-Bound
-
-Administrative and emergency authority is scoped, evidenced, and reviewed.
-
-- **Fitness function:** privileged-access review reports owner, scope, expiry, and evidence.
-
-### 6.11 Tenant Isolation Is Defense in Depth
-
-Application, data, runtime, cache, messaging, export, and administration controls enforce isolation together.
-
-- **Fitness function:** cross-tenant negative-test coverage includes every relevant data path.
-
-### 6.12 Security Controls Require Realizers and Evidence
-
-Architecture status is not implementation status.
-
-- **Fitness function:** implemented/tested controls resolve to systems and current evidence.
-
-### 6.13 External Trust Is Scoped
-
-Federation, providers, partners, and client systems are trusted only for declared facts and purposes.
-
-- **Fitness function:** external trust inventory identifies issuer/provider, scope, owner, and lifecycle.
-
-### 6.14 AI Authority Is Delegated and Bounded
-
-AI and agents operate within user/workflow authority, tool policy, data purpose, risk limits, and human oversight.
-
-- **Fitness function:** high-risk AI actions have explicit authorization and approval control.
-
-### 6.15 Degraded Security Is Explicit
-
-Failure modes define which operations continue, degrade, or fail closed.
-
-- **Fitness function:** critical security dependencies have approved degradation contracts.
+### 6.12 AI Evidence Is Reconstructable
+- **Fitness function:** significant AI actions can resolve provider/model profile, policy, retrieval/tool correlation, actor/workload, and outcome without storing prohibited secrets
 
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected | Debt Accepted |
-| :-- | :-- | :-- |
-| Perimeter/network trust | Internal location does not prove identity or authorization | More explicit identity and workload controls |
-| IAM owns all authorization | It creates a god-platform and ignores Product context | Distributed policy and local enforcement complexity |
-| One global identity correlation policy | Workforce, customer, partner, and consumer needs differ | Explicit Identity Realms and linking governance |
-| Shared human service accounts | They destroy attribution and safe rotation | Workload-identity lifecycle investment |
-| Security controls considered implemented when documented | It creates false assurance | Evidence and control-status administration |
-| AI agent inherits full user access | It creates excessive and opaque authority | Bounded delegation and approval flow |
+| Alternative | Why Rejected |
+| :-- | :-- |
+| AI gateway trusted inside network | Violates Zero Trust |
+| One shared API key for all Products | Removes attribution, isolation, rotation, and cost ownership |
+| Reuse provider web session for workers | Human session lifecycle is not workload identity |
+| Filter RAG after model invocation | Data already disclosed |
+| Agent gateway is final authorization | Product invariants and resource authority are lost |
+| Give agents full user scope | Excessive blast radius |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Security Dependency | Blast Radius | Required Posture |
+| Dependency | Blast Radius | Required Posture |
 | :-- | :-- | :-- |
-| Identity issuance | New authentication and credential lifecycle | Existing valid artifacts remain locally verifiable; new trust fails closed |
-| Tenant/Membership authority | New context and revocation changes | Bounded projections continue within security policy |
-| Cryptographic custody | New signing, encryption, or credential operation | Unsafe issuance fails closed; verification remains available where safe |
-| Policy capability | Shared policy decisions | Local approved policy or fail-closed behavior according to decision class |
-| Audit/evidence service | Central evidence consolidation | Source systems retain durable facts and retry |
-| Security telemetry | Detection quality | Preventive controls remain; telemetry restoration is prioritized |
-| External identity/provider | Affected federation or integration | Failure is isolated to the provider and journey |
+| Identity | New auth/refresh | Locally verifiable active artifacts where permitted |
+| Organization context | New membership/context changes | Bounded projections with revocation semantics |
+| Trust/Secret Services | New credential acquisition/rotation | Cached secrets only within approved bounded lifecycle |
+| AI provider | AI feature | Evaluated fallback or explicit failure |
+| Knowledge authorization | RAG/search | Fail closed for protected content |
+| Tool owner | Agent task | Fail task, never bypass Product authorization |
 
 ## 9. Ownership
 
-| Responsibility | Accountable | Consulted |
-| :-- | :-- | :-- |
-| Enterprise security architecture | Security Architecture Authority | Architecture, Platform, Product, Data |
-| Identity and protocol trust | Identity Platform Owner | Security and Application owners |
-| Tenant and Membership security | Organization Owner | Identity, Product, Security |
-| Product authorization | Product Domain Owner | Security and Policy owner |
-| Application ownership | Software Catalog Owner | Application team and Security |
-| Cryptographic custody | Security & Trust Owner | Identity, Runtime, Data |
-| Security operations and incident response | Security Operations | System and Product owners |
-| Enterprise evidence | Audit & Evidence Owner | Security, Compliance, source domains |
-| Privacy and data protection | Privacy/Data Protection Authority | Data and Domain owners |
+| Responsibility | Accountable |
+| :-- | :-- |
+| Enterprise security principles | Security / Architecture Authority |
+| Principal authentication | Identity |
+| Tenant/Workspace context | Organization |
+| Product authorization | Product domain |
+| AI execution policy enforcement | AI Platform |
+| Knowledge retrieval enforcement | Knowledge & Retrieval |
+| Provider credential custody | Trust Services |
+| Tool business authorization | Tool-owning Product/Platform |
 
 ## 10. Dependencies
 
-**Strategic inputs:** enterprise capability, system, data, interaction, and runtime architecture.
-
-**Governed outputs:** domain security architecture, enterprise security standards, system threat models, controls, and evidence.
+- EAD-001 authority map
+- EAD-003 data/knowledge topology
+- EAD-004 contracts
+- EAD-005 runtime/platform strategy
+- EAD-007 governance/assurance
 
 ## 11. Traceability
 
-- Every control family maps to one accountable authority.
-- Every implemented control maps to a PAD/SAD realizer and evidence.
-- Every protected system maps to identity, Tenant, data, application, and authorization boundaries.
-- Major trust-model changes require an enterprise ADR and EAD review.
-
-## 12. Assumptions
-
-- ATI initially has primarily internal and managed-service users.
-- External federation and third-party application exposure grow incrementally.
-- Products can validate approved security artifacts locally.
-- Managed key, secret, and runtime-security capabilities are available.
-- Security evidence maturity will increase with system maturity.
-
-## 13. Constraints
-
-- Network location cannot be the sole trust basis.
-- Identity cannot own Tenant Membership, Entitlement, or Product permission.
-- Human credentials cannot be reused by workloads.
-- Production keys cannot silently fall back to process-ephemeral material.
-- High-risk actions require attributable identity and appropriate assurance.
-- Sensitive data cannot be copied without purpose, classification, and protection.
-- A documented control cannot be claimed implemented without evidence.
-
-## 14. Risks
-
-| Risk | Likelihood | Impact | Mitigation |
-| :-- | :-- | :-- | :-- |
-| IAM becomes a god-platform | High | Critical | Narrow authority and Product authorization ownership |
-| Cross-tenant context is trusted from client input | High | Critical | Validated Membership and context controls |
-| Workload identity remains shared or anonymous | Medium | Critical | Workload inventory and credential lifecycle |
-| Key custody or rotation fails across replicas/recovery | Medium | Critical | Managed custody and tested continuity |
-| Security controls remain paper-only | High | High | Realizer/evidence status |
-| External federation leaks or correlates identities unnecessarily | Medium | High | Realm, purpose, and privacy controls |
-| AI agent acts beyond delegated authority | Medium | Critical | Bounded tools, scope, risk, and approval |
-| Degraded security fails open silently | Medium | Critical | Explicit degradation contract and testing |
-
-## 15. Future Direction
-
-The security architecture will evolve from minimum safe workforce and tenant trust toward stronger authentication, enterprise federation, workload identity, distributed authorization, automated evidence, advanced detection, and bounded external/AI ecosystems. Capability claims advance only with implementation and test evidence.
-
-## 16. References
-
-- EAD-001 — Enterprise Capability & Domain Map.
-- EAD-002 — Enterprise System Landscape.
-- EAD-003 — Enterprise Data Ownership & Topology.
-- EAD-004 — Enterprise Integration Architecture.
-- EAD-005 — Enterprise Platform Architecture.
-- GDC-000 — Governance Policy.
-- GDC-006 — EAD Guideline.
-- NIST SP 800-207 — Zero Trust Architecture.
-- NIST Digital Identity Guidelines.
-- OAuth and OpenID Connect security practices.
-- OWASP Application Security Verification Standard.
-- Privacy, cryptographic-key-management, and workload-identity practices.
+- PAD-PLT-008 AI Platform
+- PAD-PLT-015 Knowledge & Retrieval
+- ADR-GLB-012 AI/Knowledge/Product separation
+- STD-IAM profiles for identity/token verification
+- Security tests and system threat models downstream

@@ -3,56 +3,68 @@ doc_meta:
   id: EAD-003
   title: Enterprise Data Ownership & Topology
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
   created_date: 2026-08-06
-  last_reviewed: 2026-08-06
+  last_reviewed: 2026-08-23
 ---
 
 # Enterprise Data Ownership & Topology
 
 ## 1. Purpose
 
-Define enterprise data authority, ownership, movement, and governance for the **Scnehaux Enterprise Cloud**, including data whose canonical authority remains with client or industry systems.
+Define enterprise data, knowledge, evidence, and derived-intelligence authority for the **Scnehaux Enterprise Cloud**.
 
-**Decision question:** _Who is authoritative for each class of data, how may that data move, and what obligations apply when ATI stores a copy, projection, derivative, or execution record?_
-
-This document defines enterprise data principles and macro topology. It does not define database schemas, table structures, storage indexes, field-level contracts, retention schedules, or implementation-specific pipelines.
+**Decision question:** _Who is authoritative for each class of data or knowledge, how may derived representations move, and what must remain true when ATI creates projections, indexes, embeddings, graph representations, evidence, or AI outputs?_
 
 ## 2. Scope
 
-**In scope:**
+**In scope**
 
-- Enterprise data-authority classes.
-- Domain ownership of strategic data families.
-- Transactional, operational, analytical, knowledge, and evidence boundaries.
-- Macro movement and projection patterns.
-- External-authority, freshness, reconciliation, and lineage principles.
-- Enterprise data governance, classification, privacy, residency, and retention direction.
+- Transactional, operational, evidence, analytical, knowledge, retrieval-index, and AI-output authority
+- External systems of record and ATI projections
+- Knowledge assets, claims, provenance, ontology, graph representation, and retrieval indexes
+- AI inputs/outputs and acceptance into Product authority
+- Tenant, purpose, classification, residency, lineage, and reconciliation
+- Artifact and document provenance
 
-**Out of scope:**
+**Out of scope**
 
-- Physical schemas and storage engines — SADs and TDDs.
-- API/event/file contract shape — EAD-004 and standards.
-- Product-specific data models — PADs.
-- Detailed security controls — EAD-006 and standards.
-- Analytical model, ontology, vector-index, or pipeline implementation — PADs and SADs.
-
-This document binds every system that creates, stores, transforms, exports, analyzes, or deletes enterprise or client data.
+- Physical database/index/graph technologies
+- Table schemas and DDL
+- Product-specific domain models
+- API/event payload shape
+- Model-provider or embedding-model selection
+- Detailed retention schedules
 
 ## 3. Enterprise Context
 
-Scnehaux Enterprise Cloud is both:
+ATI owns Product execution state and enterprise control facts while frequently processing client/industry facts whose canonical authority remains external.
 
-- an owner of internal enterprise, control, operational-execution, and evidence data; and
-- a processor of client and industry data whose canonical authority remains external.
+Data, Knowledge, and AI are deliberately separated:
 
-Travel operations make this distinction critical. PNR, ticket, fare, inventory, payment, settlement, and financial posting may remain authoritative in client or industry systems, while ATI owns local work, decision, command, exception, reconciliation, and evidence state.
+```text
+Authoritative Fact
+    ↓
+Governed Projection / Artifact
+    ↓
+Knowledge Asset / Claim
+    ↓
+Graph / Vector / Lexical / Metadata Index
+    ↓
+Retrieval Context
+    ↓
+AI Output
+    ↓
+Product Acceptance
+    ↓
+Authoritative Product Mutation
+```
 
-The data architecture therefore treats authority as an explicit property of every critical fact rather than assuming that the system holding a copy owns the truth.
+No downward derived representation silently promotes itself into Product truth.
 
 ## 4. Architectural Drivers & Lessons
 
@@ -60,377 +72,243 @@ The data architecture therefore treats authority as an explicit property of ever
 
 | ID | Driver | Data Consequence |
 | :-- | :-- | :-- |
-| D1 | Multi-tenant enterprise operation | Tenant, classification, purpose, and residency context accompany governed data |
-| D2 | External travel and financial systems remain authoritative | External canonical data and local projections are distinct classes |
-| D3 | Cross-product analytics and AI require reusable data | Analytical and knowledge products are derived without mutating source transactions |
-| D4 | Operational actions may have financial impact | Freshness, revalidation, idempotency, evidence, and reconciliation are correctness concerns |
-| D5 | Identity and tenancy authorities are being separated | Principal, Membership, Entitlement, and Product permission have distinct owners |
-| D6 | Physical platform maturity will evolve | Logical data authority is independent of physical database consolidation or separation |
+| D1 | Enterprise AI Products require reusable grounded context | Knowledge assets and retrieval indexes have explicit authority and provenance |
+| D2 | Graph RAG is a strategic retrieval capability | Graph representation is first-class but not the sole retrieval model |
+| D3 | HCM, Travel, and future ERP hold sensitive authoritative facts | Product transactional authority remains local to the owning domain |
+| D4 | External client/industry systems remain authoritative | Projection freshness and reconciliation are mandatory |
+| D5 | Multi-tenant AI and search cross data boundaries | Retrieval authorization occurs before context disclosure |
+| D6 | Artifacts become sources for knowledge | Artifact identity/version/checksum/provenance survive ingestion |
 
 ### 4.2 Lessons Incorporated
 
 | Lesson | Data Response |
 | :-- | :-- |
-| Shared persistence recreated a distributed monolith | Domains own private logical persistence boundaries |
-| Cached external data was treated as current truth | Projections remain non-authoritative and expose freshness |
-| CDC was treated as a business contract | Business contracts remain owned APIs/events; CDC is an implementation mechanism |
-| Analytical and AI stores became shadow authorities | Derived systems cannot directly mutate transactional truth |
-| Tenant scope was lost during movement | Scope and classification travel with data |
-| Deletion was treated as a single database operation | Retention, evidence, legal hold, external authority, and downstream copies are coordinated |
+| Vector stores were treated as knowledge truth | Indexes are derived retrieval structures |
+| Knowledge Graph was treated as a master database | Graph facts preserve source/provenance and do not replace Product authority |
+| AI extraction was accepted as fact automatically | Proposed data requires owning-domain acceptance |
+| Retrieval filters happened after model context assembly | Authorization is applied before context reaches a model |
+| Document copy implied document ownership | Artifact storage and business meaning are separate |
+| Data platformization implied central ownership | Domain-oriented authoritative ownership remains explicit |
 
 ## 5. Architecture Model
 
 ### 5.1 Data Ownership
 
-#### Data Authority Classes
-
 | Class | Meaning | Authority Rule |
 | :-- | :-- | :-- |
-| ATI Authoritative Data | Facts created and governed by an ATI domain | One ATI domain is the source of truth |
-| Externally Authoritative Data | Facts whose canonical owner is a client, partner, or industry system | External authority is named explicitly |
-| Operational Execution State | Work, decision, command, exception, and outcome state created by ATI | Owned by the executing Product domain |
-| Non-Authoritative Projection | Local copy used for performance, resilience, or product needs | Source authority, version, freshness, and reconciliation are declared |
-| Evidence Data | Tamper-evident accountability record | Enterprise evidence authority owns the durable record |
-| Derived / Analytical Data | Metrics, aggregates, features, models, or reports derived from source facts | Derived product owner is accountable; source lineage remains intact |
-| Proposed / AI-Generated Data | Suggested classification, extraction, decision, or content | Never authoritative until accepted by the owning domain |
-| Reference Data | Governed codes, classifications, and shared reference values | One named authority or external source owns the reference |
+| ATI Authoritative Transactional Data | Product/control facts created and governed by ATI | One owning domain |
+| Externally Authoritative Data | Client/partner/industry canonical facts | External authority named explicitly |
+| Operational Execution State | Work, command, outcome, exception, reconciliation | Owning Product domain |
+| Platform Operational State | Schedule, Workflow, Notification, Job-attempt or other Platform-owned state | Owning Platform capability |
+| Non-Authoritative Projection | Copy for local reads/resilience | Source, freshness, conflict, reconciliation declared |
+| Artifact Content | Managed binary/textual payload and immutable versions | Artifact Platform owns lifecycle, Product owns business meaning |
+| Evidence Data | Tamper-evident accountability record | Audit & Evidence owns evidence lifecycle |
+| Analytical / Derived Data | Metrics/features/aggregates | Named Data/Product owner with source lineage |
+| Knowledge Asset | Governed knowledge unit with source/provenance/version | Knowledge/Product owner according to source semantics |
+| Knowledge Claim | Governed claim about an entity/relation | Provenance and confidence required |
+| Ontology | Governed vocabulary/schema for knowledge representation | Core owned by Knowledge; domain extensions owned with domain stewardship |
+| Knowledge Graph Projection | Derived entity/relationship/claim representation | Never silently becomes Product transactional authority |
+| Retrieval Index | Lexical/vector/graph/metadata acceleration structure | Derived and rebuildable from governed source |
+| Embedding | Derived model-specific representation | Not knowledge authority |
+| AI Run | Execution trace for inference/agent activity | AI Platform operational record |
+| Proposed / AI-Generated Output | Suggested content/classification/decision | Never authoritative until accepted by owning Product/domain |
 
-#### Canonical Ownership Matrix
+### 5.2 Canonical Ownership Matrix
 
 | Data Family | Canonical Authority |
 | :-- | :-- |
-| Principal, Identifier, Authenticator, Session, Protocol Trust | Identity & Access |
+| Principal, authenticator, session, protocol trust | Identity & Access |
 | Organization, Tenant, Workspace, Membership | Organization |
-| Product and Offering | Product-owning domain / Product & Offering Catalog |
-| Application and Application Owner | Software Catalog |
-| Subscription and Entitlement | Subscription & Entitlement |
-| Employee, Employment, HR Organization, Payroll | HCM |
-| BPO Client Account, Contract, SOW, Commercial Terms | BPO Client & Contract domain |
-| Operational Team, Workstream Assignment, Shift, Capacity | Workforce Operations / Service Catalog domains |
-| Work Item, Case, Task, Decision, Product Outcome | Owning Product domain |
-| Enterprise Evidence | Audit & Evidence |
-| PNR, Ticket, Offer, Inventory | Client or industry system defined by contract |
-| Fare and Fare Rule | Airline, ATPCO, GDS, or contracted source |
-| Financial Posting and Settlement | Client ERP, revenue accounting, payment, or settlement authority |
-| Analytical Product | Named Data or Product owner |
-| Knowledge Asset | Named Knowledge or Product owner with source provenance |
+| Employee, Employment, HR Organization, Position, Leave | HCM |
+| Future ERP financial operational facts | Owning ERP Product/domain when chartered |
+| Work Item / Case business state | Owning Product for domain-specific meaning; Work Management for generic work lifecycle when consumed |
+| Workflow definition/instance/task coordination | Workflow Platform |
+| Schedule/Occurrence/dispatch | Scheduling Platform |
+| Rule definition/runtime lifecycle | Rules & Decisioning Platform; domain rule meaning remains Product-owned |
+| Artifact binary/version/checksum | Artifact & Document Platform |
+| Notification/delivery state | Notification Platform |
+| Accepted Usage Meter / Rating / Charge / Bill state | Usage Metering & Billing Platform |
+| Enterprise evidence | Audit & Evidence Platform |
+| Knowledge asset/ontology/index lifecycle | Knowledge & Retrieval Platform within declared scope |
+| Product business facts represented in knowledge | Original Product/external authority remains canonical |
+| AI model/provider execution state | AI Enablement Platform |
 
-A copied fact does not change the authority listed above.
-
-#### Logical Persistence Boundary
-
-Each authoritative domain controls:
-
-- its write model and integrity rules;
-- access to its authoritative records;
-- publication of its contracts;
-- retention and correction obligations;
-- restoration and reconciliation responsibility.
-
-Multiple domains may temporarily share infrastructure, but direct cross-domain persistence access remains prohibited.
-
-#### Authority Topology
+### 5.3 Knowledge Topology
 
 ```mermaid
 graph LR
-    EXT[External Systems of Record] --> PROJ[ATI Projections]
-    AUTH[ATI Authoritative Domains] --> PROJ
-    AUTH --> EXEC[Operational Execution State]
-    PROJ --> EXEC
-    EXEC --> EVID[Evidence]
-    AUTH --> ANALYTICS[Analytical Data Products]
-    PROJ --> ANALYTICS
-    EXEC --> ANALYTICS
-    ANALYTICS --> KNOW[Knowledge / AI Products]
-    KNOW -. proposed outputs .-> AUTH
+    SOURCE[Product / External / Artifact Sources]
+    KA[Governed Knowledge Assets]
+    MODEL[Ontology / Entity / Relationship / Claim]
+    LEX[Lexical Index]
+    VEC[Vector Index]
+    GRAPH[Graph Index / Projection]
+    META[Metadata Index]
+    RET[Authorized Hybrid Retrieval]
+    AI[AI Platform]
+    HUMAN[Human / Product]
+
+    SOURCE --> KA
+    KA --> MODEL
+    MODEL --> LEX
+    MODEL --> VEC
+    MODEL --> GRAPH
+    MODEL --> META
+    LEX --> RET
+    VEC --> RET
+    GRAPH --> RET
+    META --> RET
+    RET --> AI
+    RET --> HUMAN
 ```
 
-The final arrow requires authoritative acceptance; derived systems cannot promote themselves.
+Graph is first-class, not exclusive. Retrieval selection follows query, evidence, authorization, latency, and quality requirements.
 
-### 5.2 Transactional & Analytical Boundary
+### 5.4 Ontology Model
 
-| Data Plane | Purpose | Mutation Rule |
-| :-- | :-- | :-- |
-| Authoritative Transactional | Enforce business and control invariants | Only owning domain commands mutate state |
-| Operational Projection | Support local product execution or resilience | Updated from declared authority; never independent truth |
-| Evidence | Preserve accountability and chain of custody | Append and govern according to evidence policy |
-| Analytical | Produce metrics, reports, forecasting, and data products | Read/derive from governed sources; no direct source mutation |
-| Knowledge | Organize documents, claims, entities, relationships, and provenance | Source authority and access controls are preserved |
-| AI / ML | Train, evaluate, infer, and recommend | Outputs remain derived or proposed until accepted |
+The enterprise uses:
 
-Transactional workloads prioritize correctness and domain invariants. Analytical and AI workloads prioritize governed reuse, lineage, and appropriate freshness without coupling operational availability to analytical systems.
+```text
+Small Enterprise Core Ontology
++
+Domain-Owned Extensions
+```
 
-#### Data Product Boundary
+The core defines only durable cross-domain concepts. Domain ontology extensions preserve the Product/domain ubiquitous language and do not centralize business authority.
 
-A data product has:
+### 5.5 Retrieval Authorization
 
-- an accountable owner;
-- defined consumers and purpose;
-- source lineage;
-- quality and freshness expectations;
-- classification and access policy;
-- lifecycle and deprecation rules.
+```text
+Identity
++ Application Trust
++ Tenant / Workspace Context
++ Product Authorization
++ Data Classification / Purpose
+        ↓
+Authorized Knowledge Scope
+        ↓
+Retrieval
+        ↓
+Context Assembly
+        ↓
+Model / Human Consumer
+```
 
-A database table, dashboard, or copied dataset is not automatically a data product.
+Unauthorized knowledge SHALL NOT be retrieved and then merely hidden from the final response.
 
-### 5.3 Data Movement Strategy
+### 5.6 Artifact-to-Knowledge Lineage
 
-Sanctioned enterprise movement patterns include:
+Every knowledge unit derived from a managed artifact can resolve, where applicable, to:
 
-| Pattern               | Appropriate Use                                                                |
-| :-------------------- | :----------------------------------------------------------------------------- |
-| Provider-Owned API    | Current authoritative query or command requiring immediate response            |
-| Domain Event          | Publication of an accepted fact to independent consumers                       |
-| Bounded Projection    | Resilient local enforcement or read needs                                      |
-| Batch / File Exchange | External or high-volume processes where synchronous contracts are unsuitable   |
-| Change Data Capture   | Governed replication or analytical ingestion, not business semantics           |
-| Data Export / Import  | Migration, portability, contractual delivery, or offboarding                   |
-| Reconciliation        | Detect and repair divergence between authority and copies or external outcomes |
+- source artifact identifier and immutable version
+- source authority
+- transformation lineage
+- extraction method
+- effective period
+- classification and tenant/purpose scope
+- confidence where derived
+- evidence/citation reference
 
-#### Projection Requirements
+### 5.7 Transactional & Analytical Boundary
 
-Every critical projection identifies:
+| Plane | Mutation Rule |
+| :-- | :-- |
+| Authoritative Transactional | Only owning Product/control commands mutate authoritative state |
+| Operational Projection | Updated from declared authority; never independent truth |
+| Evidence | Append/integrity lifecycle under Audit & Evidence |
+| Analytical | Derives from governed source; no direct source mutation |
+| Knowledge | Organizes provenanced assets/claims/relations without stealing source authority |
+| AI | Produces derived/proposed output until owning Product accepts |
 
-- source authority;
-- consuming purpose;
-- scope and classification;
-- acceptable freshness;
-- stale-state behavior;
-- conflict rule;
-- replay/bootstrap approach;
-- reconciliation owner;
-- retention and deletion behavior.
+### 5.8 Data Movement Strategy
 
-The detailed contract format belongs in standards and PAD/SAD artifacts.
+Approved macro patterns include provider-owned API, domain event, asynchronous command, bounded projection, governed batch/file exchange, CDC for replication/analytics, Artifact references, Knowledge ingestion, and reconciliation.
 
-#### External Authority Requirements
+Every critical movement declares source authority, purpose, Tenant/classification, freshness, stale behavior, lineage, retention, and reconciliation ownership.
 
-Every critical external dataset identifies:
+### 5.9 Data Governance
 
-- the external authority and contracted scope;
-- the ATI domain accountable for the relationship;
-- whether ATI is read-only, command-through, propose-only, or approved write-back;
-- the freshness required before an irreversible action;
-- the expected reconciliation and exception process.
-
-#### Conflict Direction
-
-By default:
-
-- external authority wins for externally authoritative facts;
-- ATI authority wins for ATI-owned facts;
-- local execution and evidence remain ATI-owned even when the external business outcome differs;
-- conflicts produce an explicit exception rather than silent overwrite.
-
-### 5.4 Data Governance
-
-#### Governance Responsibilities
-
-| Responsibility                                | Accountable Role                        |
-| :-------------------------------------------- | :-------------------------------------- |
-| Enterprise data principles and classification | Data Governance Authority               |
-| Authoritative domain model                    | Domain Owner                            |
-| Data Product quality and lifecycle            | Data Product Owner                      |
-| External-authority contract                   | Product Domain Owner                    |
-| Tenant isolation and residency policy         | Security, Data, and Tenancy authorities |
-| Evidence retention                            | Audit & Compliance authority            |
-| Analytical and AI usage                       | Data/AI Governance plus source owner    |
-
-#### Classification Direction
-
-Enterprise data uses classification appropriate to business and regulatory impact, including:
-
-- public;
-- internal;
-- restricted;
-- confidential or regulated where required.
-
-Classification applies to source records, projections, events, logs, exports, backups, analytics, knowledge indexes, and AI context.
-
-#### Tenant and Purpose Context
-
-Tenant-scoped or client-scoped data preserves:
-
-- owning or source context;
-- allowed purpose;
-- consumer authorization;
-- residency and retention obligations;
-- lineage to the authoritative source.
-
-Cross-tenant aggregation requires explicit authorization and purpose.
-
-#### Residency and Sovereignty
-
-Residency applies to:
-
-- authoritative storage;
-- projections and caches;
-- messages and files;
-- backups and recovery copies;
-- analytical and AI datasets;
-- support access and exports.
-
-Unsupported residency requirements block use rather than silently violating policy.
-
-#### Retention and Disposal
-
-Retention is determined by purpose, contract, regulation, security evidence, and legal hold. Deletion of authoritative data must account for projections, derived products, backups, evidence, and external authority obligations.
-
-#### Data Quality and Lineage
-
-Critical data products and projections expose:
-
-- source and owner;
-- timeliness and completeness;
-- validity and reconciliation status;
-- transformation lineage;
-- known limitations.
-
-AI-generated and extracted claims retain source provenance and confidence; they are not promoted to authoritative facts without domain acceptance.
+Data Governance defines classification, lineage, quality, residency, retention, privacy, and purpose obligations. Product/domain owners remain accountable for authoritative domain data. Knowledge/AI representations inherit source restrictions.
 
 ## 6. Principles & Rules
 
-### 6.1 One Authority per Fact
+### 6.1 One Canonical Authority per Critical Fact
 
-Every critical fact has one named ATI or external authority.
+- **Fitness function:** authority catalog reports zero multiply-authoritative critical facts
 
-- **Fitness function:** authority catalog reports zero unowned or multiply-authoritative critical datasets.
+### 6.2 Projection, Graph, Index, and Embedding Are Not Product Truth
 
-### 6.2 Projection Is Not Authority
+- **Fitness function:** knowledge/retrieval PADs declare source authority and rebuild/reconciliation behavior
 
-A copy used for performance or resilience retains source lineage and freshness semantics.
+### 6.3 AI Output Requires Product Acceptance
 
-- **Fitness function:** critical projection registry has source, freshness, stale behavior, and reconciliation owner.
+- **Fitness function:** high-impact AI mutation paths identify deterministic validation/authorization and approval where required
 
-### 6.3 Private Domain Persistence
+### 6.4 Retrieval Authorization Precedes Disclosure
 
-Only the owning domain mutates authoritative data.
+- **Fitness function:** security tests verify unauthorized data is excluded before context assembly
 
-- **Fitness function:** cross-domain database grants and direct write paths equal zero.
+### 6.5 Knowledge Is Provenanced
 
-### 6.4 External Authority Is Explicit
+- **Fitness function:** governed Knowledge Claims expose source/provenance/version and scope
 
-Client and industry systems remain canonical where contractually defined.
+### 6.6 Domain Knowledge Semantics Stay Domain-Owned
 
-- **Fitness function:** external data inventory identifies authority and ATI relationship owner.
+- **Fitness function:** enterprise ontology review finds no unapproved replacement of Product ubiquitous language
 
-### 6.5 Revalidate Irreversible Actions
+### 6.7 Private Domain Persistence
 
-High-impact actions use sufficiently current authoritative state.
+- **Fitness function:** direct cross-domain database grants/write paths equal zero
 
-- **Fitness function:** affected PADs declare freshness and revalidation policy.
+### 6.8 External Authority Remains Explicit
 
-### 6.6 Reconciliation Is Correctness
-
-Divergence between authority, projection, command, and external outcome is detected and resolved.
-
-- **Fitness function:** critical integrations report reconciliation objective and unresolved exceptions.
-
-### 6.7 Analytical and AI Systems Do Not Mutate Source Truth Directly
-
-Derived outputs enter authoritative domains only through governed commands and acceptance.
-
-- **Fitness function:** direct analytical/AI write paths into authoritative stores equal zero.
-
-### 6.8 Scope, Classification, Purpose, and Lineage Travel with Data
-
-Governance context is preserved through every copy and transformation.
-
-- **Fitness function:** critical data contracts include governance context.
-
-### 6.9 CDC Is an Implementation Mechanism
-
-Business consumers depend on owned contracts, not database change semantics.
-
-- **Fitness function:** no Product contract is defined solely by a source table change stream.
-
-### 6.10 Retention Is Purpose-Bound
-
-Data is retained only while business, legal, contractual, security, or evidence purpose requires it.
-
-- **Fitness function:** critical data families have approved retention and disposal ownership.
+- **Fitness function:** critical external datasets name authority, freshness, and reconciliation owner
 
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected | Debt Accepted |
-| :-- | :-- | :-- |
-| Treat every ATI copy as source of truth | It creates stale and conflicting authority | Projection and reconciliation governance |
-| Shared enterprise operational database | It destroys domain autonomy and security boundaries | Contract-mediated movement and duplicated projections |
-| CDC as universal integration | It leaks physical schemas and business ambiguity | Owned events/APIs plus selected CDC for replication |
-| One analytical store for all use cases | It creates classification, residency, and ownership risk | Multiple governed data products may exist |
-| AI-generated facts become canonical automatically | Probabilistic outputs cannot own business truth | Human/domain acceptance introduces additional workflow |
+| Alternative | Why Rejected |
+| :-- | :-- |
+| One central enterprise database | Destroys bounded authority and independent lifecycle |
+| Knowledge Graph as enterprise master database | Converts a derived representation into hidden transactional authority |
+| Vector-only RAG | Insufficient for all query/evidence/relationship needs |
+| Graph-only RAG | Overfits one retrieval shape and increases complexity |
+| AI Platform owns all knowledge | Couples knowledge lifecycle to model execution |
+| Filter after LLM context assembly | Discloses data before authorization is applied |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Dependency | Data Impact | Required Posture |
+| Dependency | Blast Radius | Required Posture |
 | :-- | :-- | :-- |
-| Authoritative domain unavailable | New authoritative reads/writes may pause | Approved projections may continue within freshness; unsafe writes fail closed |
-| Projection pipeline unavailable | Copies become stale | Freshness is visible; consumers apply declared stale behavior |
-| Analytical platform unavailable | Reports and intelligence degrade | Operational systems continue independently |
-| Evidence platform unavailable | Central evidence consolidation delays | Source domains retain durable local facts |
-| External authority unavailable | External state cannot be confirmed | Unsafe actions pause; local execution records remain durable |
-| Data catalog unavailable | Discovery and governance administration degrade | Existing systems continue with versioned contracts |
+| Authoritative Product store | Product-specific | Derived systems never override unavailable truth |
+| Knowledge ingestion | Stale knowledge | Existing version remains queryable with freshness visible |
+| Vector/graph/lexical index | Retrieval mode degradation | Other evaluated retrieval modes may continue |
+| Knowledge & Retrieval control | Search/RAG degradation | Product fails explicitly or uses approved fallback |
+| AI provider | AI-output degradation | Knowledge remains independently queryable |
 
 ## 9. Ownership
 
-| Responsibility                    | Accountable                           | Consulted                             |
-| :-------------------------------- | :------------------------------------ | :------------------------------------ |
-| Enterprise data architecture      | Data Architecture Authority           | Domain, Security, Privacy, Compliance |
-| Authoritative data family         | Owning Domain Team                    | Data Governance                       |
-| External data relationship        | Natural Product Owner                 | Integration, Security, Client owner   |
-| Data Product                      | Named Data Product Owner              | Source owners and consumers           |
-| Classification and privacy policy | Security/Privacy Authority            | Data and Domain owners                |
-| Residency and retention           | Data Governance plus Legal/Compliance | Domain and Runtime owners             |
+| Responsibility | Accountable |
+| :-- | :-- |
+| Product transactional facts | Product Domain Owner |
+| External facts | External authority + ATI Natural Owner |
+| Knowledge capability | Knowledge & Retrieval Platform Owner |
+| Domain knowledge semantics | Source Product/domain |
+| Artifact lifecycle | Artifact & Document Platform Owner |
+| AI execution data | AI Platform Owner |
+| Data governance principles | Data Governance Authority |
 
 ## 10. Dependencies
 
-**Strategic inputs:** enterprise domain ownership and the macro system landscape.
-
-**Governed outputs:** integration contracts, runtime data design, security controls, domain data models, and physical data topology.
+- EAD-001 capability ownership
+- EAD-002 system roles
+- EAD-004 movement/integration
+- EAD-005 Platform/runtime strategy
+- EAD-006 trust/data protection
+- EAD-007 governance/assurance
 
 ## 11. Traceability
 
-- Every critical data family traces to one authority in EAD-001/EAD-002.
-- Every PAD declares authoritative data, external authorities, and projections.
-- Data movement and projection details trace to standards and SADs.
-- Authority changes require an ADR and migration plan.
-
-## 12. Assumptions
-
-- External systems remain authoritative for significant travel and financial data.
-- Products can operate with bounded local projections.
-- Physical infrastructure may be consolidated while logical authority remains private.
-- Data and product discovery will refine quality, freshness, and retention targets.
-
-## 13. Constraints
-
-- Direct cross-domain persistence access is prohibited.
-- A projection cannot silently become canonical.
-- Analytical and AI stores cannot bypass owning-domain commands.
-- Tenant and classification context cannot be discarded during movement.
-- Irreversible external actions require declared authority and freshness policy.
-
-## 14. Risks
-
-| Risk | Likelihood | Impact | Mitigation |
-| :-- | :-- | :-- | :-- |
-| External projection treated as current truth | High | Critical | Authority, freshness, revalidation, reconciliation |
-| Shared infrastructure becomes shared authority | Medium | High | Logical private persistence and access controls |
-| Analytical platform becomes shadow system of record | Medium | High | No direct source mutation |
-| Tenant scope is lost in downstream copies | Medium | Critical | Governance context in contracts and tests |
-| Retention/deletion is inconsistent across copies | Medium | High | Data inventory, lineage, and coordinated disposal |
-| AI output is promoted without domain acceptance | Medium | Critical | Proposed-output classification and acceptance gate |
-
-## 15. Future Direction
-
-The enterprise will progressively formalize authority catalogs, data products, projection standards, and reconciliation objectives as operational evidence grows. Physical data-platform investment follows proven consumers and governance requirements rather than preceding them.
-
-## 16. References
-
-- EAD-001 — Enterprise Capability & Domain Map.
-- EAD-002 — Enterprise System Landscape.
-- GDC-000 — Governance Policy.
-- GDC-006 — EAD Guideline.
-- Domain-Driven Design.
-- Data Mesh principles.
-- Privacy, residency, and records-management practices.
+- PAD-PLT-015 defines Knowledge & Retrieval logical contracts
+- PAD-PLT-008 AI consumes Knowledge & Retrieval without owning it
+- PAD-PLT-009 manages artifact lifecycle feeding knowledge ingestion
+- ADR-GLB-012 records AI/Knowledge/Product authority separation

@@ -1,22 +1,22 @@
 ---
 doc_meta:
-  id: SAD-008
-  title: Artifact & Document Platform SAD
+  id: SAD-018
+  title: Rules & Decisioning Platform SAD
   owner: Architecture Authority
-  version: 0.2.0
+  version: 0.1.0
   status: chartered
   classification: internal
   governed_by:
     - EAD-001
     - EAD-005
-  parent_pad: PAD-PLT-009
+  parent_pad: PAD-PLT-014
   review_cycle_days: 180
-  created_date: 2026-07-06
+  created_date: 2026-08-23
   last_updated: 2026-08-23
   last_reviewed: 2026-08-23
 ---
 
-# Artifact & Document Platform SAD
+# Rules & Decisioning Platform SAD
 
 > **Status: chartered.** The parent PAD is approved, but no physical system design is approved. This document records inherited constraints only. Implementation against this placeholder is rejected until the SAD moves to `draft` and contains a reviewed physical design.
 
@@ -24,19 +24,17 @@ doc_meta:
 
 ### 1.1 Objective
 
-Record the physical-design entry constraints for the system that may realize PAD-PLT-009.
+Record the physical-design entry constraints for the system that may realize PAD-PLT-014.
 
 ### 1.2 Capability
 
-Artifact/file/document/media content lifecycle, immutable versions, checksum/provenance, conversion/rendering/OCR/scan, archive, retention enforcement, and stable artifact references.
+Reusable deterministic Rule Set lifecycle, evaluation, decision trace, test/simulation, promotion, rollback, and explanation.
 
 ### 1.3 Constraint
 
-- Product owns artifact business meaning and acceptance
-- Knowledge & Retrieval owns knowledge representation/indexing
-- Audit & Evidence owns evidence lifecycle
-- storage/object technology is not selected by this charter
-- retention semantics originate from Product/Governance while the Platform enforces declared lifecycle
+- Product/domain owns rule meaning, authoritative inputs, authorization, and business effects
+- AI output may propose rules but cannot publish them without governed acceptance
+- simple local Product branching does not automatically require this Platform
 
 ### 1.4 Requirement
 
@@ -50,7 +48,7 @@ No database, broker, graph store, vector store, model provider, framework, runti
 
 | Relationship | Target |
 | :-- | :-- |
-| Parent PAD | PAD-PLT-009 |
+| Parent PAD | PAD-PLT-014 |
 | Capability authority | EAD-001 |
 | Data authority | EAD-003 |
 | Integration | EAD-004 |
@@ -70,7 +68,7 @@ External provider/runtime dependencies are selected only during system design an
 
 ### 3.3 Internal Dependencies
 
-Consumed logical capabilities: Identity, Organization, Product authorization context, Trust Services, optional Integration services, Audit & Evidence, Event & Messaging, Observability.
+Consumed logical capabilities: Product input contracts, Identity, Organization, Artifact & Document, optional Knowledge & Retrieval, Audit & Evidence, Event & Messaging.
 
 ## 4. Architecture Model
 
@@ -120,11 +118,11 @@ Concrete Event contracts are selected only where asynchronous interaction is jus
 
 ### 6.3 Consumed
 
-Identity, Organization, Product authorization context, Trust Services, optional Integration services, Audit & Evidence, Event & Messaging, Observability
+Product input contracts, Identity, Organization, Artifact & Document, optional Knowledge & Retrieval, Audit & Evidence, Event & Messaging
 
 ### 6.4 Published
 
-Artifact lifecycle events according to parent PAD
+Rule lifecycle/version events where a future design selects asynchronous publication
 
 ## 7. Security & Trust Boundary
 
@@ -142,7 +140,7 @@ Artifact lifecycle events according to parent PAD
 
 ### 8.1 Blast Radius
 
-Failure may block artifact upload/read/processing for consuming journeys. Accepted immutable versions must not be silently lost, and unavailable conversion/OCR must not mutate Product business truth.
+Failure affects consumers that selected shared evaluation; Product-owned fallback/degradation must be explicit. Incorrect deterministic results are a correctness incident even when availability is healthy.
 
 ### 8.2 Observability and Telemetry
 

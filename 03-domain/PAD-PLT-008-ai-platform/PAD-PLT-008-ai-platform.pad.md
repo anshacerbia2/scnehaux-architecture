@@ -1,287 +1,200 @@
 ---
 doc_meta:
   id: PAD-PLT-008
-  title: Enterprise AI Platform
-  owner: AI Team
-  version: 1.0.0
+  title: Enterprise AI Enablement Platform
+  owner: AI Platform Team
+  version: 2.0.0
   status: approved
   classification: restricted
   governed_by:
     - GDC-008
+    - EAD-001
+    - EAD-005
+    - EAD-006
   realizes_capability:
     - EAD-001
     - EAD-005
+    - EAD-006
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-07-06
+  last_reviewed: 2026-08-23
   fulfilled_by:
     - SAD-011
 ---
 
-# Enterprise AI Platform
-
----
+# Enterprise AI Enablement Platform
 
 ## 1. Purpose & Scope
 
-The AI Platform provides reusable intelligence capabilities including inference, retrieval, semantic search, embeddings, document understanding, and agent orchestration.
+The AI Enablement Platform provides provider-independent, governed model and agent execution capability for Scnehaux Products and Platforms.
 
-Business products remain responsible for business decisions, business rules, and domain ownership. The AI Platform provides recommendations, predictions, classifications, and generated outputs without becoming the source of business truth.
+Foundation models are treated as replaceable commodity substrate. Enterprise differentiation remains in proprietary knowledge, domain context, workflows, tools/actions, authorization, human expertise, evaluation/feedback, and Product experience.
 
-### 1.1. Out of Scope
+### 1.1 Out Of Scope
 
-- Business decision making.
-- Business rule execution.
-- Domain ownership.
-- Business workflow orchestration.
-- Business authorization.
-- Business data ownership.
-- Model training for domain-specific datasets.
-- Business analytics and reporting.
-
----
+- enterprise Knowledge Asset/ontology/Knowledge Graph authority
+- Product business workflow and Product state
+- Product business rules and final decisions
+- Product resource authorization
+- Product-owned domain prompt/skill semantics
+- Artifact/document storage lifecycle
+- analytics/reporting authority
+- assuming all models/providers are semantically interchangeable
+- unsupported reuse/scraping of human browser sessions as machine credentials
 
 ## 2. Enterprise Traceability
 
-```mermaid
-graph TD
-    subgraph Platform["Platform Plane"]
-        AI[Enterprise AI Platform]
-        WKSP[Workspace Platform]
-        NOT[Notification Platform]
-        INT[Integration Platform]
-        AUD[Audit Platform]
-        WKFL[Workflow Platform]
-        IDP[Identity Platform]
-        DOC[Document Platform]
-    end
+### 2.1 Realizes
 
-    subgraph Business["Business Plane"]
-        PM[Project Management]
-        CMS[CMS]
-        CRM[CRM]
-        ERP[ERP]
-        PRC[Procurement]
-        LMS[LMS]
-        HCM[HCM]
-        ITSM[ITSM]
-    end
+- EAD-001 AI Enablement
+- EAD-005 AI/platform runtime strategy
+- EAD-006 AI/provider/tool security controls
 
-    AI -->|SRD: tenant context| WKSP
-    AI -->|SRD: external AI providers egress| INT
-    AI -->|SRD: knowledge retrieval| DOC
-    AI -. AEP: AI interaction audit events .-> AUD
-    AI -. PCC: local Identity token validation .-> IDP
+### 2.2 Relationships
 
-    WKFL -. AES: async batch-inference requests .-> AI
-    NOT -. AES: AI result events .-> AI
-    HCM -->|SRD: synchronous inference| AI
-    ERP -->|SRD: synchronous inference| AI
-    CRM -->|SRD: synchronous inference| AI
-    PRC -->|SRD: synchronous inference| AI
-    PM -->|SRD: synchronous inference| AI
-    ITSM -->|SRD: synchronous inference| AI
-    CMS -->|SRD: synchronous inference| AI
-    LMS -->|SRD: synchronous inference| AI
+- **Knowledge & Retrieval** supplies authorized grounded context/citations; AI does not own knowledge truth
+- **Products** own vertical AI workflow, Product UX, domain prompts/skills, tools, business decisions, and outcomes
+- **Identity / Organization / Application Trust** provide human/workload/agent identity and context
+- **Trust Services** owns raw provider credentials/keys
+- **Integration Enablement** may provide reusable provider protocol/connectivity machinery but is not a mandatory hop
+- **Product/Platform Tools** enforce their own authorization and invariants
+- **Audit & Evidence** receives privileged/high-impact AI evidence
+- **Artifact & Document** stores governed AI-produced artifacts when accepted into artifact lifecycle
 
-    style AI fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
-```
+### 2.3 Consumed By
 
-The AI Platform realizes platform intelligence capabilities defined within the Enterprise Platform Architecture. Its outputs are recommendations, never business truth; consuming products validate every AI response.
-
-### 2.1. Realizes
-
-- EAD-001 Enterprise Capability & Domain Map — the AI / enterprise intelligence capability (inference, retrieval, embeddings, agent orchestration).
-- EAD-005 Enterprise Platform Architecture — the substrate it operates on.
-
-### 2.2. Relationships
-
-- **Synchronous Dependencies (SRD):** Workspace Platform (tenant context), Integration Platform (external AI providers egress), Document Platform (knowledge retrieval for RAG).
-- **Publishes Events (AEP):** AI interaction audit events and AI result events to the Event Broker.
-- **Subscribes To Events (AES):** subscribes to async batch-inference request events.
-- **Consumes Platform Capabilities (PCC):** validates Identity-issued tokens **locally**, so consumption is not a runtime dependency on Identity.
-
-### 2.3. Consumed By
-
-Business Products and the Workflow Platform consume AI as a platform capability — calling it synchronously for inference or asynchronously for batch. AI outputs are recommendations, never business truth: consuming domains remain responsible for validating every response before acting on it. AI does not depend on Workflow or Notification; those domains invoke or subscribe to AI, not the reverse.
-
----
+Travel vertical AI Products, HCM copilot/intelligence, future ERP copilots, Knowledge experiences, Workflow tasks, Work Management assistance, and other Product-owned AI features.
 
 ## 3. Domain & Context Model
 
-The AI Platform is decomposed into multiple independent bounded contexts.
+### 3.1 Bounded Context
 
-### 3.1. Bounded Context
+- Model & Provider Gateway
+- Provider Access Profile
+- Model Catalog
+- Capability Profile
+- Routing & Policy
+- Inference Runtime
+- Agent Runtime
+- Tool Registry & Mediation
+- MCP / Protocol Adapter
+- Prompt / Skill / AI Asset Runtime
+- Evaluation & Release
+- Safety / Guardrail Enforcement
+- Usage / Quota / Cost
+- AI Telemetry
+- Provider Health / Fallback
 
-- Model Serving
-- Prompt Management
-- Embedding Services
-- Retrieval Services
-- Knowledge Retrieval (RAG)
-- Agent Orchestration
-- AI Gateway
-- Model Governance
-- Safety & Guardrails
-- AI Observability
+### 3.2 Ubiquitous Language
 
-### 3.2. Ubiquitous Language
+| Term | Meaning |
+| :-- | :-- |
+| Model Provider | External/cloud/local source of model execution |
+| Model Endpoint | Registered model execution endpoint/profile |
+| Capability Profile | Stable consumer requirement such as reasoning, multimodal, tools, structured output |
+| Provider Access Profile | Governed access mode and policy for a provider endpoint |
+| Inference Run | Bounded model invocation lifecycle |
+| Agent Run | Bounded iterative model/tool execution lifecycle |
+| Tool | Registered operation exposed by an owning Product/Platform |
+| AI Asset | Versioned prompt/skill/template/policy-support artifact used at runtime |
+| Evaluation Suite | Versioned quality/safety/latency/cost test contract |
+| Promotion | Controlled approval of model/provider/AI-asset combination for a profile |
+| Fallback | Evaluated alternate route, not arbitrary provider substitution |
 
-| Term           | Description                                                |
-| -------------- | ---------------------------------------------------------- |
-| Inference      | AI-generated prediction or response.                       |
-| Prompt         | Structured instruction sent to a model.                    |
-| Model          | Strictly governed AI model served through the platform.    |
-| Embedding      | Numerical semantic representation of content.              |
-| Vector Search  | Semantic similarity retrieval.                             |
-| Knowledge Base | Enterprise knowledge available to AI systems.              |
-| RAG            | Retrieval-Augmented Generation using enterprise knowledge. |
-| Agent          | Autonomous AI component executing delegated tasks.         |
-| Model Provider | External or internal LLM provider.                         |
-| Guardrail      | Policy constraining AI behavior.                           |
-| AI Gateway     | Enterprise abstraction over AI providers.                  |
+### 3.3 Domain Policies
 
-### 3.3. Domain Policies
-
-- AI never owns business truth.
-- AI outputs are recommendations, not decisions.
-- Business products validate every AI response.
-- AI providers remain replaceable.
-- Prompt definitions are centrally governed.
-- AI interactions are fully auditable.
-- AI capabilities remain model agnostic.
-- Sensitive enterprise data follows enterprise security policies.
-
----
+- Provider/model portability is governed and evaluated, never assumed
+- Products call stable capability profiles rather than provider-specific SDK semantics
+- Product-owned domain prompt/skill semantics remain Product-owned even when versioned/executed through AI Platform
+- Knowledge & Retrieval is consumed through authorized contracts
+- Agent Runtime is not Workflow; one Workflow task may invoke one or more Agent Runs
+- Tool mediation constrains tools but Product/Platform tool owner makes final authorization
+- interactive SSO/seat access and unattended workload/API access are distinct Provider Access Profiles
+- raw production provider credentials live in Trust Services
+- every provider route is policy-constrained by data classification/residency/purpose
+- high-impact actions require policy/human oversight appropriate to risk
 
 ## 4. Integration Contracts
 
-### 4.1. Integration Provided
+### 4.1 Integration Provided
 
-The AI Platform provides:
+- model/profile catalog
+- provider access profile management
+- synchronous/streaming inference
+- structured-output execution
+- batch inference
+- agent execution
+- tool registration/mediation
+- MCP/native tool adapter compatibility
+- AI Asset runtime/version selection
+- evaluation execution/result
+- candidate promotion/canary/fallback policy
+- usage/quota/cost metering
+- AI telemetry/correlation
 
-- Text Generation
-- Document Summarization
-- Classification
-- Semantic Search
-- Embedding Generation
-- Retrieval-Augmented Generation (RAG)
-- AI Agent Execution
-- Prompt Management
-- AI Gateway
-- Model Routing
-- AI Events
+### 4.2 Integration Consumed
 
-### 4.2. Integration Consumed
-
-The AI Platform consumes:
-
-- Identity Platform for authentication and authorization.
-- Document Platform for enterprise knowledge retrieval.
-- Integration Platform for external AI providers.
-- Audit Platform for immutable AI interaction records.
-
-Concrete model providers (OpenAI, Anthropic, Gemini, local LLMs, etc.) are implementation details defined within the realizing SAD.
-
----
+- Identity / Application Trust / Organization
+- Trust Services
+- Knowledge & Retrieval
+- Product/Platform Tool contracts
+- optional Integration Enablement
+- Artifact & Document
+- Event & Messaging
+- Audit & Evidence
+- Observability
 
 ## 5. Trust & Data Boundaries
 
-### 5.1. Trust Boundary
+### 5.1 Trust Boundary
 
-The AI Platform processes enterprise information but never becomes the authoritative owner of business data.
+AI Platform is authoritative for registered provider/model profiles, execution runs, routing/promotion policy within its scope, agent/tool mediation state, evaluation results, usage, and AI telemetry.
 
-Business domains remain responsible for validating AI outputs before execution.
+It is not authoritative for Product business facts, knowledge truth, or Product authorization.
 
-### 5.2. Identity Access
+### 5.2 Identity Access
 
-Authentication is delegated to the Identity Platform.
+- human interactive provider access is attributed to a Principal and supported provider contract
+- workload inference uses attributable non-human identity and approved credential/access profile
+- shared human sessions for unattended execution are prohibited unless provider-supported delegation explicitly creates machine authority
+- agent/tool calls carry bounded delegation/correlation
+- Product tool owner re-authorizes protected operations
 
-The AI Platform governs:
+### 5.3 Data Classification
 
-- AI access policies
-- Prompt governance
-- Model authorization
-- Knowledge access
-- Agent execution policies
+May process prompts/context/model output/tool input-output/evaluation data subject to Product/knowledge source classification and minimization.
 
-### 5.3. Data Classification
-
-The platform manages:
-
-- Prompts
-- Embeddings
-- Vector Indexes
-- AI Metadata
-- AI Sessions
-- Knowledge References
-- Model Metadata
-- Inference Metadata
-
-The platform does not own:
-
-- Business Transactions
-- Employee Records
-- Financial Records
-- Customer Records
-- Enterprise Master Data
-
----
+Raw provider secrets are excluded. Sensitive context sent to providers follows provider egress policy and residency constraints.
 
 ## 6. Capability NFR
 
-### 6.1. Reliability & Availability
-
-- High availability AI gateway.
-- Graceful degradation when AI providers are unavailable.
-- Provider failover supported.
-
-### 6.2. Performance & Scalability
-
-- Low-latency inference routing.
-- Horizontally scalable inference services.
-- Efficient vector retrieval and semantic search.
-
-### 6.3. Security & Compliance
-
-- Prompt isolation between tenants.
-- Sensitive data protection.
-- Enterprise AI governance.
-- AI provider abstraction.
-- Responsible AI enforcement.
-
-### 6.4. Auditability
-
-Every AI interaction shall be traceable, including:
-
-- Prompt execution
-- Model selection
-- Retrieval execution
-- Context injection
-- Inference generation
-- Agent execution
-- Provider invocation
-- AI policy evaluation
-
----
+- **Availability:** profile-based; C1 profiles target >=99.95%, C2 >=99.9%, C3 assistive by consumer contract
+- **RTO/RPO:** C1 <=1h/<=15m for platform control state; ephemeral inference state may be retried/recreated where safe
+- **Portability:** every promoted fallback for a capability profile has current evaluation evidence
+- **Evaluation:** model/provider/AI-asset promotion requires quality/safety plus latency/cost gates appropriate to profile
+- **Isolation:** Tenant/Product quotas, concurrency, budget, and provider bulkheads
+- **Security:** zero raw provider credentials exposed to Product clients; tool and retrieval authorization negative tests
+- **Observability:** model/provider/profile, tokens/usage where available, latency, errors, fallback, retrieval/tool correlation, Tenant/Product, and cost attribution
+- **Cost Target:** cost attributable by Product/Tenant/profile/provider/model/run
+- **Interoperability:** consumer contracts do not expose provider SDK payloads as canonical Product contracts
+- **Audit:** provider-profile/admin/promotion/high-risk agent/tool operations are traceable
 
 ## 7. Ownership & Governance
 
-### 7.1. Team Ownership
+### 7.1 Team Ownership
 
-The AI Platform Team owns platform intelligence capabilities, AI governance, and model lifecycle management.
+AI Platform Team owns provider/model execution abstractions, agent runtime, tool mediation, evaluation/release, usage/cost, and AI telemetry.
 
-The Architecture Authority governs enterprise AI standards, provider policies, and responsible AI principles.
+Knowledge Team owns Knowledge & Retrieval. Product teams own domain AI experience/workflow/prompts/tools/business decisions.
 
-### 7.2. Realizing Systems
+### 7.2 Realizing Systems
 
-- SAD-011 Enterprise AI Platform
+- SAD-011 AI Platform
 
-### 7.3. Governance Rules
+### 7.3 Governance Rules
 
-- Business domains shall never directly depend on AI providers.
-- Every AI interaction shall pass through the AI Platform.
-- AI providers shall remain replaceable without affecting business products.
-- AI-generated output shall never become business truth without domain validation.
-- Prompts and AI policies shall be centrally governed.
-- Every AI interaction shall be auditable.
-- Breaking AI contracts require Architecture Authority approval.
+- AI Platform SHALL NOT own enterprise Knowledge Graph truth
+- model/provider switch SHALL require capability compatibility and evaluation evidence
+- interactive SSO SHALL NOT silently become unattended machine authority
+- Product authorization SHALL remain at the protected resource
+- MCP SHALL be treated as an interoperability adapter, not the enterprise authorization model

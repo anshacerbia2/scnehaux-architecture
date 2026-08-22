@@ -3,321 +3,194 @@ doc_meta:
   id: PAD-BIZ-001
   title: Enterprise Human Capital Management
   owner: HCM Team
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: restricted
   governed_by:
     - GDC-008
+    - EAD-001
+    - EAD-003
+    - EAD-006
   realizes_capability:
     - EAD-001
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-07-06
+  last_reviewed: 2026-08-23
   fulfilled_by:
     - SAD-101
 ---
 
 # Enterprise Human Capital Management
 
----
-
 ## 1. Purpose & Scope
 
-HCM is the enterprise system of record for workforce lifecycle management. It governs employees from workforce planning through offboarding while remaining independent from identity management, payroll execution, workflow orchestration, and infrastructure concerns.
+HCM is the Business Plane authority for workforce and employment business meaning across the employee lifecycle.
 
-The domain owns business rules related to people management and serves as the authoritative source for workforce information across the enterprise.
+It owns Employee, Employment, HR Organization, Position, workforce-policy state, and other HCM business outcomes while consuming reusable Platform capabilities.
 
-### 1.1. Out of Scope
+### 1.1 Out Of Scope
 
-- Authentication and Identity Management.
-- Payroll calculation and payslip generation.
-- Notification delivery.
-- Workflow execution engine.
-- Document storage infrastructure.
-- Billing and subscription.
-- Enterprise audit storage.
-- AI inference.
-- ERP financial accounting.
-
----
+- Principal identity, credentials, authentication, and sessions
+- canonical Organization/Tenant/Workspace/Membership operating context
+- generic Workflow engine
+- generic Work Management
+- Notification delivery
+- Artifact storage lifecycle
+- AI/model execution or Knowledge Graph authority
+- future ERP accounting/financial authority
+- infrastructure/runtime
 
 ## 2. Enterprise Traceability
 
-```mermaid
-graph LR
-    subgraph Platform["Platform Plane"]
-        WP[Workspace Platform]
-        DOC[Document Platform]
-        AIP[AI Platform]
-        INT[Integration Platform]
-        WFP[Workflow Platform]
-        IDP[Identity Platform]
-        AUD[Audit Platform]
-        NOT[Notification Platform]
-        BIL[Billing Platform]
-    end
+### 2.1 Realizes
 
-    subgraph Business["Business Plane"]
-        EHCM[Enterprise Human Capital Management]
-        ERP[ERP]
-        CRM[CRM]
-        PRC[Procurement]
-        PM[Project Management]
-        ITSM[ITSM]
-        LMS[LMS]
-        CMS[CMS]
-    end
+- EAD-001 Human Capital Management Business Product capability
 
-    EHCM -->|SRD: tenant/org context| WP
-    EHCM -->|SRD: employment document read| DOC
-    EHCM -->|SRD: synchronous talent recommendations| AIP
-    EHCM -->|SRD: external HR/ERP/payroll/government egress| INT
-    EHCM -. AEP: workforce domain events .-> BROKER
-    EHCM -. AEP: audit events .-> AUD
-    EHCM -. AEP: notification triggers .-> NOT
-    EHCM -. AEP: usage/metering events .-> BIL
-    EHCM -. AES: workflow task-completion events .-> WFP
-    EHCM -. PCC: local token validation .-> IDP
+### 2.2 Relationships
 
-    ERP -. AES: subscribes to workforce events .-> EHCM
-    CRM -. AES: subscribes to workforce events .-> EHCM
-    PRC -. AES: subscribes to workforce events .-> EHCM
-    PM -. AES: subscribes to workforce events .-> EHCM
-    ITSM -. AES: subscribes to workforce events .-> EHCM
-    LMS -. AES: subscribes to workforce events .-> EHCM
-    CMS -. AES: subscribes to workforce events .-> EHCM
+- **Identity & Access:** Principal/authentication trust
+- **Organization:** canonical Tenant/Workspace/Membership operating context
+- **Workspace Experience:** shared digital work environment only
+- **Work Management:** reusable HR work queues/assignment/review when used
+- **Workflow:** durable multi-step HR processes
+- **Rules & Decisioning:** reusable deterministic rule lifecycle when justified
+- **Artifact & Document:** employment artifacts
+- **Notification:** employee communications
+- **Knowledge & Retrieval:** governed HR knowledge/search
+- **AI Enablement:** HCM copilot/inference/agent execution
+- **Integration:** external payroll/government/benefit/ERP connector machinery where justified
+- **Audit & Evidence:** enterprise evidence lifecycle
+- **future ERP:** consumes/publishes governed workforce/financial contracts without shared database authority
 
-    BROKER([Event Broker])
-```
+### 2.3 Consumed By
 
-HCM realizes the enterprise Human Capital Management capability defined by the Enterprise Capability & Domain Map.
+Authorized Business Products may consume HCM contracts/events for workforce facts according to purpose, Tenant, privacy, and product authorization.
 
-### 2.1. Realizes
-
-- EAD-001 Enterprise Capability & Domain Map
-
-### 2.2. Relationships
-
-- **Synchronous Dependencies (SRD):** Workspace Platform (tenant/org context), Document Platform (employment document read), AI Platform (synchronous talent recommendations), Integration Platform (external HR/ERP/payroll/government egress).
-- **Publishes Events (AEP):** workforce domain events (`EmployeeHired`, `EmployeeTransferred`, `EmployeePromoted`, `EmployeeTerminated`, `LeaveApproved`, `PerformanceCompleted`) to the Event Broker; audit events to the Audit Platform; notification triggers to the Notification Platform; usage/metering events to the Billing Platform.
-- **Subscribes To Events (AES):** Workflow Platform task-completion events for approvals.
-- **Consumes Platform Capabilities (PCC):** Identity-issued tokens are validated **locally**.
-
-### 2.3. Consumed By
-
-Other Business Products consume HCM's published workforce events (Asynchronous Event Subscription) via the Event Broker — never a direct runtime dependency: ERP, CRM, Procurement, Project Management, ITSM, LMS, CMS.
-
----
+HCM remains the authority for its workforce facts even when those facts are projected into ERP, Workspace Experience, Knowledge, Analytics, or other Products.
 
 ## 3. Domain & Context Model
 
-The HCM domain is decomposed into cohesive bounded contexts aligned with the employee lifecycle.
-
-### 3.1. Bounded Context
+### 3.1 Bounded Context
 
 - Workforce Planning
-- Recruitment
-- Candidate Management
+- Recruitment & Candidate
 - Onboarding
-- Employee Management
-- Organization Management
-- Position Management
-- Attendance Management
-- Leave Management
-- Performance Management
-- Goal Management
-- Competency Management
-- Career Development
-- Succession Planning
+- Employee & Employment
+- HR Organization
+- Position
+- Attendance
+- Leave
+- Performance & Goals
+- Competency & Skills
+- Career & Succession
 - Compensation Planning
 - Benefits Administration
 - Learning Administration
 - Offboarding
 
-### 3.2. Ubiquitous Language
+### 3.2 Ubiquitous Language
 
-| Term | Description |
-| --- | --- |
-| Candidate | A person participating in recruitment before employment. |
-| Employee | An active workforce member managed by HCM. |
-| Employment | The contractual relationship between an employee and the organization. |
-| Position | A business role within the organization. |
-| Department | Organizational unit responsible for a business function. |
-| HR Organization | Departments, positions, and reporting lines of the workforce (distinct from the Workspace Platform's organization container). |
-| Attendance | Employee working time records. |
-| Leave | Approved absence from work. |
-| Goal | Measurable objective assigned to an employee. |
-| Performance Review | Formal evaluation of employee performance. |
-| Competency | Measurable skill or capability. |
-| Career Path | Planned employee progression. |
-| Succession Plan | Replacement planning for strategic positions. |
-| Compensation Plan | Business definition of salary structures and rewards. |
-| Benefit | Non-payroll employee entitlement. |
+| Term | Meaning |
+| :-- | :-- |
+| Employee | Workforce person in an active/historical employment relationship |
+| Employment | Contractual workforce relationship |
+| HR Organization | Departments/reporting structures/positions for workforce business meaning |
+| Position | Workforce role/seat inside HR Organization |
+| Skill / Competency | HCM-governed workforce capability where HCM is declared authority |
+| Leave | Governed absence business state |
+| Operating Workspace | Organization-owned tenant/workspace context; not HR Organization |
+| HCM Copilot | Product-owned AI experience consuming AI and Knowledge Platforms |
 
-### 3.3. Domain Policies
+### 3.3 Domain Policies
 
-- Employee identity is delegated to the Identity Platform.
-- HR organization structure (departments, positions, reporting lines) belongs to HCM; the workspace/tenant organization container is owned by the Workspace Platform.
-- Employee lifecycle is immutable once historical events are recorded.
-- Payroll calculations are external to HCM.
-- Organizational changes are versioned.
-- Every employment event is auditable.
-- Business workflows are delegated to the Workflow Platform.
-- Business notifications are delegated to the Notification Platform.
-
----
+- HCM owns Employee/Employment/HR Organization business truth
+- Organization Platform owns canonical Organization/Tenant/Workspace/Membership
+- Identity owns Principal/authentication
+- HCM Product authorization is enforced inside HCM
+- Workflow coordinates long-running process but does not own HCM business outcome
+- Work Management may own shared work lifecycle while HCM owns HR meaning
+- AI outputs are proposed/assistive until HCM accepts a governed business mutation
+- HR domain prompt/skill semantics remain HCM-owned
+- external payroll/ERP/government facts preserve their declared authority
+- historical employment events remain traceable
 
 ## 4. Integration Contracts
 
-### 4.1. Integration Provided
+### 4.1 Integration Provided
 
-The HCM domain provides:
+- employee/employment lifecycle
+- HR Organization/Position contracts
+- attendance/leave
+- performance/goals
+- competency/skills
+- compensation/benefit planning
+- workforce domain events
+- HCM Product APIs/commands
+- HCM knowledge-source publication where governed
 
-- Employee Management
-- Organization Management
-- Position Management
-- Attendance Management
-- Leave Management
-- Performance Management
-- Goal Management
-- Competency Management
-- Career Development
-- Succession Planning
-- Compensation Planning
-- Workforce Events
+### 4.2 Integration Consumed
 
-Example business events include:
-
-- EmployeeHired
-- EmployeeTransferred
-- EmployeePromoted
-- EmployeeTerminated
-- LeaveApproved
-- PerformanceCompleted
-
-### 4.2. Integration Consumed
-
-HCM consumes:
-
-- Identity Platform for authentication and enterprise identity.
-- Workspace Platform for tenant and organization context.
-- Workflow Platform for business approvals.
-- Notification Platform for employee communications.
-- Document Platform for employment documents.
-- Audit Platform for immutable audit evidence.
-- Integration Platform for ERP, payroll providers, government systems, and external HR services.
-- AI Platform for recommendations, talent intelligence, document understanding, and workforce insights.
-
-Concrete APIs, events, protocols, and messaging technologies are implementation details defined within the realizing SAD.
-
----
+- Identity & Access
+- Organization
+- Workspace Experience
+- Work Management
+- Workflow
+- Rules & Decisioning
+- Artifact & Document
+- Notification
+- Knowledge & Retrieval
+- AI Enablement
+- Integration
+- Audit & Evidence
+- Event & Messaging
 
 ## 5. Trust & Data Boundaries
 
-### 5.1. Trust Boundary
+### 5.1 Trust Boundary
 
-The HCM domain owns workforce business data but does not own domain identity, infrastructure, or platform capabilities.
+HCM is authoritative for its Business Product records and invariants. It does not delegate Product authorization or business correctness to shared Platforms.
 
-### 5.2. Identity Access
+### 5.2 Identity Access
 
-Authentication and authorization are delegated to the Identity Platform.
+- authentication comes from Identity
+- Tenant/Workspace/Membership comes from Organization
+- HCM authorization uses those trust/context signals plus HCM resource/business rules
+- HCM copilot/tool actions are authorized exactly like non-AI HCM actions
 
-HCM governs business authorization related to:
+### 5.3 Data Classification
 
-- Employee administration
-- HR administration
-- Manager responsibilities
-- Organization administration
-- Workforce governance
+HCM manages sensitive PII, employment, organization, compensation, attendance, performance, leave, benefits, and career data.
 
-### 5.3. Data Classification
-
-The HCM domain manages highly sensitive enterprise information including:
-
-- Personally Identifiable Information (PII)
-- Employment Records
-- Organizational Structures
-- Compensation Planning
-- Performance Reviews
-- Leave Records
-- Attendance Records
-- Benefits Information
-- Career History
-
-The HCM domain does not own:
-
-- Credentials
-- Authentication Sessions
-- Access Tokens
-- Audit Repository
-- Documents Storage
-- Notification Infrastructure
-- AI Models
-
----
+Knowledge/AI/analytics projections inherit source classification, purpose, residency, retention, and access constraints.
 
 ## 6. Capability NFR
 
-### 6.1. Reliability & Availability
-
-- Enterprise-grade availability for workforce operations.
-- Strong consistency for employee lifecycle data.
-- No loss of approved HR transactions.
-
-### 6.2. Performance & Scalability
-
-- Horizontally scalable workforce management.
-- Responsive employee search.
-- Efficient organization hierarchy traversal.
-- Support enterprise-scale organizations.
-
-### 6.3. Security & Compliance
-
-- Protection of employee PII.
-- Tenant-isolated workforce data.
-- Regulatory compliance.
-- Fine-grained business authorization.
-- Complete auditability of HR operations.
-
-### 6.4. Auditability
-
-Every significant workforce event shall generate auditable business evidence, including:
-
-- Recruitment
-- Hiring
-- Onboarding
-- Transfers
-- Promotions
-- Organization Changes
-- Leave Approval
-- Performance Review
-- Compensation Changes
-- Benefits Changes
-- Offboarding
-
----
+- **Reliability class:** C1 for core employee/employment lifecycle
+- **Availability:** mature core HCM target >=99.95%
+- **RTO:** <=1h
+- **RPO:** <=15m for authoritative workforce transactions
+- **Consistency:** approved HCM business mutations preserve domain invariants
+- **Privacy:** least-purpose access to sensitive workforce data
+- **Audit:** consequential employment/compensation/access/business actions are traceable
+- **Interoperability:** HCM publishes stable contracts rather than database access
+- **AI safety:** unavailable AI must not silently corrupt authoritative workforce state
+- **Accessibility:** Product experience follows enterprise accessibility baseline
 
 ## 7. Ownership & Governance
 
-### 7.1. Team Ownership
+### 7.1 Team Ownership
 
-The HCM Team owns workforce business capabilities, employee lifecycle management, and HR business rules.
+HCM Team owns workforce business semantics, HCM data authority, Product authorization, Product roadmap, and HCM Product experience.
 
-The Architecture Authority governs enterprise architectural boundaries and integration contracts.
+Platform teams own their respective reusable capabilities.
 
-### 7.2. Realizing Systems
+### 7.2 Realizing Systems
 
-- SAD-101 Enterprise Human Capital Management
+- SAD-101 HCM Business System
 
-### 7.3. Governance Rules
+### 7.3 Governance Rules
 
-- HCM is the system of record for workforce information.
-- Identity shall remain owned by the Identity Platform.
-- Payroll execution shall remain outside the HCM domain.
-- Business workflows shall use the Workflow Platform.
-- Notifications shall use the Notification Platform.
-- Documents shall use the Document Platform.
-- AI capabilities shall be consumed exclusively through the AI Platform.
-- Breaking integration contracts requires Architecture Authority approval.
-
-<!-- lint_disable: cross_reference_missing, inline_reference_missing (reason: SAD-101 fulfilment recorded in the SAD layer index) -->
+- HCM SHALL NOT recreate Identity or Organization authority
+- Workspace Experience SHALL NOT own workforce business state
+- AI/Knowledge copies SHALL NOT become HCM truth without HCM acceptance
+- future ERP integrations SHALL use governed contracts, not cross-domain persistence
