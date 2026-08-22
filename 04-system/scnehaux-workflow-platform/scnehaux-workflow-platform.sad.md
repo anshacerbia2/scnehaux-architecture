@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-006
   title: Workflow Platform SAD
   owner: Architecture Authority
-  version: 0.2.0
+  version: 0.2.1
   status: chartered
   classification: internal
   governed_by:
@@ -13,13 +13,13 @@ doc_meta:
   parent_pad: PAD-PLT-004
   review_cycle_days: 180
   created_date: 2026-07-06
-  last_updated: 2026-08-22
+  last_updated: 2026-08-23
   last_reviewed: 2026-08-22
 ---
 
 # Workflow Platform Software Architecture (SAD-006)
 
-> **Status: chartered.** PAD-PLT-004 is approved and no Workflow system is currently authorized for build. This placeholder records inherited constraints only. Physical technology, container, persistence, and workflow-engine decisions are made when implementation enters `draft`.
+> **Status: chartered.** PAD-PLT-004 is currently `chartered` and no Workflow system is authorized for build. This placeholder records candidate realization constraints only. Physical technology, container, persistence, and workflow-engine decisions are made only after the PAD is promoted to `approved` and this SAD enters `draft`.
 
 ## 1. Purpose & Scope
 

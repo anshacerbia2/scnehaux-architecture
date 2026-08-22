@@ -194,10 +194,14 @@ This index documents the test suite utilities and fixtures.
 | Function | Description |
 | :--- | :--- |
 | **_global_rules** | *(No docstring provided)* |
+| **_rules** | *(No docstring provided)* |
 | **test_sad_missing_parent_pad** | *(No docstring provided)* |
 | **test_sad_invalid_parent_pad** | *(No docstring provided)* |
 | **test_sad_bidirectional_traceability_fail** | *(No docstring provided)* |
 | **test_sad_bidirectional_traceability_pass** | *(No docstring provided)* |
+| **test_chartered_sad_allowed_under_chartered_pad** | *(No docstring provided)* |
+| **test_draft_sad_rejected_under_chartered_pad** | *(No docstring provided)* |
+| **test_draft_sad_allowed_under_approved_pad** | *(No docstring provided)* |
 
 ### `tests/engine/validators/domains/test_std_validator.py`
 

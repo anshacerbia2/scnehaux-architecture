@@ -3,8 +3,8 @@ doc_meta:
   id: PAD-PLT-014
   title: Rules & Decisioning Platform
   owner: Rules Platform Team
-  version: 1.1.0
-  status: approved
+  version: 1.1.1
+  status: chartered
   classification: internal
   governed_by:
     - GDC-008
@@ -21,6 +21,8 @@ doc_meta:
 ---
 
 # Rules & Decisioning Platform
+
+> **Commitment: chartered.** This logical boundary is retained as a valid enterprise candidate, but no shared implementation is authorized until the approval gate in GDC-008 is satisfied.
 
 ## 1. Purpose & Scope
 

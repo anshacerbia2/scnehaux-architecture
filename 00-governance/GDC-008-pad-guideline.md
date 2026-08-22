@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-008
   title: Product Architecture Document (PAD) Guideline
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-22
+  last_reviewed: 2026-08-23
 ---
 
 # Product Architecture Document (PAD) Guideline
@@ -115,7 +115,7 @@ doc_meta:
   title: [Capability Title] # Descriptive title of the Domain Capability
   owner: [Domain Team/Role] # Authoritative team owner
   version: 1.0.0 # Semantic versioning format
-  status: approved # proposed | approved | deprecated
+  status: approved # chartered | draft | approved | deprecated
   classification: public # public | internal | restricted
   review_cycle_days: 180 # Review cycle period
   last_reviewed: YYYY-MM-DD # Last audit date
@@ -136,7 +136,8 @@ doc_meta:
 
 | Status       | Meaning / Lifecycle Stage                                                 |
 | ------------ | ------------------------------------------------------------------------- |
-| `proposed`   | The domain architecture is under design or Architecture Authority review. |
+| `chartered` | The logical capability boundary is recognized as a valid candidate, but no shared Product/Platform implementation commitment exists yet. |
+| `draft`      | The PAD is under active architecture design or Architecture Authority review; draft-age pressure applies. |
 | `approved`   | The domain architecture is formalized and acts as the official contract.  |
 | `deprecated` | The domain capability is being phased out or has been replaced.           |
 
@@ -174,6 +175,33 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | **Evolution _(Optional)_** | Describe the future architectural trajectory (not a timeline roadmap). | Explains how the architecture intends to evolve long-term (e.g., migrating from REST to Event-Driven). |
 | **References _(Optional)_** | Additional context or external documents. | List any relevant documentation, standard guidelines, or upstream mandates. |
 
+#### 2.3.6 Platform Commitment & Approval Gate
+
+PAD lifecycle status expresses **enterprise commitment**, not document completeness.
+
+- `chartered` means the logical boundary is recognized and may be matured in detail, but it is not yet an active shared Product/Platform implementation commitment
+- `draft` means the PAD is under active design/review; the global draft-age rule applies
+- `approved` means the PAD is the authoritative logical contract and downstream physical design may proceed
+- `deprecated` means the logical capability is being retired or replaced
+
+A PAD may be promoted to `approved` only when at least one of these drivers exists:
+
+1. **Constitutional / authority need** â€” central authority is required to preserve enterprise trust, control, evidence, or singular ownership
+2. **Mandatory dependency** â€” an already approved Product/Platform requires the capability and local duplication would violate an authority boundary or create unacceptable systemic risk
+3. **Demonstrated consumer/runtime evidence** â€” repeated concrete consumers, operational friction, lifecycle independence, or runtime economics show that shared ownership reduces total-system complexity
+
+Approval also requires:
+
+- explicit accountable ownership
+- concrete consumers or governed authority obligations
+- stable authority and data boundaries
+- provided/consumed logical contracts
+- capability NFR and degradation posture
+- an adoption, support, and operational intent appropriate to the capability
+
+Architecture completeness, taxonomy symmetry, hypothetical reuse, or a mature-looking document **do not by themselves justify `approved` status**.
+
+A `chartered` PAD may have a `chartered` SAD placeholder for traceability. A SAD may enter `draft` or `approved` only after its parent PAD is `approved`; this is enforced by the SAD validator.
 ### 2.4 Lifecycle & Audit
 
 As the Single Source of Truth (SSOT) for Product Architecture Documents (PAD), the PAD represents highly stable domain capabilities. They must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.

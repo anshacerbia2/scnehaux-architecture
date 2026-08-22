@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-007
   title: Integration Platform SAD
   owner: Architecture Authority
-  version: 0.2.0
+  version: 0.2.1
   status: chartered
   classification: internal
   governed_by:
@@ -12,13 +12,13 @@ doc_meta:
   parent_pad: PAD-PLT-006
   review_cycle_days: 180
   created_date: 2026-07-06
-  last_updated: 2026-08-22
+  last_updated: 2026-08-23
   last_reviewed: 2026-08-22
 ---
 
 # Integration Platform Software Architecture (SAD-007)
 
-> **Status: chartered.** PAD-PLT-006 is approved and no physical shared Integration runtime is currently authorized for build. This placeholder records inherited constraints only. It does not establish a universal integration gateway.
+> **Status: chartered.** PAD-PLT-006 is currently `chartered` and no physical shared Integration runtime is authorized for build. This placeholder records candidate realization constraints only and does not establish a universal integration gateway. Physical design begins only after the PAD is promoted to `approved` and this SAD enters `draft`.
 
 ## 1. Purpose & Scope
 

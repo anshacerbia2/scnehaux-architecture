@@ -8,7 +8,7 @@
 | [SAD-002](scnehaux-iam/scnehaux-identity-experience.sad.md) | Scnehaux Identity Experience | PAD-PLT-001 | Identity Experience Team | approved |
 | [SAD-003](scnehaux-ui-platform/scnehaux-ui-platform.sad.md) | Scnehaux UI Platform Software Architecture (SAD) | PAD-PLT-003 | Principal UI/UX Architect | approved |
 | [SAD-004](scnehaux-organization/scnehaux-organization-control.sad.md) | Scnehaux Organization Control | PAD-PLT-002 | Core Platform Team | approved |
-| [SAD-005](scnehaux-notification-platform/scnehaux-notification-platform.sad.md) | Scnehaux Notification Runtime | PAD-PLT-005 | Notification Platform Team | draft |
+| [SAD-005](scnehaux-notification-platform/scnehaux-notification-platform.sad.md) | Scnehaux Notification Runtime | PAD-PLT-005 | Notification Platform Team | approved |
 | [SAD-006](scnehaux-workflow-platform/scnehaux-workflow-platform.sad.md) | Workflow Platform SAD | PAD-PLT-004 | Architecture Authority | chartered |
 | [SAD-007](scnehaux-integration-platform/scnehaux-integration-platform.sad.md) | Integration Platform SAD | PAD-PLT-006 | Architecture Authority | chartered |
 | [SAD-008](scnehaux-document-platform/scnehaux-document-platform.sad.md) | Artifact & Document Platform SAD | PAD-PLT-009 | Architecture Authority | chartered |

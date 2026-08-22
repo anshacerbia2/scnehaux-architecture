@@ -131,7 +131,7 @@ This index documents the internal functions and classes of the Fitness Function 
 
 | Function | Description |
 | :--- | :--- |
-| **SADValidator.validate_type_specific** | Execute rules specific to System Architecture Documents (SAD).<br><br>Enforces upward traceability and bidirectional consistency:<br>- Validates the mandatory `parent_pad` field, ensuring the system maps to a recognized platform.<br>- Checks that the referenced PAD exists in the repository.<br>- Checks that the referenced PAD declares this SAD in its `fulfilled_by` array (bidirectional link).<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
+| **SADValidator.validate_type_specific** | Execute rules specific to System Architecture Documents (SAD).<br><br>Enforces upward traceability, bidirectional consistency, and activation state:<br>- Validates the mandatory `parent_pad` field, ensuring the system maps to a recognized platform.<br>- Checks that the referenced PAD exists in the repository.<br>- Checks that the referenced PAD declares this SAD in its `fulfilled_by` array.<br>- Prevents an active SAD (`draft` or `approved`) beneath a non-approved PAD. |
 
 ### `engine/validators/domains/std_validator.py`
 
@@ -393,20 +393,6 @@ graph LR
     IsRealizesMissing -->|No| LoopRealizes{"For each EAD ID"}
     LoopRealizes --> CheckEADExist{"EAD exists?"}
     CheckEADExist -->|No| ErrEADMissing["Error: EAD does not exist"]
-```
-
-### SAD Validator (`sad_validator.py`)
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%
-graph LR
-    StartSAD((Start SAD Validation)) --> CheckParentPAD["Check 'parent_pad' metadata"]
-    CheckParentPAD --> IsParentPADMissing{"Missing or empty?"}
-    IsParentPADMissing -->|Yes| ErrPADMissing["Error: parent_pad required"]
-    IsParentPADMissing -->|No| LoopPAD{"For each PAD ID"}
-    LoopPAD --> CheckPADExist{"PAD exists?"}
-    CheckPADExist -->|No| ErrPADNotFound["Error: PAD does not exist"]
-    CheckPADExist -->|Yes| CheckPADBidirectional{"PAD points to this SAD?"}
-    CheckPADBidirectional -->|No| ErrPADBidir["Error: Bidirectional traceability broken"]
 ```
 
 ### TDD Validator (`tdd_validator.py`)

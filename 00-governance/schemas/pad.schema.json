@@ -51,7 +51,7 @@
                 "status": {
                   "title": "Allowed Statuses",
                   "type": "string",
-                  "enum": ["draft", "approved", "deprecated"]
+                  "enum": ["chartered", "draft", "approved", "deprecated"]
                 },
                 "governed_by": {
                   "title": "Governing GDC/EAD IDs",

@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-009
   title: System Architecture Document (SAD) Guideline
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-22
+  last_reviewed: 2026-08-23
 ---
 
 # System Architecture Document (SAD) Guideline
@@ -143,7 +143,7 @@ doc_meta:
   title: [Application Title] # Descriptive title of the application
   owner: [System Team/Role] # Authoritative system owner
   version: 1.0.0 # Semantic versioning format
-  status: approved # proposed | approved | deprecated
+  status: chartered # chartered | draft | approved | deprecated
   classification: internal # public | internal | restricted
   parent_pad: PAD-PLT-XXX # Referencing the Parent Domain Capability PAD ID
   review_cycle_days: 180 # Review cycle period
@@ -166,7 +166,8 @@ doc_meta:
 
 | Status       | Meaning / Lifecycle Stage                                                          |
 | ------------ | ---------------------------------------------------------------------------------- |
-| `proposed`   | The software architecture is under design or peer review.                          |
+| `chartered` | A physical realization is recognized for traceability, but no system is in active design/build yet. |
+| `draft`      | The physical system architecture is under active design/review; draft-age pressure applies. |
 | `approved`   | The software architecture is formalized and acts as the official design blueprint. |
 | `deprecated` | The system is being phased out or has been replaced.                               |
 
@@ -205,6 +206,16 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 | **Assumptions (Optional)** | Document external operational assumptions. | Must list business, external, or operational assumptions the design relies upon. |
 | **Compatibility Strategy (Optional)** | Detail schema migration or API versioning compatibility rules. | Must outline API versioning or schema migration paths to avoid breaking changes. |
 
+#### 2.3.6 Parent PAD Activation Gate
+
+SAD lifecycle is subordinate to the parent PAD commitment state.
+
+- a `chartered` SAD is permitted under a `chartered`, `draft`, or `approved` PAD as a non-build placeholder
+- a SAD SHALL NOT enter `draft` while its parent PAD is not `approved`
+- a SAD SHALL NOT enter `approved` while its parent PAD is not `approved`
+- promotion of the parent PAD does not automatically approve the SAD; physical design still follows the SAD review lifecycle
+
+The SAD validator enforces this cross-layer activation rule.
 ### 2.4 Lifecycle & Audit
 
 All SAD artifacts must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.

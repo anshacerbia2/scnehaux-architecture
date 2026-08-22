@@ -3,8 +3,8 @@ doc_meta:
   id: PAD-PLT-004
   title: Enterprise Workflow Platform
   owner: Workflow Team
-  version: 2.2.0
-  status: approved
+  version: 2.2.1
+  status: chartered
   classification: restricted
   governed_by:
     - GDC-008
@@ -21,6 +21,8 @@ doc_meta:
 ---
 
 # Enterprise Workflow Platform
+
+> **Commitment: chartered.** This logical boundary is retained as a valid enterprise candidate, but no shared implementation is authorized until the approval gate in GDC-008 is satisfied.
 
 ## 1. Purpose & Scope
 

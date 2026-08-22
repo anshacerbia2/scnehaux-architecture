@@ -3,8 +3,8 @@ doc_meta:
   id: PAD-PLT-006
   title: Enterprise Integration Platform
   owner: Integration Team
-  version: 2.1.0
-  status: approved
+  version: 2.1.1
+  status: chartered
   classification: restricted
   governed_by:
     - GDC-008
@@ -20,6 +20,8 @@ doc_meta:
 ---
 
 # Enterprise Integration Platform
+
+> **Commitment: chartered.** This logical boundary is retained as a valid enterprise candidate, but no shared implementation is authorized until the approval gate in GDC-008 is satisfied.
 
 ## 1. Purpose & Scope
 

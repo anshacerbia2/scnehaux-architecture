@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-016
   title: Workspace Experience Platform SAD
   owner: Architecture Authority
-  version: 0.1.0
+  version: 0.1.1
   status: chartered
   classification: internal
   governed_by:
@@ -18,7 +18,7 @@ doc_meta:
 
 # Workspace Experience Platform SAD
 
-> **Status: chartered.** The parent PAD is approved, but no physical system design is approved. This document records inherited constraints only. Implementation against this placeholder is rejected until the SAD moves to `draft` and contains a reviewed physical design.
+> **Status: chartered.** The parent PAD is currently `chartered` and no physical system design is authorized. This document records candidate realization constraints only. Implementation against this placeholder is rejected until the parent PAD is promoted to `approved` and this SAD moves to `draft` with a reviewed physical design.
 
 ## 1. Purpose & Scope
 
