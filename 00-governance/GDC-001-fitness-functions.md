@@ -85,96 +85,97 @@ The Master Fitness Function resides entirely within the `06-fitness-function/` d
 <!-- BEGIN_ENGINE_TOPOGRAPHY -->
 ```text
 scnehaux-architecture/
-â””â”€â”€ 06-fitness-function/
-â”‚       â”œâ”€â”€ engine/              # (Core automated execution logic)
-â”‚       â”‚   â”œâ”€â”€ INDEX.md
-â”‚       â”‚   â”œâ”€â”€ auditors/         # (External environment validators)
-â”‚       â”‚   â”‚   â”œâ”€â”€ dependency_scanner.py
-â”‚       â”‚   â”‚   â”œâ”€â”€ git_auditor.py
-â”‚       â”‚   â”‚   â”œâ”€â”€ graph_auditor.py
-â”‚       â”‚   â”‚   â””â”€â”€ waiver_auditor.py
-â”‚       â”‚   â”œâ”€â”€ cli.py            # (The Master Fitness Function Entrypoint)
-â”‚       â”‚   â”œâ”€â”€ config/           # (Engine configuration & environment variables)
-â”‚       â”‚   â”‚   â”œâ”€â”€ constants.py
-â”‚       â”‚   â”‚   â”œâ”€â”€ loader.py
-â”‚       â”‚   â”‚   â””â”€â”€ severity.py
-â”‚       â”‚   â”œâ”€â”€ fs/               # (File system utilities & workspace traversal)
-â”‚       â”‚   â”‚   â””â”€â”€ crawler.py
-â”‚       â”‚   â”œâ”€â”€ parsing/          # (Data extraction from raw files)
-â”‚       â”‚   â”‚   â””â”€â”€ markdown_ast.py
-â”‚       â”‚   â”œâ”€â”€ reporting/        # (CLI output formatting & CI/CD error logs)
-â”‚       â”‚   â”‚   â””â”€â”€ reporter.py
-â”‚       â”‚   â””â”€â”€ validators/       # (The core policy sandbox)
-â”‚       â”‚       â”œâ”€â”€ base.py
-â”‚       â”‚       â”œâ”€â”€ domains/      # (Federated domain-specific triad scripts)
-â”‚       â”‚       â”‚   â”œâ”€â”€ adr_validator.py
-â”‚       â”‚       â”‚   â”œâ”€â”€ ead_validator.py
-â”‚       â”‚       â”‚   â”œâ”€â”€ gdc_validator.py
-â”‚       â”‚       â”‚   â”œâ”€â”€ pad_validator.py
-â”‚       â”‚       â”‚   â”œâ”€â”€ sad_validator.py
-â”‚       â”‚       â”‚   â”œâ”€â”€ std_validator.py
-â”‚       â”‚       â”‚   â””â”€â”€ tdd_validator.py
-â”‚       â”‚       â”œâ”€â”€ global_rules.py # (Foundational Python rules for all documents)
-â”‚       â”‚       â”œâ”€â”€ metadata_rules.py
-â”‚       â”‚       â”œâ”€â”€ registry.py
-â”‚       â”‚       â”œâ”€â”€ schema_extensions.py
-â”‚       â”‚       â””â”€â”€ structure_rules.py
-â”‚       â”œâ”€â”€ generators/          # (Dynamic docs and topography autobuilders)
-â”‚       â”‚   â”œâ”€â”€ INDEX.md
-â”‚       â”‚   â”œâ”€â”€ generate_adr_index.py
-â”‚       â”‚   â”œâ”€â”€ generate_engine_topography.py
-â”‚       â”‚   â”œâ”€â”€ generate_functions_doc.py
-â”‚       â”‚   â”œâ”€â”€ generate_maturity_dashboard.py
-â”‚       â”‚   â”œâ”€â”€ generate_pad_sad_index.py
-â”‚       â”‚   â”œâ”€â”€ generate_rules_doc.py
-â”‚       â”‚   â””â”€â”€ generate_traceability_graph.py
-â”‚       â”œâ”€â”€ scnehaux_linter.egg-info/
-â”‚       â”‚   â”œâ”€â”€ PKG-INFO
-â”‚       â”‚   â”œâ”€â”€ SOURCES.txt
-â”‚       â”‚   â”œâ”€â”€ dependency_links.txt
-â”‚       â”‚   â”œâ”€â”€ entry_points.txt
-â”‚       â”‚   â”œâ”€â”€ requires.txt
-â”‚       â”‚   â””â”€â”€ top_level.txt
-â”‚       â”œâ”€â”€ scratch/
-â”‚       â”œâ”€â”€ scripts/             # (Git hooks and manual CI/CD utilities)
-â”‚       â”‚   â”œâ”€â”€ INDEX.md
-â”‚       â”‚   â”œâ”€â”€ codeowners-validator.py
-â”‚       â”‚   â”œâ”€â”€ install-hooks.py
-â”‚       â”‚   â””â”€â”€ waiver-expiry-check.py
-â”‚       â””â”€â”€ tests/               # (High-coverage pytest suite)
-â”‚           â”œâ”€â”€ INDEX.md
-â”‚           â”œâ”€â”€ conftest.py
-â”‚           â””â”€â”€ engine/          # (Core automated execution logic)
-â”‚               â”œâ”€â”€ auditors/    # (External environment validators)
-â”‚               â”‚   â”œâ”€â”€ test_dependency_scanner.py
-â”‚               â”‚   â”œâ”€â”€ test_git_auditor.py
-â”‚               â”‚   â”œâ”€â”€ test_graph_auditor.py
-â”‚               â”‚   â””â”€â”€ test_waiver_auditor.py
-â”‚               â”œâ”€â”€ config/      # (Engine configuration & environment variables)
-â”‚               â”‚   â””â”€â”€ test_loader.py
-â”‚               â”œâ”€â”€ fs/          # (File system utilities & workspace traversal)
-â”‚               â”‚   â””â”€â”€ test_crawler.py
-â”‚               â”œâ”€â”€ parsing/     # (Data extraction from raw files)
-â”‚               â”‚   â””â”€â”€ test_markdown_ast.py
-â”‚               â”œâ”€â”€ reporting/   # (CLI output formatting & CI/CD error logs)
-â”‚               â”œâ”€â”€ test_cli.py
-â”‚               â”œâ”€â”€ test_cli_extra.py
-â”‚               â””â”€â”€ validators/  # (The core policy sandbox)
-â”‚                   â”œâ”€â”€ domains/ # (Federated domain-specific triad scripts)
-â”‚                   â”‚   â”œâ”€â”€ test_adr_validator.py
-â”‚                   â”‚   â”œâ”€â”€ test_all_domains.py
-â”‚                   â”‚   â”œâ”€â”€ test_ead_validator.py
-â”‚                   â”‚   â”œâ”€â”€ test_gdc_validator.py
-â”‚                   â”‚   â”œâ”€â”€ test_pad_validator.py
-â”‚                   â”‚   â”œâ”€â”€ test_sad_validator.py
-â”‚                   â”‚   â”œâ”€â”€ test_std_validator.py
-â”‚                   â”‚   â””â”€â”€ test_tdd_validator.py
-â”‚                   â”œâ”€â”€ test_base.py
-â”‚                   â”œâ”€â”€ test_global_rules.py
-â”‚                   â”œâ”€â”€ test_metadata_rules.py
-â”‚                   â”œâ”€â”€ test_registry.py
-â”‚                   â”œâ”€â”€ test_schema_extensions.py
-â”‚                   â””â”€â”€ test_structure_rules.py
+└── 06-fitness-function/
+│       ├── engine/              # (Core automated execution logic)
+│       │   ├── INDEX.md
+│       │   ├── auditors/         # (External environment validators)
+│       │   │   ├── dependency_scanner.py
+│       │   │   ├── git_auditor.py
+│       │   │   ├── graph_auditor.py
+│       │   │   └── waiver_auditor.py
+│       │   ├── cli.py            # (The Master Fitness Function Entrypoint)
+│       │   ├── config/           # (Engine configuration & environment variables)
+│       │   │   ├── constants.py
+│       │   │   ├── loader.py
+│       │   │   └── severity.py
+│       │   ├── fs/               # (File system utilities & workspace traversal)
+│       │   │   └── crawler.py
+│       │   ├── parsing/          # (Data extraction from raw files)
+│       │   │   └── markdown_ast.py
+│       │   ├── reporting/        # (CLI output formatting & CI/CD error logs)
+│       │   │   └── reporter.py
+│       │   └── validators/       # (The core policy sandbox)
+│       │       ├── base.py
+│       │       ├── domains/      # (Federated domain-specific triad scripts)
+│       │       │   ├── adr_validator.py
+│       │       │   ├── ead_validator.py
+│       │       │   ├── gdc_validator.py
+│       │       │   ├── pad_validator.py
+│       │       │   ├── sad_validator.py
+│       │       │   ├── std_validator.py
+│       │       │   └── tdd_validator.py
+│       │       ├── global_rules.py # (Foundational Python rules for all documents)
+│       │       ├── metadata_rules.py
+│       │       ├── registry.py
+│       │       ├── schema_extensions.py
+│       │       └── structure_rules.py
+│       ├── generators/          # (Dynamic docs and topography autobuilders)
+│       │   ├── INDEX.md
+│       │   ├── generate_adr_index.py
+│       │   ├── generate_engine_topography.py
+│       │   ├── generate_functions_doc.py
+│       │   ├── generate_maturity_dashboard.py
+│       │   ├── generate_pad_sad_index.py
+│       │   ├── generate_rules_doc.py
+│       │   └── generate_traceability_graph.py
+│       ├── scnehaux_linter.egg-info/
+│       │   ├── PKG-INFO
+│       │   ├── SOURCES.txt
+│       │   ├── dependency_links.txt
+│       │   ├── entry_points.txt
+│       │   ├── requires.txt
+│       │   └── top_level.txt
+│       ├── scratch/
+│       ├── scratch_ast.py
+│       ├── scripts/             # (Git hooks and manual CI/CD utilities)
+│       │   ├── INDEX.md
+│       │   ├── codeowners-validator.py
+│       │   ├── install-hooks.py
+│       │   └── waiver-expiry-check.py
+│       └── tests/               # (High-coverage pytest suite)
+│           ├── INDEX.md
+│           ├── conftest.py
+│           └── engine/          # (Core automated execution logic)
+│               ├── auditors/    # (External environment validators)
+│               │   ├── test_dependency_scanner.py
+│               │   ├── test_git_auditor.py
+│               │   ├── test_graph_auditor.py
+│               │   └── test_waiver_auditor.py
+│               ├── config/      # (Engine configuration & environment variables)
+│               │   └── test_loader.py
+│               ├── fs/          # (File system utilities & workspace traversal)
+│               │   └── test_crawler.py
+│               ├── parsing/     # (Data extraction from raw files)
+│               │   └── test_markdown_ast.py
+│               ├── reporting/   # (CLI output formatting & CI/CD error logs)
+│               ├── test_cli.py
+│               ├── test_cli_extra.py
+│               └── validators/  # (The core policy sandbox)
+│                   ├── domains/ # (Federated domain-specific triad scripts)
+│                   │   ├── test_adr_validator.py
+│                   │   ├── test_all_domains.py
+│                   │   ├── test_ead_validator.py
+│                   │   ├── test_gdc_validator.py
+│                   │   ├── test_pad_validator.py
+│                   │   ├── test_sad_validator.py
+│                   │   ├── test_std_validator.py
+│                   │   └── test_tdd_validator.py
+│                   ├── test_base.py
+│                   ├── test_global_rules.py
+│                   ├── test_metadata_rules.py
+│                   ├── test_registry.py
+│                   ├── test_schema_extensions.py
+│                   └── test_structure_rules.py
 ```
 <!-- END_ENGINE_TOPOGRAPHY -->
 
@@ -218,7 +219,7 @@ The global baseline applies universally to all architecture documents across the
 | Rule Category      | Parameter                | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | :----------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Structure Rules** | Artifact Directories | **Gdc**: `00-governance`<br>**Ead**: `01-enterprise`<br>**Std**: `02-standards`<br>**Pad**: `03-domain`<br>**Sad**: `04-system`<br>**Adr**: `05-decisions`<br>**Tdd**: `docs/designs` |
-| **Structure Rules** | Ignored Files | **Exact Matches**: <ul><li>`readme.md`</li><li>`index.md`</li><li>`contributing.md`</li><li>`changelog.md`</li><li>`maturity.md`</li><li>`traceability.md`</li><li>`temp.md`</li><li>`scnehaux_enterprise_architecture_refinement.md`</li></ul><br>**Patterns**: <ul><li>`\.copy\.md$`</li><li>`\.template\.md$`</li><li>`-template\.md$`</li><li>`[\\/]templates[\\/]`</li></ul> |
+| **Structure Rules** | Ignored Files | **Exact Matches**: <ul><li>`readme.md`</li><li>`index.md`</li><li>`contributing.md`</li><li>`changelog.md`</li><li>`maturity.md`</li><li>`traceability.md`</li><li>`temp.md`</li><li>`scnehaux_enterprise_architecture_refinement.md`</li></ul><br>**Patterns**: <ul><li>`\.copy\.md$`</li><li>`\.template\.md$`</li><li>`-template\.md$`</li><li>`[\\/]templates[\\/]`</li><li>`[\\/]scratch[\\/]`</li></ul> |
 | **Structure Rules** | Max Directory Depth | `3` |
 | **Content Rules** | Exempt Statuses | <ul><li>`{'status': 'draft', 'depend_on': 'created_date', 'max_age_days': 30, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."}`</li><li>`{'status': 'deprecated', 'depend_on': 'last_updated', 'max_age_days': 180, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be fully retired and deleted."}`</li></ul> |
 | **Content Rules** | Max Review Age Days | **Value**: `365`<br>**Error Message**: `Document review age of {age_days} days exceeds limit of {limit} days.` |

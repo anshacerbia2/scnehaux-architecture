@@ -14,7 +14,8 @@ This index documents the test suite utilities and fixtures.
 
 | Function | Description |
 | :--- | :--- |
-| **make_validator** | Create a validator instance that calls the REAL __init__,<br>ensuring lint_disable parsing and all initialisation logic is exercised. |
+| **_get_real_config** | *(No docstring provided)* |
+| **make_validator** | Create a validator instance that calls the REAL __init__,<br>ensuring lint_disable parsing and all initialisation logic is exercised.<br>It merges test rules with the real validated global schema, ensuring<br>tests cannot instantiate a validator with a broken configuration. |
 
 ### `tests/engine/auditors/test_dependency_scanner.py`
 
@@ -36,6 +37,7 @@ This index documents the test suite utilities and fixtures.
 | :--- | :--- |
 | **test_audit_hierarchy_tiers** | *(No docstring provided)* |
 | **test_audit_orphans** | *(No docstring provided)* |
+| **test_audit_hierarchy_tiers_accepts_multiple_sad_parents** | *(No docstring provided)* |
 | **test_audit_traceability_graph_cycle_detected** | *(No docstring provided)* |
 | **test_audit_traceability_graph_self_reference** | *(No docstring provided)* |
 | **test_audit_traceability_graph_acyclic_clean** | *(No docstring provided)* |
@@ -65,6 +67,8 @@ This index documents the test suite utilities and fixtures.
 | **test_gather_markdown_paths_valueerror_relpath** | Validates the security mechanism handling cross-drive path traversals.<br>Ensures that when os.path.relpath throws a ValueError due to mismatched drives<br>(e.g., on Windows), the system performs a Fail-Closed hard crash (ValueError). |
 | **test_gather_markdown_paths_target_str** | Validates the type coercion mechanism for the target_dirs argument.<br>Ensures that passing a single string path is correctly converted into a list<br>before path evaluation continues. |
 | **test_gather_markdown_paths_skipped_targets** | Validates strict boundary enforcement against unauthorized internal directories.<br>Ensures that targets not explicitly present in the allowed_root_dirs list<br>trigger a Fail-Closed hard crash (ValueError). |
+| **test_gather_markdown_paths_allows_parent_of_artifact_root** | *(No docstring provided)* |
+| **test_unauthorized_target_keeps_accurate_error** | *(No docstring provided)* |
 | **test_gather_markdown_paths_outside_repo** | Validates boundary enforcement against external path traversal attacks.<br>Ensures that targets located outside the designated repo_root boundary<br>(e.g., ../) trigger a Fail-Closed hard crash (ValueError). |
 | **test_crawler_handles_exception_during_read** | Validates graceful error handling during file read operations.<br>Ensures that if a PermissionError occurs while extracting metadata,<br>it safely bypasses the unreadable file without crashing the crawler. |
 | **test_gather_markdown_paths_unallowed_directory_in_tree** | *(No docstring provided)* |
@@ -137,6 +141,7 @@ This index documents the test suite utilities and fixtures.
 
 | Function | Description |
 | :--- | :--- |
+| **test_merge_reference_registry_resolves_cross_repo_ids_and_duplicates** | *(No docstring provided)* |
 | **test_validate_execution_root_fails_without_git** | *(No docstring provided)* |
 | **test_validate_execution_root_passes_with_git** | *(No docstring provided)* |
 | **test_main_missing_global_config** | *(No docstring provided)* |
@@ -222,6 +227,8 @@ This index documents the test suite utilities and fixtures.
 | **test_base_validator_lint_disable_ignored_inside_code_fence** | *(No docstring provided)* |
 | **test_base_validator_lint_disable_honored_with_reason** | *(No docstring provided)* |
 | **test_base_validator_lint_disable_undocumented_has_none_reason** | *(No docstring provided)* |
+| **test_base_validator_lint_disable_invalid_rule_fails_fast** | *(No docstring provided)* |
+| **test_base_validator_lint_disable_inline_scope_limited** | *(No docstring provided)* |
 | **test_base_validator_lint_disable_cannot_silence_critical** | *(No docstring provided)* |
 | **test_base_validator_lint_disable_honors_non_critical** | *(No docstring provided)* |
 | **test_schema_validation_enum** | *(No docstring provided)* |

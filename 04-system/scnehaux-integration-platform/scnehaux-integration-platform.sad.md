@@ -3,229 +3,217 @@ doc_meta:
   id: SAD-007
   title: Integration Platform SAD
   owner: Architecture Authority
-  version: 0.1.0
+  version: 0.2.0
   status: chartered
   classification: internal
   governed_by:
     - EAD-001
-    - EAD-003
+    - EAD-004
   parent_pad: PAD-PLT-006
   review_cycle_days: 180
   created_date: 2026-07-06
-  last_updated: 2026-08-18
-  last_reviewed: 2026-08-18
+  last_updated: 2026-08-22
+  last_reviewed: 2026-08-22
 ---
 
 # Integration Platform Software Architecture (SAD-007)
 
-> **Status: chartered.** The capability is chartered by PAD-PLT-006 and no system is in build.
-> Every statement below is inherited from an enterprise document that has already decided
-> it. Nothing here is a system-specific design choice, because those are made when the
-> system enters build and this document moves to `draft`.
->
-> EAD-001 section 5.4 is explicit that a target capability is not implementation
-> authorization. This document records the constraints a build inherits on day one so that
-> they are not rediscovered or renegotiated then.
-
----
+> **Status: chartered.** PAD-PLT-006 is approved and no physical shared Integration runtime is currently authorized for build. This placeholder records inherited constraints only. It does not establish a universal integration gateway.
 
 ## 1. Purpose & Scope
 
-This document records the architectural constraints the Integration Platform inherits from the enterprise architecture. It is the placeholder that a full system design replaces.
-
 ### 1.1 Objective
 
-Realize the capability PAD-PLT-006 charters, within the constraints below, without re-implementing a capability another platform owns.
+Realize reusable connector, protocol, transformation, routing, and integration-governance machinery where shared execution is justified while preserving the Natural Owner of each external business relationship.
 
 ### 1.2 Capability
 
-External connectivity, payload transformation, and the enterprise Anti-Corruption Layer.
+Reusable external/internal connector lifecycle, protocol translation, transformation, routing, integration contract registry, policy, reconciliation support, and integration observability.
 
-### 1.3 Constraint
+### 1.3 Requirement
 
-These are inherited and not open to per-system renegotiation:
+A future implementation must be optional machinery selected by integration evidence. It cannot require every Product or Platform external call to traverse one runtime.
 
-- **One owning domain, one operational store.** This system owns the Integration Database and no other system reads it directly, per EAD-003 section 5.1.
-- **No shared operational database and no cross-domain query.** Other domains obtain this system's data through its published API or its events, per EAD-003 section 6.5.
-- **Tier-1.** Availability at or above 99.95%, RTO within 1 hour, RPO within 5 minutes, per EAD-005 section 5.4.
-- **Independently deployable** on its own pipeline, with no coordinated enterprise release, per EAD-002 section 6.2.
-- **Identity is consumed, never implemented.** Authentication and token issuance belong to the Identity Platform, per EAD-006 section 6.2.
-- **Zero Trust.** Every request is authenticated and authorized regardless of origin, and every internal call is mutually authenticated, per EAD-006 sections 5.1 and 5.4.
-- **UUIDv7 primary keys, Row-Level Security for tenant-scoped tables, and declarative schema management**, per STD-GLB-002 and ADR-GLB-002.
-- **The transactional outbox** for every published domain event, per ADR-GLB-003.
+### 1.4 Constraint
 
-### 1.4 Requirement
-
-The capability requirements are held by PAD-PLT-006 until a system design exists. This document adds none of its own.
+- external authority and business meaning remain with the Natural Owner
+- Product/Platform direct adapters remain allowed under enterprise contract/security/observability standards
+- Event & Messaging broker ownership remains Engineering & Runtime rather than this domain
+- Notification naturally owns communication-provider delivery adapters
+- credentials are consumed from Trust Services
+- Integration never owns exchanged Product business truth
 
 ### 1.5 Assumption
 
-The platform substrate described by EAD-005 is available: a managed runtime, brokered secrets, telemetry collection, and the event broker.
+Concrete shared connectors will be justified by multiple consumers, independent lifecycle, governance, scale, risk, or protocol reuse before build.
 
----
+### 1.6 Out of Scope
+
+- universal gateway topology
+- Event Broker ownership
+- Product business logic
+- Workflow execution
+- Notification delivery semantics
+- Identity authority
+- Product data authority
 
 ## 2. Enterprise Traceability
 
 | Relationship | Target |
 | :-- | :-- |
 | Realizes | PAD-PLT-006 |
-| Governed by | EAD-001 — capability ownership and strategic classification |
-| Governed by | EAD-003 — data ownership and the operational store assignment |
-| Conforms to | EAD-002 — the dependency direction and its acyclic constraint |
-| Conforms to | EAD-006 — the mandatory security controls every system inherits |
-| Conforms to | STD-GLB-BE-001 — internal package structure and boundary assertion |
-
----
+| Governed by | EAD-001 and EAD-004 |
+| Aligns with | EAD-002 Shared Integration is not a universal gateway |
+| Consumes | Event & Messaging, Trust, Identity/Application Trust, Audit/Observability |
 
 ## 3. Solution Context
 
 ### 3.1 System Context
 
-Synchronous egress and ingress. Every external vendor call transits this platform, and no Business Product calls a vendor directly.
+Products/Platforms may use a shared Integration runtime when connector/protocol reuse is justified. A domain-specific external adapter may remain inside its Natural Owner without violating the enterprise architecture.
 
-Dependencies point inward and downward toward stable substrate and never form a cycle, per EAD-002 section 5.3. This system may depend on Platform Services and MUST NOT be depended upon by one.
+### 3.2 External
 
-### 3.2 External Dependencies
+External systems retain their canonical authority. A connector translates/protects the boundary but does not become the business source of truth.
 
-Every external vendor is mediated by the Integration Platform acting as an Anti-Corruption Layer. No vendor SDK or vendor payload model appears inside this system, per EAD-002 section 6.4.
+### 3.3 Internal
 
-### 3.3 Internal Structure
-
-A modular monolith: one bounded context, one deployable, modules separated at compile time, per ADR-GLB-001 section 5.1 and STD-GLB-BE-001 Rule 1.
-
----
+No physical connector host, gateway, broker, or transformation engine is selected while this SAD remains chartered.
 
 ## 4. Architecture Model
 
-### 4.1 Container View
+### 4.1 Container
 
-One deployable service and its operational store. The container decomposition is a system design decision and is made when this document moves to `draft`.
+Physical container topology is deferred until concrete shared connector requirements enter build.
 
-### 4.2 Component View
+### 4.2 Component
 
-Components follow the layer direction STD-GLB-BE-001 Rule 2 fixes: adapter depends on app, app depends on domain, and the domain depends on neither. Internal edges are declared in a manifest and asserted against the package graph on every build.
+A future design must terminate vendor models in adapter/ACL boundaries and keep Product-domain contracts independent of vendor SDKs.
 
-### 4.3 Event Flow
+### 4.3 Runtime Flow
 
-Domain events are appended to the outbox inside the transaction that mutates the aggregate, and a dispatcher publishes them to the broker. A consumer deduplicates on the event identifier inside the same transaction as its effect, which is what makes at-least-once delivery safe.
+```text
+Natural Owner -> governed Integration contract (when justified) -> external provider/system
+```
 
----
+or, for a domain-specific relationship:
+
+```text
+Natural Owner -> governed local adapter -> external provider/system
+```
+
+Both remain subject to enterprise standards.
 
 ## 5. State & Data Architecture
 
 ### 5.1 Storage
 
-The Integration Database holds connector configuration and per-vendor mapping state. It is private to this domain: no other system holds a connection to it, and no cross-domain join exists, per EAD-003 sections 5.1 and 6.5.
+Future Integration state is limited to connector/configuration/correlation/reconciliation metadata required by shared connector contracts. Product business records remain external to this domain.
 
 ### 5.2 Schema
 
-Declarative under Atlas, with migrations generated deterministically and applied by a job running under a migration role distinct from the runtime role, per ADR-GLB-004. The runtime role holds no DDL privilege.
+Physical persistence and migration design are deferred until a draft system exists.
 
 ### 5.3 Cache
 
-Any cache carries a bounded lifetime and an explicit staleness behaviour. A cached authorization decision is never used to permit an action.
+Any future cache is non-authoritative with explicit staleness and invalidation semantics.
 
-### 5.4 Stateless Runtime
+### 5.4 Stateless
 
-The process holds no state that survives a request, so replicas are interchangeable and scale horizontally, per EAD-005 section 5.3.
-
----
+Connector compute is replaceable/restartable; authoritative Product/external facts are not held solely in connector memory.
 
 ## 6. Integration Contracts
 
-### 6.1 Published API
+### 6.1 API
 
-A versioned contract owned by this system, published before implementation, per EAD-004 section 6.3. REST with an OpenAPI 3.1 document for control-plane and client-facing interfaces; gRPC for internal request-hot-path interfaces, per STD-GLB-006. Errors are RFC 9457 problem documents.
+Shared connector/control contracts are versioned when implementation begins.
 
 ### 6.2 Published Events
 
-CloudEvents 1.0 in JSON, registered in the enterprise schema registry, with backward compatibility enforced in the build, per STD-GLB-004 and ADR-GLB-006. A breaking change promotes the major version inside the event type.
+Connector lifecycle/status events use Event & Messaging contracts but Integration does not own the broker.
 
-### 6.3 Consumed Events and Capabilities
+### 6.3 Consumed
 
-Consumed contracts belong to their publishing domains. This system depends on the contract and never on a publisher's internal model.
-
----
+Event & Messaging, Trust Services, Identity/Application Trust, Audit/Evidence, Observability, and external provider/system protocols.
 
 ## 7. Security & Trust Boundary
 
-**Authentication** is delegated to the Identity Platform. Tokens are verified locally against the published JWKS, per STD-IAM-002 section 3.5, and a token for an internal audience without `principal_id` is rejected.
+### 7.1 Authentication
 
-**Authorization** is applied by this system to every command. A valid token is an authenticated identity and never an authorization decision.
+Enterprise human/workload authentication applies at control and runtime boundaries.
 
-**Encryption**: TLS 1.3 in transit and AES-256 at rest, per EAD-006 section 5.5.
+### 7.2 Authorization
 
-**Secrets** are brokered from the managed store and never present in source or in an image, per EAD-006 section 5.5.
+Connector usage and administration are scoped by registered Product/Platform/Tenant relationships.
 
-**Audit**: every security-sensitive action publishes an immutable evidence event to the Audit Platform, per EAD-006 section 6.6.
+### 7.3 Encryption
 
----
+Enterprise in-transit and at-rest security baselines apply.
+
+### 7.4 Secrets
+
+Connector credentials remain in Trust Services and are not exposed to consuming Products beyond the governed contract.
+
+### 7.5 Audit
+
+Connector creation/change, contract/policy mutation, replay/reconciliation, and privileged cross-Tenant operations produce evidence.
 
 ## 8. NFR
 
 ### 8.1 Blast Radius
 
-Contained to the affected vendor. Each integration carries its own circuit breaker and cached last-known-good response, so a failing vendor is isolated and does not cascade into the calling domain.
-
-The reliability tier is inherited rather than chosen: Tier-1 at or above 99.95%, with RTO within 1 hour and RPO within 5 minutes. An error budget derived from that target gates feature work when exhausted, per EAD-005 section 5.4.
+One provider/connector failure must remain isolated from unrelated integrations. A shared Integration outage affects only consumers that selected its runtime; direct Natural-Owner adapters outside that runtime are not made dependent by architecture label alone.
 
 ### 8.2 Observability and Telemetry
 
-OpenTelemetry traces, RED metrics, and structured JSON logs to stdout, every line carrying the trace and span identifiers and the tenant identifier where one applies, per STD-GLB-003. No vendor agent is coupled into application code.
+Future connectors expose provider latency/error/rate-limit, backlog/reconciliation, Tenant/app impact, and contract health.
 
-### 8.3 Timeout, Retry, and Circuit Breaker
+### 8.3 Retry, Timeout, and Circuit Breaker
 
-The cascaded timeout hierarchy, three retries with exponential backoff and jitter for transient classes only, bulkhead isolation per downstream dependency, and priority-based load shedding, all per STD-GLB-005 and ADR-GLB-005.
+Future connector designs apply bounded retry, timeout, backpressure, and provider-specific bulkheads according to enterprise resilience standards.
 
 ### 8.4 Runbook
 
-Runbooks are written before production and are a release gate rather than a follow-up. Their contents depend on the system design and are authored with it.
-
----
+Runbooks become mandatory when a physical connector/runtime enters production.
 
 ## 9. Deployment Strategy
 
-### 9.1 Environment and Infrastructure
+### 9.1 Environment
 
-The standardised containerised runtime on Kubernetes across multiple availability zones, provisioned declaratively through the Internal Developer Platform. Direct resource creation through a cloud console is prohibited, per STD-GLB-009.
+No environment topology is authorized by this chartered placeholder.
 
-### 9.2 CI/CD
+### 9.2 Infrastructure
 
-The Golden Path pipeline, with every gate blocking a merge: formatting, static analysis, build, tests under the race detector, a coverage floor, package-graph boundary assertion, schema migration integrity and the destructive gate, event schema compatibility, dependency tidiness, secret scanning, and a scheduled vulnerability scan.
+No universal gateway, connector framework, or integration product is selected here.
 
-Deployment is zero-downtime and progressive, and any deployment is reversible within five minutes, per EAD-005 section 5.3.
+### 9.3 CI/CD
 
----
+A future draft must define contract compatibility, adapter boundaries, security, failure-injection, secret, and architecture gates.
 
 ## 10. Architecture Decisions
 
-### Accepted
+### 10.1 Accepted
 
-Every inherited constraint in section 1.3, each traced to the enterprise document that decided it. This document makes no independent decision, which is the property that distinguishes a chartered placeholder from a design.
+Inherited EAD-002/EAD-004 rule that Integration is reusable optional machinery rather than a mandatory hop.
 
-### Rejected
+### 10.2 Rejected
 
-#### 10.1 Direct vendor integration from each Business Product
+#### 10.2.1 Universal Integration Gateway
 
-Rejected. Vendor coupling would spread across every product, and a vendor replacement would become a multi-quarter change in many repositories. EAD-002 section 6.4 requires vendor payloads and SDKs to stay inside this boundary.
+Rejected because it adds synchronous blast radius and strips Natural Owners of direct responsibility without proven reuse value.
 
-#### 10.2 Re-implementing a capability another platform owns
+#### 10.2.2 Event Broker Ownership in Integration Domain
 
-Rejected by EAD-001 section 6.1. A shared capability implemented twice produces divergent behaviour and multiplied cost, and the duplication is invisible until the two versions disagree in production.
+Rejected because Event & Messaging is an Engineering & Runtime capability.
 
-#### 10.3 Beginning implementation against this document
+#### 10.2.3 Implementation Against This Placeholder
 
-Rejected. A chartered placeholder is not an implementation authorization. A build starts when this document holds a system design, has moved to `draft`, and has passed design review.
-
----
+Rejected until concrete shared connector requirements justify a draft physical design.
 
 ## 11. Assumptions
 
-- The capability remains chartered and is not folded into another domain before build.
-- The enterprise substrate and the platform capabilities this system consumes are available at build time.
-
----
+Integration remains chartered until concrete connector consumers establish a physical runtime need.
 
 ## 12. Compatibility Strategy
 
-APIs are versioned in the path and events in the type. A breaking change requires a new major version and a deprecation window of at least 90 days or two consumer release cycles, whichever is longer, per EAD-004 section 5.3.
+Shared Integration contracts isolate consuming domains from connector/provider implementation. A direct adapter can later migrate behind shared Integration without changing Product business authority.

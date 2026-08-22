@@ -3,229 +3,214 @@ doc_meta:
   id: SAD-006
   title: Workflow Platform SAD
   owner: Architecture Authority
-  version: 0.1.0
+  version: 0.2.0
   status: chartered
   classification: internal
   governed_by:
     - EAD-001
     - EAD-003
+    - ADR-GLB-011
   parent_pad: PAD-PLT-004
   review_cycle_days: 180
   created_date: 2026-07-06
-  last_updated: 2026-08-18
-  last_reviewed: 2026-08-18
+  last_updated: 2026-08-22
+  last_reviewed: 2026-08-22
 ---
 
 # Workflow Platform Software Architecture (SAD-006)
 
-> **Status: chartered.** The capability is chartered by PAD-PLT-004 and no system is in build.
-> Every statement below is inherited from an enterprise document that has already decided
-> it. Nothing here is a system-specific design choice, because those are made when the
-> system enters build and this document moves to `draft`.
->
-> EAD-001 section 5.4 is explicit that a target capability is not implementation
-> authorization. This document records the constraints a build inherits on day one so that
-> they are not rediscovered or renegotiated then.
-
----
+> **Status: chartered.** PAD-PLT-004 is approved and no Workflow system is currently authorized for build. This placeholder records inherited constraints only. Physical technology, container, persistence, and workflow-engine decisions are made when implementation enters `draft`.
 
 ## 1. Purpose & Scope
 
-This document records the architectural constraints the Workflow Platform inherits from the enterprise architecture. It is the placeholder that a full system design replaces.
-
 ### 1.1 Objective
 
-Realize the capability PAD-PLT-004 charters, within the constraints below, without re-implementing a capability another platform owns.
+Realize PAD-PLT-004 without re-implementing Product business logic, generic durable scheduling, Notification delivery, or another platform authority.
 
 ### 1.2 Capability
 
-Durable business process orchestration and automation.
+Durable long-running human/system process orchestration, workflow state, task coordination, timeout/deadline meaning, escalation state, and compensation.
 
-### 1.3 Constraint
+### 1.3 Requirement
 
-These are inherited and not open to per-system renegotiation:
+A future implementation must preserve durable process position across failure and coordinate Products through governed contracts while leaving Product operations and outcomes with their owning domains.
 
-- **One owning domain, one operational store.** This system owns the Workflow Database and no other system reads it directly, per EAD-003 section 5.1.
-- **No shared operational database and no cross-domain query.** Other domains obtain this system's data through its published API or its events, per EAD-003 section 6.5.
-- **Tier-1.** Availability at or above 99.95%, RTO within 1 hour, RPO within 5 minutes, per EAD-005 section 5.4.
-- **Independently deployable** on its own pipeline, with no coordinated enterprise release, per EAD-002 section 6.2.
-- **Identity is consumed, never implemented.** Authentication and token issuance belong to the Identity Platform, per EAD-006 section 6.2.
-- **Zero Trust.** Every request is authenticated and authorized regardless of origin, and every internal call is mutually authenticated, per EAD-006 sections 5.1 and 5.4.
-- **UUIDv7 primary keys, Row-Level Security for tenant-scoped tables, and declarative schema management**, per STD-GLB-002 and ADR-GLB-002.
-- **The transactional outbox** for every published domain event, per ADR-GLB-003.
+### 1.4 Constraint
 
-### 1.4 Requirement
-
-The capability requirements are held by PAD-PLT-004 until a system design exists. This document adds none of its own.
+- one Workflow-owned operational store; no cross-domain database access
+- generic durable temporal wake-up is consumed from PAD-PLT-011 rather than reimplemented
+- Workflow retains semantic ownership of deadlines, timeout, SLA, escalation, and post-wake-up transitions
+- Notification delivery is consumed from PAD-PLT-005
+- business operations execute in participating Product/Platform systems
+- Identity/Organization are consumed as trust/context, not reimplemented
+- transactional outbox applies to published workflow state events
 
 ### 1.5 Assumption
 
-The platform substrate described by EAD-005 is available: a managed runtime, brokered secrets, telemetry collection, and the event broker.
+The enterprise Event & Messaging, Scheduling, Notification, Identity, Organization, Audit, and Observability capabilities are available according to adoption sequencing.
 
----
+### 1.6 Out of Scope
+
+- Product business rules and records
+- generic recurring/one-shot Scheduler authority
+- arbitrary worker hosting
+- communication-provider delivery
+- external provider business ownership
 
 ## 2. Enterprise Traceability
 
 | Relationship | Target |
 | :-- | :-- |
 | Realizes | PAD-PLT-004 |
-| Governed by | EAD-001 — capability ownership and strategic classification |
-| Governed by | EAD-003 — data ownership and the operational store assignment |
-| Conforms to | EAD-002 — the dependency direction and its acyclic constraint |
-| Conforms to | EAD-006 — the mandatory security controls every system inherits |
-| Conforms to | STD-GLB-BE-001 — internal package structure and boundary assertion |
-
----
+| Governed by | EAD-001 and EAD-003 |
+| Boundary decision | ADR-GLB-011 |
+| Consumes | PAD-PLT-011 durable temporal wake-up |
+| Consumes | PAD-PLT-005 communication delivery |
 
 ## 3. Solution Context
 
 ### 3.1 System Context
 
-Asynchronous orchestration. A Business Product starts a process and reacts to its events; steps are resumable and idempotent.
+A Business Product starts or advances a durable process. Workflow records process state and delegates Product work through governed contracts. When a future wake-up is required, Workflow registers it with Scheduling and resumes only after receiving the due occurrence.
 
-Dependencies point inward and downward toward stable substrate and never form a cycle, per EAD-002 section 5.3. This system may depend on Platform Services and MUST NOT be depended upon by one.
+### 3.2 External
 
-### 3.2 External Dependencies
+External Product/vendor operations remain with their Natural Owner or governed Integration capability. Workflow does not become a universal external gateway.
 
-Every external vendor is mediated by the Integration Platform acting as an Anti-Corruption Layer. No vendor SDK or vendor payload model appears inside this system, per EAD-002 section 6.4.
+### 3.3 Internal
 
-### 3.3 Internal Structure
-
-A modular monolith: one bounded context, one deployable, modules separated at compile time, per ADR-GLB-001 section 5.1 and STD-GLB-BE-001 Rule 1.
-
----
+No physical internal decomposition is authorized while this SAD remains chartered.
 
 ## 4. Architecture Model
 
-### 4.1 Container View
+### 4.1 Container
 
-One deployable service and its operational store. The container decomposition is a system design decision and is made when this document moves to `draft`.
+The physical container model is intentionally deferred until the SAD moves to `draft`.
 
-### 4.2 Component View
+### 4.2 Component
 
-Components follow the layer direction STD-GLB-BE-001 Rule 2 fixes: adapter depends on app, app depends on domain, and the domain depends on neither. Internal edges are declared in a manifest and asserted against the package graph on every build.
+Workflow implementation must preserve domain/app/adapter dependency direction and keep workflow semantics independent of Scheduler/Notification implementation technology.
 
-### 4.3 Event Flow
+### 4.3 Runtime Flow
 
-Domain events are appended to the outbox inside the transaction that mutates the aggregate, and a dispatcher publishes them to the broker. A consumer deduplicates on the event identifier inside the same transaction as its effect, which is what makes at-least-once delivery safe.
+Conceptual durable timer flow:
 
----
+```text
+Workflow state -> Scheduling registration -> due occurrence -> Workflow resumes -> Product operation
+```
+
+The due occurrence does not choose a Workflow transition by itself.
 
 ## 5. State & Data Architecture
 
 ### 5.1 Storage
 
-The Workflow Database holds process definitions and running instance state. It is private to this domain: no other system holds a connection to it, and no cross-domain join exists, per EAD-003 sections 5.1 and 6.5.
+Workflow owns process definitions, instances, task state, timer/deadline semantic state, compensation state, and process history. Scheduling owns generic Schedule/Occurrence runtime state.
 
 ### 5.2 Schema
 
-Declarative under Atlas, with migrations generated deterministically and applied by a job running under a migration role distinct from the runtime role, per ADR-GLB-004. The runtime role holds no DDL privilege.
+Physical schema design is deferred. Enterprise UUIDv7, RLS, migration-role, and declarative-schema standards apply when implementation begins.
 
 ### 5.3 Cache
 
-Any cache carries a bounded lifetime and an explicit staleness behaviour. A cached authorization decision is never used to permit an action.
+Any future cache is non-authoritative and has explicit staleness semantics.
 
-### 5.4 Stateless Runtime
+### 5.4 Stateless
 
-The process holds no state that survives a request, so replicas are interchangeable and scale horizontally, per EAD-005 section 5.3.
-
----
+Compute is restartable; durable workflow position is not held only in process memory.
 
 ## 6. Integration Contracts
 
-### 6.1 Published API
+### 6.1 API
 
-A versioned contract owned by this system, published before implementation, per EAD-004 section 6.3. REST with an OpenAPI 3.1 document for control-plane and client-facing interfaces; gRPC for internal request-hot-path interfaces, per STD-GLB-006. Errors are RFC 9457 problem documents.
+Versioned workflow control contracts are defined before implementation.
 
 ### 6.2 Published Events
 
-CloudEvents 1.0 in JSON, registered in the enterprise schema registry, with backward compatibility enforced in the build, per STD-GLB-004 and ADR-GLB-006. A breaking change promotes the major version inside the event type.
+Workflow lifecycle events use the enterprise CloudEvents/schema-registry standard and transactional outbox.
 
-### 6.3 Consumed Events and Capabilities
+### 6.3 Consumed
 
-Consumed contracts belong to their publishing domains. This system depends on the contract and never on a publisher's internal model.
-
----
+Scheduling due occurrences, Product events/results, Notification capability, and bounded trust/context contracts.
 
 ## 7. Security & Trust Boundary
 
-**Authentication** is delegated to the Identity Platform. Tokens are verified locally against the published JWKS, per STD-IAM-002 section 3.5, and a token for an internal audience without `principal_id` is rejected.
+### 7.1 Authentication
 
-**Authorization** is applied by this system to every command. A valid token is an authenticated identity and never an authorization decision.
+Delegated to enterprise Identity with local protected-resource validation where applicable.
 
-**Encryption**: TLS 1.3 in transit and AES-256 at rest, per EAD-006 section 5.5.
+### 7.2 Authorization
 
-**Secrets** are brokered from the managed store and never present in source or in an image, per EAD-006 section 5.5.
+Workflow authorizes its own process/task operations. Participating Products independently authorize business operations.
 
-**Audit**: every security-sensitive action publishes an immutable evidence event to the Audit Platform, per EAD-006 section 6.6.
+### 7.3 Encryption
 
----
+Enterprise transport and at-rest encryption baselines apply.
+
+### 7.4 Secrets
+
+No Product/provider secret becomes Workflow-owned merely because a task is orchestrated.
+
+### 7.5 Audit
+
+Workflow definition/lifecycle, task coordination, timeout, escalation, compensation, cancellation, and privileged operations publish evidence.
 
 ## 8. NFR
 
 ### 8.1 Blast Radius
 
-Running instances are durable, so an outage pauses progress rather than losing it. Instances resume from their last committed step on recovery, which is why every step is required to be idempotent.
-
-The reliability tier is inherited rather than chosen: Tier-1 at or above 99.95%, with RTO within 1 hour and RPO within 5 minutes. An error budget derived from that target gates feature work when exhausted, per EAD-005 section 5.4.
+A Workflow outage pauses durable process progress rather than losing process state. A Scheduling outage delays timer wake-ups but does not lose Workflow position. A Notification outage delays communication without changing Workflow/Product truth.
 
 ### 8.2 Observability and Telemetry
 
-OpenTelemetry traces, RED metrics, and structured JSON logs to stdout, every line carrying the trace and span identifiers and the tenant identifier where one applies, per STD-GLB-003. No vendor agent is coupled into application code.
+A future design must expose process success/failure, stuck state, task latency, timer/wake-up lag, downstream dependency health, and Tenant impact through OpenTelemetry-compatible telemetry.
 
-### 8.3 Timeout, Retry, and Circuit Breaker
+### 8.3 Retry, Timeout, and Circuit Breaker
 
-The cascaded timeout hierarchy, three retries with exponential backoff and jitter for transient classes only, bulkhead isolation per downstream dependency, and priority-based load shedding, all per STD-GLB-005 and ADR-GLB-005.
+Workflow retry/compensation semantics are explicit per step. Scheduling retry covers only temporal dispatch, and Notification retry covers only communication delivery.
 
 ### 8.4 Runbook
 
-Runbooks are written before production and are a release gate rather than a follow-up. Their contents depend on the system design and are authored with it.
-
----
+Runbooks are a production gate when implementation begins.
 
 ## 9. Deployment Strategy
 
-### 9.1 Environment and Infrastructure
+### 9.1 Environment
 
-The standardised containerised runtime on Kubernetes across multiple availability zones, provisioned declaratively through the Internal Developer Platform. Direct resource creation through a cloud console is prohibited, per STD-GLB-009.
+Physical environment topology is deferred until implementation authorization.
 
-### 9.2 CI/CD
+### 9.2 Infrastructure
 
-The Golden Path pipeline, with every gate blocking a merge: formatting, static analysis, build, tests under the race detector, a coverage floor, package-graph boundary assertion, schema migration integrity and the destructive gate, event schema compatibility, dependency tidiness, secret scanning, and a scheduled vulnerability scan.
+No workflow engine/runtime technology is selected by this chartered placeholder.
 
-Deployment is zero-downtime and progressive, and any deployment is reversible within five minutes, per EAD-005 section 5.3.
+### 9.3 CI/CD
 
----
+A future draft must define blocking build, contract, migration, resilience, security, and architecture gates.
 
 ## 10. Architecture Decisions
 
-### Accepted
+### 10.1 Accepted
 
-Every inherited constraint in section 1.3, each traced to the enterprise document that decided it. This document makes no independent decision, which is the property that distinguishes a chartered placeholder from a design.
+Inherited PAD-PLT-004 boundaries and ADR-GLB-011 Scheduler/Workflow authority separation.
 
-### Rejected
+### 10.2 Rejected
 
-#### 10.1 Orchestration through chained synchronous calls
+#### 10.2.1 Workflow as Universal Scheduler
 
-Rejected. A chain of synchronous cross-domain calls couples the availability of every participant and has no durable position to resume from. EAD-004 section 5.2 places long-running work on this platform for that reason.
+Rejected because durable application scheduling without workflow state belongs to PAD-PLT-011.
 
-#### 10.2 Re-implementing a capability another platform owns
+#### 10.2.2 Product Business Logic Inside Workflow
 
-Rejected by EAD-001 section 6.1. A shared capability implemented twice produces divergent behaviour and multiplied cost, and the duplication is invisible until the two versions disagree in production.
+Rejected because Product domains own business meaning and irreversible outcomes.
 
-#### 10.3 Beginning implementation against this document
+#### 10.2.3 Implementation Against This Placeholder
 
-Rejected. A chartered placeholder is not an implementation authorization. A build starts when this document holds a system design, has moved to `draft`, and has passed design review.
-
----
+Rejected until a system design moves this SAD to `draft` and passes design review.
 
 ## 11. Assumptions
 
-- The capability remains chartered and is not folded into another domain before build.
-- The enterprise substrate and the platform capabilities this system consumes are available at build time.
-
----
+The Workflow capability remains chartered and its first implementation will be driven by concrete consumer process evidence.
 
 ## 12. Compatibility Strategy
 
-APIs are versioned in the path and events in the type. A breaking change requires a new major version and a deprecation window of at least 90 days or two consumer release cycles, whichever is longer, per EAD-004 section 5.3.
+Workflow contracts are versioned independently of the eventual workflow engine. Scheduling and Notification are consumed through their platform contracts rather than physical implementation details.

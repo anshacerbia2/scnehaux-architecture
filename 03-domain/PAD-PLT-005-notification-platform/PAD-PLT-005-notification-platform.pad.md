@@ -2,259 +2,294 @@
 doc_meta:
   id: PAD-PLT-005
   title: Enterprise Notification Platform
-  owner: Notification Team
-  version: 1.0.0
+  owner: Notification Platform Team
+  version: 2.0.0
   status: approved
   classification: restricted
   governed_by:
     - GDC-008
+    - ADR-GLB-011
   realizes_capability:
     - EAD-001
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-07-06
+  last_reviewed: 2026-08-22
   fulfilled_by:
     - SAD-005
+    - SAD-015
 ---
 
 # Enterprise Notification Platform
 
----
-
 ## 1. Purpose & Scope
 
-The Notification Platform provides a centralized communication capability for the entire enterprise. It is responsible for receiving notification requests, selecting appropriate delivery channels, managing templates, scheduling deliveries, handling retries, and tracking delivery status.
+The Enterprise Notification Platform provides shared communication-delivery capability for Scnehaux Products and Platforms. It accepts an authorized communication intent, freezes the minimum delivery snapshot required for correctness, resolves a governed template/channel variant, routes through an authorized sender/channel profile, executes provider delivery asynchronously, applies communication retry policy, and tracks normalized delivery outcomes.
 
-Business domains remain responsible for determining **when** a notification should occur, while the Notification Platform governs **how** notifications are delivered.
+Products own **why a communication is needed**, the business event or rule behind it, and business-recipient eligibility. Notification owns **how an accepted communication is rendered and delivered**.
 
-### 1.1. Out of Scope
+The platform supports email, WhatsApp/messaging-provider delivery, SMS, push, and governed webhook channels through replaceable adapters.
 
-- Business event generation.
-- Business workflow orchestration.
-- Authentication and authorization.
-- User interface rendering.
-- Business data ownership.
-- Customer relationship management.
-- Marketing campaign management.
-- Business approval processes.
+### 1.1 Out Of Scope
 
----
+- Product business event generation, business rules, or business recipient eligibility
+- Generic durable application scheduling
+- Workflow process orchestration
+- Gmail/mailbox ingestion, inbound email polling, or business-message parsing
+- Customer/contact system-of-record ownership
+- Identity account lifecycle or authentication
+- Product business authorization and irreversible Product outcomes
+- Arbitrary external integration unrelated to communication delivery
+- Marketing campaign/business-domain ownership unless separately chartered
+- Provider credential custody outside enterprise Trust/Secret Services
 
 ## 2. Enterprise Traceability
 
-```mermaid
-graph TD
-    subgraph Platform["Platform Plane"]
-        NOT[Enterprise Notification Platform]
-        IDP[Identity Platform]
-        INT[Integration Platform]
-        DOC[Document Platform]
-        BRK[Event Broker]
-    end
+### 2.1 Realizes
 
-    Requester([All Platform Services & Business Products])
+- **EAD-001** — Notification & Communication shared enabling capability
+- **EAD-005** — multi-tenant reusable communication execution capability on the enterprise runtime substrate
 
-    NOT -->|SRD: recipient resolution| IDP
-    NOT -->|SRD: external delivery providers| INT
-    NOT -->|SRD: attachment retrieval| DOC
-    Requester -. AEP: notification-request events .-> BRK
-    BRK -. AES: notification-request events .-> NOT
-    NOT -. AEP: delivery-status events .-> BRK
-    NOT -. PCC: local token validation .-> IDP
+### 2.2 Relationships
 
-    style NOT fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
-    style IDP fill:#2b6cb0,stroke:#63b3ed,color:#fff
-```
+- **Products/Platforms:** publish or submit authorized Notification intents; Product business authority remains upstream
+- **Scheduling Platform:** provides generic durable future wake-up when a Notification is already frozen and only delivery time remains
+- **Document Platform:** supplies immutable attachment/version references when attachments are used
+- **Identity / Organization / Application Trust:** establish authenticated caller, application ownership, Tenant scope, and optional Principal contact resolution without requiring every recipient to be a Principal
+- **Trust Services:** hold provider/API/SMTP credentials; Notification stores only governed provider/channel configuration and secret references
+- **Event & Messaging:** carries Notification request/lifecycle contracts where asynchronous integration is selected
+- **Integration Enablement:** optional reusable connector/protocol machinery when it adds value; it is not a mandatory network hop between Notification and its natural communication providers
+- **Audit & Evidence:** receives privileged configuration/test-send/replay evidence
 
-The Notification Platform realizes the enterprise communication and delivery capability: business domains publish notification-request events and the platform governs how they are delivered.
+### 2.3 Consumed By
 
-### 2.1. Realizes
+All Scnehaux Products and Platforms may consume Notification. Initial migration consumers include:
 
-- EAD-001 Enterprise Capability & Domain Map — the notification / communication-delivery capability.
-- EAD-005 Enterprise Platform Architecture — the substrate it operates on.
+- Mailcast client workloads for outbound WhatsApp/email delivery and template/provider machinery
+- ATI PH for governed public-holiday email delivery
+- Workflow for human-task, escalation, and process communications
+- HCM, finance operations, travel operations, approvals, and future Products requiring governed communication
 
-### 2.2. Relationships
-
-- **Synchronous Dependencies (SRD):** Identity Platform (recipient resolution), Integration Platform (external delivery providers), Document Platform (attachment retrieval).
-- **Publishes Events (AEP):** delivery-status events (e.g. `NotificationDelivered`, `DeliveryFailed`) to the Event Broker.
-- **Subscribes To Events (AES):** notification-request events published by all domains via the Event Broker.
-- **Consumes Platform Capabilities (PCC):** Identity-issued tokens are validated **locally** (cached, per the EAD-006 §8 degradation contract), so token validation is not a runtime dependency on Identity.
-
-### 2.3. Consumed By
-
-Every Platform Service and Business Product requests delivery by **publishing** notification-request events to the Event Broker, which the Notification Platform subscribes to (Asynchronous Event Subscription on Notification's side). Requesters do not call the Notification Platform synchronously, so consumption is not a runtime dependency on Notification.
-
----
+Consumers do not synchronously wait for provider delivery. A control/API command may return accepted state, while actual provider interaction remains asynchronous.
 
 ## 3. Domain & Context Model
 
-The Notification Platform is decomposed into several independent bounded contexts responsible for enterprise communication.
-
-### 3.1. Bounded Context
+### 3.1 Bounded Context
 
 - Notification Request
-- Delivery Management
-- Channel Management
-- Template Management
-- Preference Management
-- Scheduling
-- Retry Management
+- Recipient Snapshot
+- Template & Channel Variant
+- Channel / Sender Profile
+- Provider Routing
+- Delivery Planning
+- Delivery Execution
+- Delivery Retry
+- Provider Callback & Receipt Normalization
 - Delivery Tracking
+- Communication Preference Enforcement
+- Scheduled Notification Binding
 - Notification Governance
 
-### 3.2. Ubiquitous Language
+### 3.2 Ubiquitous Language
 
-| Term                   | Description                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| Notification           | Enterprise communication request.                                              |
-| Delivery               | Transmission of a notification through a specific channel.                     |
-| Channel                | Communication medium such as Email, SMS, Push, Webhook, or Messaging Platform. |
-| Recipient              | Target identity receiving a notification.                                      |
-| Template               | Reusable notification content definition.                                      |
-| Preference             | Recipient communication preferences.                                           |
-| Delivery Status        | Current state of a notification delivery.                                      |
-| Retry Policy           | Strategy governing failed deliveries.                                          |
-| Notification Policy    | Enterprise rules controlling communication behavior.                           |
-| Scheduled Notification | Notification delivered at a future time.                                       |
+| Term | Meaning |
+| :-- | :-- |
+| Notification | Accepted communication intent tracked by the platform |
+| Recipient Snapshot | Immutable destination endpoint and bounded recipient metadata used for one Notification |
+| Template Family | Stable semantic communication type managed through platform lifecycle |
+| Template Version | Immutable governed version of template content and data contract |
+| Channel Variant | Email, WhatsApp, SMS, Push, Webhook, or other realization of one Template Version |
+| Channel Profile | Sender identity, provider binding, routing policy, and secret references for one channel context |
+| Provider Binding | Notification-owned provider configuration that references secrets held by Trust Services |
+| Delivery | One recipient/channel delivery lifecycle |
+| Delivery Attempt | One provider interaction attempt within a Delivery lifecycle |
+| Provider Acceptance | Provider accepted a send request; not necessarily final channel delivery |
+| Delivery Receipt | Provider/channel evidence of final or intermediate delivery where available |
+| Delivery Status | Provider-independent normalized state owned by Notification |
+| Scheduled Notification | Frozen Notification awaiting a durable future wake-up from Scheduling |
 
-### 3.3. Domain Policies
+### 3.3 Domain Policies
 
-- Business domains own notification intent.
-- The Notification Platform owns delivery.
-- Every notification must support delivery tracking.
-- Notification templates are centrally governed.
-- Delivery channels are implementation-independent.
-- Retry policies are platform managed.
-- Notification history is immutable.
-- User communication preferences must always be respected.
-
----
+- Product domains own Notification intent and business recipient eligibility
+- Notification owns accepted communication snapshots, template/version lifecycle, provider routing, delivery attempts, retry, and normalized delivery state
+- Provider acceptance and final delivery are distinct states
+- Every non-idempotent provider send is protected by a platform delivery identity/idempotency strategy
+- Template versions and recipient snapshots used for an accepted Notification are immutable
+- Template data contracts are machine-validatable; a UI-only variable registry is not sufficient authority
+- Template rendering cannot execute arbitrary Product code
+- Product business aggregates are not copied into Notification; only bounded values required to render/deliver the accepted communication are snapshotted
+- External recipients may be email addresses, phone/WhatsApp endpoints, device endpoints, or registered webhook endpoints without being enterprise Principals
+- Product/Legal authority retains business-specific consent meaning; Notification enforces communication preferences/policy facts within its declared scope
+- Generic future scheduling is delegated to the Scheduling Platform
+- Notification retries only delivery operations it owns; Product business retry remains Product/Workflow responsibility
 
 ## 4. Integration Contracts
 
-### 4.1. Integration Provided
+### 4.1 Integration Provided
 
 The Notification Platform provides:
 
-- Notification Delivery
-- Email Delivery
-- SMS Delivery
-- Push Notification Delivery
-- Webhook Delivery
-- Template Management
-- Recipient Preference Management
-- Delivery Scheduling
-- Retry Management
-- Delivery Tracking
-- Notification Events
+- Notification intent acceptance
+- Email delivery
+- WhatsApp / messaging-platform delivery
+- SMS delivery
+- Push delivery
+- Governed webhook delivery
+- Template family/version/channel-variant management
+- Template data-schema validation and preview
+- Recipient snapshot and optional recipient-resolution contracts
+- Channel/sender/provider profile management
+- Frozen scheduled-notification registration
+- Delivery retry and cancellation
+- Provider callback/receipt normalization
+- Delivery status query
+- Notification lifecycle events
+- Test-send and administrative validation under privileged policy
 
-### 4.2. Integration Consumed
+### 4.2 Integration Consumed
 
 The Notification Platform consumes:
 
-- Identity Platform for recipient identity resolution.
-- Integration Platform for external communication providers.
-- Document Platform for document attachment retrieval.
+- Scheduling Platform for durable future wake-up of frozen Notifications
+- Document Platform for immutable attachment versions
+- Identity / Organization / Application Trust for caller, ownership, Tenant scope, and optional Principal contact resolution
+- Trust Services for provider/SMTP/API credential material through secret references
+- Event & Messaging for asynchronous intent and lifecycle propagation
+- Audit & Evidence for privileged-operation evidence
+- optional reusable Integration connectors where justified by the specific provider relationship
 
-Delivery protocols and external provider integrations are defined by the realizing SAD.
-
----
+SMTP host/port/TLS mode, sender identity, provider selection, messaging-provider endpoint metadata, and comparable delivery configuration remain Notification-owned because they directly control Notification behavior. Passwords, OAuth refresh tokens, private keys, and API secrets remain Trust-owned.
 
 ## 5. Trust & Data Boundaries
 
-### 5.1. Trust Boundary
+### 5.1 Trust Boundary
 
-The Notification Platform governs enterprise communication delivery but never owns business data.
+Notification is authoritative for its Notification aggregate, communication template/version lifecycle, channel/provider routing configuration, Delivery state, and provider-normalized outcomes.
 
-Business domains remain authoritative for notification content and business events.
+Notification is not authoritative for Product state that motivated the communication, canonical customer/employee/contact truth, or provider credential custody.
 
-### 5.2. Identity Access
+### 5.2 Identity Access
 
-Identity verification is delegated to the Identity Platform.
+- Human/workload callers authenticate through enterprise Identity and are authorized within application/Tenant scope
+- External recipients need not be Identity Principals
+- direct recipient endpoints are accepted only through authorized bounded contracts and are snapshotted with purpose/correlation
+- provider callbacks are authenticated using provider-specific signature/credential contracts
+- privileged template publication, channel-profile mutation, test-send, replay, and cross-Tenant operations require evidence
 
-The Notification Platform governs:
+### 5.3 Data Classification
 
-- Recipient resolution
-- Communication preferences
-- Delivery authorization
-- Notification policies
+Notification manages:
 
-### 5.3. Data Classification
+- communication metadata and correlation
+- Template Families, immutable versions, channel variants, and template data schemas
+- Recipient Snapshots and delivery endpoints
+- Channel Profiles and Provider Bindings excluding raw secrets
+- Delivery and Delivery Attempt state
+- provider identifiers, callbacks, and normalized receipts
+- communication preference metadata within the platform scope
+- scheduled-notification binding to a Scheduling identifier
 
-The platform manages communication metadata including:
+Recipient endpoints are treated as PII where applicable.
 
-- Notification Metadata
-- Delivery Metadata
-- Recipient Preferences
-- Delivery History
-- Templates
-- Scheduling Information
-- Retry Metadata
-
-The platform does not own:
-
-- Business Transactions
-- HR Records
-- Financial Records
-- Customer Business Data
-- Product-specific business entities
-
----
+Notification does not own Product business records, HR/finance/travel transactions, provider secrets, or source mailbox contents.
 
 ## 6. Capability NFR
 
-### 6.1. Reliability & Availability
+### 6.1 Availability, RTO, and RPO
 
-- Enterprise-grade notification delivery.
-- Delivery failures remain isolated.
-- Guaranteed retry according to platform policies.
+- Reliability class: **C1 Mission-Critical Operations**
+- Target mature service availability: **>= 99.95% monthly** for Notification acceptance and internal delivery processing
+- Target RTO: **<= 1 hour**
+- Target RPO: **<= 15 minutes**
+- accepted Notifications are delayed rather than silently lost during platform/provider outage
 
-### 6.2. Performance & Scalability
+### 6.2 Delivery SLO and Scalability
 
-- Horizontally scalable delivery services.
-- High-volume concurrent notification processing.
-- Efficient multi-channel communication.
+- internal accepted-to-ready processing target: **99.9% within 30 seconds** for immediate Notifications, excluding provider latency and intentionally scheduled delivery
+- production capacity certification demonstrates **10x forecast peak accepted-notification rate** without breaching internal processing SLO
+- provider/channel/Tenant bulkheads prevent one provider or Tenant from exhausting unrelated delivery capacity
+- large fan-out is expanded through bounded asynchronous work rather than one unbounded transaction
+- provider rate limits and Tenant/application quotas are explicit
 
-### 6.3. Security & Compliance
+Final provider delivery time is not used as a universal platform SLO because provider/channel capabilities differ. Provider-specific SLOs are declared by Channel Profile where evidence exists.
 
-- Secure communication channels.
-- Privacy-aware recipient handling.
-- Enterprise communication governance.
-- Regulatory communication compliance.
+### 6.3 Security, Compliance, Data Privacy, and Residency
 
-### 6.4. Auditability
+- Tenant-isolated communication configuration and delivery state
+- raw provider credentials never persist in Notification operational tables or browser clients
+- recipient PII is minimized, redacted in telemetry, and retained according to communication/evidence policy
+- sender domain/number/profile ownership is verified before production enablement
+- provider callbacks are authenticated
+- regional/silo deployment profiles remain available for contractual residency requirements
 
-Every notification lifecycle event shall be traceable, including:
+### 6.4 Audit and Interoperability
 
-- Notification request
-- Template resolution
-- Channel selection
-- Delivery scheduling
-- Delivery execution
-- Delivery completion
-- Delivery failure
-- Retry execution
-- Notification cancellation
+Traceable lifecycle includes request acceptance, snapshot creation, template/version selection, future schedule binding, provider attempt, provider acceptance, receipt, retry, permanent failure, cancellation, replay, and privileged configuration change.
 
----
+Provider-specific vocabulary stays behind adapters; Products consume stable Notification contract semantics.
+
+### 6.5 Cost Target
+
+Cost is measured by channel/provider usage and accepted/delivered units per Tenant/application. Quotas and provider routing prevent unbounded shared cost.
 
 ## 7. Ownership & Governance
 
-### 7.1. Team Ownership
+### 7.1 Team Ownership
 
-The Notification Platform Team owns platform communication capabilities and delivery governance.
+Notification Platform Team owns:
 
-The Architecture Authority governs enterprise communication standards and platform evolution.
+- Notification contract and aggregate
+- template/version/channel-variant machinery
+- recipient snapshot and delivery planning
+- Channel Profiles and Provider Bindings excluding secret custody
+- provider/channel adapters
+- delivery retry and status normalization
+- provider callbacks and reconciliation
+- communication reliability, observability, operations, and support
 
-### 7.2. Realizing Systems
+Product teams own business intent, business timing semantics, recipient eligibility, and business follow-up.
 
-- SAD-005 Enterprise Notification Platform
+Scheduling Team owns generic durable future trigger mechanics. Trust Services own credential/key custody.
 
-### 7.3. Governance Rules
+### 7.2 Realizing Systems
 
-- Business domains shall never implement notification delivery directly.
-- All enterprise communication shall pass through the Notification Platform.
-- Notification templates are centrally governed.
-- Communication channels remain implementation-independent.
-- Breaking notification contracts require Architecture Authority approval.
+- **SAD-005** Scnehaux Notification Runtime
+- **SAD-015** Scnehaux Notification Experience
+
+### 7.3 Governance Rules
+
+- Products SHALL use Notification for enterprise communication delivery when the platform contract satisfies the channel requirement
+- Notification SHALL NOT own Product business timing or eligibility
+- Notification SHALL NOT require every recipient to be an Identity Principal
+- generic durable scheduling SHALL NOT be reimplemented inside Notification
+- provider models SHALL terminate at Notification adapters and never leak into Product contracts
+- provider transport acceptance SHALL NOT be represented as final delivery unless the channel/provider contract proves it
+- browser clients SHALL NOT receive decrypted provider credentials after registration
+
+## 8. Assumptions & Constraints
+
+- Email and WhatsApp are initial migration channels because Mailcast and ATI PH provide immediate consumers
+- Additional channels are introduced behind the same logical Delivery contract
+- Provider capability differences are normalized without inventing delivery guarantees a provider cannot prove
+- Scheduling, Trust, Event & Messaging, Identity/Organization context, and Document capabilities are adopted according to migration sequencing
+
+## 9. Architectural Decisions
+
+- ADR-GLB-011 removes generic temporal scheduling authority from Notification
+- global event/outbox/resilience/database standards govern asynchronous delivery mechanics
+- provider/channel implementation decisions belong in SAD/TDD or future domain decisions when they create a durable trade-off
+
+## 10. Evolution
+
+Notification begins with the channels required by real consumers and expands through provider/channel adapters. Communication-domain contracts remain stable if provider SDKs, SMTP implementation, messaging vendor, or internal worker topology changes.
+
+## 11. References
+
+- EAD-001 Enterprise Capability & Domain Map
+- EAD-002 Enterprise System Landscape
+- EAD-004 Enterprise Integration Architecture
+- EAD-005 Enterprise Platform Architecture
+- EAD-006 Enterprise Security Architecture
+- ADR-GLB-011 Enterprise Durable Scheduling Boundary
+- STD-GLB-004 Event-Driven Architecture & Messaging
+- STD-GLB-010 Durable Scheduled Work
