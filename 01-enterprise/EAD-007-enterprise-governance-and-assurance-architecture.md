@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-007
   title: Enterprise Governance & Assurance Architecture
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -293,11 +293,9 @@ An exception that becomes permanent either becomes an explicit architectural/sta
 
 ## 10. Dependencies
 
-- GDC-000..GDC-011 for architecture artifact governance
-- EAD-001..EAD-006 for enterprise architecture subject matter
-- Standards/ADRs for enforceable implementation rules/decisions
-- Audit & Evidence for durable evidence lifecycle
-- CI/fitness functions and runtime telemetry for assurance
+- This C1 architecture artifact has no synchronous runtime dependency on another architecture artifact
+- Its inputs are enterprise strategy, accountable domain ownership, legal or contractual obligations, and validated operational evidence appropriate to its subject
+- Cross-artifact architectural lineage is recorded in the Traceability section and MUST NOT be interpreted as a runtime dependency graph
 
 ## 11. Traceability
 

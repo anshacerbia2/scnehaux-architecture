@@ -4,7 +4,7 @@ doc_meta:
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
   version: 1.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by:
     - GDC-009

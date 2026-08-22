@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-003
   title: Enterprise Data Ownership & Topology
   owner: Architecture Authority
-  version: 1.1.0
+  version: 1.1.1
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -299,12 +299,9 @@ Data Governance defines classification, lineage, quality, residency, retention, 
 
 ## 10. Dependencies
 
-- EAD-001 capability ownership
-- EAD-002 system roles
-- EAD-004 movement/integration
-- EAD-005 Platform/runtime strategy
-- EAD-006 trust/data protection
-- EAD-007 governance/assurance
+- This C1 architecture artifact has no synchronous runtime dependency on another architecture artifact
+- Its inputs are enterprise strategy, accountable domain ownership, legal or contractual obligations, and validated operational evidence appropriate to its subject
+- Cross-artifact architectural lineage is recorded in the Traceability section and MUST NOT be interpreted as a runtime dependency graph
 
 ## 11. Traceability
 

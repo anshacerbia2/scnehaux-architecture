@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-002
   title: Enterprise System Landscape
   owner: Architecture Authority
-  version: 2.1.0
+  version: 2.1.1
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -336,12 +336,9 @@ A shared Platform is not introduced into every journey merely for uniformity.
 
 ## 10. Dependencies
 
-- EAD-001 for capability authority
-- EAD-003 for data and knowledge authority
-- EAD-004 for integration relationships
-- EAD-005 for platform/runtime strategy
-- EAD-006 for trust boundaries
-- EAD-007 for governance and assurance
+- This C1 architecture artifact has no synchronous runtime dependency on another architecture artifact
+- Its inputs are enterprise strategy, accountable domain ownership, legal or contractual obligations, and validated operational evidence appropriate to its subject
+- Cross-artifact architectural lineage is recorded in the Traceability section and MUST NOT be interpreted as a runtime dependency graph
 
 ## 11. Traceability
 

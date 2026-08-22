@@ -3,17 +3,15 @@ doc_meta:
   id: STD-GLB-011
   title: Enterprise Background Job Execution Standard
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.0.1
   status: adopted
   classification: internal
   governed_by:
     - EAD-005
-    - ADR-GLB-013
   review_cycle_days: 180
   created_date: 2026-08-23
   last_reviewed: 2026-08-23
 ---
-
 # Enterprise Background Job Execution Standard (STD-GLB-011)
 
 ## 1. Objective & Scope
@@ -21,6 +19,8 @@ doc_meta:
 This standard defines mandatory semantics for **bounded background Job execution** across Scnehaux Products and Platforms.
 
 It applies when work executes asynchronously or outside the initiating request and requires governed identity, attempts, duplicate safety, retry, timeout, cancellation, progress, dead-letter/replay, concurrency, telemetry, or durable acceptance.
+
+This standard operationalizes the Work/Workflow/Job/Schedule boundary established by ADR-GLB-013 while attaching normatively to EAD-005 because no independent Job Execution Platform is approved.
 
 It does not require one shared Job runtime and does not authorize a central Platform to host arbitrary Product code.
 

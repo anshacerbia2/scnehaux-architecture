@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-006
   title: Enterprise Security Architecture
   owner: Architecture Authority
-  version: 1.1.0
+  version: 1.1.1
   status: approved
   classification: restricted
   governed_by: [GDC-006]
@@ -288,11 +288,9 @@ Classification, minimization, purpose, encryption, residency, retention, legal h
 
 ## 10. Dependencies
 
-- EAD-001 authority map
-- EAD-003 data/knowledge topology
-- EAD-004 contracts
-- EAD-005 runtime/platform strategy
-- EAD-007 governance/assurance
+- This C1 architecture artifact has no synchronous runtime dependency on another architecture artifact
+- Its inputs are enterprise strategy, accountable domain ownership, legal or contractual obligations, and validated operational evidence appropriate to its subject
+- Cross-artifact architectural lineage is recorded in the Traceability section and MUST NOT be interpreted as a runtime dependency graph
 
 ## 11. Traceability
 

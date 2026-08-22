@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-001
   title: Enterprise Capability & Domain Map
   owner: Architecture Authority
-  version: 2.1.0
+  version: 2.1.1
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -482,11 +482,9 @@ Governance defines constraints and evidence; Products and Platforms execute thei
 
 ## 10. Dependencies
 
-- Enterprise strategy and operating-model priorities
-- EAD-002 through EAD-007
-- GDC governance framework
-- Approved PADs, SADs, standards, and ADRs
-- External client and industry authorities
+- This C1 architecture artifact has no synchronous runtime dependency on another architecture artifact
+- Its inputs are enterprise strategy, accountable domain ownership, legal or contractual obligations, and validated operational evidence appropriate to its subject
+- Cross-artifact architectural lineage is recorded in the Traceability section and MUST NOT be interpreted as a runtime dependency graph
 
 ## 11. Traceability
 

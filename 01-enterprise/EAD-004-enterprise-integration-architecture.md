@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-004
   title: Enterprise Integration Architecture
   owner: Architecture Authority
-  version: 1.1.0
+  version: 1.1.1
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -259,12 +259,9 @@ Gateway, broker, connector, AI gateway, and tool gateway are technical roles rat
 
 ## 10. Dependencies
 
-- EAD-001 capability authority
-- EAD-002 system roles
-- EAD-003 data/knowledge authority
-- EAD-005 runtime strategy
-- EAD-006 security
-- EAD-007 governance
+- This C1 architecture artifact has no synchronous runtime dependency on another architecture artifact
+- Its inputs are enterprise strategy, accountable domain ownership, legal or contractual obligations, and validated operational evidence appropriate to its subject
+- Cross-artifact architectural lineage is recorded in the Traceability section and MUST NOT be interpreted as a runtime dependency graph
 
 ## 11. Traceability
 

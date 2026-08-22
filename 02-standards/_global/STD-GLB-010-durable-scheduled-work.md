@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-010
   title: Enterprise Durable Scheduled Work Standard
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.0.1
   status: adopted
   classification: internal
   governed_by:
-    - ADR-GLB-011
+    - PAD-PLT-011
   review_cycle_days: 180
   created_date: 2026-08-22
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-08-23
 ---
 
 # Enterprise Durable Scheduled Work Standard (STD-GLB-010)
@@ -20,6 +20,8 @@ doc_meta:
 This standard defines mandatory semantics for durable scheduled work across Scnehaux Products and Platforms. It governs schedule ownership, time representation, occurrence identity, dispatch, duplicate safety, misfire, lifecycle mutation, Tenant isolation, and operational evidence.
 
 It applies when a future action must survive consumer restart, infrastructure restart, or independent deployment and is represented through the shared Scheduling capability.
+
+This standard operationalizes the durable scheduling boundary established by ADR-GLB-011 while attaching normatively to PAD-PLT-011.
 
 It excludes request deadlines, short retry backoff, tight connector polling loops, in-process debounce/throttle, and infrastructure-local maintenance whose lifecycle is not an application scheduling contract.
 
