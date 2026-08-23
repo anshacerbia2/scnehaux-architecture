@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-015
   title: Scnehaux Notification Experience
   owner: Notification Platform Team
-  version: 1.0.0
+  version: 1.1.0
   status: draft
   classification: restricted
   governed_by:
@@ -36,6 +36,7 @@ The application provides:
 - Template Family / Version / Channel Variant administration
 - template data-schema editor/validation/preview
 - Email/WhatsApp/SMS/Push/Webhook Channel Profile administration as channels are enabled
+- Application Notification Profile administration for application/Tenant/channel-to-provider/template routing
 - sender identity and Provider Binding administration through secret-reference workflows
 - test-send with explicit Tenant/application context and privileged confirmation
 - Notification and Delivery search/detail/timeline
@@ -109,6 +110,7 @@ Feature modules are organized by Notification concepts rather than provider/vend
 
 - Template Management
 - Channel/Sender Profiles
+- Application Notification Profiles
 - Provider Binding
 - Notification/Delivery Explorer
 - Reconciliation Operations
@@ -128,6 +130,7 @@ One independently deployable internal React SPA using Scnehaux UI Platform packa
 app-shell
   -> template-management
   -> channel-profile-management
+  -> application-notification-profile-management
   -> delivery-explorer
   -> reconciliation-operations
   -> quota-usage
@@ -179,7 +182,7 @@ Reload reconstructs durable state from SAD-005. Unsaved secret entry is intentio
 
 ### 6.1 API
 
-The SPA consumes Notification APIs for templates, channel profiles, provider binding, Notification/Delivery history, test send, reconciliation, quotas, and operational views.
+The SPA consumes Notification APIs for templates, channel profiles, Application Notification Profiles, provider binding, Notification/Delivery history, test send, reconciliation, quotas, and operational views. The UI selects only authorized application/Tenant contexts surfaced by Notification APIs; it does not become authoritative for Organization or application ownership.
 
 ### 6.2 Events
 

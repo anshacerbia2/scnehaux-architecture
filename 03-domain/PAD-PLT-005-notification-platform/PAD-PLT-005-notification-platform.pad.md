@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-005
   title: Enterprise Notification Platform
   owner: Notification Platform Team
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -30,6 +30,8 @@ Products own **why a communication is needed**, the business event or rule behin
 
 The platform supports email, WhatsApp/messaging-provider delivery, SMS, push, and governed webhook channels through replaceable adapters.
 
+Notification also owns **Application Notification Profile** configuration: the mapping from an authorized application/Tenant/channel context to Notification-owned sender/channel/provider/template policy. Organization remains authoritative for Tenant/Workspace facts, Application/Service Trust remains authoritative for application/workload identity and ownership, and Trust/Secret Services remain authoritative for secret custody.
+
 ### 1.1 Out Of Scope
 
 - Product business event generation, business rules, or business recipient eligibility
@@ -55,7 +57,7 @@ The platform supports email, WhatsApp/messaging-provider delivery, SMS, push, an
 - **Products/Platforms:** publish or submit authorized Notification intents; Product business authority remains upstream
 - **Scheduling Platform:** provides generic durable future wake-up when a Notification is already frozen and only delivery time remains
 - **Document Platform:** supplies immutable attachment/version references when attachments are used
-- **Identity / Organization / Application Trust:** establish authenticated caller, application ownership, Tenant scope, and optional Principal contact resolution without requiring every recipient to be a Principal
+- **Identity / Organization / Application Trust:** establish authenticated caller, application ownership, Tenant scope, and optional Principal contact resolution without requiring every recipient to be a Principal; administrative profile validation may use bounded/local projections and normal delivery does not require a per-send synchronous Organization call
 - **Trust Services:** hold provider/API/SMTP credentials; Notification stores only governed provider/channel configuration and secret references
 - **Event & Messaging:** carries Notification request/lifecycle contracts where asynchronous integration is selected
 - **Integration Enablement:** optional reusable connector/protocol machinery when it adds value; it is not a mandatory network hop between Notification and its natural communication providers
@@ -80,6 +82,7 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 - Recipient Snapshot
 - Template & Channel Variant
 - Channel / Sender Profile
+- Application Notification Profile
 - Provider Routing
 - Delivery Planning
 - Delivery Execution
@@ -100,6 +103,8 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 | Template Version | Immutable governed version of template content and data contract |
 | Channel Variant | Email, WhatsApp, SMS, Push, Webhook, or other realization of one Template Version |
 | Channel Profile | Sender identity, provider binding, routing policy, and secret references for one channel context |
+| Application Notification Profile | Notification-owned configuration that binds authorized application/Tenant/channel context to sender/channel/provider/template policy without owning the application or Tenant itself |
+| Deferred Notification Command | Bounded registered command delivered by Scheduling that causes Notification creation at due time rather than at schedule-registration time |
 | Provider Binding | Notification-owned provider configuration that references secrets held by Trust Services |
 | Delivery | One recipient/channel delivery lifecycle |
 | Delivery Attempt | One provider interaction attempt within a Delivery lifecycle |
@@ -121,6 +126,10 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 - External recipients may be email addresses, phone/WhatsApp endpoints, device endpoints, or registered webhook endpoints without being enterprise Principals
 - Product/Legal authority retains business-specific consent meaning; Notification enforces communication preferences/policy facts within its declared scope
 - Generic future scheduling is delegated to the Scheduling Platform
+- Pure scheduled communication SHOULD use a frozen Notification registered with Scheduling when recipient/content/version semantics must be preserved from creation time
+- A Product MAY schedule a bounded Deferred Notification Command directly to Notification when no Notification must exist before due time and Scheduler does not become a communication-data store
+- If business eligibility, recipient, or content must be revalidated at due time, Scheduling targets the owning Product/Platform Worker before Notification is requested
+- Application Notification Profile resolution is Notification authority; Organization/Application Trust supply canonical context/ownership and are not replaced by Notification-local configuration
 - Notification retries only delivery operations it owns; Product business retry remains Product/Workflow responsibility
 
 ## 4. Integration Contracts
@@ -139,6 +148,8 @@ The Notification Platform provides:
 - Template data-schema validation and preview
 - Recipient snapshot and optional recipient-resolution contracts
 - Channel/sender/provider profile management
+- Application Notification Profile management by authorized application/Tenant/channel scope
+- deferred Notification command acceptance from registered Scheduling targets
 - Frozen scheduled-notification registration
 - Delivery retry and cancellation
 - Provider callback/receipt normalization
@@ -154,6 +165,7 @@ The Notification Platform consumes:
 - Document Platform for immutable attachment versions
 - Identity / Organization / Application Trust for caller, ownership, Tenant scope, and optional Principal contact resolution
 - Trust Services for provider/SMTP/API credential material through secret references
+- bounded locally usable Organization/Application Trust context for profile ownership validation without a required per-delivery synchronous control-plane call
 - Event & Messaging for asynchronous intent and lifecycle propagation
 - Audit & Evidence for privileged-operation evidence
 - optional reusable Integration connectors where justified by the specific provider relationship
@@ -184,6 +196,7 @@ Notification manages:
 - Template Families, immutable versions, channel variants, and template data schemas
 - Recipient Snapshots and delivery endpoints
 - Channel Profiles and Provider Bindings excluding raw secrets
+- Application Notification Profiles keyed by authorized application/Tenant/channel scope
 - Delivery and Delivery Attempt state
 - provider identifiers, callbacks, and normalized receipts
 - communication preference metadata within the platform scope
@@ -242,6 +255,7 @@ Notification Platform Team owns:
 - template/version/channel-variant machinery
 - recipient snapshot and delivery planning
 - Channel Profiles and Provider Bindings excluding secret custody
+- Application Notification Profile lifecycle and application/Tenant/channel routing policy
 - provider/channel adapters
 - delivery retry and status normalization
 - provider callbacks and reconciliation
@@ -262,6 +276,9 @@ Scheduling Team owns generic durable future trigger mechanics. Trust Services ow
 - Notification SHALL NOT own Product business timing or eligibility
 - Notification SHALL NOT require every recipient to be an Identity Principal
 - generic durable scheduling SHALL NOT be reimplemented inside Notification
+- Notification SHALL own application/Tenant/channel-to-provider/template mapping but SHALL NOT become authoritative for Organization/Tenant/Workspace or application ownership
+- normal Notification delivery SHALL NOT require a synchronous Organization lookup when validated local context/projection is sufficient
+- Workspace Experience, Workflow, and Work Management SHALL NOT be introduced solely to resolve Notification provider/profile configuration
 - provider models SHALL terminate at Notification adapters and never leak into Product contracts
 - provider transport acceptance SHALL NOT be represented as final delivery unless the channel/provider contract proves it
 - browser clients SHALL NOT receive decrypted provider credentials after registration
@@ -293,3 +310,5 @@ Notification begins with the channels required by real consumers and expands thr
 - ADR-GLB-011 Enterprise Durable Scheduling Boundary
 - STD-GLB-004 Event-Driven Architecture & Messaging
 - STD-GLB-010 Durable Scheduled Work
+- ADR-GLB-014 Background Worker Network Boundary
+- STD-GLB-012 Background Worker Network Exposure

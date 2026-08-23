@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-006
   title: Enterprise Security Architecture
   owner: Architecture Authority
-  version: 1.1.1
+  version: 1.2.0
   status: approved
   classification: restricted
   governed_by: [GDC-006]
@@ -60,6 +60,7 @@ AI does not receive a special trust exemption. Model inference, retrieval, tool 
 | S4 | Provider/model routing is dynamic | Policy constrains data egress, classification, and allowed providers |
 | S5 | Agent/tool ecosystems ingest untrusted content | Prompt/tool injection and sandbox boundaries are explicit |
 | S6 | Workloads/jobs are pervasive | Human credentials are never shared as workload authority |
+| S7 | Background workers are pervasive and often unattended | Pure worker runtimes minimize inbound network surface and do not expose business ingress by default |
 
 ### 4.2 Lessons Incorporated
 
@@ -69,6 +70,7 @@ AI does not receive a special trust exemption. Model inference, retrieval, tool 
 | AI agent inherited unrestricted user power | Delegation is bounded by tool, scope, time, risk, and purpose |
 | Knowledge filtering occurred after model input | Retrieval is authorized before disclosure |
 | Provider key lived in Product code | Credential custody stays in Trust Services |
+| Pure background worker exposed a public/business HTTP listener | Worker execution and business ingress are separated; only explicitly justified internal probe/metrics/admin surfaces remain reachable |
 | Tool protocol was treated as authorization | MCP/API transport does not grant Product permission |
 | Model output was treated as approval | High-impact effects retain Product authorization/human control |
 
@@ -213,6 +215,23 @@ Protection applies to authoritative data, projections, artifacts, events, logs, 
 
 Classification, minimization, purpose, encryption, residency, retention, legal hold, and support access follow the source obligation. Derived representations do not weaken source restrictions.
 
+### 5.12 Background Worker Network Boundary
+
+A **pure background Worker** is a runtime process whose business work is initiated through an owned queue, broker subscription, durable database claim, schedule occurrence, or equivalent asynchronous mechanism rather than a business request/response API.
+
+The enterprise default is **no public or business inbound listener on pure Worker runtimes**.
+
+Permitted inbound surfaces are limited to explicitly required operational interfaces such as:
+
+- Kubernetes liveness/readiness/startup probes
+- metrics scraping
+- authenticated internal diagnostic or administrative control when no safer control path exists
+
+These surfaces are not business APIs. They remain internal, network-policy restricted, least-privileged, observable, and independently removable from the business execution contract.
+
+A deployable MAY intentionally contain both an API adapter and background Worker components. In that topology, the deployable has business ingress because of the API role; the Worker role itself does not create a second business ingress contract.
+
+Provider webhooks/callbacks terminate at an authenticated ingress/API adapter and may enqueue owned work. They do not require exposing the background Worker directly.
 ## 6. Principles & Rules
 
 ### 6.1 Explicit Trust
@@ -251,6 +270,8 @@ Classification, minimization, purpose, encryption, residency, retention, legal h
 ### 6.12 AI Evidence Is Reconstructable
 - **Fitness function:** significant AI actions can resolve provider/model profile, policy, retrieval/tool correlation, actor/workload, and outcome without storing prohibited secrets
 
+### 6.13 Background Workers Minimize Inbound Surface
+- **Fitness function:** pure background Worker deployments expose zero public/business inbound listeners; permitted probe/metrics/admin listeners are internal and network-policy restricted
 ## 7. Alternatives Considered
 
 | Alternative | Why Rejected |
@@ -299,3 +320,5 @@ Classification, minimization, purpose, encryption, residency, retention, legal h
 - ADR-GLB-012 AI/Knowledge/Product separation
 - STD-IAM profiles for identity/token verification
 - Security tests and system threat models downstream
+- ADR-GLB-014 Background Worker Network Boundary
+- STD-GLB-012 Background Worker Network Exposure

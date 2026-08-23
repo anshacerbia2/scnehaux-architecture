@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-010
   title: Enterprise Durable Scheduled Work Standard
   owner: Architecture Authority
-  version: 1.0.1
+  version: 1.1.0
   status: adopted
   classification: internal
   governed_by:
@@ -43,9 +43,29 @@ It excludes request deadlines, short retry backoff, tight connector polling loop
 - A Product or Platform **MUST** use the shared Scheduling capability when a future trigger must survive consumer restart and its lifecycle is managed independently of the consumer process
 - A Product or Platform **MUST NOT** register request deadlines, short transient retry backoff, tight connector poll loops, or in-process debounce timers as enterprise schedules
 - A timed workflow step **MUST** remain Workflow-owned in meaning even when Scheduling provides the durable wake-up
-- A scheduled communication whose business eligibility must be revalidated at due time **MUST** target the owning Product/Platform worker before Notification is requested
-- A Notification **MAY** register its own future delivery only after the communication intent, recipient snapshot, and governed content version are frozen
 
+#### Scheduled Communication Modes
+
+**Frozen Notification**
+
+- Notification **MAY** register its own future delivery after communication intent, recipient snapshot, governed content/template version, and required delivery semantics are frozen
+- This mode **SHOULD** be the default for pure scheduled communication because it keeps Scheduler payload minimal and establishes Notification lifecycle/status/cancellation at creation time
+
+**Deferred Notification Command**
+
+- A Product **MAY** target a registered Notification command directly through Scheduling when no Notification must exist before due time
+- The scheduled trigger **MUST** contain only bounded identifiers or immutable trigger input accepted by the registered Notification contract
+- The trigger **MUST NOT** contain SMTP passwords, API keys, refresh tokens, private keys, provider credentials, or provider-secret material
+- Scheduler **MUST NOT** become the authoritative store for arbitrary communication content or unbounded recipient/contact datasets
+- If required Notification input cannot remain bounded under Scheduling data classification, the consumer **MUST** use Frozen Notification or Product-owned revalidation
+- Notification configuration/provider routing in this mode is resolved by Notification at due time
+
+**Revalidated Business Action**
+
+- A scheduled communication whose business eligibility, recipient, content, booking/subscription state, or other authoritative fact may change before due time **MUST** target the owning Product/Platform Worker before Notification is requested
+- The owning Product/Platform **MUST** re-read or otherwise validate required authoritative facts under current policy before creating Notification
+
+Every scheduled communication contract **MUST** make its selected mode explicit so operators can tell whether facts are frozen at creation time or resolved/revalidated at due time.
 ### 3.2 Identity and Ownership
 
 - Every Schedule **MUST** have a globally unique, non-enumerable `schedule_id`
@@ -117,6 +137,7 @@ Additional rules:
 ### 3.9 Payload, Data, and Secret Safety
 
 - Schedule state **MUST NOT** contain passwords, bearer tokens, refresh tokens, API keys, private keys, or provider credentials
+- Scheduling **MUST NOT** resolve SMTP/provider credentials or own Application Notification Profile configuration; Notification performs that resolution under its own authority
 - Trigger data **SHOULD** contain identifiers or bounded immutable input rather than copied Product aggregates
 - Sensitive authoritative Product facts needed at execution time **SHOULD** be re-read by the consumer under its own freshness and authorization rules
 - Cross-domain database reads **MUST NOT** be introduced to satisfy scheduled execution

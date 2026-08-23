@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-013
   title: Scnehaux Scheduling Runtime
   owner: Scheduling Platform Team
-  version: 1.0.0
+  version: 1.1.0
   status: draft
   classification: restricted
   governed_by:
@@ -65,6 +65,7 @@ The default platform SLO inherited from PAD-PLT-011 is 99.9% of due Occurrences 
 - Product business code never executes inside this runtime
 - no Product operational database is read directly
 - no arbitrary URL, shell command, function body, or container image is accepted as a Target
+- a registered Notification deferred-command Target is permitted only with bounded non-secret trigger input; Scheduling never resolves provider/channel credentials or Application Notification Profiles
 - state mutation and publication intent use the enterprise transactional-outbox pattern
 - the initial timing mechanism uses relational durable state and short transactional due claims rather than a bespoke consensus/timer cluster
 - physical worker extraction requires measured scale or fault-containment evidence and a separate SAD
@@ -113,7 +114,7 @@ graph LR
     SCHED[Scheduling Runtime]
     DB[(Scheduling PostgreSQL)]
     KAFKA[Kafka Protocol Broker]
-    TARGET[Registered Consumer Worker]
+    TARGET[Registered Consumer Contract / Worker / Notification]
     TRUST[Identity / Organization / App Trust Projections]
     AUDIT[Audit & Evidence]
 
@@ -127,7 +128,7 @@ graph LR
     KAFKA -. evidence subscription .-> AUDIT
 ```
 
-The target worker is not a Scheduling container and the Scheduler does not synchronously invoke it.
+The target consumer is not a Scheduling container and the Scheduler does not synchronously invoke it. A target may be an owning Product/Platform Worker or a registered bounded Notification command contract.
 
 ### 3.2 External
 
@@ -329,6 +330,8 @@ Human and workload callers use audience-bound enterprise Identity credentials. P
 
 TLS 1.3 in transit and enterprise-managed encryption at rest. Trigger metadata is minimized by default.
 
+- deferred Notification triggers remain bounded and non-secret; arbitrary communication bodies, provider configuration, and unbounded recipient/contact datasets are rejected.
+
 ### 7.4 Secrets
 
 Schedule records and due events never store provider credentials, application API keys, OAuth refresh tokens, or private keys. Runtime infrastructure credentials arrive only through the enterprise secret mechanism.
@@ -424,6 +427,7 @@ Deployments are progressive and reversible according to EAD-005.
 - ADR-SCH-001 selects PostgreSQL temporal authority and Kafka dispatch
 - global outbox, database, event, resilience, and observability standards are inherited rather than redefined
 - custom Scnehaux Scheduler Experience is a separate deployable under SAD-014
+- registered Deferred Notification Command is supported as a target only under STD-GLB-010 bounded-payload rules; business revalidation still targets the owning Product/Platform Worker
 
 ### 10.2 Rejected
 

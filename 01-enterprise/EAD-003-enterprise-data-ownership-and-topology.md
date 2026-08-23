@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-003
   title: Enterprise Data Ownership & Topology
   owner: Architecture Authority
-  version: 1.1.1
+  version: 1.2.0
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -27,7 +27,7 @@ Define enterprise data, knowledge, evidence, and derived-intelligence authority 
 - Transactional, operational, evidence, analytical, knowledge, retrieval-index, and AI-output authority
 - External systems of record and ATI projections
 - Knowledge assets, claims, provenance, ontology, graph representation, and retrieval indexes
-- AI inputs/outputs and acceptance into Product authority
+- Model inference inputs/outputs, Agent Run/context/memory state, and acceptance into Product authority
 - Tenant, purpose, classification, residency, lineage, and reconciliation
 - Artifact and document provenance
 
@@ -57,7 +57,9 @@ Graph / Vector / Lexical / Metadata Index
     ↓
 Retrieval Context
     ↓
-AI Output
+Agent Context Assembly or Direct Inference
+    ↓
+Model Output / Agent Result
     ↓
 Product Acceptance
     ↓
@@ -110,7 +112,10 @@ No downward derived representation silently promotes itself into Product truth.
 | Knowledge Graph Projection | Derived entity/relationship/claim representation | Never silently becomes Product transactional authority |
 | Retrieval Index | Lexical/vector/graph/metadata acceleration structure | Derived and rebuildable from governed source |
 | Embedding | Derived model-specific representation | Not knowledge authority |
-| AI Run | Execution trace for inference/agent activity | AI Platform operational record |
+| Inference Run | Bounded model invocation state, route, usage, and result metadata | Model & Inference Platform operational record |
+| Agent Run / Turn | Durable agent execution and turn state | Agent Runtime Platform operational record |
+| Agent Context Snapshot | Bounded assembled execution context or references required for reproducibility/recovery | Agent Runtime operational record; source facts retain original authority |
+| Run / Session Memory | Agent execution continuity state | Agent Runtime within declared lifetime; never enterprise Knowledge authority by itself |
 | Proposed / AI-Generated Output | Suggested content/classification/decision | Never authoritative until accepted by owning Product/domain |
 
 ### 5.2 Canonical Ownership Matrix
@@ -131,7 +136,8 @@ No downward derived representation silently promotes itself into Product truth.
 | Enterprise evidence | Audit & Evidence Platform |
 | Knowledge asset/ontology/index lifecycle | Knowledge & Retrieval Platform within declared scope |
 | Product business facts represented in knowledge | Original Product/external authority remains canonical |
-| AI model/provider execution state | AI Enablement Platform |
+| Model/provider access, Capability Profile, and Inference Run state | Model & Inference Platform |
+| Agent Definition runtime registration, Agent Run/Turn, Context Snapshot, and run/session memory mechanics | Agent Runtime Platform |
 
 ### 5.3 Knowledge Topology
 
@@ -145,7 +151,8 @@ graph LR
     GRAPH[Graph Index / Projection]
     META[Metadata Index]
     RET[Authorized Hybrid Retrieval]
-    AI[AI Platform]
+    AGENT[Agent Runtime]
+    INFER[Model & Inference]
     HUMAN[Human / Product]
 
     SOURCE --> KA
@@ -158,8 +165,9 @@ graph LR
     VEC --> RET
     GRAPH --> RET
     META --> RET
-    RET --> AI
+    RET --> AGENT
     RET --> HUMAN
+    AGENT --> INFER
 ```
 
 Graph is first-class, not exclusive. Retrieval selection follows query, evidence, authorization, latency, and quality requirements.
@@ -218,7 +226,7 @@ Every knowledge unit derived from a managed artifact can resolve, where applicab
 | Evidence | Append/integrity lifecycle under Audit & Evidence |
 | Analytical | Derives from governed source; no direct source mutation |
 | Knowledge | Organizes provenanced assets/claims/relations without stealing source authority |
-| AI | Produces derived/proposed output until owning Product accepts |
+| Model / Agent Execution | Produces derived/proposed output and execution state until owning Product accepts any resulting business fact/effect |
 
 ### 5.8 Data Movement Strategy
 
@@ -228,7 +236,7 @@ Every critical movement declares source authority, purpose, Tenant/classificatio
 
 ### 5.9 Data Governance
 
-Data Governance defines classification, lineage, quality, residency, retention, privacy, and purpose obligations. Product/domain owners remain accountable for authoritative domain data. Knowledge/AI representations inherit source restrictions.
+Data Governance defines classification, lineage, quality, residency, retention, privacy, and purpose obligations. Product/domain owners remain accountable for authoritative domain data. Knowledge, model-input/output, Agent Context, and Agent Memory representations inherit source restrictions.
 
 ## 6. Principles & Rules
 
@@ -272,7 +280,7 @@ Data Governance defines classification, lineage, quality, residency, retention, 
 | Knowledge Graph as enterprise master database | Converts a derived representation into hidden transactional authority |
 | Vector-only RAG | Insufficient for all query/evidence/relationship needs |
 | Graph-only RAG | Overfits one retrieval shape and increases complexity |
-| AI Platform owns all knowledge | Couples knowledge lifecycle to model execution |
+| Model or Agent runtime owns all knowledge | Couples knowledge lifecycle to execution and creates hidden authority |
 | Filter after LLM context assembly | Discloses data before authorization is applied |
 
 ## 8. Single Points of Failure & Graceful Degradation
@@ -283,7 +291,8 @@ Data Governance defines classification, lineage, quality, residency, retention, 
 | Knowledge ingestion | Stale knowledge | Existing version remains queryable with freshness visible |
 | Vector/graph/lexical index | Retrieval mode degradation | Other evaluated retrieval modes may continue |
 | Knowledge & Retrieval control | Search/RAG degradation | Product fails explicitly or uses approved fallback |
-| AI provider | AI-output degradation | Knowledge remains independently queryable |
+| Model provider / Model & Inference | AI-output degradation | Knowledge remains independently queryable; evaluated alternate route or explicit failure |
+| Agent Runtime | Agentic execution degradation | Durable run state may resume; Product truth and Knowledge authority remain outside Agent state |
 
 ## 9. Ownership
 
@@ -294,7 +303,8 @@ Data Governance defines classification, lineage, quality, residency, retention, 
 | Knowledge capability | Knowledge & Retrieval Platform Owner |
 | Domain knowledge semantics | Source Product/domain |
 | Artifact lifecycle | Artifact & Document Platform Owner |
-| AI execution data | AI Platform Owner |
+| Model/inference execution data | Model & Inference Platform Owner |
+| Agent execution/context/run-memory data | Agent Runtime Platform Owner |
 | Data governance principles | Data Governance Authority |
 
 ## 10. Dependencies
@@ -306,6 +316,8 @@ Data Governance defines classification, lineage, quality, residency, retention, 
 ## 11. Traceability
 
 - PAD-PLT-015 defines Knowledge & Retrieval logical contracts
-- PAD-PLT-008 AI consumes Knowledge & Retrieval without owning it
+- PAD-PLT-008 Model & Inference owns bounded model/provider execution without owning Knowledge
+- PAD-PLT-016 Agent Runtime consumes Knowledge & Retrieval for governed context without owning source truth
 - PAD-PLT-009 manages artifact lifecycle feeding knowledge ingestion
 - ADR-GLB-012 records AI/Knowledge/Product authority separation
+- ADR-GLB-015 refines AI execution into Model & Inference and Agent Runtime authorities

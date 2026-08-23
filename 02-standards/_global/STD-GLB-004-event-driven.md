@@ -3,9 +3,11 @@ doc_meta:
   id: STD-GLB-004
   title: Enterprise Event-Driven Architecture & Messaging Standard
   owner: Enterprise Architect
-  version: 1.1.0
+  version: 2.0.0
   status: approved
   classification: public
+  governed_by:
+    - EAD-004
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-08-14
@@ -70,6 +72,12 @@ To ensure interoperability across heterogeneous services, all asynchronous event
 To prevent dual-write inconsistencies, services must never write to a database and directly publish to an external message broker within the same execution path.
 
 - **Outbox Write**: Services must write both the business entity mutation and an outbox event record into the same transactional database database block.
+- **Applicability**: A Transactional Outbox is **REQUIRED** when one local authoritative state transaction and one or more external event publications must be logically atomic. Consumer-only services or flows with no coordinated local mutation **MUST NOT** add an outbox solely for architectural uniformity.
+- **Transaction Locality**: The authoritative mutation and its outbox publication intent **MUST** commit in the same local transactional resource and transaction boundary.
+- **No Central Outbox Authority**: A source service **MUST NOT** synchronously write its publication intent to a separate central Outbox database/service as part of the business commit path. That is a distributed dual-write, not Transactional Outbox.
+- **Shared Delivery Machinery**: Relay code, CDC infrastructure, Kafka producer adapters, schema libraries, telemetry, and operational tooling **MAY** be provided as shared Engineering & Runtime machinery after local commit.
+- **Ownership**: Outbox records remain owned by the Product/Platform whose transaction created them. A shared relay **MUST NOT** become authoritative for Product business state.
+- **Equivalent Atomic Mechanism**: A system **MAY** use another mechanism only when it proves an equivalent atomic/no-silent-loss property for the authoritative mutation and publication intent.
 - **Outbox Schema**: The outbox table must contain:
   - `event_id`: Primary key (UUID).
   - `event_type`: String.
@@ -161,4 +169,5 @@ None. All event-driven architecture rules apply unconditionally. Deviations requ
 
 1. **Schema Registry Validation**: Build validation pipelines must check event models against the centralized schema registry. Schema modifications that break backward compatibility rules must block the build.
 2. **Consumer Group Audit**: All services running consumer groups must register their offsets and lagging metrics under the enterprise observability stack.
-3. **Exception Waivers**: Deviations from these event-driven architecture requirements require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.
+3. **Outbox Locality Check**: Architecture/code review verifies transactional publishers persist publication intent in the same local transaction as the authoritative mutation and do not call a central Outbox service in the commit path.
+4. **Exception Waivers**: Deviations from these event-driven architecture requirements require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.

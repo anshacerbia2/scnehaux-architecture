@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-005
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -41,6 +41,7 @@ The deployable provides:
 - immutable Recipient Snapshot
 - Template Family, Version, Channel Variant, and data-schema management
 - Channel/Sender Profile and Provider Binding management
+- Application Notification Profile management and due-time profile resolution by application/Tenant/channel scope
 - Email, WhatsApp/messaging, SMS, Push, and governed Webhook adapter model
 - Scheduling adapter for frozen future delivery
 - delivery planning and channel-specific worker pools
@@ -146,15 +147,16 @@ The initial Go deployable is a modular application with bounded modules:
 3. Template & Data Schema
 4. Recipient Snapshot
 5. Channel/Sender Profile
-6. Provider Binding & Secret Reference
-7. Scheduling Adapter
-8. Delivery Planning
-9. Channel Dispatch Workers
-10. Provider Adapters
-11. Callback/Receipt Normalization
-12. Retry & Reconciliation
-13. Outbox/Event Publication
-14. Operations/Admin Query
+6. Application Notification Profile
+7. Provider Binding & Secret Reference
+8. Scheduling Adapter
+9. Delivery Planning
+10. Channel Dispatch Workers
+11. Provider Adapters
+12. Callback/Receipt Normalization
+13. Retry & Reconciliation
+14. Outbox/Event Publication
+15. Operations/Admin Query
 
 Channel worker pools share one deployable initially but use independent concurrency/bulkhead controls. A channel or provider becomes a separate deployable only when measured throughput, security isolation, or failure containment justifies its own SAD.
 
@@ -240,7 +242,50 @@ sequenceDiagram
 
 This path is prohibited when Product business eligibility must be revalidated at due time. In that case Scheduling wakes the Product worker, which requests Notification after revalidation.
 
-### 4.5 Runtime Flow — Provider Callback
+### 4.5 Runtime Flow — Deferred Notification Command
+
+```mermaid
+sequenceDiagram
+    participant P as Product
+    participant S as Scheduling
+    participant K as Kafka
+    participant N as Notification
+    participant D as Notification PostgreSQL
+
+    P->>S: register target=Notification + bounded command
+    S-->>K: occurrence.due
+    K-->>N: registered deferred Notification command
+    N->>N: validate application/Tenant/channel context
+    N->>N: resolve Application Notification Profile
+    N->>D: create Notification + snapshot + delivery plan + outbox
+    D-->>N: commit
+```
+
+This mode is allowed only when the Scheduling trigger can remain bounded and non-secret. Notification resolves provider/channel/template policy at due time. SMTP/API credentials are resolved from Trust/Secret Services by Notification and never transit through Scheduling.
+
+If recipient/content/business eligibility requires current Product-owned truth, Scheduling targets the Product Worker instead and the Product requests Notification after revalidation.
+
+### 4.6 Runtime Flow — Application Notification Profile Administration
+
+```mermaid
+sequenceDiagram
+    participant U as Authorized Admin
+    participant N as Notification Control API
+    participant C as Local Trust/Organization Context
+    participant T as Trust/Secret Services
+    participant D as Notification PostgreSQL
+
+    U->>N: configure app/Tenant/channel profile
+    N->>C: validate bounded ownership/context when required
+    U->>N: register/update provider credential
+    N->>T: write/rotate secret
+    T-->>N: secret_ref
+    N->>D: persist Application Notification Profile + Provider Binding + secret_ref
+    D-->>N: commit
+```
+
+Normal delivery resolves validated Notification-local profile state and does not synchronously call Organization per send.
+### 4.7 Runtime Flow — Provider Callback
 
 ```mermaid
 sequenceDiagram
@@ -269,6 +314,7 @@ One private PostgreSQL database is authoritative for Notification runtime state.
 - Provider Callback/Event deduplication
 - Template Family / Version / Channel Variant / Data Schema
 - Channel/Sender Profile
+- Application Notification Profile
 - Provider Binding with secret references only
 - communication preference metadata within Notification scope
 - Scheduling binding
@@ -303,6 +349,7 @@ The versioned API supports:
 - Template Family/Version/Channel Variant/schema administration
 - template validation/preview/test-send
 - Channel/Sender Profile and Provider Binding administration
+- Application Notification Profile administration and validation
 - Delivery query and reconciliation
 - provider callback endpoints
 
@@ -339,7 +386,8 @@ Workload and privileged tokens are validated locally for the Notification protec
 
 ### 7.2 Authorization
 
-- Templates, Channel Profiles, Notifications, and Delivery administration are application/Tenant scoped
+- Templates, Channel Profiles, Application Notification Profiles, Notifications, and Delivery administration are application/Tenant scoped
+- Application/Tenant ownership is validated from trusted context/projection during profile administration; normal delivery uses Notification-local validated bindings rather than a mandatory synchronous Organization lookup
 - provider configuration, test-send, replay/reconciliation, and cross-Tenant operations are privileged
 - recipient endpoints cannot be used to infer Tenant/application authority
 - Product-supplied recipient or content data is accepted only under the caller's authorized Notification contract
@@ -443,6 +491,8 @@ Blocking gates include:
 - generic future scheduling is delegated to Scheduling
 - communication provider relationships are naturally Notification-owned; reusable Integration machinery is optional
 - custom Notification operational experience is realized separately by SAD-015
+- Frozen Notification is the default scheduled-communication mode; bounded Deferred Notification Command is also supported when Scheduler does not become a communication-data authority
+- Application Notification Profile is Notification-owned configuration; Organization/Application Trust remain canonical for Tenant/application identity and ownership
 
 ### 10.2 Rejected
 

@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-011
   title: Enterprise Background Job Execution Standard
   owner: Architecture Authority
-  version: 1.0.1
+  version: 1.1.0
   status: adopted
   classification: internal
   governed_by:
@@ -43,6 +43,7 @@ It excludes:
 - Future time belongs to Scheduling
 - Multi-step process state belongs to Workflow
 - Workload identity, Tenant scope, observability, and bounded resource usage are intrinsic
+- Worker network exposure follows STD-GLB-012; pure Worker topology does not create a business ingress API
 
 ## 3. Normative Rules
 
@@ -160,6 +161,12 @@ Every durable Job implementation **MUST** expose, at minimum:
 - Physical runtime selection belongs to the owning SAD/ADR and technology lifecycle governance
 - An independent shared Job Execution Platform **MUST NOT** be assumed by this standard
 
+### 3.17 Worker Network Exposure
+
+- Job Worker topology **MUST** conform to STD-GLB-012
+- A pure Job Worker **MUST NOT** expose a public/Product-facing business API merely to receive or execute Jobs
+- A mixed API + Worker deployable **MAY** remain one deployable when its SAD identifies API ingress and Worker execution boundaries
+- Health/readiness/metrics listeners remain operational surfaces rather than Job command contracts
 ## 4. Exceptions
 
 None.

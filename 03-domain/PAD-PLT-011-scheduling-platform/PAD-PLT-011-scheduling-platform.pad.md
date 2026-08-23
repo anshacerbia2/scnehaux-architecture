@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-011
   title: Enterprise Scheduling Platform
   owner: Scheduling Platform Team
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -55,7 +55,7 @@ The capability is chartered as a shared Platform because more than ten applicati
 - **Event & Messaging:** due Occurrences and lifecycle facts are dispatched asynchronously through the enterprise messaging contract
 - **Audit & Evidence:** privileged administration, replay, cross-Tenant operations, and policy changes emit evidence facts
 - **Workflow:** Workflow may register durable wake-ups while retaining timeout/escalation/process semantics
-- **Notification:** Notification may register future delivery only after communication intent is frozen; Notification retains delivery authority
+- **Notification:** Notification may register future delivery after communication intent is frozen, and Scheduling may target a registered bounded Deferred Notification Command when no Notification must exist before due time; Notification always retains communication/provider authority
 - **Products/Platforms:** consumers register durable temporal intent and execute their own business/capability work after dispatch
 
 ### 2.3 Consumed By
@@ -113,6 +113,8 @@ A consumer integrates through versioned schedule lifecycle commands and asynchro
 - Unlimited catch-up is prohibited
 - Product-relative timing rules remain Product logic and are materialized into Schedule registrations by the owning Product
 - Scheduler never treats Product worker success/failure as authoritative Scheduler lifecycle state
+- A registered Deferred Notification target is allowed only with bounded trigger data that does not make Scheduling authoritative for communication content, recipient datasets, provider configuration, or credentials
+- When business eligibility/recipient/content requires current Product truth at due time, the target remains the owning Product/Platform Worker rather than Notification
 
 ## 4. Integration Contracts
 
@@ -219,6 +221,7 @@ Higher-precision or higher-criticality classes require an explicit PAD/SAD profi
 
 - Tenant isolation follows the enterprise database/security standards
 - Trigger payloads contain no credentials
+- deferred Notification triggers contain only bounded identifiers/immutable trigger input under Scheduling data classification; arbitrary communication bodies and unbounded recipient/contact datasets remain outside Scheduling
 - Sensitive Product data is minimized and re-read by the consumer when freshness is required
 - Privileged cross-Tenant actions, replay, target change, and quota override are fully evidenced
 - Regional placement can be selected when residency or contractual commitments require it
@@ -267,6 +270,8 @@ Workflow Team owns workflow timer/deadline semantics. Notification Team owns not
 - Scheduling SHALL NOT become a universal Worker Platform
 - Scheduling SHALL NOT own Product business completion
 - Scheduling SHALL NOT interpret Product-specific calendar/business rules
+- Scheduling SHALL NOT resolve Notification provider/channel credentials or Application Notification Profiles
+- Deferred Notification targets SHALL use a registered contract and bounded non-secret trigger input
 - Consumers SHALL implement occurrence-level idempotency
 - Durable recurrence SHALL declare time-zone and misfire semantics
 - New shared durable scheduling authority outside this PAD requires architecture review

@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-002
   title: Enterprise System Landscape
   owner: Architecture Authority
-  version: 2.1.1
+  version: 2.2.0
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -50,7 +50,7 @@ Scnehaux serves Travel Operations, adjacent BPO services, HCM and future enterpr
 
 The target landscape is intentionally not a one-box-per-service diagram. A logical capability can be realized by a library, a module, a shared internal service, a managed service, or an independently deployed Platform Product.
 
-AI-enabled Products are treated as Business Products or Product features when they own domain workflow and outcomes. Shared model execution, knowledge, retrieval, tools, evaluation, and governance remain Platform capabilities.
+AI-enabled Products are treated as Business Products or Product features when they own domain workflow and outcomes. Shared bounded model execution, durable Agent execution, knowledge/retrieval, Tool mediation, evaluation, and governance remain separate Platform capabilities.
 
 ## 4. Architectural Drivers & Lessons
 
@@ -61,7 +61,7 @@ AI-enabled Products are treated as Business Products or Product features when th
 | D1 | Travel, HCM, and future ERP require common foundations | Shared capabilities are explicit but do not absorb Product meaning |
 | D2 | ATI operates across multiple tenants, clients, providers, and applications | Identity, Organization, Application Trust, Entitlement, and Product authorization remain separate |
 | D3 | Long-running work exists in multiple forms | Work Item, Workflow, Job, Schedule, Worker, and Queue are modeled separately |
-| D4 | AI Products must survive model/provider change | Vertical Products depend on stable Scnehaux AI and Knowledge contracts rather than provider SDKs |
+| D4 | AI Products must survive model/provider and agent-runtime change | Vertical Products depend on stable Model & Inference, Agent Runtime, and Knowledge contracts rather than provider SDKs or agent frameworks |
 | D5 | Human work spans Products | Workspace Experience composes Products without becoming the authority for Tenant/Workspace context |
 | D6 | Shared systems create blast radius | Local validation, projections, asynchronous contracts, and graceful degradation are preferred where correctness permits |
 
@@ -71,7 +71,7 @@ AI-enabled Products are treated as Business Products or Product features when th
 | :-- | :-- |
 | Workspace was used both for operating context and user experience | Organization owns canonical Workspace context; Workspace Experience owns digital work composition |
 | Worker, queue, workflow, and scheduler were treated as synonyms | Each receives a distinct architectural role |
-| AI Platform was allowed to absorb knowledge and Product semantics | AI execution, Knowledge/ Retrieval, and Product authority are separated |
+| AI Platform was allowed to absorb knowledge and Product semantics | Model & Inference, Agent Runtime, Knowledge & Retrieval, and Product authority are separated |
 | Data/knowledge copies were mistaken for Product truth | Derived representations preserve source authority and provenance |
 | Shared Integration became a candidate universal hop | Natural owner retains external relationship; shared Integration is optional machinery |
 | Platform taxonomies were read as deployment maps | Target capability, approved PAD, SAD, and runtime evidence are separate views |
@@ -102,7 +102,8 @@ graph TB
 
     subgraph DKI_DETAIL[Shared Intelligence]
         KNOW[Knowledge & Retrieval]
-        AI[AI Enablement]
+        MODEL[Model & Inference]
+        AGENT[Agent Runtime]
     end
 
     subgraph EI_DETAIL[Shared Experience]
@@ -130,9 +131,11 @@ graph TB
     USERS --> WX
     WX --> BUSINESS
     BUSINESS --> PLATFORM
-    VAI --> AI
+    VAI --> MODEL
+    VAI --> AGENT
     VAI --> KNOW
-    AI --> KNOW
+    AGENT --> MODEL
+    AGENT --> KNOW
 
     BEE --> BEE_DETAIL
     DKI --> DKI_DETAIL
@@ -153,7 +156,8 @@ The diagram expresses roles and dependency direction, not deployment topology.
 | Foundation & Control System | Owns cross-product authority or trust capability |
 | Shared Execution System | Owns reusable operational machinery without Product-specific authority |
 | Knowledge & Retrieval System | Owns governed knowledge representation, provenance, indexes, and retrieval capability |
-| AI Enablement System | Owns model/provider access, inference/agent execution, tool mediation, evaluation, usage, and telemetry |
+| Model & Inference System | Owns model/provider access, Capability Profiles, bounded inference, routing, model evaluation/release, usage, and inference telemetry |
+| Agent Runtime System | Owns generic durable Agent execution, Agent Run state, Harness/context/memory mechanics, Tool Binding/mediation state, delegation/handoff, and agent-runtime evaluation |
 | Experience System | Owns reusable interaction/composition foundations without Product business state |
 | Engineering & Runtime System | Owns reusable execution/delivery/operability substrate |
 | Governance & Assurance | Defines constraints, decision rights, evidence requirements, conformance, and exceptions |
@@ -203,19 +207,22 @@ These roles may interact but are not interchangeable.
 ```mermaid
 graph LR
     PRODUCT[Vertical AI Product / Copilot]
-    AIP[AI Enablement Platform]
+    MODEL[Model & Inference Platform]
+    AGENT[Agent Runtime Platform]
     KRP[Knowledge & Retrieval Platform]
     TOOLS[Product / Platform Tools]
     PROVIDERS[External / Local Model Providers]
 
-    PRODUCT --> AIP
+    PRODUCT -->|simple inference| MODEL
+    PRODUCT -->|agentic run| AGENT
     PRODUCT --> KRP
-    AIP --> KRP
-    AIP --> TOOLS
-    AIP --> PROVIDERS
+    AGENT --> MODEL
+    AGENT --> KRP
+    AGENT --> TOOLS
+    MODEL --> PROVIDERS
 ```
 
-Products own domain workflow, Product UX, domain prompt/skill semantics, business authorization, and final business outcome.
+Products own domain workflow, Product UX, domain prompt/skill meaning, business authorization, and final business outcome. Agent Runtime is optional for non-agentic Product inference and never becomes a universal request hop.
 
 ### 5.6 Target, Approved, Chartered, and Deployed Views
 
@@ -236,7 +243,7 @@ Dependency direction is based on contract and business timing, not plane hierarc
 - local verification/projection is preferred for control facts where freshness permits
 - asynchronous commands/events depend on messaging substrate rather than peer runtime availability
 - Workspace Experience may compose Products without becoming their runtime gateway
-- AI Enablement and Knowledge & Retrieval are optional/declared Product dependencies, not universal request hops
+- Model & Inference, Agent Runtime, and Knowledge & Retrieval are optional/declared Product dependencies, not universal request hops
 - Workflow, Work Management, Scheduling, and Job execution may collaborate while retaining separate state authority
 
 ### 5.8 External Ecosystem
@@ -283,11 +290,11 @@ AI remains a reusable capability under Data, Knowledge & Intelligence. Vertical 
 
 - **Fitness function:** enterprise capability map contains no separate AI Plane
 
-### 6.6 Knowledge Is Not AI Execution
+### 6.6 Knowledge, Model Invocation, and Agent Execution Are Distinct
 
-Knowledge & Retrieval owns governed knowledge representation and retrieval. AI Enablement owns model/agent execution.
+Knowledge & Retrieval owns governed knowledge representation and retrieval. Model & Inference owns bounded model execution. Agent Runtime owns durable Agent execution semantics.
 
-- **Fitness function:** AI PAD contains no authoritative Knowledge Asset or Knowledge Graph ownership
+- **Fitness function:** no one Platform PAD owns authoritative Knowledge, bounded model routing/inference, and durable Agent Run lifecycle together
 
 ### 6.7 Synchronous Dependencies Remain Acyclic
 
@@ -306,7 +313,7 @@ A shared Platform is not introduced into every journey merely for uniformity.
 | Alternative | Why Rejected |
 | :-- | :-- |
 | One shared mega-platform for all execution | Conflates work, workflow, scheduling, jobs, rules, and business semantics |
-| AI Platform owns knowledge and vertical workflows | Creates a god-platform and makes Product authority ambiguous |
+| One AI runtime owns model gateway, durable agents, knowledge, and vertical workflows | Conflates distinct execution models, creates a god-platform, and makes Product authority ambiguous |
 | Workspace Platform owns tenant/workspace context | Duplicates Organization authority |
 | Every target capability becomes a service | Creates premature distributed-system complexity |
 | Central Integration mediates all providers | Obscures natural ownership and enlarges blast radius |
@@ -319,7 +326,8 @@ A shared Platform is not introduced into every journey merely for uniformity.
 | Messaging substrate | Delayed async processing | Durable producers retain/replay accepted work |
 | Scheduling | Delayed future triggers | Accepted schedules recover using durable state and misfire semantics |
 | Workflow | Delayed long-running coordination | Process state remains durable/resumable |
-| AI provider / AI Enablement | Assistive or AI Product degradation | Route/fallback where evaluated; non-AI path where Product contract requires it |
+| Model provider / Model & Inference | Bounded inference degradation | Evaluated route/fallback or explicit unavailable state; non-AI Product path where required |
+| Agent Runtime | Agentic execution degradation | Durable run state and resumability; Product/Workflow truth remains outside the runtime |
 | Knowledge & Retrieval | Reduced grounded intelligence/search | Product degrades explicitly; no fabricated knowledge truth |
 | Workspace Experience | Shared navigation/composition unavailable | Product-specific direct entry remains possible where operationally required |
 
@@ -346,4 +354,7 @@ A shared Platform is not introduced into every journey merely for uniformity.
 - Refines EAD-001 capability roles without changing the five Platform Plane roots
 - PAD-PLT-012 through PAD-PLT-015 establish logical boundaries for newly approved Platform Products
 - ADR-GLB-012 defines AI, Knowledge, and Product authority separation
+- ADR-GLB-015 refines AI execution into Model & Inference and Agent Runtime authorities
+- PAD-PLT-008 defines Model & Inference
+- PAD-PLT-016 defines Agent Runtime
 - ADR-GLB-013 defines Work Item, Workflow, Job, Schedule, Worker, and Queue boundaries

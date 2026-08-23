@@ -17,6 +17,8 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-GLB-011](_global/ADR-GLB-011-durable-scheduling-boundary.md) | ADR-GLB-011 Establish Enterprise Durable Scheduling Boundary | foundational | accepted | 2026-08-22 | N/A |
 | [ADR-GLB-012](_global/ADR-GLB-012-separate-ai-knowledge-and-product-authority.md) | ADR-GLB-012 Separate Product, Knowledge, and AI Execution Authority | foundational | accepted | 2026-08-23 | N/A |
 | [ADR-GLB-013](_global/ADR-GLB-013-work-workflow-job-schedule-boundaries.md) | ADR-GLB-013 Separate Work, Workflow, Job, Schedule, Worker, and Queue Boundaries | foundational | accepted | 2026-08-23 | N/A |
+| [ADR-GLB-014](_global/ADR-GLB-014-background-worker-network-boundary.md) | ADR-GLB-014 Minimize Inbound Network Surface for Background Workers | foundational | accepted | 2026-08-23 | N/A |
+| [ADR-GLB-015](_global/ADR-GLB-015-separate-model-inference-and-agent-runtime.md) | ADR-GLB-015 Separate Model & Inference from Agent Runtime | foundational | accepted | 2026-08-23 | N/A |
 | [ADR-GLB-FE-001](_global/ADR-GLB-FE-001-react-ecosystem.md) | ADR-GLB-FE-001 Standardization on React and Framework Paved Road | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-FE-002](_global/ADR-GLB-FE-002-build-toolchain.md) | ADR-GLB-FE-002 Standardization on Next-Generation Build Toolchains | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-FE-003](_global/ADR-GLB-FE-003-meta-framework.md) | ADR-GLB-FE-003 Standardization on Enterprise Meta-Framework | foundational | accepted | 2026-01-01 | N/A |

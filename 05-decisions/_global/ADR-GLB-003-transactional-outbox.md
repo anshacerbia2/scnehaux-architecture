@@ -7,6 +7,8 @@ doc_meta:
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
+  governed_by:
+    - EAD-004
 ---
 
 # ADR-GLB-003: Mandating the Transactional Outbox Pattern for Secure Asynchronous Domain Event Propagation
@@ -23,8 +25,11 @@ Mandating the Transactional Outbox Pattern for Secure Asynchronous Domain Event 
 | ---------- | -------- | ------------ | ------------------------- | -------------------- |
 | 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
 | 2026-08-21 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-08-23 | accepted | foundational | Architecture Authority, Platform Engineering | Architecture Authority |
 
 The 2026-08-21 entry records two corrections. The broker product is fixed to the Kafka protocol in section 5; the original text named a different product in passing without ever deciding one, so the dispatcher was written against a delivery contract no artifact had chosen. The outbox table is also renamed from `auth_outbox` to `platform.outbox`, matching the schema `foundation-platform` ships. The transactional-outbox decision itself is unchanged.
+
+The 2026-08-23 clarification makes an existing invariant explicit: **Outbox state is local to the authoritative transaction and is not a centralized Platform authority.** Shared relay, CDC, libraries, and operational tooling remain valid after the source transaction commits.
 
 ## 3. Context
 
@@ -54,6 +59,25 @@ When a database write or state change occurs, the core business module must writ
 
 To deliver these events, we adopt a **Two-Stage Evolutionary Architecture Plan** that balances operational complexity with extreme-scale performance goals:
 
+### Outbox Locality and Non-Platformization
+
+The outbox row **MUST be committed inside the same local transactional resource and transaction boundary** as the authoritative state mutation it represents.
+
+```text
+Product / Platform database transaction
+├─ authoritative state mutation
+└─ local outbox publication intent
+        ↓ COMMIT
+relay / CDC
+        ↓
+Kafka
+```
+
+A central Outbox database or network service **MUST NOT** be inserted into the source commit path as the publication authority. Doing so recreates the dual-write/distributed-transaction problem this ADR exists to remove.
+
+Shared outbox libraries/schema conventions, relay implementations, CDC infrastructure, Kafka producer adapters, event-schema tooling, telemetry, dashboards, and retention automation are allowed. Shared machinery does not move ownership of the outbox record away from the source Product/Platform transaction.
+
+The pattern is required when a local authoritative transaction and an external event must be logically atomic. A service that only consumes events, or a flow with no local authoritative mutation to coordinate, does not need an outbox merely because it is event-driven.
 ### Broker Product: the Kafka Protocol
 
 Both stages publish into the same broker, and that broker is fixed here because the dispatcher is written against one delivery contract rather than against a family of them.
@@ -197,4 +221,8 @@ None.
 - **Pros**: The longest production record of the candidates as a message broker, mature routing topologies, native dead-letter exchanges, per-queue priority, and quorum queues for high availability. The Streams feature supplies an append-only log with offset-based consumption, so the replay requirement is reachable.
 - **Cons**: Reaching the replay requirement means adopting Streams alongside classic queues, which places two delivery models in one deployment. The schema-registry and Change Data Capture ecosystems are markedly smaller than the Kafka protocol's, so both enterprise mandates again become bespoke work.
 - **Why Rejected**: Capable of the mechanics, and it carries the same two ecosystem gaps as Alternative C while adding a second delivery model to operate.
+### Alternative E: Centralized Outbox Platform / Database
 
+- **Pros**: One operational surface and one apparent event-publishing service
+- **Cons**: The source database commit and central outbox write become separate failure domains, recreating dual-write or requiring distributed transactions
+- **Why Rejected**: Transactional Outbox derives its guarantee from source-local atomicity. Shared relay/CDC/tooling is allowed, but the outbox record itself remains local to the authoritative transaction

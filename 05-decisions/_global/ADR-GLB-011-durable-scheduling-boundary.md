@@ -24,6 +24,7 @@ Establish a shared durable temporal scheduling boundary without centralizing bus
 | Date | Status | ADR Type | Reviewers | Approver |
 | :-- | :-- | :-- | :-- | :-- |
 | 2026-08-22 | accepted | foundational | Architecture Authority, Platform Engineering, Notification, Workflow, Product Engineering | Architecture Authority |
+| 2026-08-23 | accepted | foundational | Architecture Authority, Notification, Scheduling, Product Engineering | Architecture Authority |
 
 ## 3. Context
 
@@ -79,24 +80,49 @@ Scheduler dispatch success means that the governed asynchronous delivery boundar
 
 ### 5.3 Scheduled Communication
 
-Two patterns are explicitly separated.
+Scnehaux supports three explicit compositions. They freeze state at different authority boundaries.
 
-**Business state must be revalidated when the time arrives:**
-
-```text
-Scheduling -> Product/Platform Worker -> authoritative revalidation -> Notification -> Provider
-```
-
-This is the default for reminders whose business eligibility, recipient set, booking state, subscription state, or other authoritative facts may change before due time.
-
-**Notification intent is already frozen and only delivery time remains:**
+#### Mode A — Frozen Notification (default for pure scheduled communication)
 
 ```text
-Notification -> Scheduling -> Notification Delivery Worker -> Provider
+Product -> Notification -> Scheduling -> Notification Delivery Worker -> Provider
 ```
 
-In this pattern Notification owns the immutable accepted communication snapshot; Scheduling owns only the future wake-up.
+Use when the Product is already authorizing **this communication** and recipient/content/template-version semantics should be preserved from creation time. Notification creates the accepted Notification and freezes the bounded snapshot before registering a future wake-up.
 
+**Efficiency:** one additional upfront call, but smallest Scheduler payload, earliest validation, immediate Notification status/cancel/audit identity, and stable recipient/content/version semantics.
+
+#### Mode B — Deferred Notification Command
+
+```text
+Product -> Scheduling -> Notification -> Notification Delivery Worker -> Provider
+```
+
+Use only when no Notification must exist before due time and a **bounded registered Notification command** is sufficient. Scheduler may retain identifiers or immutable trigger input, but not provider credentials, SMTP/API secrets, provider configuration, arbitrary communication content, or unbounded recipient/contact datasets.
+
+At due time Notification creates the Notification and resolves the applicable **Application Notification Profile** and provider binding.
+
+**Efficiency:** fewer upfront calls and due-time Notification configuration can remain current, but validation is delayed and Scheduler is more coupled to the Notification target contract. If the deferred command cannot remain bounded and non-secret, Mode A is required.
+
+#### Mode C — Revalidated Business Action
+
+```text
+Product -> Scheduling -> Product/Platform Worker -> authoritative revalidation -> Notification -> Provider
+```
+
+Use when business eligibility, booking state, recipient selection, content, entitlement, or another authoritative Product fact may change before due time.
+
+**Efficiency:** most hops, but preserves current-state correctness and Product authority and avoids stale business decisions.
+
+#### Selection Rule
+
+| Question | Select |
+| :-- | :-- |
+| Communication final now and snapshot/version must be preserved? | Mode A |
+| Small deferred command is sufficient and due-time Notification config should resolve then? | Mode B |
+| Business eligibility/recipient/content can change before due time? | Mode C |
+
+Provider credentials are never carried by Product or Scheduling in any mode. Notification resolves provider/channel configuration and secret references; Trust/Secret Services retain credential custody.
 ### 5.4 Workflow Timers
 
 Workflow owns the semantic meaning of timeout, deadline, escalation, and process timer state. Workflow MAY use Scheduling as the generic durable wake-up mechanism. Scheduling does not inspect workflow state or decide which transition follows a due occurrence.

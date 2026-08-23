@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-015
   title: Knowledge & Retrieval Platform
   owner: Knowledge Platform Team
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -66,7 +66,7 @@ Knowledge representation and retrieval may derive from Product facts but cannot 
 
 - **Products and external authorities** remain authoritative for source facts and domain semantics
 - **Artifact & Document** provides immutable Artifact Version references for source content
-- **AI Enablement** consumes authorized retrieval, grounded context, provenance, and citations
+- **Agent Runtime** consumes authorized retrieval, grounded context, provenance, and citations for Agent Context Assembly; Products and human experiences may also consume retrieval directly
 - **Rules & Decisioning** may consume governed reference knowledge while retaining deterministic Rule meaning
 - **Identity / Organization / Product authorization** constrain retrieval scope
 - **Data Foundation** may provide governed data products and lineage
@@ -76,7 +76,7 @@ Knowledge representation and retrieval may derive from Product facts but cannot 
 
 ### 2.3 Consumed By
 
-Vertical AI Products, HCM copilots and search, Travel Operations, future ERP, enterprise search, human knowledge experiences, Rules, analytics consumers, Workspace Experience, and AI Enablement may consume the Platform.
+Vertical AI Products, HCM copilots and search, Travel Operations, future ERP, enterprise search, human knowledge experiences, Rules, analytics consumers, Workspace Experience, and Agent Runtime may consume the Platform.
 
 Consumption does not transfer source authority.
 
@@ -380,7 +380,7 @@ Knowledge Platform Team owns:
 - Freshness and degradation semantics
 - Platform reliability and support
 
-Product and domain owners own domain semantics and authoritative source facts. AI Platform owns model and Agent execution.
+Product and domain owners own domain semantics and authoritative source facts. Model & Inference owns bounded model execution. Agent Runtime owns durable agent-execution semantics.
 
 ### 7.2 Realizing Systems
 
@@ -433,3 +433,4 @@ A new representation becomes shared only when it preserves provenance, authoriza
 - EAD-007 Enterprise Governance & Assurance Architecture
 - GDC-008 Product Architecture Document Guideline
 - ADR-GLB-012 Separate AI, Knowledge, and Product Authority
+- ADR-GLB-015 Separate Model & Inference and Agent Runtime Authority

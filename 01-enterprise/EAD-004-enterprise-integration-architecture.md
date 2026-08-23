@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-004
   title: Enterprise Integration Architecture
   owner: Architecture Authority
-  version: 1.1.1
+  version: 1.2.0
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -57,6 +57,7 @@ Shared Integration may provide connector/protocol/transformation machinery. The 
 | D4 | External outcomes are ambiguous | Acceptance, completion, reconciliation, and evidence are distinct |
 | D5 | Model/provider switching is desired | Portability requires evaluation, not assumed equivalence |
 | D6 | Shared integration must not become central coupling | Natural Owner rule remains mandatory |
+| D7 | Local authoritative state changes may require external event publication | Atomic publication intent remains inside the source transaction boundary; shared delivery machinery does not become a second authority |
 
 ### 4.2 Lessons Incorporated
 
@@ -68,6 +69,7 @@ Shared Integration may provide connector/protocol/transformation machinery. The 
 | SSO and API credentials were treated as interchangeable | Interactive and workload access profiles are distinct |
 | Integration mediated every external provider | Shared Integration remains optional machinery |
 | Model change was treated as configuration-only | Evaluation and release gates protect semantic compatibility |
+| A central outbox service was treated as the transaction boundary | Outbox state stays local to the authoritative mutation; shared relays/CDC may transport it after commit |
 
 ## 5. Architecture Model
 
@@ -101,6 +103,21 @@ Product owns business intent
 
 A Queue may support any of these but does not redefine their authority.
 
+### 5.2.1 Scheduled Communication Composition
+
+Scheduled communication supports three compositions with different authority and efficiency characteristics.
+
+| Mode | Flow | Best fit | Main trade-off |
+| :-- | :-- | :-- | :-- |
+| Frozen Notification | `Product -> Notification -> Scheduling -> Notification` | Communication already accepted and recipient/content/version semantics must be preserved from creation time | One additional upfront call, but smallest Scheduler payload, earliest validation, stable Notification lifecycle, and clean cancellation/status |
+| Deferred Notification Command | `Product -> Scheduling -> Notification` | A lightweight communication command may be created only when due and bounded trigger data is sufficient | Fewer upfront calls, but validation is delayed and Scheduler is coupled to a registered Notification command contract |
+| Revalidated Business Action | `Product -> Scheduling -> Product Worker -> Notification` | Eligibility, recipient, content, or business state may change before due time | Extra execution hop, but preserves Product authority and current-state correctness |
+
+**Default:** use Frozen Notification for pure scheduled communication.
+
+Deferred Notification Command is permitted only when it does not turn Scheduling into a communication-data store. Scheduler carries a registered target plus bounded identifiers or immutable trigger input. Provider credentials, SMTP configuration, provider secrets, unbounded content, and arbitrary recipient/contact datasets remain outside Scheduling.
+
+If current Product state must be revalidated, the due occurrence targets the owning Product/Platform Worker before Notification is requested.
 ### 5.3 AI Provider Contract
 
 AI consumers request a stable capability/profile. Provider selection is performed by AI Enablement policy and evaluation.
@@ -193,6 +210,31 @@ Gateway, broker, connector, AI gateway, and tool gateway are technical roles rat
 - AI gateway does not own Product/Knowledge truth
 - no gateway/broker is a universal mandatory hop without justified capability
 
+### 5.12 Transactional Publication Boundary
+
+When a local authoritative state mutation and its external event publication must succeed or fail as one logical operation, the publication intent is persisted **inside the same local transactional authority** as the state mutation.
+
+```text
+Source Product / Platform DB transaction
+├─ authoritative mutation
+└─ outbox publication intent
+        ↓ COMMIT
+local relay / shared relay / CDC
+        ↓
+enterprise messaging
+```
+
+A separate central Outbox database/service is not an atomic substitute for the source transaction because it recreates a distributed dual-write boundary.
+
+The following may be shared without moving authority:
+
+- outbox library/schema conventions
+- relay implementation
+- CDC infrastructure
+- event envelope and schema tooling
+- telemetry and operational dashboards
+
+Outbox state itself remains owned by the source Product/Platform transaction.
 ## 6. Principles & Rules
 
 ### 6.1 Contract First
@@ -222,6 +264,8 @@ Gateway, broker, connector, AI gateway, and tool gateway are technical roles rat
 ### 6.9 Critical External Outcomes Reconcile
 - **Fitness function:** critical provider contracts declare unresolved-state and reconciliation ownership
 
+### 6.10 Atomic Publication Stays With Source Authority
+- **Fitness function:** transactional publishers have zero network write to a separate outbox authority inside the source commit path; publication intent is atomically persisted with the authoritative mutation or an equivalent atomic mechanism is proven
 ## 7. Alternatives Considered
 
 | Alternative | Why Rejected |
@@ -271,3 +315,5 @@ Gateway, broker, connector, AI gateway, and tool gateway are technical roles rat
 - PAD-PLT-008 AI
 - PAD-PLT-015 Knowledge & Retrieval
 - STD-GLB-011 Background Job Execution
+- ADR-GLB-003 Transactional Outbox
+- STD-GLB-004 Event-Driven Architecture & Messaging

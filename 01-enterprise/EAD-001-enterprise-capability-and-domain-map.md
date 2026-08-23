@@ -3,7 +3,7 @@ doc_meta:
   id: EAD-001
   title: Enterprise Capability & Domain Map
   owner: Architecture Authority
-  version: 2.1.1
+  version: 2.2.0
   status: approved
   classification: internal
   governed_by: [GDC-006]
@@ -83,7 +83,7 @@ The Platform Plane remains grouped into five enduring concern families. These ro
 | G1 | Transform Travel Operations first while supporting HCM, ERP, and adjacent enterprise Products | Business Plane remains value-stream and authority driven |
 | G2 | Reuse trusted capability without creating a god-platform | Shared Platforms own bounded Platform semantics, never consuming Product business outcomes |
 | G3 | Support organizations, tenants, workspaces, Products, applications, people, workloads, and agents | Identity, Organization, application trust, entitlement, workforce business data, and authorization remain distinct |
-| G4 | Build durable vertical AI Products without locking Product logic to one model/provider | AI execution, Knowledge/Retrieval, and Product semantics are separate authorities |
+| G4 | Build durable vertical AI Products without locking Product logic to one model/provider | Model & Inference, Agent Runtime, Knowledge & Retrieval, and Product semantics are separate authorities |
 | G5 | Reduce repeated engineering friction without platform sprawl | Platformization requires structural need, friction/reuse evidence, runtime economics, or material risk reduction |
 | G6 | Preserve external client and industry systems of record | External authority remains explicit; ATI owns execution and reconciliation where appropriate |
 | G7 | Keep architecture implementable and evolvable | PAD approval locks logical boundary; physical design remains a SAD decision |
@@ -110,7 +110,7 @@ The Platform Plane remains grouped into five enduring concern families. These ro
 | Developer experience was treated as secondary | Platform Products measure adoption, lead time, cognitive load, support burden, reliability, and cost |
 | Resilience was confused with overlapping authority | Projections, caches, replicas, and local enforcement may duplicate representation; canonical authority does not silently duplicate |
 | HCM workforce meaning was conflated with technical Organization/Workspace context | HCM owns employee/workforce business truth; Organization owns Tenant/Workspace/Membership operating context |
-| AI, RAG, knowledge, agents, and Product workflow were treated as one platform | AI execution, Knowledge & Retrieval, Workflow, and Product semantics are distinct bounded capabilities |
+| AI, RAG, knowledge, agents, and Product workflow were treated as one platform | Model & Inference, Agent Runtime, Knowledge & Retrieval, Workflow, and Product semantics are distinct bounded capabilities |
 
 ## 5. Architecture Model
 
@@ -162,7 +162,8 @@ graph TB
     DKI --> DATA[Data Foundation]
     DKI --> KNOW[Knowledge Foundation]
     DKI --> SEARCH[Search & Retrieval]
-    DKI --> AI[AI Enablement]
+    DKI --> MODEL[Model & Inference]
+    DKI --> AGENT[Agent Runtime]
     DKI --> ANALYTICS[Analytics]
     DKI --> OI[Operational Intelligence]
 
@@ -224,7 +225,9 @@ Owns reusable operational machinery:
 - **Data Foundation** — governed analytical data products, contracts, metadata, and shared data mechanics
 - **Knowledge Foundation** — knowledge assets, provenance, ontology lifecycle, entities, relationships, claims, publication
 - **Search & Retrieval** — lexical, vector, metadata, graph, hybrid, authorization-aware retrieval and evidence assembly
-- **AI Enablement** — model/provider access, routing, inference, agent execution, tool interoperability, evaluation, guardrails, usage/cost, telemetry
+- **AI Enablement** is a capability family realized through separate Platform authorities rather than one owning Platform Product
+- **Model & Inference** — provider access, model catalog, Capability Profiles, bounded inference, routing, model evaluation/release, guardrails, usage/cost, provider health, and inference telemetry
+- **Agent Runtime** — Agent Definition/runtime lifecycle mechanics, durable Agent Run execution, harness semantics, context assembly, run/session memory, Tool Binding/mediation, Skill Runtime, delegation/handoff, agent evaluation, and Agent telemetry
 - **Analytics & Operational Intelligence** — derived measurement, signals, forecasting, recommendations, and operational insight
 
 Knowledge Graph is a first-class knowledge representation and graph retrieval is a first-class retrieval mode. Neither graph nor vector indexes become Product transactional authority.
@@ -269,22 +272,28 @@ Knowledge Graph is a first-class knowledge representation and graph retrieval is
 ```mermaid
 graph TB
     PRODUCT[Vertical AI Product / Copilot]
-    AI[AI Enablement Platform]
+    MODEL[Model & Inference Platform]
+    AGENT[Agent Runtime Platform]
     KNOW[Knowledge & Retrieval Platform]
     TOOLS[Product / Platform Tools]
-    MODELS[External or Local Model Providers]
+    PROVIDERS[External or Local Model Providers]
 
-    PRODUCT --> AI
+    PRODUCT -->|simple bounded inference| MODEL
+    PRODUCT -->|agentic execution| AGENT
     PRODUCT --> KNOW
-    AI --> KNOW
-    AI --> TOOLS
-    AI --> MODELS
+    AGENT --> MODEL
+    AGENT --> KNOW
+    AGENT --> TOOLS
+    MODEL --> PROVIDERS
 ```
 
-- Vertical AI Products own business workflow, Product UX, domain prompt/skill semantics, business tools, validation, and final outcomes
-- AI Platform owns model/provider and agent execution semantics
+- Vertical AI Products own business workflow, Product UX, domain prompt/skill meaning, business tools, validation, and final outcomes
+- Model & Inference owns provider/model access, Capability Profiles, bounded inference execution, routing, model-level evaluation/release, usage/cost, and provider health
+- Agent Runtime owns generic durable Agent execution semantics, Agent Run state, Harness/context/memory mechanics, Tool Binding/mediation state, delegation/handoff, and agent-runtime evaluation
 - Knowledge & Retrieval owns governed knowledge representation, graph/index lifecycle, retrieval, and provenance
-- Product/source domains remain authoritative for source business facts
+- Product/Platform Tool owners own Tool semantics, protected-resource authorization, and side effects
+- Agent Runtime is not Workflow, Work Management, Knowledge authority, Tool authority, or a Vertical AI Product
+- Simple Product inference may bypass Agent Runtime; Agent Runtime is not a universal AI hop
 - Provider/model switching is governed portability through capability matching and evaluation, not assumed equivalence
 
 ### 5.6 Platform Qualification
@@ -346,7 +355,8 @@ PAD approval is not physical-system design approval.
 | Deterministic rule runtime lifecycle | Rules & Decisioning |
 | Durable future temporal state | Scheduling |
 | Knowledge Asset/retrieval lifecycle | Knowledge & Retrieval |
-| Model/provider/agent execution | AI Enablement |
+| Model/provider access and bounded inference execution | Model & Inference |
+| Durable Agent execution, Harness, context assembly, Tool Binding, and run/session memory mechanics | Agent Runtime |
 | Artifact content/version lifecycle | Artifact & Document |
 | Evidence lifecycle | Audit & Evidence |
 | Cross-cutting governance requirement | Named Governance Authority |
@@ -465,7 +475,8 @@ Governance defines constraints and evidence; Products and Platforms execute thei
 | Scheduling | Delayed future triggers | Persisted occurrences and bounded misfire recovery |
 | Work Management / Workflow | Delayed shared operational coordination | Product authority remains intact; manual/local fallback where designed |
 | Knowledge & Retrieval | Search/RAG degradation | Product transactional operation remains independent where safe |
-| AI Provider / AI Platform | AI feature degradation | Provider fallback, human/deterministic fallback, fail-closed for unsafe automation |
+| Model provider / Model & Inference | Bounded inference degradation | Evaluated provider fallback, explicit unavailability, or Product non-AI fallback |
+| Agent Runtime | Agentic execution degradation | Durable Agent Run state survives restart; Product/Workflow authority remains intact and unsafe automation fails closed |
 | Workspace Experience | Cross-Product shell degradation | Direct Product access or bounded degraded experience where designed |
 | Governance tooling | Delayed assurance/admin activity | Existing compliant runtime continues; policy enforcement is not a universal runtime dependency |
 
@@ -496,6 +507,9 @@ Governance defines constraints and evidence; Products and Platforms execute thei
 - EAD-007 — governance and assurance architecture
 - ADR-GLB-011 — durable scheduling boundary
 - ADR-GLB-012 — AI, Knowledge, and Product authority separation
+- ADR-GLB-015 — Model & Inference and Agent Runtime authority separation
+- PAD-PLT-008 — Model & Inference Platform
+- PAD-PLT-016 — Agent Runtime Platform
 - ADR-GLB-013 — work, workflow, job, schedule, worker, and queue boundary
 - STD-GLB-010 — durable scheduled work
 - STD-GLB-011 — background job execution

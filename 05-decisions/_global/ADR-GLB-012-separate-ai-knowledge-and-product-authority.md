@@ -155,7 +155,8 @@ Tool protocols such as MCP MAY be supported as adapters. They do not become Prod
 
 - PAD-PLT-008 is rebaselined around AI execution
 - PAD-PLT-015 establishes Knowledge & Retrieval
-- AI SAD remains chartered until physical model/provider/runtime technologies are selected
+- AI execution remains separated from Product and Knowledge authority
+- ADR-GLB-015 further refines AI execution into separate Model & Inference and Agent Runtime Platform authorities; this ADR remains accepted at the macro authority boundary
 - graph/vector/search technology selection remains a downstream SAD/ADR decision
 
 ## 7. Compliance Impact
