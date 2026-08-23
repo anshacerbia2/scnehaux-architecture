@@ -3,8 +3,8 @@ doc_meta:
   id: SAD-013
   title: Scnehaux Scheduling Runtime
   owner: Scheduling Platform Team
-  version: 1.1.0
-  status: draft
+  version: 1.2.0
+  status: approved
   classification: restricted
   governed_by:
     - GDC-009
@@ -12,7 +12,7 @@ doc_meta:
   parent_pad: PAD-PLT-011
   review_cycle_days: 90
   created_date: 2026-08-22
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-08-24
   technologies:
     - name: golang
       type: backend-language
@@ -51,7 +51,7 @@ The deployable provides:
 
 ### 1.3 Requirement
 
-The runtime must remain correct under duplicate commands, concurrent replicas, process termination during due processing, broker outage, time-zone/DST transitions, near-due update/cancel races, and prolonged outage followed by recovery.
+The runtime must remain correct under duplicate commands, lost/ambiguous create responses, concurrent replicas, process termination during due processing, broker outage, time-zone/DST transitions, near-due update/cancel races, and prolonged outage followed by recovery.
 
 The default platform SLO inherited from PAD-PLT-011 is 99.9% of due Occurrences durably dispatched within 30 seconds of `scheduled_for` at mature production state.
 
@@ -192,12 +192,14 @@ sequenceDiagram
     participant S as Scheduling Runtime
     participant D as PostgreSQL
 
-    C->>S: Create Schedule + idempotency key
+    C->>S: Create Schedule + stable idempotency key
     S->>S: authenticate, authorize, validate target and time policy
     S->>D: atomic Schedule/idempotency/lifecycle-outbox transaction
     D-->>S: commit
     S-->>C: schedule_id, version, next occurrence
 ```
+
+The idempotency record is scoped to authenticated application/Tenant ownership. An equivalent retry with the same identity returns the same logical `schedule_id` even when the original response was lost. Reuse of the identity with conflicting semantic Schedule content is rejected. The Control API exposes owned query/reconciliation semantics sufficient for a caller to recover the binding without direct database access.
 
 ### 4.4 Runtime Flow — Due Occurrence and Dispatch
 
@@ -247,6 +249,7 @@ Logical state families include:
 - Schedule aggregate state
 - Occurrence state
 - command idempotency state
+- create-command semantic fingerprint and stable idempotency-to-`schedule_id` mapping required for lost-response recovery
 - registered-target projection
 - application/Tenant quota and consumption state
 - outbox publication state
@@ -275,13 +278,14 @@ Replicas hold no correctness-critical state exclusively in memory. PostgreSQL tr
 
 ### 6.1 API
 
-The Control API is versioned under the enterprise API standard and provides command/query capabilities for create, read/list, update, pause, resume, cancel, preview, occurrence query, replay, target discovery, and reconciliation.
+The Control API is versioned under the enterprise API standard and provides command/query capabilities for idempotent create, create-result recovery/reconciliation, read/list, update, pause, resume, cancel, preview, occurrence query, replay, target discovery, and reconciliation.
 
 Mutating commands require:
 
 - authenticated identity/workload context
 - canonical ownership scope
 - idempotency key
+- semantic consistency with any prior command using the same scoped idempotency identity
 - expected Schedule version where mutation races are possible
 - privileged reason/evidence metadata for replay, quota override, or cross-Tenant administration
 
@@ -414,6 +418,9 @@ Blocking gates include:
 - concurrent-replica occurrence uniqueness tests
 - restart/fault tests around materialization and outbox publication
 - Kafka schema compatibility and duplicate-delivery tests
+- lost-create-response retry tests proving the same logical `schedule_id` is returned
+- conflicting idempotency-key reuse tests
+- Notification binding-reconciliation contract tests covering Schedule creation followed by caller process loss before local binding persistence
 - Tenant isolation, quota, and saturation tests
 - secret and vulnerability scanning
 - architecture-document traceability/linting
@@ -426,6 +433,7 @@ Deployments are progressive and reversible according to EAD-005.
 
 - ADR-SCH-001 selects PostgreSQL temporal authority and Kafka dispatch
 - global outbox, database, event, resilience, and observability standards are inherited rather than redefined
+- Schedule creation is idempotent and recoverable after ambiguous responses; Scheduler never requires a caller to create a second logical Schedule merely because a response or caller-local binding write was lost
 - custom Scnehaux Scheduler Experience is a separate deployable under SAD-014
 - registered Deferred Notification Command is supported as a target only under STD-GLB-010 bounded-payload rules; business revalidation still targets the owning Product/Platform Worker
 

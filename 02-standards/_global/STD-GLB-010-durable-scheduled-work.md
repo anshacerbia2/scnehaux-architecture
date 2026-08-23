@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-010
   title: Enterprise Durable Scheduled Work Standard
   owner: Architecture Authority
-  version: 1.1.0
+  version: 1.2.0
   status: adopted
   classification: internal
   governed_by:
     - PAD-PLT-011
   review_cycle_days: 180
   created_date: 2026-08-22
-  last_reviewed: 2026-08-23
+  last_reviewed: 2026-08-24
 ---
 
 # Enterprise Durable Scheduled Work Standard (STD-GLB-010)
@@ -50,6 +50,12 @@ It excludes request deadlines, short retry backoff, tight connector polling loop
 
 - Notification **MAY** register its own future delivery after communication intent, recipient snapshot, governed content/template version, and required delivery semantics are frozen
 - This mode **SHOULD** be the default for pure scheduled communication because it keeps Scheduler payload minimal and establishes Notification lifecycle/status/cancellation at creation time
+- Notification **MUST** durably record its local scheduling intent before treating the cross-platform Schedule binding as complete
+- Schedule creation for a Frozen Notification **MUST** use a stable idempotency identity so retry after timeout, process loss, or an ambiguous response cannot create a second logical Schedule for the same registration generation
+- Notification **MUST** be able to reconcile incomplete or ambiguous Schedule bindings without relying on an atomic transaction spanning Notification and Scheduling
+- Frozen communication semantics **MUST** remain immutable after acceptance; operational provider route, active credential/secret version, provider endpoint, failover route, and rate-limit state **SHOULD** be resolved at delivery time unless an explicit governed contract pins a configuration version
+- Notification cancellation **MUST** remain the final delivery gate for a Frozen Notification. Scheduler cancellation reduces future dispatch but **MUST NOT** be relied on to retract an Occurrence already durably dispatched
+- A late/duplicate `occurrence.due` for a terminally cancelled Notification **MUST** be consumed idempotently as a no-op and **MUST NOT** resurrect delivery
 
 **Deferred Notification Command**
 
@@ -69,6 +75,8 @@ Every scheduled communication contract **MUST** make its selected mode explicit 
 ### 3.2 Identity and Ownership
 
 - Every Schedule **MUST** have a globally unique, non-enumerable `schedule_id`
+- Every retryable Schedule-create command **MUST** carry a stable idempotency identity scoped to the authenticated owning application/Tenant context
+- Reuse of that identity with an equivalent semantic request **MUST** resolve to the same logical Schedule; reuse with conflicting semantic content **MUST** be rejected
 - Every Schedule **MUST** have one owning `application_id`
 - Every Tenant-scoped Schedule **MUST** carry the canonical `tenant_id` issued by the Organization authority
 - Consumer-supplied ownership identifiers **MUST NOT** override ownership derivable from authenticated workload/client context
@@ -131,6 +139,7 @@ Additional rules:
 - Resume **MUST** apply the persisted misfire policy to elapsed time
 - Cancel **MUST** be terminal for that Schedule identity
 - Cancellation **MUST NOT** claim to retract an Occurrence whose Trigger was already durably dispatched
+- A consumer-owned terminal state **MUST** remain authoritative for whether the consumer effect may proceed after dispatch; Scheduler cancellation is not a substitute for consumer-side terminal-state/idempotency checks
 - Near-due update/cancel races **MUST** have deterministic tested semantics
 - Operational replay **MUST** re-dispatch the same Occurrence identity rather than fabricate a new business occurrence
 
@@ -190,6 +199,10 @@ The following timing mechanisms remain outside this standard when they do not re
 
 - Architecture review checks every durable schedule implementation against PAD-PLT-011 and this standard
 - Contract tests verify one-time, recurring, pause, resume, update, cancel, replay, and optimistic-concurrency semantics
+- Contract tests verify lost-response Schedule creation retries return the same logical Schedule and conflicting idempotency-key reuse is rejected
+- Notification/Scheduling composition tests inject process loss between local Notification acceptance, Schedule creation, and binding persistence and prove reconciliation without duplicate Schedule creation
+- Cancellation-race tests prove a late/duplicate due Occurrence cannot resurrect a terminally cancelled Notification
+- Frozen-notification tests prove communication-semantic fields remain immutable while non-pinned operational provider configuration/credentials can rotate before delivery
 - A time-zone golden corpus verifies DST gaps, repeated local times, leap-calendar boundaries, and time-zone-data upgrades
 - Concurrency tests prove one logical Occurrence under multiple Scheduler replicas
 - Restart and fault-injection tests prove accepted Schedule state and un-dispatched Occurrences survive process loss

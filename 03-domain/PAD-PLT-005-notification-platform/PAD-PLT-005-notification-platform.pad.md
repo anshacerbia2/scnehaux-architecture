@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-005
   title: Enterprise Notification Platform
   owner: Notification Platform Team
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -14,7 +14,7 @@ doc_meta:
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-08-24
   fulfilled_by:
     - SAD-005
     - SAD-015
@@ -24,7 +24,7 @@ doc_meta:
 
 ## 1. Purpose & Scope
 
-The Enterprise Notification Platform provides shared communication-delivery capability for Scnehaux Products and Platforms. It accepts an authorized communication intent, freezes the minimum delivery snapshot required for correctness, resolves a governed template/channel variant, routes through an authorized sender/channel profile, executes provider delivery asynchronously, applies communication retry policy, and tracks normalized delivery outcomes.
+The Enterprise Notification Platform provides shared communication-delivery capability for Scnehaux Products and Platforms. It accepts an authorized communication intent, freezes the minimum communication-semantic snapshot required for correctness, resolves a governed template/channel variant, routes through an authorized sender/channel profile, executes provider delivery asynchronously, applies communication retry policy, and tracks normalized delivery outcomes.
 
 Products own **why a communication is needed**, the business event or rule behind it, and business-recipient eligibility. Notification owns **how an accepted communication is rendered and delivered**.
 
@@ -55,7 +55,7 @@ Notification also owns **Application Notification Profile** configuration: the m
 ### 2.2 Relationships
 
 - **Products/Platforms:** publish or submit authorized Notification intents; Product business authority remains upstream
-- **Scheduling Platform:** provides generic durable future wake-up when a Notification is already frozen and only delivery time remains
+- **Scheduling Platform:** provides generic durable future wake-up when a Notification is already accepted/frozen and only delivery time remains; cross-platform registration uses an idempotent Schedule command and recoverable binding rather than a correctness-critical distributed transaction
 - **Document Platform:** supplies immutable attachment/version references when attachments are used
 - **Identity / Organization / Application Trust:** establish authenticated caller, application ownership, Tenant scope, and optional Principal contact resolution without requiring every recipient to be a Principal; administrative profile validation may use bounded/local projections and normal delivery does not require a per-send synchronous Organization call
 - **Trust Services:** hold provider/API/SMTP credentials; Notification stores only governed provider/channel configuration and secret references
@@ -111,7 +111,8 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 | Provider Acceptance | Provider accepted a send request; not necessarily final channel delivery |
 | Delivery Receipt | Provider/channel evidence of final or intermediate delivery where available |
 | Delivery Status | Provider-independent normalized state owned by Notification |
-| Scheduled Notification | Frozen Notification awaiting a durable future wake-up from Scheduling |
+| Scheduled Notification | Accepted Notification whose communication semantics are frozen and which awaits a durable future wake-up from Scheduling |
+| Scheduling Binding | Recoverable association between one Notification scheduling intent and the Scheduler Schedule identity created idempotently for it |
 
 ### 3.3 Domain Policies
 
@@ -127,6 +128,10 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 - Product/Legal authority retains business-specific consent meaning; Notification enforces communication preferences/policy facts within its declared scope
 - Generic future scheduling is delegated to the Scheduling Platform
 - Pure scheduled communication SHOULD use a frozen Notification registered with Scheduling when recipient/content/version semantics must be preserved from creation time
+- Frozen Notification preserves communication meaning at acceptance time, including recipient snapshot, immutable template/content version and data, selected channel, logical sender identity where required, immutable attachment/version references, and business correlation needed for the accepted communication
+- Provider route, current provider credential/secret version, provider endpoint, failover route, rate-limit state, and comparable operational delivery machinery SHOULD be resolved at delivery time from the current valid Notification-owned configuration unless an explicit governed contract requires a pinned configuration version
+- Frozen Notification registration SHALL NOT depend on an atomic cross-service transaction between Notification and Scheduling; Notification SHALL durably record its local scheduling intent, register the Schedule with a stable idempotency identity, persist/recover the returned binding, and reconcile missing or ambiguous bindings
+- Notification cancellation is authoritative for whether a not-yet-started Notification Delivery may proceed; cancellation of the corresponding Scheduler Schedule is asynchronous cleanup/optimization and a late or already-dispatched Scheduling Occurrence SHALL NOT resurrect a terminally cancelled Notification
 - A Product MAY schedule a bounded Deferred Notification Command directly to Notification when no Notification must exist before due time and Scheduler does not become a communication-data store
 - If business eligibility, recipient, or content must be revalidated at due time, Scheduling targets the owning Product/Platform Worker before Notification is requested
 - Application Notification Profile resolution is Notification authority; Organization/Application Trust supply canonical context/ownership and are not replaced by Notification-local configuration
@@ -150,7 +155,7 @@ The Notification Platform provides:
 - Channel/sender/provider profile management
 - Application Notification Profile management by authorized application/Tenant/channel scope
 - deferred Notification command acceptance from registered Scheduling targets
-- Frozen scheduled-notification registration
+- Frozen scheduled-notification registration with idempotent/reconcilable Scheduling binding
 - Delivery retry and cancellation
 - Provider callback/receipt normalization
 - Delivery status query
@@ -161,7 +166,7 @@ The Notification Platform provides:
 
 The Notification Platform consumes:
 
-- Scheduling Platform for durable future wake-up of frozen Notifications
+- Scheduling Platform for durable future wake-up of frozen Notifications using stable idempotent registration and reconciliation semantics
 - Document Platform for immutable attachment versions
 - Identity / Organization / Application Trust for caller, ownership, Tenant scope, and optional Principal contact resolution
 - Trust Services for provider/SMTP/API credential material through secret references
@@ -170,7 +175,7 @@ The Notification Platform consumes:
 - Audit & Evidence for privileged-operation evidence
 - optional reusable Integration connectors where justified by the specific provider relationship
 
-SMTP host/port/TLS mode, sender identity, provider selection, messaging-provider endpoint metadata, and comparable delivery configuration remain Notification-owned because they directly control Notification behavior. Passwords, OAuth refresh tokens, private keys, and API secrets remain Trust-owned.
+SMTP host/port/TLS mode, sender identity, provider selection, messaging-provider endpoint metadata, and comparable delivery configuration remain Notification-owned because they directly control Notification behavior. Passwords, OAuth refresh tokens, private keys, and API secrets remain Trust-owned. For a Frozen Notification, communication semantics are immutable while operational provider realization is late-bound by default unless an explicit version-pinning contract says otherwise.
 
 ## 5. Trust & Data Boundaries
 
@@ -200,7 +205,7 @@ Notification manages:
 - Delivery and Delivery Attempt state
 - provider identifiers, callbacks, and normalized receipts
 - communication preference metadata within the platform scope
-- scheduled-notification binding to a Scheduling identifier
+- scheduled-notification registration intent, reconciliation metadata, and binding to a Scheduling identifier
 
 Recipient endpoints are treated as PII where applicable.
 
@@ -215,6 +220,7 @@ Notification does not own Product business records, HR/finance/travel transactio
 - Target RTO: **<= 1 hour**
 - Target RPO: **<= 15 minutes**
 - accepted Notifications are delayed rather than silently lost during platform/provider outage
+- accepted frozen Notifications with incomplete or ambiguous Schedule binding remain recoverable through idempotent registration and reconciliation rather than becoming silently unscheduled
 
 ### 6.2 Delivery SLO and Scalability
 
@@ -237,7 +243,7 @@ Final provider delivery time is not used as a universal platform SLO because pro
 
 ### 6.4 Audit and Interoperability
 
-Traceable lifecycle includes request acceptance, snapshot creation, template/version selection, future schedule binding, provider attempt, provider acceptance, receipt, retry, permanent failure, cancellation, replay, and privileged configuration change.
+Traceable lifecycle includes request acceptance, snapshot creation, template/version selection, schedule-registration intent, Schedule binding/reconciliation, provider attempt, provider acceptance, receipt, retry, permanent failure, cancellation, replay, and privileged configuration change.
 
 Provider-specific vocabulary stays behind adapters; Products consume stable Notification contract semantics.
 
@@ -276,6 +282,9 @@ Scheduling Team owns generic durable future trigger mechanics. Trust Services ow
 - Notification SHALL NOT own Product business timing or eligibility
 - Notification SHALL NOT require every recipient to be an Identity Principal
 - generic durable scheduling SHALL NOT be reimplemented inside Notification
+- Frozen Notification SHALL durably persist its local scheduling intent before depending on Scheduling and SHALL reconcile incomplete or ambiguous Schedule bindings using a stable idempotency identity
+- Notification terminal cancellation SHALL gate delivery even if Scheduling cancellation races with or follows durable occurrence dispatch
+- frozen communication semantics SHALL remain immutable, while operational provider routing/credentials SHOULD remain late-bound unless an explicit governed pinning contract requires otherwise
 - Notification SHALL own application/Tenant/channel-to-provider/template mapping but SHALL NOT become authoritative for Organization/Tenant/Workspace or application ownership
 - normal Notification delivery SHALL NOT require a synchronous Organization lookup when validated local context/projection is sufficient
 - Workspace Experience, Workflow, and Work Management SHALL NOT be introduced solely to resolve Notification provider/profile configuration

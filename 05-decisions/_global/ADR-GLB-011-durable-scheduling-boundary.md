@@ -92,6 +92,12 @@ Use when the Product is already authorizing **this communication** and recipient
 
 **Efficiency:** one additional upfront call, but smallest Scheduler payload, earliest validation, immediate Notification status/cancel/audit identity, and stable recipient/content/version semantics.
 
+**Consistency:** Notification does not perform a distributed transaction with Scheduling. It durably records a local scheduling intent, creates/retries the Schedule with a stable idempotency identity, persists the resulting binding, and reconciles any ambiguous create response or process-loss window. A Schedule that was created while the Notification process lost the response must be rediscovered/rebound rather than recreated.
+
+**Cancellation:** Notification terminal state is the final authority over whether delivery may proceed. Scheduler cancellation is attempted asynchronously to avoid unnecessary future dispatch, but a late or already-dispatched Occurrence cannot resurrect a cancelled Notification.
+
+**Freeze boundary:** communication meaning is frozen, including recipient snapshot, immutable content/template version and data, selected channel, required logical sender identity, immutable attachments, and business correlation. Operational delivery machinery such as current provider route, credential/secret version, endpoint, failover route, and rate-limit state is late-bound by default unless an explicit governed contract pins a configuration version.
+
 #### Mode B — Deferred Notification Command
 
 ```text
@@ -158,6 +164,7 @@ Durable temporal scheduling and trigger dispatch belong to **Engineering & Runti
 
 - Products using enterprise durable scheduling gain a shared asynchronous dependency
 - Consumers must implement occurrence-level idempotency
+- Cross-platform callers such as Notification must implement idempotent registration reconciliation because Scheduler creation and caller binding cannot share one local transaction
 - Schedule lifecycle and Product business policy can drift and therefore require reconciliation
 - Teams must distinguish local transient timers from enterprise durable schedules instead of treating every timed action identically
 

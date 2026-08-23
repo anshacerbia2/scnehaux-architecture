@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-005
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
   parent_pad: PAD-PLT-005
   review_cycle_days: 90
   created_date: 2026-07-06
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-08-24
   technologies:
     - name: golang
       type: backend-language
@@ -43,7 +43,7 @@ The deployable provides:
 - Channel/Sender Profile and Provider Binding management
 - Application Notification Profile management and due-time profile resolution by application/Tenant/channel scope
 - Email, WhatsApp/messaging, SMS, Push, and governed Webhook adapter model
-- Scheduling adapter for frozen future delivery
+- Scheduling adapter with durable registration intent, idempotent Schedule creation, binding reconciliation, and asynchronous cancellation for frozen future delivery
 - delivery planning and channel-specific worker pools
 - provider callback/receipt ingestion
 - retry/permanent/unknown outcome classification
@@ -54,7 +54,7 @@ Initial implementation prioritizes Email and WhatsApp because they have immediat
 
 ### 1.3 Requirement
 
-The runtime must remain correct under duplicate Notification commands, process restart, provider timeout with unknown outcome, duplicate provider callback, provider outage, future-trigger duplicates, template version changes, cancellation races, and noisy-neighbor Tenant/provider load.
+The runtime must remain correct under duplicate Notification commands, process restart, provider timeout with unknown outcome, duplicate provider callback, provider outage, future-trigger duplicates, process loss or timeout during cross-platform Schedule registration, template/provider configuration rotation before a frozen delivery becomes due, cancellation races, and noisy-neighbor Tenant/provider load.
 
 ### 1.4 Constraint
 
@@ -149,7 +149,7 @@ The initial Go deployable is a modular application with bounded modules:
 5. Channel/Sender Profile
 6. Application Notification Profile
 7. Provider Binding & Secret Reference
-8. Scheduling Adapter
+8. Scheduling Registration, Binding & Reconciliation
 9. Delivery Planning
 10. Channel Dispatch Workers
 11. Provider Adapters
@@ -227,20 +227,34 @@ sequenceDiagram
 sequenceDiagram
     participant P as Product
     participant N as Notification
+    participant D as Notification PostgreSQL
+    participant R as Schedule Registration Worker
     participant S as Scheduling
     participant K as Kafka
 
     P->>N: Notification intent + scheduled_at
-    N->>N: freeze recipient + template/version + channel profile
-    N->>S: register one-time future wake-up
-    S-->>N: schedule_id
-    N->>N: persist schedule binding
+    N->>D: atomic Notification + frozen communication snapshot + schedule-registration intent
+    D-->>N: commit
+    N-->>P: accepted notification_id
+    R->>D: claim pending registration
+    R->>S: create one-time Schedule + stable idempotency identity
+    S-->>R: same schedule_id on equivalent retry
+    R->>D: persist/reconcile Schedule binding
     S-->>K: occurrence.due
     K-->>N: occurrence.due
-    N->>N: dedupe occurrence_id and transition delivery to ready
+    N->>D: dedupe occurrence_id + verify Notification terminal state
+    N->>D: transition eligible delivery to ready
 ```
 
+No correctness-critical transaction spans Notification and Scheduling. If Schedule creation succeeds but the response/binding persistence is lost, retry/reconciliation reuses the stable registration identity and recovers the same logical `schedule_id`.
+
+The frozen snapshot preserves communication semantics: recipient snapshot, immutable template/content version and data, selected channel, required logical sender identity, immutable attachment versions, and business correlation. Active provider route, credential/secret version, endpoint, failover route, and rate-limit state are resolved from current valid Notification-owned configuration at delivery time unless an explicit governed contract pins a configuration version.
+
 This path is prohibited when Product business eligibility must be revalidated at due time. In that case Scheduling wakes the Product worker, which requests Notification after revalidation.
+
+#### 4.4.1 Cancellation Race
+
+Notification cancellation commits the terminal Notification/Delivery state first and emits the required evidence/outbox facts. Cancellation of the bound Schedule is then retried asynchronously using the stored `schedule_id`. If Scheduling has already durably dispatched the Occurrence, Notification consumes/deduplicates it but treats it as a no-op when the Notification is terminally cancelled. A due Occurrence never resurrects a cancelled Notification.
 
 ### 4.5 Runtime Flow — Deferred Notification Command
 
@@ -317,7 +331,7 @@ One private PostgreSQL database is authoritative for Notification runtime state.
 - Application Notification Profile
 - Provider Binding with secret references only
 - communication preference metadata within Notification scope
-- Scheduling binding
+- Scheduling registration intent, registration generation/idempotency identity, binding, and reconciliation metadata
 - outbox publication state
 
 Exact DDL, indexes, retention partitions, provider-specific fields, and queries belong in TDDs.
@@ -330,6 +344,7 @@ Exact DDL, indexes, retention partitions, provider-specific fields, and queries 
 - Tenant-scoped data uses enterprise RLS where applicable
 - PII columns are classified and excluded/redacted from telemetry
 - immutable Template Version and Recipient Snapshot records are enforced by application/schema invariants
+- Schedule registration state supports crash-safe retry/reconciliation and prevents one Notification registration generation from being rebound to multiple logical Schedules
 
 ### 5.3 Cache
 
@@ -346,6 +361,7 @@ Accepted Notification and Delivery state survive process restart in PostgreSQL. 
 The versioned API supports:
 
 - Notification acceptance/query/cancel
+- scheduled-Notification registration/binding status and reconciliation query
 - Template Family/Version/Channel Variant/schema administration
 - template validation/preview/test-send
 - Channel/Sender Profile and Provider Binding administration
@@ -370,7 +386,7 @@ com.scnehaux.notification.cancelled.v1
 
 ### 6.3 Consumed Events and Capabilities
 
-- Scheduling `occurrence.due` for frozen future delivery
+- Scheduling idempotent Schedule create/cancel/query semantics and `occurrence.due` for frozen future delivery
 - Document immutable attachment references
 - locally usable Identity/Organization/Application Trust context
 - secret material resolved at runtime from Trust Services
@@ -431,6 +447,8 @@ OpenTelemetry exposes:
 - retry and permanent-failure counts
 - unknown-outcome/reconciliation backlog
 - callback verification/deduplication state
+- pending/failed Schedule-registration age and binding-reconciliation backlog
+- cancelled-Notification late-occurrence no-op count
 - Tenant/application/channel/provider quota pressure
 - cost units per channel/provider
 
@@ -442,10 +460,11 @@ OpenTelemetry exposes:
 - an unknown provider outcome is reconciled before duplicate send when provider semantics require it
 - circuit breakers isolate a failing provider from other providers/channels
 - consumer/event processing follows the enterprise idempotency and DLQ standard
+- Schedule registration and cancellation calls are retried with stable idempotency identities; an ambiguous create response is reconciled before any new logical Schedule may be created
 
 ### 8.5 Runbook
 
-Runbooks cover provider outage, sender credential rotation, provider rate-limit exhaustion, stuck backlog, duplicate callback, unknown delivery outcome, Scheduling outage, callback outage, replay/reconciliation, and rollback.
+Runbooks cover provider outage, sender credential rotation, provider rate-limit exhaustion, stuck backlog, duplicate callback, unknown delivery outcome, Scheduling outage, pending/ambiguous Schedule binding reconciliation, cancellation race/late occurrence, callback outage, replay/reconciliation, and rollback.
 
 ## 9. Deployment Strategy
 
@@ -476,6 +495,10 @@ Blocking gates include:
 - event schema compatibility
 - Notification and Delivery idempotency tests
 - duplicate-send fault-injection tests
+- crash/fault tests across Notification acceptance, Schedule creation, lost response, and binding persistence
+- Schedule-registration idempotency and orphan/missing-binding reconciliation tests
+- cancellation-race tests proving late/duplicate `occurrence.due` cannot resurrect a terminal Notification
+- frozen-semantics tests proving immutable communication fields remain fixed while non-pinned provider credentials/routes may rotate before due time
 - retry/error-classification tests
 - secret scanning and dependency vulnerability scans
 - performance/backpressure/bulkhead tests
@@ -492,6 +515,9 @@ Blocking gates include:
 - communication provider relationships are naturally Notification-owned; reusable Integration machinery is optional
 - custom Notification operational experience is realized separately by SAD-015
 - Frozen Notification is the default scheduled-communication mode; bounded Deferred Notification Command is also supported when Scheduler does not become a communication-data authority
+- Frozen Notification uses local durable registration intent plus idempotent/reconcilable Schedule binding; no distributed transaction is assumed across Notification and Scheduling
+- Notification terminal cancellation remains the final delivery gate when Scheduler cancellation races with durable occurrence dispatch
+- Frozen communication meaning is immutable while operational provider realization is late-bound by default unless an explicit governed version pin is required
 - Application Notification Profile is Notification-owned configuration; Organization/Application Trust remain canonical for Tenant/application identity and ownership
 
 ### 10.2 Rejected

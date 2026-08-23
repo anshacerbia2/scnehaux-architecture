@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-011
   title: Enterprise Scheduling Platform
   owner: Scheduling Platform Team
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -14,7 +14,7 @@ doc_meta:
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-08-22
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-08-24
   fulfilled_by:
     - SAD-013
     - SAD-014
@@ -104,6 +104,8 @@ A consumer integrates through versioned schedule lifecycle commands and asynchro
 
 - A consumer owns **why** and **what**; Scheduling owns **when** and durable trigger state
 - Every Schedule has one owning application and, when Tenant-scoped, one canonical Tenant
+- Schedule registration is idempotent under a stable consumer command identity; a retry after timeout or ambiguous response MUST resolve to the same logical Schedule when the semantic request is unchanged, and conflicting reuse of the same identity MUST be rejected
+- Consumers and operators can reconcile a Schedule registration through owned identifiers/correlation without direct database access
 - Every due Occurrence has a stable identity reused across dispatch retries and replay
 - Dispatch is at-least-once; consumers are idempotent on occurrence identity
 - Scheduler considers an Occurrence dispatched when the governed messaging boundary durably accepts it
@@ -124,6 +126,7 @@ The Scheduling Platform provides logical capabilities for:
 
 - One-Time Schedule Registration
 - Recurring Schedule Registration
+- Idempotent Schedule Registration Recovery and Reconciliation
 - Schedule Query and Ownership Discovery
 - Schedule Update
 - Pause / Resume / Cancel
@@ -273,6 +276,7 @@ Workflow Team owns workflow timer/deadline semantics. Notification Team owns not
 - Scheduling SHALL NOT resolve Notification provider/channel credentials or Application Notification Profiles
 - Deferred Notification targets SHALL use a registered contract and bounded non-secret trigger input
 - Consumers SHALL implement occurrence-level idempotency
+- Consumers SHALL use a stable registration idempotency identity for retryable create operations and SHALL NOT manufacture a second Schedule solely because the original create response was lost
 - Durable recurrence SHALL declare time-zone and misfire semantics
 - New shared durable scheduling authority outside this PAD requires architecture review
 - Local transient timing remains local when it does not require the durable application schedule contract
