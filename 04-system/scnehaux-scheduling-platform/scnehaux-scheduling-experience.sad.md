@@ -119,7 +119,7 @@ The browser communicates only with the Scheduling Experience origin. The server-
 
 ### 3.3 Internal
 
-The SPA is organized by platform capability rather than vendor UI concepts:
+The React application is organized by platform capability rather than vendor UI concepts:
 
 - Schedule Management
 - Occurrence Timeline
@@ -188,13 +188,13 @@ API models are generated or validated from the governed Scheduling API contract.
 
 ### 5.4 Stateless Client
 
-Reloading the SPA loses only ephemeral UI state. Schedule/Occurrence state is reconstructed from the Control API.
+Reloading the Experience loses only ephemeral browser state. Schedule/Occurrence state is reconstructed through the same-origin BFF from the Scheduling Control API.
 
 ## 6. Integration Contracts
 
 ### 6.1 API
 
-The SPA consumes only the versioned Scheduling Control API for schedules, occurrences, preview, replay, quotas, targets, and operational projections.
+The Experience BFF consumes the versioned Scheduling Control API server-to-server for schedules, occurrences, preview, replay, quotas, targets, and operational projections. Browser JavaScript consumes only same-origin Experience routes.
 
 ### 6.2 Events
 
@@ -211,21 +211,34 @@ The browser never consumes RabbitMQ, Kafka, or another messaging substrate direc
 
 ### 7.1 Authentication
 
-The BFF owns the enterprise browser OIDC/session integration. Session cookies are Secure, HttpOnly, and SameSite according to enterprise browser policy. Access/refresh tokens are not persisted in browser local/session storage and are not exposed to browser JavaScript.
+Identity remains authoritative for authentication and identity-session validity. The BFF owns only the browser-facing application-session binding and delegated token custody for the Scheduling Experience. Session cookies are Secure, HttpOnly, and SameSite according to enterprise browser policy. Access/refresh tokens are not persisted in browser local/session storage and are not exposed to browser JavaScript.
 
 ### 7.2 Authorization
 
 The Scheduling API is authoritative for authorization. The SPA passes context and intent but cannot grant itself Tenant, application, replay, or quota authority.
 
-### 7.3 Encryption
+### 7.3 Browser Security
+
+The Experience enforces:
+
+- anti-CSRF protection for state-changing requests
+- Origin and Host validation
+- restrictive Content Security Policy
+- clickjacking protection
+- governed redirect allowlist
+- safe output encoding and React rendering defaults
+- no permissive wildcard CORS for authenticated routes
+- secure cookie attributes and session rotation according to enterprise browser policy
+
+### 7.4 Encryption
 
 All runtime network traffic uses enterprise TLS policy.
 
-### 7.4 Secrets
+### 7.5 Secrets
 
 No Scheduler infrastructure secret, database credential, RabbitMQ/Kafka credential, access token, refresh token, or provider credential is shipped to the browser bundle or client telemetry.
 
-### 7.5 Audit
+### 7.6 Audit
 
 Privileged operations require explicit reason capture and expose resulting evidence correlation. UI telemetry never replaces server-side evidence.
 
@@ -264,7 +277,7 @@ Operational guidance covers API degradation, stale client cache, authentication/
 
 ### 9.1 Environment
 
-Immutable frontend artifacts are promoted across governed environments. Environment configuration contains only public runtime endpoints and non-secret settings.
+Immutable Scheduling Experience artifacts containing the Go web boundary and compiled React assets are promoted across governed environments. Environment configuration contains only server-resolved endpoints and intentionally public non-secret browser settings.
 
 ### 9.2 Infrastructure
 
@@ -295,7 +308,8 @@ Blocking gates include:
 ### 10.1 Accepted
 
 - fully custom Scnehaux operational experience
-- Scheduling Control API is the only Scheduling runtime boundary exposed to the browser
+- Scheduling Experience BFF is the only Scheduling runtime boundary exposed to the browser
+- Scheduling Control API is consumed server-to-server only by the Experience BFF
 - single deployable Go web boundary serving React assets and same-origin BFF
 - server-side browser token/session custody
 - recurrence/DST preview is server-authoritative

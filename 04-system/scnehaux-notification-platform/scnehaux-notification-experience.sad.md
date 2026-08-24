@@ -180,7 +180,7 @@ A secret value is write-only from the browser perspective. The BFF does not pers
 
 ### 5.1 Storage
 
-The frontend owns no Notification-authoritative storage. Browser state contains only ephemeral editing/query state.
+The Experience owns no Notification-authoritative storage. Browser state contains only ephemeral editing/query state, while any server-side application-session state remains authentication/UX state rather than Notification authority.
 
 ### 5.2 Cache
 
@@ -192,13 +192,13 @@ Frontend API models are derived from the governed Notification contract. Templat
 
 ### 5.4 Stateless Client
 
-Reload reconstructs durable state from SAD-005. Unsaved secret entry is intentionally lost rather than persisted.
+Reload reconstructs durable Notification state through the same-origin BFF from SAD-005. Unsaved secret entry is intentionally lost rather than persisted.
 
 ## 6. Integration Contracts
 
 ### 6.1 API
 
-The SPA consumes Notification APIs for templates, channel profiles, Application Notification Profiles, provider binding, Notification/Delivery history, test send, reconciliation, quotas, and operational views. The UI selects only authorized application/Tenant contexts surfaced by Notification APIs; it does not become authoritative for Organization or application ownership.
+The Experience BFF consumes versioned Notification APIs server-to-server for templates, channel profiles, Application Notification Profiles, provider binding, Notification/Delivery history, test send, reconciliation, quotas, and operational views. Browser JavaScript consumes only same-origin Experience routes. The UI selects only authorized application/Tenant contexts surfaced through Notification contracts; it does not become authoritative for Organization or application ownership.
 
 ### 6.2 Events
 
@@ -215,21 +215,35 @@ RabbitMQ, Kafka, and any other messaging substrate are never exposed to the brow
 
 ### 7.1 Authentication
 
-The BFF owns the enterprise browser OIDC/session integration. Session cookies are Secure, HttpOnly, and SameSite according to enterprise browser policy. Access/refresh tokens are not persisted in browser local/session storage or exposed to browser JavaScript.
+Identity remains authoritative for authentication and identity-session validity. The BFF owns only the browser-facing application-session binding and delegated token custody for the Notification Experience. Session cookies are Secure, HttpOnly, and SameSite according to enterprise browser policy. Access/refresh tokens are not persisted in browser local/session storage or exposed to browser JavaScript.
 
 ### 7.2 Authorization
 
 Server-side Notification authorization controls every mutation and privileged operation. UI role/visibility state is presentation only.
 
-### 7.3 Encryption
+### 7.3 Browser Security
+
+The Experience enforces:
+
+- anti-CSRF protection for state-changing requests
+- Origin and Host validation
+- restrictive Content Security Policy
+- clickjacking protection
+- governed redirect allowlist
+- safe output encoding and React rendering defaults
+- no permissive wildcard CORS for authenticated routes
+- isolated sandbox/CSP for template preview
+- secure cookie attributes and session rotation according to enterprise browser policy
+
+### 7.4 Encryption
 
 Enterprise TLS policy protects all runtime connections.
 
-### 7.4 Secrets
+### 7.5 Secrets
 
 Provider secrets are write-only from the browser perspective. They are never rendered after registration, stored in local/session storage, persisted by the Experience, exposed in query caches, placed in asynchronous retry stores, or emitted to logs/traces/analytics. Only secret-reference metadata may be displayed.
 
-### 7.5 Audit
+### 7.6 Audit
 
 Template publication, provider/channel config, test-send, replay/reconciliation, and cross-Tenant operations capture explicit scope/reason and expose evidence correlation.
 
@@ -263,7 +277,7 @@ Runbooks cover API degradation, stale client data, authentication/session failur
 
 ### 9.1 Environment
 
-Immutable frontend artifacts are promoted between governed environments. Environment configuration contains public endpoints/settings only.
+Immutable Notification Experience artifacts containing the Go web boundary and compiled React assets are promoted between governed environments. Environment configuration contains only server-resolved endpoints and intentionally public non-secret browser settings.
 
 ### 9.2 Infrastructure
 
@@ -298,7 +312,8 @@ Blocking gates include:
 ### 10.1 Accepted
 
 - custom Scnehaux Notification UI
-- Notification Control API as the only Notification runtime boundary exposed to the browser
+- Notification Experience BFF is the only Notification runtime boundary exposed to the browser
+- Notification Control API is consumed server-to-server only by the Experience BFF
 - single deployable Go web boundary serving React assets and same-origin BFF
 - server-side browser token/session custody
 - write-only provider-secret registration experience
@@ -321,11 +336,11 @@ Rejected because it couples product experience, Tenant semantics, authorization,
 
 Rejected because it exposes vendor credentials and bypasses Notification authorization, evidence, and normalized provider semantics.
 
-#### 10.2.2A Unsandboxed Template Preview
+#### 10.2.3 Unsandboxed Template Preview
 
 Rejected because attacker-controlled or malformed template content must not execute with the administrative application's origin privileges.
 
-#### 10.2.3 Browser Read Access to Stored Provider Secrets
+#### 10.2.4 Browser Read Access to Stored Provider Secrets
 
 Rejected because credential disclosure is unnecessary for administration and violates the Trust boundary.
 
