@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 # Document types that reference deployable technology surfaces.
 _TECHNOLOGY_HOLD_DOC_TYPES = frozenset({"SAD", "TDD"})
 
+# Statuses that assert the artifact is, or has been, an official baseline. Every GDC guideline
+# defines its own status set, so this is the union of the baseline-bearing values across them
+# rather than one document type's list. Pre-baseline statuses -- `chartered`, `draft`,
+# `proposed` -- are deliberately absent: see _validate_approved_version_stability.
+_BASELINE_STATUSES = frozenset({"approved", "deprecated"})
+
 
 def validate_exempt_age(doc_meta: dict, doc_status: str, violation_severity: str, global_rules: dict) -> list[tuple[str, str]]:
     """
@@ -106,6 +112,54 @@ def _validate_review_age(v: BaseValidator) -> None:
                     "review_age_violation",
                     error_msg,
                 )
+
+
+def _validate_approved_version_stability(v: BaseValidator) -> None:
+    """
+    Enforce GDC-000 Section 2.6 item 6: a versioned artifact that has reached a baseline
+    status MUST carry a stable Semantic Version.
+
+    GDC-000 Section 2.6 item 4 mandates Semantic Versioning, under which major version zero
+    means the artifact is in initial development and anything may change at any time. A
+    document declaring `approved` -- "approved for implementation", the blueprint other teams
+    build against -- while sitting at `0.y.z` therefore says two contradictory things about
+    the same artifact, and a reader has no way to know which one to trust.
+
+    The distinction matters at the point where it costs something. A design at 0.4.0 tells an
+    implementer that the contract may move underneath their code; a design marked approved
+    tells them it will not. Both readings were true of six TDDs in this ecosystem, all six of
+    which already had code written against them.
+
+    `chartered`, `draft`, and `proposed` are deliberately not covered: `0.y.z` is exactly the
+    right version for an artifact that is recognized or under review but not yet a baseline.
+    `deprecated` is covered, because an artifact can only be phased out after having been the
+    baseline -- a deprecated document at `0.y.z` never was one.
+
+    Artifacts that carry no `version` are skipped. GDC-000 Section 2.6 item 4 makes ADRs
+    immutable snapshots rather than versioned artifacts, so there is nothing here to check.
+    """
+    if not v.doc_meta:
+        return
+
+    raw_version = str(v.doc_meta.get("version", "")).strip()
+    if not raw_version:
+        return
+
+    status = str(v.doc_meta.get("status", "")).strip().lower()
+    if status not in _BASELINE_STATUSES:
+        return
+
+    major = raw_version.split(".", 1)[0]
+    if major != "0":
+        return
+
+    v.add_error(
+        "approved_version_not_stable",
+        f"Document is '{status}' at version '{raw_version}'. Semantic Versioning reserves "
+        f"major version zero for initial development where anything may change, which "
+        f"contradicts a baseline status. Promote it to '1.0.0' or move the status back to a "
+        f"pre-baseline value.",
+    )
 
 
 def _validate_cross_references(v: BaseValidator) -> None:

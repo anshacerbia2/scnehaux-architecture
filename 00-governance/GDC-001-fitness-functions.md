@@ -280,6 +280,7 @@ The global baseline applies universally to all architecture documents across the
 #### 4. Lifecycle & Environment Domain (Time, Space, & State)
 | Error Code | Severity (CI Action) |
 | :--- | :--- |
+| `approved_version_not_stable` | **ERROR** |
 | `compliance_filename_match` | **ERROR** |
 | `compliance_macro_directory` | **ERROR** |
 | `draft_status_violation` | **ERROR** |

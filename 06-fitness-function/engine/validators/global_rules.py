@@ -6,6 +6,7 @@ from engine.parsing.markdown_ast import (
 )
 from .metadata_rules import (
     _validate_review_age,
+    _validate_approved_version_stability,
     _validate_cross_references,
     _validate_technologies_whitelist,
 )
@@ -31,7 +32,9 @@ def run_common_validations(validator: BaseValidator) -> None:
     _validate_compliance_placement(validator)
     # @flow-validator: ValCompliance --> ValRevAge["<b>_validate_review_age()</b>: Check if document is expired"]
     _validate_review_age(validator)
-    # @flow-validator: ValRevAge --> ValContent["<b>_validate_content_quality()</b>: Check for prohibited words & vague claims"]
+    # @flow-validator: ValRevAge --> ValVerStab["<b>_validate_approved_version_stability()</b>: Check baseline status carries a stable version"]
+    _validate_approved_version_stability(validator)
+    # @flow-validator: ValVerStab --> ValContent["<b>_validate_content_quality()</b>: Check for prohibited words & vague claims"]
     _validate_content_quality(validator)
     # @flow-validator: ValContent --> ValStruct["<b>_validate_structure()</b>: Check minimum section lengths"]
     _validate_structure(validator)

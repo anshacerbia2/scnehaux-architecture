@@ -42,6 +42,7 @@ class SeverityRule(str, Enum):
     VAGUE_CLAIM_IN_NFR = "vague_claim_in_nfr"
 
     # 4. LIFECYCLE & ENVIRONMENT DOMAIN (Time, Space, & State)
+    APPROVED_VERSION_NOT_STABLE = "approved_version_not_stable"
     COMPLIANCE_FILENAME_MATCH = "compliance_filename_match"
     COMPLIANCE_MACRO_DIRECTORY = "compliance_macro_directory"
     DRAFT_STATUS_VIOLATION = "draft_status_violation"

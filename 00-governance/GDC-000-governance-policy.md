@@ -406,6 +406,7 @@ Architecture artifacts are not static, they represent the evolving truth of the 
 3. **Decentralized State Machines**: The exact allowable statuses (e.g., `proposed`, `approved`, `deprecated`) and the valid transition paths between them are explicitly defined by their respective GDC Guidelines.
 4. **Immutable Snapshots vs. Semantic Versioning**: Immutable artifacts (ADRs) are not versioned, if a decision changes, a _new_ artifact must supersede the old one. All other artifacts (including GDCs, EADs, STDs, PADs, SADs, and TDDs) are treated as Versioned Artifacts and must utilize Semantic Versioning.
 5. **The Version Bump Mandate**: Once a versioned artifact reaches an `approved` state, any subsequent modification to its architectural content MUST include a corresponding version bump in its YAML metadata.
+6. **The Baseline Stability Mandate**: A versioned artifact whose status asserts it is, or has been, an official baseline (`approved`, `deprecated`) MUST carry a stable Semantic Version of `1.0.0` or higher. Semantic Versioning reserves major version zero for initial development, where anything MAY change at any time; an artifact cannot simultaneously be the blueprint other teams build against and a document whose contract may move underneath them. Pre-baseline statuses (`chartered`, `draft`, `proposed`) are the correct home for `0.y.z` and remain unconstrained — promotion to a baseline status and promotion to `1.0.0` are one act, not two. Enforced by the `approved_version_not_stable` fitness function.
 
 ### 2.7 Policy-as-Code
 

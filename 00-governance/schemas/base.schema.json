@@ -118,6 +118,7 @@
         "vague_claim_in_nfr": "ERROR"
       },
       "4. Lifecycle & Environment Domain (Time, Space, & State)": {
+        "approved_version_not_stable": "ERROR",
         "compliance_filename_match": "ERROR",
         "compliance_macro_directory": "ERROR",
         "draft_status_violation": "ERROR",

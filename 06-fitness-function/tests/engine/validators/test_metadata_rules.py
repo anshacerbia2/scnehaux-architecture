@@ -1,6 +1,7 @@
 from tests.conftest import make_validator
 from engine.validators.metadata_rules import (
     _validate_review_age,
+    _validate_approved_version_stability,
     _validate_cross_references,
     _validate_technologies_whitelist,
     validate_exempt_age,
@@ -22,6 +23,61 @@ def test_validate_review_age():
 def test_review_age_no_meta():
     v = make_validator(doc_meta={})
     _validate_review_age(v)
+    assert len(v.errors) == 0
+
+
+def test_baseline_status_at_major_version_zero_is_refused():
+    """GDC-000 Section 2.6 item 6, in both baseline-bearing statuses.
+
+    An artifact cannot be the blueprint other teams build against while carrying the version
+    Semantic Versioning reserves for "anything may change at any time".
+    """
+    rules = {"rules": {}, "severity_levels": {}}
+
+    for status in ("approved", "deprecated"):
+        v = make_validator(doc_meta={"status": status, "version": "0.4.0"}, rules=rules)
+        _validate_approved_version_stability(v)
+        assert len(v.errors) == 1, f"{status} at 0.4.0 was accepted"
+        assert "major version zero" in v.errors[0][1]
+
+
+def test_pre_baseline_statuses_may_sit_at_major_version_zero():
+    """The other half of the rule, and the half that makes it a rule rather than a ban.
+
+    `0.y.z` is exactly the right version for an artifact that is recognized or under review
+    and not yet a baseline. A check that flagged those too would push every chartered SAD to
+    1.0.0 and destroy the signal it is trying to protect.
+    """
+    rules = {"rules": {}, "severity_levels": {}}
+
+    for status in ("chartered", "draft", "proposed"):
+        v = make_validator(doc_meta={"status": status, "version": "0.1.0"}, rules=rules)
+        _validate_approved_version_stability(v)
+        assert len(v.errors) == 0, f"{status} at 0.1.0 was refused"
+
+
+def test_stable_versions_and_unversioned_artifacts_pass():
+    rules = {"rules": {}, "severity_levels": {}}
+
+    v = make_validator(doc_meta={"status": "approved", "version": "1.0.0"}, rules=rules)
+    _validate_approved_version_stability(v)
+    assert len(v.errors) == 0
+
+    # A ten-major-version artifact must not be caught by a naive "starts with 0" test.
+    v = make_validator(doc_meta={"status": "approved", "version": "10.2.3"}, rules=rules)
+    _validate_approved_version_stability(v)
+    assert len(v.errors) == 0
+
+    # ADRs are immutable snapshots rather than versioned artifacts per GDC-000 Section 2.6
+    # item 4, so an approved one carries no version and there is nothing to check.
+    v = make_validator(doc_meta={"status": "approved"}, rules=rules)
+    _validate_approved_version_stability(v)
+    assert len(v.errors) == 0
+
+
+def test_version_stability_no_meta():
+    v = make_validator(doc_meta={})
+    _validate_approved_version_stability(v)
     assert len(v.errors) == 0
 
 
