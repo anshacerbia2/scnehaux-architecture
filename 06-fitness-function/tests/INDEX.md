@@ -259,6 +259,10 @@ This index documents the test suite utilities and fixtures.
 | :--- | :--- |
 | **test_validate_review_age** | *(No docstring provided)* |
 | **test_review_age_no_meta** | *(No docstring provided)* |
+| **test_baseline_status_at_major_version_zero_is_refused** | GDC-000 Section 2.6 item 6, in both baseline-bearing statuses.<br><br>An artifact cannot be the blueprint other teams build against while carrying the version<br>Semantic Versioning reserves for "anything may change at any time". |
+| **test_pre_baseline_statuses_may_sit_at_major_version_zero** | The other half of the rule, and the half that makes it a rule rather than a ban.<br><br>`0.y.z` is exactly the right version for an artifact that is recognized or under review<br>and not yet a baseline. A check that flagged those too would push every chartered SAD to<br>1.0.0 and destroy the signal it is trying to protect. |
+| **test_stable_versions_and_unversioned_artifacts_pass** | *(No docstring provided)* |
+| **test_version_stability_no_meta** | *(No docstring provided)* |
 | **test_validate_cross_references** | *(No docstring provided)* |
 | **test_cross_references_no_meta** | *(No docstring provided)* |
 | **test_validate_exempt_age** | *(No docstring provided)* |

@@ -3,11 +3,13 @@ doc_meta:
   id: SAD-005
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
-  version: 1.2.0
+  version: 2.0.0
   status: approved
   classification: restricted
   governed_by:
     - GDC-009
+    - ADR-GLB-016
+    - ADR-GLB-017
   parent_pad: PAD-PLT-005
   review_cycle_days: 90
   created_date: 2026-07-06
@@ -17,8 +19,10 @@ doc_meta:
       type: backend-language
     - name: postgresql
       type: database
+    - name: rabbitmq
+      type: queue-broker-profile
     - name: kafka
-      type: event-broker
+      type: stream-broker-profile
     - name: kubernetes
       type: orchestration
     - name: opentelemetry
@@ -31,7 +35,9 @@ doc_meta:
 
 ### 1.1 Objective
 
-Realize PAD-PLT-005 as a multi-tenant asynchronous communication runtime that accepts authorized Notification intent, freezes bounded delivery state, renders a governed channel variant, routes through an authorized Channel Profile, executes provider delivery with duplicate protection, and records normalized outcomes without absorbing Product business meaning.
+Realize PAD-PLT-005 as a multi-tenant asynchronous communication runtime that accepts authorized Notification intent, freezes bounded delivery state, renders governed channel variants, routes through authorized profiles, executes provider delivery with duplicate protection, and records normalized outcomes without absorbing Product business meaning.
+
+Notification messaging contracts are transport-neutral. RabbitMQ is the default queue deployment profile, Kafka is the supported stream profile, and bounded direct durable acceptance is available where a broker is not justified.
 
 ### 1.2 Capability
 
@@ -41,53 +47,77 @@ The deployable provides:
 - immutable Recipient Snapshot
 - Template Family, Version, Channel Variant, and data-schema management
 - Channel/Sender Profile and Provider Binding management
-- Application Notification Profile management and due-time profile resolution by application/Tenant/channel scope
+- Application Notification Profile management
 - Email, WhatsApp/messaging, SMS, Push, and governed Webhook adapter model
-- Scheduling adapter with durable registration intent, idempotent Schedule creation, binding reconciliation, and asynchronous cancellation for frozen future delivery
-- delivery planning and channel-specific worker pools
+- Scheduling registration intent, idempotent Schedule creation, binding reconciliation, asynchronous cancellation
+- delivery planning and channel/provider Worker pools
 - provider callback/receipt ingestion
 - retry/permanent/unknown outcome classification
-- delivery-status events and provider reconciliation
+- delivery-status publication through selected messaging profile
+- Scheduling trigger consumption through selected messaging profile
+- provider reconciliation
 - operational/admin query surfaces
 
-Initial implementation prioritizes Email and WhatsApp because they have immediate consumers. Additional channels reuse the same domain contract.
+Email and WhatsApp remain initial priority channels.
 
 ### 1.3 Requirement
 
-The runtime must remain correct under duplicate Notification commands, process restart, provider timeout with unknown outcome, duplicate provider callback, provider outage, future-trigger duplicates, process loss or timeout during cross-platform Schedule registration, template/provider configuration rotation before a frozen delivery becomes due, cancellation races, and noisy-neighbor Tenant/provider load.
+The runtime remains correct under:
 
-### 1.4 Constraint
+- duplicate Notification commands
+- process restart
+- provider timeout with unknown outcome
+- duplicate provider callback
+- provider outage
+- future-trigger duplicates
+- Scheduling create timeout/process loss/binding ambiguity
+- template/provider configuration rotation before frozen delivery
+- cancellation races
+- selected messaging-substrate outage
+- Direct-profile ambiguous acceptance
+- noisy-neighbor Tenant/provider load
+
+### 1.4 Constraints
 
 - Go is the application runtime
 - PostgreSQL is the private authoritative Notification store
-- Kafka is the asynchronous enterprise event protocol
+- source state mutation plus external publication intent uses source-local Transactional Outbox
+- lifecycle publication and Scheduling trigger consumption use STD-GLB-004 delivery profiles
+- default Scnehaux deployment uses RabbitMQ Queue profile
+- Kafka is supported when retained Stream semantics are justified
+- Direct Durable Delivery is permitted only through governed idempotent durable-acceptance APIs
+- one logical message contract has one primary delivery path per environment
+- provider delivery Workers are internal Notification execution and are not replaced by RabbitMQ/Kafka merely for uniformity
 - Kubernetes is the deployment substrate
 - OpenTelemetry is the instrumentation contract
-- provider delivery never runs inside a Product caller's business transaction/request path
-- generic durable future timing is delegated to PAD-PLT-011
-- provider credentials remain in Trust/Secret Services; Notification stores secret references only
-- provider-specific SDK/model types terminate in adapter boundaries
-- Notification may connect naturally to communication providers through its governed adapter; Integration Enablement is reusable machinery rather than a mandatory hop
+- provider delivery never runs inside a Product caller's transaction/request path
+- generic durable timing is delegated to PAD-PLT-011
+- provider credentials remain in Trust/Secret Services
+- provider-specific SDK/model types terminate at adapters
+- Integration Enablement is optional reusable machinery, not mandatory hop
 - no Product operational database is read directly
-- no shared operational database exists with Mailcast, ATI PH, or other consumers
+- no shared operational database exists with consumer Products
 
-### 1.5 Assumption
+### 1.5 Assumptions
 
-- Scheduling provides durable future wake-up when frozen future delivery is used
+- Scheduling provides durable future wake-up for frozen future delivery
+- Scheduling exposes the same logical `OccurrenceDue` contract independent of transport
 - Identity/Organization/Application Trust provide caller and ownership context
-- secret management can resolve provider credentials to Notification runtime only
-- providers expose the transport and callback capabilities required by each Channel Profile
+- secret management resolves provider credentials only to Notification runtime
+- providers expose channel-appropriate transport/callback capability
+- Direct-profile acceptance persists/deduplicates before successful response
 
 ### 1.6 Out of Scope
 
-- Gmail/mailbox ingestion and polling
+- Gmail/mailbox ingestion/polling
 - Mailcast travel/PNR logic
-- ATI PH public-holiday business policy
+- ATI PH public-holiday policy
 - Product business eligibility
 - Workflow orchestration
 - generic scheduling
 - secret custody
-- third-party provider/admin dashboard as the Scnehaux operational UI
+- universal messaging-broker ownership
+- third-party provider/broker admin dashboard as Scnehaux Product UI
 
 ## 2. Enterprise Traceability
 
@@ -96,9 +126,10 @@ The runtime must remain correct under duplicate Notification commands, process r
 | Realizes | PAD-PLT-005 Enterprise Notification Platform |
 | Consumes | PAD-PLT-011 Scheduling for frozen future delivery |
 | Consumes | Document Platform for immutable attachment references |
-| Consumes | Identity/Organization/Application Trust for caller and ownership context |
+| Consumes | Identity/Organization/Application Trust |
 | Consumes | Trust Services for provider credential material |
-| Conforms to | ADR-GLB-003 Transactional Outbox and Kafka Protocol |
+| Conforms to | ADR-GLB-016 Transactional Publication and Durable Messaging Profiles |
+| Conforms to | ADR-GLB-017 Enterprise Durable Scheduling Boundary with Profiled Dispatch |
 | Conforms to | STD-GLB-002 Database Standard |
 | Conforms to | STD-GLB-003 Observability Standard |
 | Conforms to | STD-GLB-004 Event-Driven Architecture & Messaging Standard |
@@ -115,32 +146,36 @@ graph LR
     UI[Notification Experience]
     NOTIF[Notification Runtime]
     DB[(Notification PostgreSQL)]
-    KAFKA[Kafka]
+    MSG[Selected Messaging Boundary]
     SCHED[Scheduling Platform]
     DOC[Document Platform]
     TRUST[Trust / Secret Services]
-    PROVIDER[Email / WhatsApp / SMS / Push / Webhook Provider]
+    PROVIDER[Communication Provider]
     CALLBACK[Provider Callback]
 
     PRODUCT -->|Notification command| NOTIF
     UI -->|Control API| NOTIF
     NOTIF --> DB
-    NOTIF -. lifecycle events .-> KAFKA
+    NOTIF -. lifecycle contracts .-> MSG
     NOTIF -->|frozen future wake-up| SCHED
-    SCHED -. occurrence.due via Kafka .-> NOTIF
+    SCHED -. occurrence.due through selected profile .-> NOTIF
     NOTIF -->|immutable attachment version| DOC
-    TRUST -->|runtime credential resolution| NOTIF
+    TRUST -->|credential resolution| NOTIF
     NOTIF --> PROVIDER
     CALLBACK --> NOTIF
 ```
 
+RabbitMQ/Kafka are transport dependencies only when their deployment profile is selected.
+
 ### 3.2 External
 
-Communication providers are external delivery authorities for their transport. Provider-specific authentication, payload, error, acceptance, receipt, rate-limit, and callback semantics terminate inside the provider adapter.
+Communication providers are external transport/delivery authorities.
 
-### 3.3 Internal
+Provider authentication, request format, acceptance, receipt, error, rate-limit, callback, and reconciliation semantics terminate in provider adapters.
 
-The initial Go deployable is a modular application with bounded modules:
+Scheduling remains the temporal authority and does not become Notification delivery authority.
+
+### 3.3 Internal Modules
 
 1. Notification Ingress
 2. Notification Aggregate & Idempotency
@@ -150,15 +185,17 @@ The initial Go deployable is a modular application with bounded modules:
 6. Application Notification Profile
 7. Provider Binding & Secret Reference
 8. Scheduling Registration, Binding & Reconciliation
-9. Delivery Planning
-10. Channel Dispatch Workers
-11. Provider Adapters
-12. Callback/Receipt Normalization
-13. Retry & Reconciliation
-14. Outbox/Event Publication
-15. Operations/Admin Query
+9. Scheduling Trigger Acceptance / Consumer
+10. Delivery Planning
+11. Channel Dispatch Workers
+12. Provider Adapters
+13. Callback/Receipt Normalization
+14. Retry & Reconciliation
+15. Outbox Relay
+16. Messaging Port & Direct/RabbitMQ/Kafka Adapters
+17. Operations/Admin Query
 
-Channel worker pools share one deployable initially but use independent concurrency/bulkhead controls. A channel or provider becomes a separate deployable only when measured throughput, security isolation, or failure containment justifies its own SAD.
+Channel/provider Worker pools share one deployable initially with independent concurrency/bulkheads.
 
 ## 4. Architecture Model
 
@@ -168,8 +205,8 @@ Channel worker pools share one deployable initially but use independent concurre
 graph TB
     INGRESS[Managed Internal Ingress]
     APP[Go Notification Runtime - N Replicas]
-    DB[(Managed PostgreSQL - Multi-AZ)]
-    KAFKA[Managed Kafka Protocol Broker]
+    DB[(Managed PostgreSQL - HA)]
+    MSG[Selected Messaging Substrate]
     SCHED[Scheduling Runtime]
     SECRET[Managed Secret Service]
     PROVIDERS[Communication Providers]
@@ -177,7 +214,7 @@ graph TB
 
     INGRESS --> APP
     APP --> DB
-    APP --> KAFKA
+    APP --> MSG
     APP --> SCHED
     SECRET --> APP
     APP --> PROVIDERS
@@ -185,23 +222,27 @@ graph TB
     APP -. telemetry .-> OTEL
 ```
 
-Provider callbacks enter a dedicated authenticated route and are normalized before mutating Delivery state.
+For Direct profile, Scheduling/lifecycle delivery terminates at a governed Notification durable-acceptance API and no broker is present for that relationship.
+
+Provider callbacks enter a dedicated authenticated route.
 
 ### 4.2 Component
 
 ```text
-adapter/http          -> app/notification -> domain/notification
-adapter/kafka         -> app/notification -> domain/notification
-adapter/scheduling    -> app ports
-adapter/provider/*    -> app/delivery     -> domain/delivery
-adapter/secrets       -> app ports
-adapter/db            -> app ports
-outbox-relay          -> app/publish      -> app ports
+adapter/http             -> app/notification -> domain/notification
+adapter/messaging/http   -> app/trigger      -> domain/notification
+adapter/messaging/rmq    -> app/trigger      -> domain/notification
+adapter/messaging/kafka  -> app/trigger      -> domain/notification
+adapter/scheduling       -> app ports
+adapter/provider/*       -> app/delivery     -> domain/delivery
+adapter/secrets          -> app ports
+adapter/db               -> app ports
+outbox-relay             -> app/publish      -> app/ports/messaging
 ```
 
-Provider SDK types do not enter domain/app packages.
+Provider/broker SDK types do not enter domain packages.
 
-### 4.3 Runtime Flow — Immediate Notification
+### 4.3 Immediate Notification
 
 ```mermaid
 sequenceDiagram
@@ -212,16 +253,18 @@ sequenceDiagram
     participant X as Provider
 
     P->>N: Notification intent + idempotency key
-    N->>D: atomic notification + snapshot + delivery plan + outbox
+    N->>D: atomic Notification + snapshot + delivery plan + outbox
     D-->>N: commit
     N-->>P: accepted notification_id
-    W->>D: claim bounded ready delivery
-    W->>X: send with delivery identity/provider idempotency where available
+    W->>D: claim bounded ready Delivery
+    W->>X: send with delivery identity/provider idempotency when available
     X-->>W: accepted / transient / permanent / unknown
-    W->>D: persist normalized attempt/status + outbox
+    W->>D: normalized attempt/status + outbox
 ```
 
-### 4.4 Runtime Flow — Frozen Scheduled Notification
+RabbitMQ/Kafka are not required for the internal provider Worker just because provider delivery is asynchronous. PostgreSQL-backed ready Delivery state remains authoritative.
+
+### 4.4 Frozen Scheduled Notification
 
 ```mermaid
 sequenceDiagram
@@ -230,56 +273,108 @@ sequenceDiagram
     participant D as Notification PostgreSQL
     participant R as Schedule Registration Worker
     participant S as Scheduling
-    participant K as Kafka
+    participant M as Selected Durable Delivery Boundary
 
     P->>N: Notification intent + scheduled_at
-    N->>D: atomic Notification + frozen communication snapshot + schedule-registration intent
+    N->>D: atomic Notification + frozen snapshot + schedule-registration intent
     D-->>N: commit
     N-->>P: accepted notification_id
     R->>D: claim pending registration
     R->>S: create one-time Schedule + stable idempotency identity
     S-->>R: same schedule_id on equivalent retry
     R->>D: persist/reconcile Schedule binding
-    S-->>K: occurrence.due
-    K-->>N: occurrence.due
-    N->>D: dedupe occurrence_id + verify Notification terminal state
-    N->>D: transition eligible delivery to ready
+    S-->>M: occurrence.due
+    M-->>N: at-least-once occurrence.due
+    N->>D: dedupe occurrence_id + verify terminal state
+    N->>D: transition eligible Delivery to ready
 ```
 
-No correctness-critical transaction spans Notification and Scheduling. If Schedule creation succeeds but the response/binding persistence is lost, retry/reconciliation reuses the stable registration identity and recovers the same logical `schedule_id`.
+No transaction spans Notification and Scheduling.
 
-The frozen snapshot preserves communication semantics: recipient snapshot, immutable template/content version and data, selected channel, required logical sender identity, immutable attachment versions, and business correlation. Active provider route, credential/secret version, endpoint, failover route, and rate-limit state are resolved from current valid Notification-owned configuration at delivery time unless an explicit governed contract pins a configuration version.
+If Schedule creation succeeds but response/binding persistence is lost, retry/reconciliation uses the same registration identity.
 
-This path is prohibited when Product business eligibility must be revalidated at due time. In that case Scheduling wakes the Product worker, which requests Notification after revalidation.
+Frozen communication semantics include:
 
-#### 4.4.1 Cancellation Race
+- recipient snapshot
+- immutable template/content version and data
+- selected channel
+- required logical sender identity
+- immutable attachment versions
+- business correlation
 
-Notification cancellation commits the terminal Notification/Delivery state first and emits the required evidence/outbox facts. Cancellation of the bound Schedule is then retried asynchronously using the stored `schedule_id`. If Scheduling has already durably dispatched the Occurrence, Notification consumes/deduplicates it but treats it as a no-op when the Notification is terminally cancelled. A due Occurrence never resurrects a cancelled Notification.
+Operational provider route, current credential/secret version, endpoint, failover route, and rate-limit state are late-bound unless explicitly version-pinned.
 
-### 4.5 Runtime Flow — Deferred Notification Command
+### 4.5 Scheduling Trigger Delivery by Profile
+
+The logical effect is identical across profiles.
+
+**Direct**
+
+```text
+Scheduling Outbox Relay
+  -> Notification Trigger Acceptance API
+      -> atomic occurrence dedup + Delivery-ready transition
+```
+
+The API returns success only after durable idempotent acceptance.
+
+**RabbitMQ**
+
+```text
+Scheduling
+  -> Rabbit exchange
+      -> Notification durable/quorum queue
+          -> Notification consumer
+              -> atomic occurrence dedup + Delivery-ready transition
+              -> ACK
+```
+
+**Kafka**
+
+```text
+Scheduling
+  -> occurrence topic
+      -> Notification consumer group
+          -> atomic occurrence dedup + Delivery-ready transition
+          -> commit/advance according to consumer durability policy
+```
+
+The UI/business semantics never expose which profile delivered the Occurrence.
+
+### 4.6 Cancellation Race
+
+Notification cancellation commits terminal Notification/Delivery state first and emits evidence/outbox facts.
+
+Cancellation of the bound Schedule is retried asynchronously.
+
+If Scheduling already durably dispatched the Occurrence, Notification consumes/deduplicates it as a no-op when terminally cancelled.
+
+A due Occurrence never resurrects a cancelled Notification.
+
+### 4.7 Deferred Notification Command
 
 ```mermaid
 sequenceDiagram
     participant P as Product
     participant S as Scheduling
-    participant K as Kafka
+    participant M as Selected Durable Delivery Boundary
     participant N as Notification
     participant D as Notification PostgreSQL
 
-    P->>S: register target=Notification + bounded command
-    S-->>K: occurrence.due
-    K-->>N: registered deferred Notification command
-    N->>N: validate application/Tenant/channel context
-    N->>N: resolve Application Notification Profile
-    N->>D: create Notification + snapshot + delivery plan + outbox
+    P->>S: target=Notification + bounded deferred command
+    S-->>M: occurrence.due
+    M-->>N: registered deferred Notification command
+    N->>N: validate application/Tenant/channel
+    N->>N: resolve Notification-owned profile
+    N->>D: create Notification + snapshot + Delivery plan + outbox
     D-->>N: commit
 ```
 
-This mode is allowed only when the Scheduling trigger can remain bounded and non-secret. Notification resolves provider/channel/template policy at due time. SMTP/API credentials are resolved from Trust/Secret Services by Notification and never transit through Scheduling.
+Provider credentials never transit Scheduling.
 
-If recipient/content/business eligibility requires current Product-owned truth, Scheduling targets the Product Worker instead and the Product requests Notification after revalidation.
+When recipient/content/business eligibility requires current Product truth, Scheduling targets the Product Worker instead.
 
-### 4.6 Runtime Flow — Application Notification Profile Administration
+### 4.8 Application Notification Profile Administration
 
 ```mermaid
 sequenceDiagram
@@ -294,47 +389,53 @@ sequenceDiagram
     U->>N: register/update provider credential
     N->>T: write/rotate secret
     T-->>N: secret_ref
-    N->>D: persist Application Notification Profile + Provider Binding + secret_ref
+    N->>D: persist profile + binding + secret_ref
     D-->>N: commit
 ```
 
-Normal delivery resolves validated Notification-local profile state and does not synchronously call Organization per send.
-### 4.7 Runtime Flow — Provider Callback
+Normal delivery uses Notification-local validated profile state.
+
+### 4.9 Provider Callback
 
 ```mermaid
 sequenceDiagram
     participant X as Provider
     participant N as Callback Adapter
     participant D as PostgreSQL
-    participant K as Kafka
+    participant R as Outbox Relay
+    participant M as Selected Messaging Boundary
 
     X->>N: signed provider callback
-    N->>N: authenticate, validate, dedupe, normalize
-    N->>D: delivery-state mutation + outbox
+    N->>N: authenticate + validate + dedupe + normalize
+    N->>D: Delivery mutation + outbox
     D-->>N: commit
     N-->>X: acknowledgement
-    N-->>K: delivery lifecycle event via outbox relay
+    R->>D: claim committed lifecycle event
+    R->>M: publish through selected profile
 ```
 
 ## 5. State & Data Architecture
 
 ### 5.1 Storage
 
-One private PostgreSQL database is authoritative for Notification runtime state. Logical state families include:
+One private PostgreSQL database is authoritative for Notification runtime state.
+
+Logical state families:
 
 - Notification
 - Recipient Snapshot
-- Delivery and Delivery Attempt
-- Provider Callback/Event deduplication
+- Delivery / Delivery Attempt
+- provider callback/event deduplication
 - Template Family / Version / Channel Variant / Data Schema
 - Channel/Sender Profile
 - Application Notification Profile
-- Provider Binding with secret references only
-- communication preference metadata within Notification scope
-- Scheduling registration intent, registration generation/idempotency identity, binding, and reconciliation metadata
-- outbox publication state
+- Provider Binding with secret reference only
+- bounded preference metadata within Notification scope
+- Scheduling registration intent/generation/idempotency/binding/reconciliation
+- Scheduling occurrence Inbox/dedup state
+- transport-neutral outbox publication state
 
-Exact DDL, indexes, retention partitions, provider-specific fields, and queries belong in TDDs.
+Exact DDL, queue/topic naming, adapter config, indexes, and retention partitions belong in TDDs.
 
 ### 5.2 Schema
 
@@ -342,32 +443,37 @@ Exact DDL, indexes, retention partitions, provider-specific fields, and queries 
 - migration role separate from runtime role
 - UUIDv7 durable identifiers
 - Tenant-scoped data uses enterprise RLS where applicable
-- PII columns are classified and excluded/redacted from telemetry
-- immutable Template Version and Recipient Snapshot records are enforced by application/schema invariants
-- Schedule registration state supports crash-safe retry/reconciliation and prevents one Notification registration generation from being rebound to multiple logical Schedules
+- PII excluded/redacted from telemetry
+- immutable Template Version and Recipient Snapshot invariants
+- Schedule registration state prevents one generation from binding to multiple logical Schedules
+- occurrence dedup state prevents duplicate future triggers from creating duplicate Delivery effect
 
 ### 5.3 Cache
 
-Immutable Template Versions and versioned Channel Profile routing metadata may be cached with explicit keys/freshness. Cache is not authoritative for Delivery state, idempotency, cancellation, or provider callback deduplication.
+Immutable Template Versions and versioned routing metadata may be cached with explicit freshness.
+
+Cache is not authoritative for Delivery, idempotency, cancellation, occurrence dedup, or provider callback dedup.
 
 ### 5.4 Stateless Compute
 
-Accepted Notification and Delivery state survive process restart in PostgreSQL. Worker replicas are interchangeable and claim bounded ready work through the authoritative store.
+Accepted Notification/Delivery state survives process restart in PostgreSQL.
+
+Worker replicas are interchangeable and claim bounded ready work from authoritative state.
 
 ## 6. Integration Contracts
 
 ### 6.1 API
 
-The versioned API supports:
+Versioned APIs support:
 
-- Notification acceptance/query/cancel
-- scheduled-Notification registration/binding status and reconciliation query
-- Template Family/Version/Channel Variant/schema administration
-- template validation/preview/test-send
+- Notification accept/query/cancel
+- scheduled registration/binding/reconciliation query
+- template/schema administration and preview/test send
 - Channel/Sender Profile and Provider Binding administration
-- Application Notification Profile administration and validation
-- Delivery query and reconciliation
-- provider callback endpoints
+- Application Notification Profile administration
+- Delivery query/reconciliation
+- provider callback
+- Direct-profile Scheduling trigger durable acceptance when selected
 
 API acceptance never means provider delivery success.
 
@@ -384,13 +490,17 @@ com.scnehaux.notification.failed.v1
 com.scnehaux.notification.cancelled.v1
 ```
 
-### 6.3 Consumed Events and Capabilities
+Event schema is transport-neutral.
 
-- Scheduling idempotent Schedule create/cancel/query semantics and `occurrence.due` for frozen future delivery
+### 6.3 Consumed Contracts
+
+- Scheduling idempotent Schedule create/cancel/query
+- Scheduling `occurrence.due`
 - Document immutable attachment references
-- locally usable Identity/Organization/Application Trust context
-- secret material resolved at runtime from Trust Services
+- locally usable Identity/Organization/Application Trust
+- Trust Services runtime secret material
 - Product Notification commands/events
+- selected STD-GLB-004 delivery profile
 
 The runtime imports no Product internal model.
 
@@ -398,111 +508,202 @@ The runtime imports no Product internal model.
 
 ### 7.1 Authentication
 
-Workload and privileged tokens are validated locally for the Notification protected-resource audience. Provider callbacks use provider-specific authentication/signature verification.
+Workload/privileged tokens are locally validated for Notification audience.
+
+Provider callbacks use provider-specific signature/authentication.
+
+Broker/direct acceptance uses attributable workload identity.
 
 ### 7.2 Authorization
 
-- Templates, Channel Profiles, Application Notification Profiles, Notifications, and Delivery administration are application/Tenant scoped
-- Application/Tenant ownership is validated from trusted context/projection during profile administration; normal delivery uses Notification-local validated bindings rather than a mandatory synchronous Organization lookup
-- provider configuration, test-send, replay/reconciliation, and cross-Tenant operations are privileged
-- recipient endpoints cannot be used to infer Tenant/application authority
-- Product-supplied recipient or content data is accepted only under the caller's authorized Notification contract
+- templates/profiles/Notifications/Delivery administration are application/Tenant scoped
+- normal delivery uses Notification-local validated bindings
+- provider configuration, test send, replay/reconciliation, cross-Tenant operations are privileged
+- recipient endpoint never proves Tenant/application authority
+- Product recipient/content input is accepted only under authorized Notification contract
+- Direct Scheduling trigger endpoint accepts only registered Scheduling workload/contract context
 
 ### 7.3 Encryption
 
-TLS 1.3 in transit and enterprise-managed encryption at rest. Recipient endpoint PII is handled according to data classification and retention policy.
+TLS 1.3 in transit and enterprise-managed encryption at rest.
+
+Recipient endpoint PII follows classification and retention policy.
 
 ### 7.4 Secrets
 
-Provider passwords, SMTP credentials, OAuth client/refresh secrets, API keys, certificates, and private keys exist only in the managed secret capability. Notification persists a secret reference and non-secret configuration required for routing. Secret values are never returned to browser clients after registration and never emitted in logs/events.
+Provider passwords, SMTP credentials, OAuth secrets, API keys, certificates, and private keys exist only in managed secret capability.
+
+Notification stores secret references plus non-secret routing config.
+
+Secrets never appear in event/queue/stream payloads, browser responses after registration, or telemetry.
 
 ### 7.5 Audit
 
-Template publication, provider/channel configuration, sender identity changes, test sends, cancellation, replay/reconciliation, callback verification failures, and privileged cross-Tenant operations produce evidence facts.
+Template publication, provider/channel configuration, sender change, test send, cancellation, replay/reconciliation, callback verification failure, messaging-profile migration, and cross-Tenant operations produce evidence.
 
 ## 8. NFR
 
 ### 8.1 Blast Radius
 
-A provider outage affects only the relevant provider/channel bulkhead. A Notification Runtime outage delays accepted work but does not lose committed Notification state. A Scheduling outage delays only frozen future Notifications; immediate Notification acceptance/delivery processing remains independent. A callback outage leaves final provider state unresolved and reconciliation resumes later when provider capability permits it.
+Provider outage affects the relevant provider/channel bulkhead.
 
-Target reliability is C1: >=99.95% mature availability, RTO <=1 hour, RPO <=15 minutes.
+Notification outage delays accepted work but does not lose committed state.
+
+Scheduling outage delays frozen future Notifications only.
+
+Messaging-substrate outage delays trigger/lifecycle transport while local outbox/Notification state remains durable.
+
+Direct target acceptance outage affects the relevant relationship only.
+
+Callback outage leaves final provider state unresolved until reconciliation.
+
+Target reliability remains C1:
+
+- mature availability >=99.95%
+- RTO <=1 hour
+- RPO <=15 minutes
 
 ### 8.2 Latency, Throughput, and Scalability
 
 - immediate accepted-to-ready internal SLO: 99.9% <=30 seconds excluding provider latency
-- capacity certification: 10x forecast peak acceptance rate without internal SLO breach
-- channel/provider/Tenant concurrency is independently bounded
+- capacity certification: 10x forecast peak acceptance without internal SLO breach
+- channel/provider/Tenant concurrency independently bounded
 - large fan-out uses bounded asynchronous expansion
-- provider rate limits feed admission/backpressure rather than unbounded retry queues
+- provider rate-limit pressure feeds admission/backpressure
+- messaging profiles are capacity-tested independently
 
-### 8.3 Observability and Telemetry
+### 8.3 Observability
 
-OpenTelemetry exposes:
+Common:
 
-- acceptance and ready latency
-- ready-delivery backlog age
-- provider request latency/error/rate-limit state
-- provider acceptance vs final delivery where measurable
-- retry and permanent-failure counts
-- unknown-outcome/reconciliation backlog
-- callback verification/deduplication state
-- pending/failed Schedule-registration age and binding-reconciliation backlog
-- cancelled-Notification late-occurrence no-op count
+- acceptance/ready latency
+- ready Delivery backlog age
+- provider latency/error/rate-limit
+- provider acceptance vs final delivery
+- retry/permanent failure
+- unknown/reconciliation backlog
+- callback verification/dedup
+- pending Schedule registration/binding reconciliation
+- cancelled late-occurrence no-op count
+- Notification outbox oldest age
+- messaging publication latency/error
 - Tenant/application/channel/provider quota pressure
-- cost units per channel/provider
+- cost units
+
+Profile-specific:
+
+**Direct**
+
+- trigger acceptance latency/error
+- ambiguous timeout/reconciliation count
+
+**RabbitMQ**
+
+- queue depth/unacked/oldest age
+- publisher confirm
+- redelivery/DLQ
+
+**Kafka**
+
+- producer acknowledgement
+- consumer lag
+- partition skew
+- retention/replay pressure
 
 ### 8.4 Retry, Timeout, Circuit Breaker, and Failover
 
-- provider calls use channel-specific timeout and bulkhead policy
-- only transient classes are automatically retried
-- permanent validation/authentication failures are not blindly retried
-- an unknown provider outcome is reconciled before duplicate send when provider semantics require it
-- circuit breakers isolate a failing provider from other providers/channels
-- consumer/event processing follows the enterprise idempotency and DLQ standard
-- Schedule registration and cancellation calls are retried with stable idempotency identities; an ambiguous create response is reconciled before any new logical Schedule may be created
+- provider calls use channel-specific timeout/bulkhead
+- only transient provider classes are auto-retried
+- unknown provider outcome is reconciled before harmful duplicate send
+- consumer/message processing follows STD-GLB-004 idempotency/failure parking
+- Schedule registration/cancel calls retry with stable identities
+- ambiguous Schedule create is reconciled before a new logical Schedule can exist
+- Direct messaging timeout is treated as ambiguous and reconciled/retried with same identity
+- Rabbit/Kafka delivery retries do not manufacture a new logical event/occurrence
+- messaging transport retry never substitutes for provider business retry
 
-### 8.5 Runbook
+### 8.5 Runbooks
 
-Runbooks cover provider outage, sender credential rotation, provider rate-limit exhaustion, stuck backlog, duplicate callback, unknown delivery outcome, Scheduling outage, pending/ambiguous Schedule binding reconciliation, cancellation race/late occurrence, callback outage, replay/reconciliation, and rollback.
+Runbooks cover:
+
+- provider outage
+- credential rotation
+- rate-limit exhaustion
+- stuck Delivery backlog
+- duplicate callback
+- unknown delivery outcome
+- Scheduling outage
+- Schedule binding reconciliation
+- cancellation race/late occurrence
+- selected messaging-substrate outage
+- Direct ambiguous acceptance
+- Rabbit queue/DLQ backlog
+- Kafka lag/retention issue
+- messaging profile migration
+- rollback
 
 ## 9. Deployment Strategy
 
-### 9.1 Environment
+### 9.1 Messaging Profiles
 
-Immutable artifacts are promoted across environments. Production provider credentials and recipient data do not enter preview/test environments outside governed test identities/data.
+| Profile | Runtime dependencies | Intended use |
+| :-- | :-- | :-- |
+| `minimal-direct` | PostgreSQL + governed HTTPS acceptance | local/lab or bounded point-to-point Notification integration |
+| `queue-rabbitmq` | PostgreSQL + RabbitMQ | **default Scnehaux deployment** |
+| `stream-kafka` | PostgreSQL + Kafka | retained event-stream/replay exercises or workloads requiring stream semantics |
+
+Notification provider Delivery Workers continue to use Notification-owned database state in all profiles.
 
 ### 9.2 Infrastructure
 
+Common:
+
 - OCI-compatible Go artifact
-- Kubernetes deployment across multiple availability zones
-- managed PostgreSQL
-- Kafka protocol broker
+- Kubernetes across availability zones
+- managed/HA PostgreSQL
 - managed secret service
-- OpenTelemetry export
-- initial production is single-region multi-AZ; per-Tenant silo/regional profiles are available when risk/residency requires them
+- OpenTelemetry
+
+Queue profile:
+
+- RabbitMQ durable/quorum queues and publisher confirms
+
+Stream profile:
+
+- replicated Kafka topics and governed producer/consumer settings
+
+Direct profile:
+
+- authenticated TLS target/source
+- durable Inbox/Operation acceptance
+
+One logical message contract uses one primary profile per environment.
 
 ### 9.3 CI/CD
 
-Blocking gates include:
+Blocking gates:
 
-- Go format/static/build/race tests
-- package-boundary enforcement
-- Atlas migration and Tenant-RLS tests
-- Template schema/sandbox/security tests
-- provider-adapter contract tests
-- provider callback authentication and duplicate tests
+- Go format/static/build/race
+- package boundaries
+- Atlas/RLS
+- template schema/sandbox/security
+- provider adapter/callback authentication
 - event schema compatibility
-- Notification and Delivery idempotency tests
-- duplicate-send fault-injection tests
-- crash/fault tests across Notification acceptance, Schedule creation, lost response, and binding persistence
-- Schedule-registration idempotency and orphan/missing-binding reconciliation tests
-- cancellation-race tests proving late/duplicate `occurrence.due` cannot resurrect a terminal Notification
-- frozen-semantics tests proving immutable communication fields remain fixed while non-pinned provider credentials/routes may rotate before due time
-- retry/error-classification tests
-- secret scanning and dependency vulnerability scans
-- performance/backpressure/bulkhead tests
-- architecture governance lint
+- Notification/Delivery idempotency
+- duplicate-send fault injection
+- crash/fault around Notification acceptance and Scheduling binding
+- Schedule registration/orphan reconciliation
+- cancellation-race late-occurrence no-resurrection
+- frozen-semantics vs late-bound provider config
+- Direct idempotent trigger acceptance/lost response
+- RabbitMQ publisher-confirm/redelivery/DLQ/node-loss
+- Kafka producer/consumer/replay
+- profile parity for `occurrence.due` and Notification lifecycle events
+- dual-primary-profile rejection
+- retry/error classification
+- secret/dependency scanning
+- performance/backpressure/bulkhead
+- architecture governance
 
 ## 10. Architecture Decisions
 
@@ -510,58 +711,85 @@ Blocking gates include:
 
 - asynchronous provider delivery
 - Product business intent/eligibility remains outside Notification
-- direct external recipient endpoints are allowed under an authorized bounded contract and need not map to Principal
+- direct external recipient endpoints may exist under bounded authorized contracts without Principal identity
 - generic future scheduling is delegated to Scheduling
-- communication provider relationships are naturally Notification-owned; reusable Integration machinery is optional
-- custom Notification operational experience is realized separately by SAD-015
-- Frozen Notification is the default scheduled-communication mode; bounded Deferred Notification Command is also supported when Scheduler does not become a communication-data authority
-- Frozen Notification uses local durable registration intent plus idempotent/reconcilable Schedule binding; no distributed transaction is assumed across Notification and Scheduling
-- Notification terminal cancellation remains the final delivery gate when Scheduler cancellation races with durable occurrence dispatch
-- Frozen communication meaning is immutable while operational provider realization is late-bound by default unless an explicit governed version pin is required
-- Application Notification Profile is Notification-owned configuration; Organization/Application Trust remain canonical for Tenant/application identity and ownership
+- communication provider relationships are Notification-owned
+- Frozen Notification is default scheduled-communication mode
+- local durable registration intent plus idempotent/reconcilable Schedule binding
+- Notification terminal cancellation is final delivery gate
+- frozen communication meaning with late-bound provider realization by default
+- Application Notification Profile is Notification-owned while Tenant/application authority remains external
+- source-local outbox is independent of messaging product
+- queue-rabbitmq is default messaging deployment profile
+- Kafka remains a supported stream profile
+- Direct profile is permitted only through durable idempotent acceptance
 
 ### 10.2 Rejected
 
 #### 10.2.1 Synchronous Provider Send on Product Transaction Path
 
-Rejected because provider latency/outage would become Product latency/outage and ambiguous retries could duplicate external side effects.
+Rejected because provider latency/outage becomes Product latency/outage and ambiguous retries can duplicate external effects.
 
 #### 10.2.2 Identity Principal Required for Every Recipient
 
-Rejected because passengers, customers, partners, and external contacts may be valid delivery endpoints without Scnehaux accounts.
+Rejected because valid external recipients may have no Scnehaux account.
 
 #### 10.2.3 Notification-Owned Product Eligibility
 
-Rejected because authoritative Product state can change independently and Product owns business meaning.
+Rejected because Product authority can change independently.
 
 #### 10.2.4 Plaintext Provider Credentials in Database or Browser
 
-Rejected because credential custody belongs to Trust Services and browser exposure defeats the secret boundary.
+Rejected because credential custody belongs to Trust Services.
 
 #### 10.2.5 Shared Operational Database with Consumers
 
-Rejected because it creates dual authority and cross-domain coupling.
+Rejected because it creates dual authority/cross-domain coupling.
 
-#### 10.2.6 Mandatory Integration-Platform Hop for Every Communication Provider
+#### 10.2.6 Mandatory Integration-Platform Hop
 
-Rejected because EAD-002/EAD-004 preserve the external relationship with its natural owner. Shared Integration is consumed only when its reusable machinery is justified.
+Rejected because provider relationships remain with their natural owner unless shared machinery is justified.
+
+#### 10.2.7 Universal Kafka Dependency
+
+Rejected because queue/direct profiles can satisfy Notification messaging without retained-log infrastructure in every deployment.
+
+#### 10.2.8 RabbitMQ + Kafka Dual Publish
+
+Rejected because partial success creates duplicate/reconciliation ambiguity.
 
 ## 11. Assumptions
 
-- Email and WhatsApp are the first production channels
+- Email and WhatsApp are first production channels
 - providers differ in whether final delivery can be proven
-- consumer migration removes legacy shared-Mongo notification/template authority
+- default Scnehaux deployment uses RabbitMQ for async messaging contracts
+- Kafka is deployed when stream-profile learning/workload semantics justify it
+- consumer migration removes legacy shared-Mongo Notification/template authority
 
 ## 12. Compatibility Strategy
 
-API paths and event types are versioned. Template versions and data schemas are immutable. Provider adapter changes cannot alter published normalized Delivery semantics without a contract migration.
+API paths and logical message/event types are versioned.
+
+Template versions/data schemas are immutable.
+
+Provider adapter changes cannot alter normalized Delivery semantics without migration.
+
+Messaging adapter replacement preserves logical event/trigger identity and uses explicit migration/reconciliation instead of blind dual-publish.
 
 ## 13. Migration Strategy
 
 ### 13.1 Mailcast Client Solution
 
-Move outbound WhatsApp/email provider delivery, Template lifecycle, channel/provider configuration, and Delivery tracking into Notification. Keep Gmail inbound polling, travel parsing, booking/passenger logic, and business eligibility in Mailcast. Legacy Notification/template Mongo collections become migration sources, not shared runtime authority.
+Move outbound WhatsApp/email delivery, Template lifecycle, provider/channel config, and Delivery tracking into Notification.
+
+Keep Gmail inbound polling, travel parsing, booking/passenger logic, and business eligibility in Mailcast.
+
+Legacy Notification/template Mongo collections become migration sources, not shared runtime authority.
 
 ### 13.2 ATI PH
 
-Move generic Email delivery, template/provider machinery, retry, and Delivery tracking into Notification. ATI PH retains holiday rules, subscription/recipient eligibility, approvals, and Product business state. ATI PH requests Notification only after current business state is validated.
+Move generic Email delivery, template/provider machinery, retry, and Delivery tracking into Notification.
+
+ATI PH retains holiday rules, subscription/recipient eligibility, approvals, and Product business state.
+
+ATI PH requests Notification only after current business state is validated.

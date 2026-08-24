@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-003
   title: ADR-GLB-003 Enterprise Transactional Outbox Pattern
   adr_type: foundational
-  status: accepted
+  status: superseded
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
@@ -26,6 +26,7 @@ Mandating the Transactional Outbox Pattern for Secure Asynchronous Domain Event 
 | 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
 | 2026-08-21 | accepted | foundational | Architecture Review Board | Enterprise Architect |
 | 2026-08-23 | accepted | foundational | Architecture Authority, Platform Engineering | Architecture Authority |
+| 2026-08-24 | superseded | foundational | Architecture Authority, Platform Engineering | Architecture Authority |
 
 The 2026-08-21 entry records two corrections. The broker product is fixed to the Kafka protocol in section 5; the original text named a different product in passing without ever deciding one, so the dispatcher was written against a delivery contract no artifact had chosen. The outbox table is also renamed from `auth_outbox` to `platform.outbox`, matching the schema `foundation-platform` ships. The transactional-outbox decision itself is unchanged.
 

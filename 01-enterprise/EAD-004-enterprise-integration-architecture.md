@@ -3,13 +3,13 @@ doc_meta:
   id: EAD-004
   title: Enterprise Integration Architecture
   owner: Architecture Authority
-  version: 1.2.0
+  version: 1.3.0
   status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
   created_date: 2026-08-06
-  last_reviewed: 2026-08-23
+  last_reviewed: 2026-08-24
 ---
 
 # Enterprise Integration Architecture
@@ -58,6 +58,7 @@ Shared Integration may provide connector/protocol/transformation machinery. The 
 | D5 | Model/provider switching is desired | Portability requires evaluation, not assumed equivalence |
 | D6 | Shared integration must not become central coupling | Natural Owner rule remains mandatory |
 | D7 | Local authoritative state changes may require external event publication | Atomic publication intent remains inside the source transaction boundary; shared delivery machinery does not become a second authority |
+| D8 | Asynchronous relationships need different delivery semantics | Direct durable delivery, queue-oriented messaging, and stream-oriented messaging remain distinct profiles selected below Product authority |
 
 ### 4.2 Lessons Incorporated
 
@@ -70,6 +71,7 @@ Shared Integration may provide connector/protocol/transformation machinery. The 
 | Integration mediated every external provider | Shared Integration remains optional machinery |
 | Model change was treated as configuration-only | Evaluation and release gates protect semantic compatibility |
 | A central outbox service was treated as the transaction boundary | Outbox state stays local to the authoritative mutation; shared relays/CDC may transport it after commit |
+| One broker product was treated as the architecture | Delivery profile follows point-to-point, queue, or retained-stream semantics; concrete products remain downstream choices |
 
 ## 5. Architecture Model
 
@@ -210,6 +212,20 @@ Gateway, broker, connector, AI gateway, and tool gateway are technical roles rat
 - AI gateway does not own Product/Knowledge truth
 - no gateway/broker is a universal mandatory hop without justified capability
 
+### 5.11.1 Durable Delivery Substrate Selection
+
+Asynchronous communication does not imply one universal broker. The required delivery semantics select the minimum durable profile:
+
+| Profile | Best fit | Required properties |
+| :-- | :-- | :-- |
+| Direct Durable Delivery | bounded point-to-point asynchronous relationship | source-local publication durability when needed, idempotent target acceptance, retry, ambiguity handling, reconciliation |
+| Queue-Oriented Messaging | commands, jobs, targeted triggers, competing consumers, routing | durable queue, acknowledgement, backpressure, bounded retry, failure parking |
+| Stream-Oriented Messaging | replayable facts, many independent consumers, CDC, stream processing | retained append-only log, partition/key ordering, offsets, replay, consumer groups |
+
+A Product/Platform contract declares the semantic need. SAD/ADR/TDD layers select concrete HTTP, RabbitMQ, Kafka, or equivalent implementation.
+
+One logical message contract uses one primary delivery path per environment unless a governed migration or distinct semantic contract justifies multiple substrates.
+
 ### 5.12 Transactional Publication Boundary
 
 When a local authoritative state mutation and its external event publication must succeed or fail as one logical operation, the publication intent is persisted **inside the same local transactional authority** as the state mutation.
@@ -315,5 +331,5 @@ Outbox state itself remains owned by the source Product/Platform transaction.
 - PAD-PLT-008 AI
 - PAD-PLT-015 Knowledge & Retrieval
 - STD-GLB-011 Background Job Execution
-- ADR-GLB-003 Transactional Outbox
+- ADR-GLB-016 Transactional Publication and Durable Messaging Profiles
 - STD-GLB-004 Event-Driven Architecture & Messaging

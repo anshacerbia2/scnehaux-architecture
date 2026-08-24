@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-SCH-001
   title: ADR-SCH-001 PostgreSQL Temporal Authority and Kafka Dispatch
   adr_type: implementation
-  status: accepted
+  status: superseded
   created: 2026-08-22
   created_date: 2026-08-22
   created_by: Scheduling Platform Team
@@ -22,6 +22,7 @@ Use PostgreSQL as the initial durable temporal authority and the enterprise Kafk
 | Date | Status | ADR Type | Reviewers | Approver |
 | :-- | :-- | :-- | :-- | :-- |
 | 2026-08-22 | accepted | implementation | Scheduling Platform, Platform Engineering, Architecture Authority | Architecture Authority |
+| 2026-08-24 | superseded | implementation | Scheduling Platform, Platform Engineering, Architecture Authority, Notification | Architecture Authority |
 
 ## 3. Context
 

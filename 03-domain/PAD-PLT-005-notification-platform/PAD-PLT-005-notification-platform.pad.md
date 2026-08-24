@@ -3,12 +3,12 @@ doc_meta:
   id: PAD-PLT-005
   title: Enterprise Notification Platform
   owner: Notification Platform Team
-  version: 2.2.0
+  version: 2.2.1
   status: approved
   classification: restricted
   governed_by:
     - GDC-008
-    - ADR-GLB-011
+    - ADR-GLB-017
   realizes_capability:
     - EAD-001
     - EAD-005

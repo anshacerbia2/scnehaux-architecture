@@ -1,7 +1,7 @@
 # tech-radar.yaml — Enterprise Technology Radar
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
-# Last updated: 2026-07-06
+# Last updated: 2026-08-24
 
 technology_radar:
   adopt:
@@ -44,14 +44,19 @@ technology_radar:
       owner: Identity Platform Team
       rationale_adr: ADR-IAM-001
 
-    # The three entries below carry no new runtime into the portfolio; each is the
-    # implementation of a decision already accepted, and a radar that omits an adopted
-    # technology cannot answer what the estate runs.
+    # Messaging technologies are adopted by semantic profile rather than as universal
+    # dependencies. A deployment runs only the substrate required by its contracts.
     - name: kafka
-      category: event-broker
+      category: event-streaming-broker
       date_adopted: "2026-08-21"
       owner: Platform Engineering
-      rationale_adr: ADR-GLB-003
+      rationale_adr: ADR-GLB-016
+
+    - name: rabbitmq
+      category: queue-broker
+      date_adopted: "2026-08-24"
+      owner: Platform Engineering
+      rationale_adr: ADR-GLB-016
 
     - name: atlas
       category: schema-migration

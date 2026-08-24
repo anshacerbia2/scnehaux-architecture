@@ -3,12 +3,12 @@ doc_meta:
   id: SAD-013
   title: Scnehaux Scheduling Runtime
   owner: Scheduling Platform Team
-  version: 1.2.0
+  version: 2.0.0
   status: approved
   classification: restricted
   governed_by:
     - GDC-009
-    - ADR-SCH-001
+    - ADR-SCH-002
   parent_pad: PAD-PLT-011
   review_cycle_days: 90
   created_date: 2026-08-22
@@ -18,8 +18,10 @@ doc_meta:
       type: backend-language
     - name: postgresql
       type: database
+    - name: rabbitmq
+      type: queue-broker-profile
     - name: kafka
-      type: event-broker
+      type: stream-broker-profile
     - name: kubernetes
       type: orchestration
     - name: opentelemetry
@@ -32,7 +34,9 @@ doc_meta:
 
 ### 1.1 Objective
 
-Realize PAD-PLT-011 as a durable multi-tenant scheduling runtime that accepts Schedule lifecycle commands, persists authoritative temporal state, materializes each logical due Occurrence once, and dispatches that Occurrence at least once through the enterprise Kafka contract without running consumer business code.
+Realize PAD-PLT-011 as a durable multi-tenant Scheduling runtime that accepts Schedule lifecycle commands, persists authoritative temporal state, materializes each logical due Occurrence once, and dispatches that Occurrence at least once through a selected durable-delivery profile without running consumer business code.
+
+Scheduling correctness is independent of RabbitMQ, Kafka, or direct HTTP.
 
 ### 1.2 Capability
 
@@ -44,56 +48,81 @@ The deployable provides:
 - multi-replica due claiming
 - durable Occurrence materialization
 - misfire recovery
-- transactional outbox publication
+- source-local transactional outbox
+- transport-neutral Outbox Relay
+- Direct/RabbitMQ/Kafka dispatch adapters
 - target/application ownership projection
 - Tenant/application admission and quota
 - operational query, replay, and reconciliation
 
 ### 1.3 Requirement
 
-The runtime must remain correct under duplicate commands, lost/ambiguous create responses, concurrent replicas, process termination during due processing, broker outage, time-zone/DST transitions, near-due update/cancel races, and prolonged outage followed by recovery.
+The runtime remains correct under:
 
-The default platform SLO inherited from PAD-PLT-011 is 99.9% of due Occurrences durably dispatched within 30 seconds of `scheduled_for` at mature production state.
+- duplicate commands
+- lost/ambiguous create responses
+- concurrent replicas
+- process termination during due processing
+- selected delivery-substrate outage
+- target outage in Direct profile
+- duplicate transport delivery
+- time-zone/DST transitions
+- near-due update/cancel races
+- prolonged outage followed by recovery
+- profile migration without duplicate logical Occurrence creation
 
-### 1.4 Constraint
+The inherited mature default SLO remains 99.9% of due Occurrences durably dispatched within 30 seconds of `scheduled_for`.
+
+### 1.4 Constraints
 
 - Go is the application runtime
 - PostgreSQL is the authoritative Scheduling store
-- Kafka is the due-occurrence and lifecycle publication protocol
-- Kubernetes is the approved orchestration substrate for this deployable
+- source state mutation and publication intent use one local transactional-outbox transaction
+- dispatch occurs only through the `OccurrenceDispatchPort`
+- default Scnehaux deployment uses the Queue profile with RabbitMQ
+- Kafka is the supported Stream profile
+- Direct Durable Delivery is permitted only for bounded deployments/relationships whose target exposes governed idempotent durable acceptance
+- one Occurrence contract has one primary delivery adapter per environment
+- blind RabbitMQ+Kafka dual-publish is prohibited
+- Kubernetes is the approved orchestration substrate
 - OpenTelemetry is the instrumentation contract
-- Product business code never executes inside this runtime
+- Product business code never executes inside Scheduling
 - no Product operational database is read directly
 - no arbitrary URL, shell command, function body, or container image is accepted as a Target
-- a registered Notification deferred-command Target is permitted only with bounded non-secret trigger input; Scheduling never resolves provider/channel credentials or Application Notification Profiles
-- state mutation and publication intent use the enterprise transactional-outbox pattern
-- the initial timing mechanism uses relational durable state and short transactional due claims rather than a bespoke consensus/timer cluster
-- physical worker extraction requires measured scale or fault-containment evidence and a separate SAD
+- a registered Notification deferred-command Target is permitted only with bounded non-secret trigger input
+- Scheduling never resolves Notification provider/channel credentials or Application Notification Profiles
+- relational durable state and short transactional due claims remain the initial timing mechanism
+- physical module extraction requires measured scale/security/fault-containment evidence and a separate SAD
 
-### 1.5 Assumption
+### 1.5 Assumptions
 
 - Identity publishes locally verifiable workload/user trust
 - Organization provides canonical Tenant context through bounded contracts
-- application/service ownership can be projected from the enterprise trust/catalog capability
-- Kafka and PostgreSQL are operated according to their enterprise standards
+- application/service ownership can be projected from enterprise trust/catalog capability
+- PostgreSQL and the selected dispatch substrate are operated to the declared reliability class
 - consumers enforce `occurrence_id` idempotency
+- Direct-profile target APIs persist/deduplicate before successful acknowledgement
 
 ### 1.6 Out of Scope
 
-- Product worker implementation
+- Product Worker implementation
 - Product retry, compensation, or business completion state
 - Workflow process state
 - Notification provider delivery
-- secrets or credentials
-- third-party scheduler administration UI
+- secret/credential custody
+- broker administration as a Product experience
+- universal enterprise broker ownership
+- arbitrary routing endpoints supplied in Schedule payload
 
 ## 2. Enterprise Traceability
 
 | Relationship | Target |
 | :-- | :-- |
 | Realizes | PAD-PLT-011 Enterprise Scheduling Platform |
-| Governed by | ADR-SCH-001 PostgreSQL Temporal Authority and Kafka Dispatch |
-| Conforms to | ADR-GLB-003 Transactional Outbox and Kafka Protocol |
+| Governed by | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch |
+| Conforms to | ADR-GLB-016 Transactional Publication and Durable Messaging Profiles |
+| Conforms to | ADR-GLB-017 Enterprise Durable Scheduling Boundary with Profiled Dispatch |
+| Conforms to | ADR-GLB-014 Background Worker Network Boundary |
 | Conforms to | ADR-GLB-004 Declarative Schema Lifecycle |
 | Conforms to | STD-GLB-002 Database Standard |
 | Conforms to | STD-GLB-003 Observability Standard |
@@ -101,7 +130,7 @@ The default platform SLO inherited from PAD-PLT-011 is 99.9% of due Occurrences 
 | Conforms to | STD-GLB-005 Resilience Standard |
 | Conforms to | STD-GLB-010 Durable Scheduled Work Standard |
 
-The runtime does not redefine Product, Workflow, Notification, Identity, Organization, or Event & Messaging authority.
+The runtime does not redefine Product, Workflow, Notification, Identity, Organization, Background Job, or Event & Messaging authority.
 
 ## 3. Solution Context
 
@@ -109,12 +138,12 @@ The runtime does not redefine Product, Workflow, Notification, Identity, Organiz
 
 ```mermaid
 graph LR
-    CONSUMER[Product or Platform Consumer]
+    CONSUMER[Product / Platform Consumer]
     UI[Scheduling Experience]
     SCHED[Scheduling Runtime]
     DB[(Scheduling PostgreSQL)]
-    KAFKA[Kafka Protocol Broker]
-    TARGET[Registered Consumer Contract / Worker / Notification]
+    MSG[Selected Durable Delivery Boundary]
+    TARGET[Registered Consumer Acceptance / Consumer]
     TRUST[Identity / Organization / App Trust Projections]
     AUDIT[Audit & Evidence]
 
@@ -122,33 +151,50 @@ graph LR
     UI -->|Control API| SCHED
     SCHED --> DB
     TRUST -. bounded/local control facts .-> SCHED
-    SCHED -. Occurrence Due .-> KAFKA
-    KAFKA -. at-least-once .-> TARGET
-    SCHED -. privileged evidence .-> KAFKA
-    KAFKA -. evidence subscription .-> AUDIT
+    SCHED -. occurrence.due .-> MSG
+    MSG -. at-least-once .-> TARGET
+    SCHED -. lifecycle/evidence facts .-> MSG
+    MSG -. governed subscription/acceptance .-> AUDIT
 ```
 
-The target consumer is not a Scheduling container and the Scheduler does not synchronously invoke it. A target may be an owning Product/Platform Worker or a registered bounded Notification command contract.
+The target consumer is not a Scheduling container. A target is a registered Product/Platform contract, Worker-owning application acceptance boundary, or bounded Notification command contract.
 
-### 3.2 External
+### 3.2 External Dependencies
 
-The runtime has no business-vendor integration. Its external platform dependencies are PostgreSQL, Kafka, enterprise trust/context artifacts, secret delivery for its own infrastructure credentials, and observability export.
+Always required:
 
-### 3.3 Internal
+- PostgreSQL
+- enterprise trust/context artifacts
+- secret delivery for runtime infrastructure credentials
+- observability export
 
-The initial Go deployable contains compile-time bounded modules:
+Profile-dependent:
 
-1. **Control API** — authentication context, command idempotency, validation, authorization, and query endpoints
+- Direct — registered target durable-acceptance API
+- Queue — RabbitMQ
+- Stream — Kafka protocol broker
+
+No business-vendor dependency exists in Scheduling.
+
+### 3.3 Internal Modules
+
+The initial Go deployable contains:
+
+1. **Control API** — authentication context, command idempotency, validation, authorization, query
 2. **Schedule Domain** — lifecycle invariants and temporal policy
-3. **Temporal Calculator** — versioned recurrence calculation using a replaceable free/open-source parser/calculator
-4. **Due Claimer** — horizontally safe acquisition of due Schedules through short PostgreSQL coordination
-5. **Occurrence Materializer** — creates the stable logical Occurrence and advances Schedule state atomically
-6. **Outbox Relay** — publishes occurrence/lifecycle events through Kafka
-7. **Target Projection** — locally usable registered-target ownership metadata
-8. **Quota & Admission** — per-application/Tenant limits and saturation protection
-9. **Operations & Reconciliation** — replay, repair, state comparison, and support query surfaces
+3. **Temporal Calculator** — versioned replaceable recurrence calculation
+4. **Due Claimer** — horizontally safe due-Schedule acquisition
+5. **Occurrence Materializer** — creates stable Occurrence and advances Schedule state atomically
+6. **Outbox Relay** — claims committed transport-neutral publication intents
+7. **Occurrence Dispatch Port** — stable application contract for durable dispatch
+8. **Direct Adapter** — idempotent target durable-acceptance API
+9. **RabbitMQ Adapter** — queue-oriented dispatch
+10. **Kafka Adapter** — stream-oriented dispatch
+11. **Target Projection** — registered-target ownership/routing metadata
+12. **Quota & Admission** — Tenant/application limits and saturation protection
+13. **Operations & Reconciliation** — replay, repair, state comparison, support query
 
-The modules share one deployable and one private database initially. Logical module ownership remains explicit so measured hot paths can be split later without changing PAD contracts.
+Only adapters required by the selected deployment profile need to be enabled/deployed.
 
 ## 4. Architecture Model
 
@@ -158,31 +204,37 @@ The modules share one deployable and one private database initially. Logical mod
 graph TB
     INGRESS[Managed Internal Ingress]
     APP[Go Scheduling Runtime - N Replicas]
-    DB[(Managed PostgreSQL - Multi-AZ)]
-    KAFKA[Managed Kafka Protocol Broker]
+    DB[(Managed PostgreSQL - HA)]
+    MSG[Selected Dispatch Substrate]
+    TARGET[Registered Target Acceptance]
     SECRET[Managed Secret Service]
     OTEL[OpenTelemetry Collector]
 
     INGRESS --> APP
     APP --> DB
-    APP --> KAFKA
+    APP --> MSG
+    MSG --> TARGET
     SECRET --> APP
     APP -. telemetry .-> OTEL
 ```
 
+For Direct profile, `MSG` is the governed target durable-acceptance boundary rather than a broker.
+
 ### 4.2 Component
 
 ```text
-adapter/http   -> app/command     -> domain/schedule
-adapter/http   -> app/query       -> app/ports
-adapter/db     -> app/ports
-due-runner     -> app/materialize -> domain/schedule
-outbox-relay   -> app/publish     -> app/ports
-adapter/kafka  -> app/ports
-adapter/trust  -> app/ports
+adapter/http          -> app/command       -> domain/schedule
+adapter/http          -> app/query         -> app/ports
+adapter/db            -> app/ports
+due-runner            -> app/materialize   -> domain/schedule
+outbox-relay          -> app/publish       -> app/ports/occurrence-dispatch
+adapter/dispatch/http -> app/ports
+adapter/dispatch/rmq  -> app/ports
+adapter/dispatch/kafka-> app/ports
+adapter/trust         -> app/ports
 ```
 
-Domain packages depend on no network, database, Kafka, Kubernetes, or UI package.
+Domain packages depend on no network, database, broker, Kubernetes, or UI package.
 
 ### 4.3 Runtime Flow — Create Schedule
 
@@ -193,13 +245,17 @@ sequenceDiagram
     participant D as PostgreSQL
 
     C->>S: Create Schedule + stable idempotency key
-    S->>S: authenticate, authorize, validate target and time policy
-    S->>D: atomic Schedule/idempotency/lifecycle-outbox transaction
+    S->>S: authenticate, authorize, validate target/time policy
+    S->>D: atomic Schedule + idempotency + lifecycle outbox
     D-->>S: commit
-    S-->>C: schedule_id, version, next occurrence
+    S-->>C: schedule_id + version + next occurrence
 ```
 
-The idempotency record is scoped to authenticated application/Tenant ownership. An equivalent retry with the same identity returns the same logical `schedule_id` even when the original response was lost. Reuse of the identity with conflicting semantic Schedule content is rejected. The Control API exposes owned query/reconciliation semantics sufficient for a caller to recover the binding without direct database access.
+The idempotency record is scoped to authenticated application/Tenant ownership.
+
+Equivalent retry with the same identity returns the same logical `schedule_id`. Conflicting semantic reuse is rejected.
+
+The Control API exposes owned recovery/reconciliation so a caller can recover an ambiguous create result without creating a second Schedule.
 
 ### 4.4 Runtime Flow — Due Occurrence and Dispatch
 
@@ -208,92 +264,125 @@ sequenceDiagram
     participant W as Due Claimer
     participant D as PostgreSQL
     participant R as Outbox Relay
-    participant K as Kafka
-    participant C as Consumer Worker
+    participant P as OccurrenceDispatchPort
+    participant X as Selected Durable Boundary
+    participant C as Consumer
 
     W->>D: claim bounded due batch
-    W->>D: atomic occurrence + schedule advance + outbox
+    W->>D: atomic Occurrence + Schedule advance + outbox
     D-->>W: commit
-    R->>D: claim unpublished outbox records
-    R->>K: publish occurrence.due
-    K-->>R: durable acknowledgement
-    R->>D: record publication state
-    K-->>C: at-least-once occurrence.due
+    R->>D: claim unpublished outbox
+    R->>P: publish occurrence.due
+    P->>X: profile-specific durable delivery
+    X-->>P: durable acceptance
+    P-->>R: accepted
+    R->>D: mark publication accepted
+    X-->>C: deliver / expose accepted operation
     C->>C: dedupe occurrence_id and execute owned work
 ```
 
-No network call occurs inside the authoritative due-state transaction.
+No external network call occurs inside the authoritative due-state transaction.
 
-### 4.5 Runtime Flow — Misfire Recovery
+### 4.5 Profile Durability Points
 
-After restart or outage, the Due Claimer discovers elapsed Schedule state and applies the persisted policy:
+| Profile | Dispatch durability point | Consumer durability point |
+| :-- | :-- | :-- |
+| Direct | registered target confirms persisted/deduplicated acceptance | target Inbox/Operation or atomic effect |
+| RabbitMQ Queue | publisher confirm under durable queue contract | ACK only after local dedup/durability |
+| Kafka Stream | producer acknowledgement under replicated stream contract | offset/consumer acknowledgement only after declared local durability |
 
-- `skip` advances to the first future occurrence and records the skipped condition
-- `fire_once` materializes one recovery occurrence
+Scheduler dispatch state never represents Product business completion.
+
+### 4.6 Misfire Recovery
+
+After restart/outage the Due Claimer discovers elapsed Schedule state and applies persisted policy:
+
+- `skip` advances to the first future occurrence and records skip evidence
+- `fire_once` materializes one recovery Occurrence
 - `catch_up_bounded` materializes only the permitted finite recovery set
 
-Every recovery Occurrence preserves the logical `scheduled_for` instant required by STD-GLB-010.
+Every recovery Occurrence preserves logical `scheduled_for`.
 
-### 4.6 Runtime Flow — Replay
+### 4.7 Replay
 
-Operational replay re-publishes the existing Occurrence with the same `occurrence_id`. Replay never manufactures a second business occurrence for the same logical due instant.
+Operational replay republishes the existing Occurrence with the same `occurrence_id`.
+
+Replay does not create a second logical business occurrence.
+
+Profile adapter changes do not change replay identity.
 
 ## 5. State & Data Architecture
 
 ### 5.1 Storage
 
-One private managed PostgreSQL database is authoritative for Scheduling runtime state. No Product or Platform consumer receives a database connection.
+One private PostgreSQL database is authoritative for Scheduling runtime state.
 
-Logical state families include:
+Logical state families:
 
-- Schedule aggregate state
-- Occurrence state
-- command idempotency state
-- create-command semantic fingerprint and stable idempotency-to-`schedule_id` mapping required for lost-response recovery
+- Schedule aggregate
+- Occurrence
+- command idempotency
+- create-command semantic fingerprint and idempotency-to-`schedule_id` mapping
 - registered-target projection
-- application/Tenant quota and consumption state
-- outbox publication state
+- application/Tenant quota and consumption
+- transport-neutral outbox publication state
+- dispatch profile/route reference where operationally required
 - replay/reconciliation metadata
 
-Exact table names, DDL, indexes, partitioning, and query plans belong in TDDs.
+Exact DDL, indexes, table partitioning, claim queries, queue/topic names, and adapter configuration belong in TDDs.
 
 ### 5.2 Schema
 
 - declarative Atlas lifecycle
-- migration role is separate from runtime role
+- migration role separate from runtime role
 - runtime role has no DDL privilege
-- UUIDv7 for durable primary identifiers
-- Tenant-scoped state uses the enterprise RLS isolation pattern where applicable
-- due-access paths are performance-tested against forecast and 10x forecast-peak certification load
+- UUIDv7 durable identifiers
+- Tenant-scoped state uses enterprise RLS where applicable
+- due-access paths are performance-tested at forecast and 10x forecast peak
 
 ### 5.3 Cache
 
-Any cache is non-authoritative. Temporal calculation metadata or target projections may be cached only with explicit version/freshness bounds. Schedule lifecycle, Occurrence identity, and publication durability never depend on cache survival.
+Cache is non-authoritative.
+
+Schedule lifecycle, Occurrence identity, idempotency, and dispatch durability never depend on cache survival.
 
 ### 5.4 Stateless Compute
 
-Replicas hold no correctness-critical state exclusively in memory. PostgreSQL transaction time is the canonical comparison source for due claiming so host clock skew does not create competing due-state authority.
+Replicas hold no correctness-critical state exclusively in memory.
+
+PostgreSQL transaction time is canonical for due claiming so host clock skew cannot become competing temporal authority.
 
 ## 6. Integration Contracts
 
 ### 6.1 API
 
-The Control API is versioned under the enterprise API standard and provides command/query capabilities for idempotent create, create-result recovery/reconciliation, read/list, update, pause, resume, cancel, preview, occurrence query, replay, target discovery, and reconciliation.
+The versioned Control API provides:
+
+- idempotent create
+- create-result recovery/reconciliation
+- read/list
+- update
+- pause/resume/cancel
+- preview
+- occurrence query
+- replay
+- target discovery
+- reconciliation
 
 Mutating commands require:
 
 - authenticated identity/workload context
 - canonical ownership scope
 - idempotency key
-- semantic consistency with any prior command using the same scoped idempotency identity
-- expected Schedule version where mutation races are possible
-- privileged reason/evidence metadata for replay, quota override, or cross-Tenant administration
+- semantic consistency with prior use of that scoped identity
+- expected Schedule version where races are possible
+- privileged reason/evidence for replay, quota override, cross-Tenant administration
 
 Errors use the enterprise RFC 9457 contract.
 
-### 6.2 Published Events
+### 6.2 Published Contracts
 
-CloudEvents 1.0 event families include:
+CloudEvents lifecycle/event families include:
 
 ```text
 com.scnehaux.scheduling.schedule.created.v1
@@ -303,180 +392,302 @@ com.scnehaux.scheduling.occurrence.due.v1
 com.scnehaux.scheduling.occurrence.misfired.v1
 ```
 
-Occurrence events contain stable Schedule/Occurrence IDs, `scheduled_for`, application/Tenant ownership, target contract, correlation, and bounded trigger data. They contain no credential.
+The logical `OccurrenceDue` contract contains:
+
+- stable Schedule/Occurrence IDs
+- `scheduled_for`
+- application/Tenant ownership
+- registered target contract
+- correlation
+- bounded trigger data
+
+It contains no credential and no RabbitMQ/Kafka-specific field.
 
 ### 6.3 Consumed Contracts
 
 - Identity local verification material
 - Organization Tenant/context projection
 - Application/Service Trust target ownership projection
-- enterprise secret delivery for runtime credentials
-- Kafka protocol and schema registry
+- enterprise secret delivery for infrastructure credentials
+- selected STD-GLB-004 durable-delivery profile
+- enterprise schema-contract registry/catalog
 - OpenTelemetry export
 
-There is no per-occurrence synchronous control-plane fan-in.
+No per-occurrence synchronous Identity/Organization fan-in exists.
 
 ## 7. Security & Trust Boundary
 
 ### 7.1 Authentication
 
-Human and workload callers use audience-bound enterprise Identity credentials. Protected-resource tokens are validated locally according to the IAM standard.
+Human/workload callers use audience-bound enterprise Identity credentials.
+
+Protected-resource tokens are validated locally according to IAM standards.
 
 ### 7.2 Authorization
 
 - application ownership and Tenant scope are enforced on every command
 - privileged provider operations use an explicit cross-Tenant path
-- caller-supplied `application_id` does not replace authenticated application ownership
-- target changes require authorization against the registered target projection
-- replay and quota override are privileged operations
+- caller-supplied `application_id` never replaces authenticated ownership
+- target change requires authorization against registered-target projection
+- replay and quota override are privileged
 
-### 7.3 Encryption
+### 7.3 Dispatch Security
 
-TLS 1.3 in transit and enterprise-managed encryption at rest. Trigger metadata is minimized by default.
+All profiles enforce authenticated workload identity, encrypted transport, least privilege, payload minimization, and governed target registration.
 
-- deferred Notification triggers remain bounded and non-secret; arbitrary communication bodies, provider configuration, and unbounded recipient/contact datasets are rejected.
+Direct-profile target endpoints come from trusted target registration, never Schedule payload URLs.
+
+RabbitMQ/Kafka admin surfaces are not Product APIs.
 
 ### 7.4 Secrets
 
-Schedule records and due events never store provider credentials, application API keys, OAuth refresh tokens, or private keys. Runtime infrastructure credentials arrive only through the enterprise secret mechanism.
+Schedule/outbox/due-event records never store provider credentials, API keys, OAuth refresh tokens, or private keys.
+
+Runtime infrastructure credentials arrive through enterprise secret delivery.
 
 ### 7.5 Audit
 
-Create/update/cancel/pause/resume, target change, misfire-policy change, replay, quota override, repair, and cross-Tenant operations emit traceable evidence facts with actor, scope, reason, and correlation.
+Create, update, cancel, pause/resume, target change, misfire-policy change, replay, quota override, repair, profile migration, and cross-Tenant operations produce traceable evidence with actor, scope, reason, and correlation.
 
 ## 8. NFR
 
 ### 8.1 Blast Radius
 
-A Scheduling Runtime outage delays future trigger dispatch but does not mutate Product business truth. Accepted Schedule state remains durable and recovery follows the stored misfire policy. A Kafka outage retains publication intent in the outbox. A single consumer outage does not stop materialization or dispatch for unrelated targets.
+A Scheduling Runtime outage delays future dispatch but does not mutate Product business truth.
 
-The target reliability class is C1: >=99.95% mature service availability, RTO <=1 hour, RPO <=15 minutes.
+A selected delivery-boundary outage retains committed publication intent in the local outbox.
+
+A Direct target outage affects that target relationship only.
+
+A RabbitMQ queue/route failure must be isolated from unrelated target queues where topology permits.
+
+A Kafka partition/consumer issue must be isolated according to topic/partition design.
+
+Target reliability remains C1:
+
+- mature service availability >=99.95% monthly
+- RTO <=1 hour
+- RPO <=15 minutes
 
 ### 8.2 Latency, Throughput, and Scalability
 
 - default due-dispatch SLO: 99.9% within 30 seconds of `scheduled_for`
 - production capacity gate: 10x forecast peak due rate without SLO breach
-- compute replicas scale horizontally across availability zones
+- compute scales horizontally
 - bounded claim batches and short transactions limit database lock duration
-- per-application/Tenant quotas and fair admission prevent noisy-neighbor starvation
-- control/list traffic is lower priority than due-dispatch work under saturation
+- per-application/Tenant quotas enforce fairness
+- control/list traffic sheds before due-dispatch work
+- profile capacity is certified independently
 
-### 8.3 Observability and Telemetry
+### 8.3 Observability
 
-OpenTelemetry traces, metrics, and structured logs expose:
+Common telemetry:
 
 - dispatch lateness distribution
 - active Schedule count
 - due/materialized Occurrence rate
 - oldest undispatched Occurrence
-- misfire/replay counts
-- outbox age
-- Kafka publication error/latency
+- misfire/replay count
+- outbox oldest age
+- dispatch publication latency/error
 - database claim latency/contention
 - per-Tenant/application quota utilization
-- admission rejects and saturation
+- admission reject/saturation
 
-Every alert has an owner and runbook action.
+Profile telemetry:
+
+**Direct**
+
+- target acceptance latency/error
+- ambiguous response count
+- retry backlog age
+
+**RabbitMQ**
+
+- publisher confirm latency
+- queue ready/unacked count
+- oldest queue age
+- redelivery and DLQ depth
+
+**Kafka**
+
+- producer acknowledgement latency
+- consumer lag
+- partition skew
+- retention/storage pressure
+- replay position/age
 
 ### 8.4 Retry, Timeout, Circuit Breaker, and Failover
 
-- database transactions are bounded and contain no external network call
-- outbox publication retries only Kafka publication using the enterprise retry policy
-- consumer business retry is outside this system
-- control-plane downstream lookups use bounded projections rather than hot-path synchronous dependencies
+- database transaction contains no external network call
+- Outbox Relay retries selected dispatch only
+- Direct profile uses bounded timeout, exponential backoff/jitter, circuit breaker, and ambiguous-result reconciliation
+- RabbitMQ profile retries publish without manufacturing a new `occurrence_id`
+- Kafka profile retries publish without manufacturing a new `occurrence_id`
+- consumer business retry remains outside Scheduling
 - application replicas span availability zones
-- database/broker failover follows managed-substrate recovery contracts
+- database and broker failover follow profile recovery contracts
 
-### 8.5 Runbook
+### 8.5 Runbooks
 
-Production release is blocked until runbooks cover database failover, Kafka outage, stuck outbox, dispatch-lateness breach, quota saturation, time-zone regression, misfire surge after outage, duplicate dispatch, replay, and rollback.
+Production runbooks cover:
+
+- PostgreSQL failover
+- selected messaging-substrate outage
+- Direct target outage/ambiguous acceptance
+- stuck outbox
+- dispatch-lateness breach
+- queue backlog/DLQ
+- stream lag/partition skew
+- quota saturation
+- time-zone regression
+- misfire surge
+- duplicate dispatch
+- replay
+- profile migration
+- rollback
 
 ## 9. Deployment Strategy
 
-### 9.1 Environment
+### 9.1 Deployment Profiles
 
-Separate development, test, staging, and production environments use promoted immutable artifacts. Production data and secrets are not copied into preview/test environments without explicit governed handling.
+| Profile | Runtime dependencies | Intended use |
+| :-- | :-- | :-- |
+| `minimal-direct` | PostgreSQL + governed target HTTPS | local/lab or tightly bounded point-to-point deployments |
+| `queue-rabbitmq` | PostgreSQL + RabbitMQ | **default Scnehaux deployment** for targeted due-trigger delivery |
+| `stream-kafka` | PostgreSQL + Kafka | retained/replayable stream learning or workloads requiring stream semantics |
+
+One Occurrence contract uses one primary profile in an environment.
+
+A mixed environment may run RabbitMQ and Kafka only for **different contracts** with different semantics or an explicitly governed migration.
 
 ### 9.2 Infrastructure
 
+Common:
+
 - OCI-compatible Go artifact
-- Kubernetes deployment across multiple availability zones
-- managed PostgreSQL capability
-- managed Kafka-protocol broker
+- Kubernetes across multiple availability zones for production
+- managed/HA PostgreSQL capability
 - enterprise secret management
-- OpenTelemetry collector/export path
-- initial production profile is single-region multi-AZ; regional/silo profiles are introduced from Tenant requirements rather than code forks
+- OpenTelemetry collector/export
+
+Queue profile:
+
+- RabbitMQ durable/quorum topology appropriate to C1
+- publisher-confirm and DLQ configuration
+
+Stream profile:
+
+- replicated Kafka-protocol topics
+- producer durability, retention, partition, consumer-group policy
+
+Direct profile:
+
+- source Outbox Relay
+- registered target TLS/auth
+- target durable Inbox/Operation acceptance
+
+Initial production is single-region multi-AZ. Regional/silo profiles are introduced from Tenant/residency/fault-containment requirements rather than code forks.
 
 ### 9.3 CI/CD
 
 Blocking gates include:
 
-- formatting, static analysis, build, race tests, and dependency integrity
+- formatting, static analysis, build, race, dependency integrity
 - package-boundary enforcement
 - Atlas migration integrity and RLS tests using runtime roles
 - recurrence property tests and DST/time-zone golden corpus
-- concurrent-replica occurrence uniqueness tests
-- restart/fault tests around materialization and outbox publication
-- Kafka schema compatibility and duplicate-delivery tests
-- lost-create-response retry tests proving the same logical `schedule_id` is returned
-- conflicting idempotency-key reuse tests
-- Notification binding-reconciliation contract tests covering Schedule creation followed by caller process loss before local binding persistence
-- Tenant isolation, quota, and saturation tests
-- secret and vulnerability scanning
-- architecture-document traceability/linting
+- concurrent-replica Occurrence uniqueness tests
+- restart/fault tests around materialization and outbox
+- profile-parity contract tests for stable `OccurrenceDue`
+- Direct lost-response/idempotent-target tests
+- RabbitMQ publisher-confirm, redelivery, DLQ, node-loss tests
+- Kafka producer-ack, duplicate, consumer-group, replay tests
+- dual-adapter startup/config rejection test
+- lost-create-response test proving same logical `schedule_id`
+- conflicting idempotency-key reuse test
+- Notification binding-reconciliation tests
+- Tenant isolation, quota, saturation tests
+- secret/vulnerability scanning
+- architecture traceability/linting
 
-Deployments are progressive and reversible according to EAD-005.
+Deployments are progressive and reversible.
 
 ## 10. Architecture Decisions
 
 ### 10.1 Accepted
 
-- ADR-SCH-001 selects PostgreSQL temporal authority and Kafka dispatch
-- global outbox, database, event, resilience, and observability standards are inherited rather than redefined
-- Schedule creation is idempotent and recoverable after ambiguous responses; Scheduler never requires a caller to create a second logical Schedule merely because a response or caller-local binding write was lost
-- custom Scnehaux Scheduler Experience is a separate deployable under SAD-014
-- registered Deferred Notification Command is supported as a target only under STD-GLB-010 bounded-payload rules; business revalidation still targets the owning Product/Platform Worker
+- ADR-SCH-002 selects PostgreSQL temporal authority and replaceable durable dispatch
+- ADR-GLB-016 defines source-local outbox and delivery profiles
+- queue-rabbitmq is the default Scnehaux Scheduling deployment profile
+- Kafka remains a first-class stream profile rather than a universal dependency
+- Direct profile is permitted only through registered durable acceptance
+- Schedule creation remains idempotent/recoverable after ambiguous responses
+- custom Scheduling Experience remains separate under SAD-014
+- bounded Deferred Notification Command remains supported under STD-GLB-010
 
 ### 10.2 Rejected
 
 #### 10.2.1 Product Code Inside Scheduler
 
-Rejected because it collapses Product authority, deployment lifecycle, dependencies, and business failure semantics into a shared runtime.
+Rejected because it collapses Product authority, dependencies, deployment lifecycle, and failure semantics into Scheduling.
 
 #### 10.2.2 In-Memory Cron as Authority
 
-Rejected because restart and multi-replica correctness require durable Schedule/Occurrence state outside process memory.
+Rejected because restart/multi-replica correctness requires durable Schedule/Occurrence state outside process memory.
 
-#### 10.2.3 Additional Queue/Broker Substrate for Initial Dispatch
+#### 10.2.3 Universal Kafka Dependency
 
-Rejected because Kafka already satisfies the enterprise asynchronous dispatch contract. Adding another broker increases operational and disaster-recovery surface without a current requirement.
+Rejected because queue/direct deployments can satisfy Scheduling dispatch without retained-log semantics.
 
-#### 10.2.4 Third-Party Scheduler Dashboard as Product UI
+#### 10.2.4 RabbitMQ + Kafka Dual Publish
 
-Rejected because the operational experience is a Scnehaux contract independent of the internal scheduling implementation.
+Rejected because partial acknowledgement creates duplicate delivery and reconciliation ambiguity.
 
-#### 10.2.5 Active-Active Multi-Region in Initial Build
+#### 10.2.5 Arbitrary HTTP Worker Target
 
-Rejected because no measured residency, latency, or availability requirement currently justifies distributed temporal ownership across regions. The PAD and API contracts preserve a later regional realization.
+Rejected because target trust/routing must come from registered contracts and pure Workers do not gain public ingress.
+
+#### 10.2.6 Third-Party Scheduler Dashboard as Product UI
+
+Rejected because the Scnehaux operational experience remains independent of internal technology.
+
+#### 10.2.7 Active-Active Multi-Region Initial Build
+
+Rejected until measured residency/latency/availability evidence justifies distributed temporal ownership.
 
 ## 11. Assumptions
 
-- Initial measured workload fits the relational timing profile
-- Kafka and PostgreSQL are available as adopted enterprise capabilities
-- consumers can operate their own worker/handler deployment and implement occurrence idempotency
+- initial measured workload fits the relational timing profile
+- RabbitMQ is available for the baseline queue profile
+- Kafka can be deployed when stream-profile exercises/workloads require it
+- consumers operate their own handler/Worker and implement occurrence idempotency
+- no applicable business requirement currently requires two brokers for the same trigger contract
 
 ## 12. Compatibility Strategy
 
-API paths and event types are versioned. Recurrence semantics and time-zone calculation are compatibility-sensitive and protected by golden-corpus tests. Internal claim strategy, recurrence library, table partitioning, or future timer kernel may change without changing the PAD contract.
+API paths and logical event/trigger types are versioned.
+
+Recurrence/time-zone semantics are compatibility-sensitive and protected by golden-corpus tests.
+
+Internal claim strategy, recurrence library, table partitioning, and dispatch adapter may change without changing PAD or `OccurrenceDue` semantics.
+
+A transport migration preserves message identity and runs through explicit reconciliation rather than blind dual-publish.
 
 ## 13. Migration Strategy
 
 ### 13.1 ATI PH
 
-ATI PH retains public-holiday policy, recipient eligibility, business revalidation, and Product worker execution. Durable future reminder triggers move to Scheduling. A due occurrence wakes ATI PH, which revalidates current Product state and requests Notification.
+ATI PH retains public-holiday policy, recipient eligibility, business revalidation, and Product Worker execution.
+
+Durable future reminder triggers move to Scheduling. A due Occurrence wakes ATI PH, which revalidates current Product state and requests Notification.
 
 ### 13.2 Mailcast Client Solution
 
-Mailcast retains Gmail ingestion/polling, travel/PNR parsing, booking/passenger state, travel-specific rules, and client-owned worker execution. Durable future travel reminders/reconciliation wake-ups migrate to Scheduling. Tight Gmail polling remains local connector execution and is not modeled as an enterprise Schedule.
+Mailcast retains Gmail ingestion/polling, travel/PNR parsing, booking/passenger state, travel-specific rules, and client Worker execution.
 
-Legacy company identifiers are explicitly mapped to canonical Scnehaux Tenant/Application identity during migration; string equality is not treated as tenancy authority.
+Durable future travel reminders/reconciliation wake-ups move to Scheduling.
+
+Tight Gmail polling remains local connector execution and is not modeled as an enterprise Schedule.
+
+Legacy company identifiers are explicitly mapped to canonical Tenant/Application identity during migration.

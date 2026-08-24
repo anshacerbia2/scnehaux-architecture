@@ -3,12 +3,12 @@ doc_meta:
   id: PAD-PLT-011
   title: Enterprise Scheduling Platform
   owner: Scheduling Platform Team
-  version: 1.2.0
+  version: 1.3.0
   status: approved
   classification: restricted
   governed_by:
     - GDC-008
-    - ADR-GLB-011
+    - ADR-GLB-017
   realizes_capability:
     - EAD-001
     - EAD-005
@@ -291,12 +291,14 @@ Workflow Team owns workflow timer/deadline semantics. Notification Team owns not
 ## 9. Architectural Decisions
 
 - **ADR-GLB-011** establishes the enterprise Scheduler/Worker/Workflow/Notification authority boundary
-- **ADR-SCH-001** selects the initial physical realization while keeping the PAD technology-independent
+- **ADR-SCH-002** selects PostgreSQL temporal authority and profile-based durable dispatch while keeping the PAD technology-independent
 - **STD-GLB-010** defines the enterprise durable scheduled-work contract for all consumers
 
 ## 10. Evolution
 
 The logical Scheduling contract remains stable while physical timing machinery may evolve from the initial relational implementation to time-partitioned, regional, or specialized timing infrastructure if measured cardinality, precision, residency, or fault-containment requirements exceed the initial profile.
+
+Durable dispatch may move between Direct, Queue, and Stream delivery profiles without changing Schedule/Occurrence authority or logical trigger identity. Concrete broker/API selection remains below the PAD.
 
 Consumer APIs/events and authority boundaries remain the migration seam.
 
@@ -308,5 +310,5 @@ Consumer APIs/events and authority boundaries remain the migration seam.
 - EAD-004 Enterprise Integration Architecture
 - EAD-005 Enterprise Platform Architecture
 - EAD-006 Enterprise Security Architecture
-- ADR-GLB-011 Enterprise Durable Scheduling Boundary
+- ADR-GLB-017 Enterprise Durable Scheduling Boundary with Profiled Dispatch
 - STD-GLB-010 Enterprise Durable Scheduled Work Standard

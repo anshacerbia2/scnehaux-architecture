@@ -6,7 +6,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | [ADR-GLB-001](_global/ADR-GLB-001-modular-monolith.md) | ADR-GLB-001 Enterprise Adoption of Modular Monolith Architecture | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-002](_global/ADR-GLB-002-postgresql-rls.md) | ADR-GLB-002 Enterprise PostgreSQL Row-Level Security for Isolation | foundational | accepted | 2026-01-01 | N/A |
-| [ADR-GLB-003](_global/ADR-GLB-003-transactional-outbox.md) | ADR-GLB-003 Enterprise Transactional Outbox Pattern | foundational | accepted | 2026-01-01 | N/A |
+| [ADR-GLB-003](_global/ADR-GLB-003-transactional-outbox.md) | ADR-GLB-003 Enterprise Transactional Outbox Pattern | foundational | superseded | 2026-01-01 | N/A |
 | [ADR-GLB-004](_global/ADR-GLB-004-atlas-schema.md) | ADR-GLB-004 Atlas Schema Governance for Deterministic Data Migrations | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-005](_global/ADR-GLB-005-load-shedding.md) | ADR-GLB-005 Adopting Load Shedding and Resilience Invariants | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-006](_global/ADR-GLB-006-event-versioning.md) | ADR-GLB-006 Enforcing Event Versioning and Schema Evolution Contracts | foundational | accepted | 2026-01-01 | N/A |
@@ -14,11 +14,13 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-GLB-008](_global/ADR-GLB-008-go-project-structure.md) | ADR-GLB-008 Go Project Structure and Layer Enforcement | foundational | accepted | 2026-08-11 | N/A |
 | [ADR-GLB-009](_global/ADR-GLB-009-repository-topology.md) | One Repository per Deployable Unit for the Identity and Organization Foundation | foundational | proposed | 2026-08-12 | N/A |
 | [ADR-GLB-010](_global/ADR-GLB-010-application-mechanics-in-process.md) | Application Mechanics Stay In-Process; Network Mechanics Move to Infrastructure | foundational | proposed | 2026-08-12 | N/A |
-| [ADR-GLB-011](_global/ADR-GLB-011-durable-scheduling-boundary.md) | ADR-GLB-011 Establish Enterprise Durable Scheduling Boundary | foundational | accepted | 2026-08-22 | N/A |
+| [ADR-GLB-011](_global/ADR-GLB-011-durable-scheduling-boundary.md) | ADR-GLB-011 Establish Enterprise Durable Scheduling Boundary | foundational | superseded | 2026-08-22 | N/A |
 | [ADR-GLB-012](_global/ADR-GLB-012-separate-ai-knowledge-and-product-authority.md) | ADR-GLB-012 Separate Product, Knowledge, and AI Execution Authority | foundational | accepted | 2026-08-23 | N/A |
 | [ADR-GLB-013](_global/ADR-GLB-013-work-workflow-job-schedule-boundaries.md) | ADR-GLB-013 Separate Work, Workflow, Job, Schedule, Worker, and Queue Boundaries | foundational | accepted | 2026-08-23 | N/A |
 | [ADR-GLB-014](_global/ADR-GLB-014-background-worker-network-boundary.md) | ADR-GLB-014 Minimize Inbound Network Surface for Background Workers | foundational | accepted | 2026-08-23 | N/A |
 | [ADR-GLB-015](_global/ADR-GLB-015-separate-model-inference-and-agent-runtime.md) | ADR-GLB-015 Separate Model & Inference from Agent Runtime | foundational | accepted | 2026-08-23 | N/A |
+| [ADR-GLB-016](_global/ADR-GLB-016-durable-messaging-substrate-profiles.md) | ADR-GLB-016 Separate Transactional Publication from Durable Messaging Substrate Selection | replacement | accepted | 2026-08-24 | N/A |
+| [ADR-GLB-017](_global/ADR-GLB-017-durable-scheduling-profiled-dispatch.md) | ADR-GLB-017 Preserve Enterprise Durable Scheduling Boundary with Profiled Dispatch | replacement | accepted | 2026-08-24 | N/A |
 | [ADR-GLB-FE-001](_global/ADR-GLB-FE-001-react-ecosystem.md) | ADR-GLB-FE-001 Standardization on React and Framework Paved Road | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-FE-002](_global/ADR-GLB-FE-002-build-toolchain.md) | ADR-GLB-FE-002 Standardization on Next-Generation Build Toolchains | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-FE-003](_global/ADR-GLB-FE-003-meta-framework.md) | ADR-GLB-FE-003 Standardization on Enterprise Meta-Framework | foundational | accepted | 2026-01-01 | N/A |
@@ -31,7 +33,8 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-IAM-001](identity-access-platform/ADR-IAM-001-adopt-keycloak-identity-kernel.md) | Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel | replacement | accepted | 2026-08-06 | N/A |
 | [ADR-IAM-002](identity-access-platform/ADR-IAM-002-token-signing.md) | ADR-IAM-002 Token Signing Algorithm and Key Lifecycle Management | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-ORG-001](organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) | Separate Organization Authority from Identity and Use Keycloak as a Projection Target | replacement | accepted | 2026-08-06 | N/A |
-| [ADR-SCH-001](scheduling-platform/ADR-SCH-001-postgresql-kafka-scheduling-runtime.md) | ADR-SCH-001 PostgreSQL Temporal Authority and Kafka Dispatch | implementation | accepted | 2026-08-22 | N/A |
+| [ADR-SCH-001](scheduling-platform/ADR-SCH-001-postgresql-kafka-scheduling-runtime.md) | ADR-SCH-001 PostgreSQL Temporal Authority and Kafka Dispatch | implementation | superseded | 2026-08-22 | N/A |
+| [ADR-SCH-002](scheduling-platform/ADR-SCH-002-postgresql-profiled-durable-dispatch.md) | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch | replacement | accepted | 2026-08-24 | N/A |
 | [ADR-UIP-BLD-001](ui-platform/ADR-UIP-BLD-001-deferred-minification.md) | Deferred Minification | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-TKN-001](ui-platform/ADR-UIP-TKN-001-three-tier-isolation-architecture.md) | ADR-UIP-TKN-001 Three-Tier Design Token Isolation Architecture | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-TKN-002](ui-platform/ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md) | ADR-UIP-TKN-002 OKLCH Gamut and Dual-Engine Alpha Blending Architecture | foundational | accepted | 2026-01-01 | N/A |

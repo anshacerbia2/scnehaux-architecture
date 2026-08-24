@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-010
   title: Enterprise Durable Scheduled Work Standard
   owner: Architecture Authority
-  version: 1.2.0
+  version: 1.2.1
   status: adopted
   classification: internal
   governed_by:
@@ -21,7 +21,7 @@ This standard defines mandatory semantics for durable scheduled work across Scne
 
 It applies when a future action must survive consumer restart, infrastructure restart, or independent deployment and is represented through the shared Scheduling capability.
 
-This standard operationalizes the durable scheduling boundary established by ADR-GLB-011 while attaching normatively to PAD-PLT-011.
+This standard operationalizes the durable scheduling boundary established by ADR-GLB-017 while attaching normatively to PAD-PLT-011.
 
 It excludes request deadlines, short retry backoff, tight connector polling loops, in-process debounce/throttle, and infrastructure-local maintenance whose lifecycle is not an application scheduling contract.
 

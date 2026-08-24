@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-011
   title: ADR-GLB-011 Establish Enterprise Durable Scheduling Boundary
   adr_type: foundational
-  status: accepted
+  status: superseded
   created: 2026-08-22
   created_date: 2026-08-22
   created_by: Architecture Authority
@@ -25,6 +25,7 @@ Establish a shared durable temporal scheduling boundary without centralizing bus
 | :-- | :-- | :-- | :-- | :-- |
 | 2026-08-22 | accepted | foundational | Architecture Authority, Platform Engineering, Notification, Workflow, Product Engineering | Architecture Authority |
 | 2026-08-23 | accepted | foundational | Architecture Authority, Notification, Scheduling, Product Engineering | Architecture Authority |
+| 2026-08-24 | superseded | foundational | Architecture Authority, Platform Engineering, Scheduling, Notification | Architecture Authority |
 
 ## 3. Context
 

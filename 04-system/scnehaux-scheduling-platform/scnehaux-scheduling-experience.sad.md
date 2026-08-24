@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-014
   title: Scnehaux Scheduling Experience
   owner: Scheduling Platform Team
-  version: 1.0.0
+  version: 1.0.1
   status: draft
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
   parent_pad: PAD-PLT-011
   review_cycle_days: 90
   created_date: 2026-08-22
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-08-24
   technologies:
     - name: react
       type: frontend-framework
@@ -27,7 +27,7 @@ doc_meta:
 
 ### 1.1 Objective
 
-Provide a fully Scnehaux-owned administrative and operational user experience for Schedule lifecycle, Occurrence inspection, misfire/replay operations, Tenant/application usage, and Scheduler health without exposing database, Kafka, or third-party task-queue dashboards.
+Provide a fully Scnehaux-owned administrative and operational user experience for Schedule lifecycle, Occurrence inspection, misfire/replay operations, Tenant/application usage, and Scheduler health without exposing database, messaging-substrate, or third-party task-queue dashboards.
 
 ### 1.2 Capability
 
@@ -53,7 +53,7 @@ Every operation must display explicit Tenant and Application scope, preserve ser
 - React is the rendering framework
 - the internal-tool build follows the adopted SPA build-toolchain decision
 - Scnehaux UI Platform packages provide tokens, primitives, accessibility, and interaction foundations
-- the browser never reads Scheduling PostgreSQL, Kafka topics, broker admin endpoints, or internal recurrence-library state
+- the browser never reads Scheduling PostgreSQL, messaging queues/topics, broker admin endpoints, or internal recurrence-library state
 - Asynqmon, Bull Board, RabbitMQ Management UI, Kafka admin UI, or other vendor/library operational UI is not embedded or exposed as the Scheduler product experience
 - authorization is never inferred from hidden/disabled client controls
 - access and refresh tokens are not persisted in browser local storage
@@ -69,7 +69,7 @@ Every operation must display explicit Tenant and Application scope, preserve ser
 
 - Schedule execution
 - due claiming
-- Kafka publication
+- messaging publication
 - database administration
 - Product worker monitoring beyond linked correlation facts
 - Notification administration
