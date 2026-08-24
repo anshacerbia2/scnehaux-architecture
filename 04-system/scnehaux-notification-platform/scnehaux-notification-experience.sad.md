@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-015
   title: Scnehaux Notification Experience
   owner: Notification Platform Team
-  version: 1.1.0
+  version: 2.0.0
   status: draft
   classification: restricted
   governed_by:
@@ -11,10 +11,12 @@ doc_meta:
   parent_pad: PAD-PLT-005
   review_cycle_days: 90
   created_date: 2026-08-22
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-08-24
   technologies:
     - name: react
       type: frontend-framework
+    - name: golang
+      type: backend-language
     - name: kubernetes
       type: orchestration
     - name: opentelemetry
@@ -27,7 +29,9 @@ doc_meta:
 
 ### 1.1 Objective
 
-Provide a fully Scnehaux-owned administration and operations experience for templates, channel/sender profiles, provider bindings, test sends, Notification/Delivery history, retry/reconciliation, quota, and provider health without exposing provider secrets or third-party provider/task-queue dashboards.
+Provide a fully Scnehaux-owned administration and operations experience for templates, channel/sender profiles, provider bindings, test sends, Notification/Delivery history, retry/reconciliation, quota, and provider health through a same-origin web boundary without exposing provider secrets, Notification persistence, Scheduling internals, messaging substrates, or provider/broker administration surfaces.
+
+The physical web boundary is one deployable Go application that serves compiled React assets and a same-origin Backend-for-Frontend (BFF). Browser authentication/session custody, provider-secret write-only mediation, CSRF protection, context enforcement, and Notification API access remain server-side.
 
 ### 1.2 Capability
 
@@ -45,17 +49,27 @@ The application provides:
 - Tenant/application/channel/provider quota and usage visibility
 - provider/channel health and backlog dashboards
 - audit/evidence correlation
+- same-origin browser session and Notification API mediation
+- hard Tenant/Application context-switch invalidation
 
 ### 1.3 Requirement
 
-The browser uses only governed Notification Control APIs. Provider secret values never return to the browser after registration, and user interface visibility never substitutes for server authorization.
+The browser uses only the same-origin Experience BFF, which uses governed Notification Control APIs. Provider secret values never return to browser JavaScript after registration and are never persisted in Experience caches or telemetry. The Experience must remain safe under stale tabs, duplicate submit/retry, context switches, malicious template content, test-send abuse, expired sessions, and underlying messaging-profile changes. User interface visibility never substitutes for server authorization.
 
 ### 1.4 Constraint
 
 - React is the frontend framework
+- Go serves compiled React assets and the same-origin BFF in one deployable unit
 - the adopted SPA build toolchain is used for this internal operational application
 - Scnehaux UI Platform packages provide design-system and accessibility foundations
-- the browser does not read Notification PostgreSQL, Kafka topics, provider admin consoles, or Scheduler internals directly
+- browser JavaScript never receives long-lived access/refresh tokens or provider credentials after submission
+- browser-to-BFF traffic is same-origin
+- the BFF calls only governed Notification Control APIs and enterprise Identity/context endpoints
+- Notification Experience never calls Scheduling directly; future-delivery composition stays behind Notification Runtime contracts
+- the browser/BFF does not read Notification PostgreSQL, messaging queues/topics, broker admin endpoints, provider admin consoles, or Scheduler internals directly
+- provider credential material is write-only through the Experience boundary and excluded from logs/traces
+- template preview never executes arbitrary active content with the Experience origin's privileges
+- test-send is not a bulk-delivery bypass
 - no third-party Notification/queue dashboard is embedded as the supported product UI
 - long-lived bearer credentials are not stored in browser local storage
 
@@ -102,7 +116,7 @@ graph LR
 
 ### 3.2 External
 
-No browser-to-provider, browser-to-Kafka, or browser-to-database connection exists. Provider configuration and secret-reference operations are mediated by the Notification Control API.
+The browser communicates only with the Notification Experience origin. No browser-to-provider, browser-to-messaging-substrate, browser-to-Scheduling, browser-to-secret-store, or browser-to-database connection exists. The BFF mediates Notification Control API access.
 
 ### 3.3 Internal
 
@@ -122,7 +136,7 @@ Feature modules are organized by Notification concepts rather than provider/vend
 
 ### 4.1 Container
 
-One independently deployable internal React SPA using Scnehaux UI Platform packages and the enterprise web delivery path.
+One independently deployable Go web application serves compiled React assets and a same-origin BFF using Scnehaux UI Platform packages and the enterprise web delivery path.
 
 ### 4.2 Component
 
@@ -136,7 +150,9 @@ app-shell
   -> quota-usage
   -> provider-health
 
-feature modules -> notification-api client
+browser -> same-origin BFF
+BFF -> notification-api adapter
+feature modules -> same-origin BFF client
 feature modules -> scnehaux-ui-platform packages
 ```
 
@@ -158,7 +174,7 @@ sequenceDiagram
     W-->>U: Show masked/metadata state, never secret value
 ```
 
-A secret value is write-only from the browser perspective.
+A secret value is write-only from the browser perspective. The BFF does not persist provider credential material and excludes credential-bearing request bodies from logs, traces, caches, analytics, and asynchronous retry stores.
 
 ## 5. State & Data Architecture
 
@@ -186,7 +202,7 @@ The SPA consumes Notification APIs for templates, channel profiles, Application 
 
 ### 6.2 Events
 
-Kafka is never exposed to the browser. Near-real-time status updates are delivered through a Notification-owned web API projection/stream contract when required.
+RabbitMQ, Kafka, and any other messaging substrate are never exposed to the browser. Near-real-time status updates are delivered through a Notification-owned HTTP/SSE/WebSocket-style projection when required; broker offsets/routes are not Product UX.
 
 ### 6.3 Consumed
 
@@ -199,7 +215,7 @@ Kafka is never exposed to the browser. Near-real-time status updates are deliver
 
 ### 7.1 Authentication
 
-The enterprise browser OIDC/session pattern is used.
+The BFF owns the enterprise browser OIDC/session integration. Session cookies are Secure, HttpOnly, and SameSite according to enterprise browser policy. Access/refresh tokens are not persisted in browser local/session storage or exposed to browser JavaScript.
 
 ### 7.2 Authorization
 
@@ -211,7 +227,7 @@ Enterprise TLS policy protects all runtime connections.
 
 ### 7.4 Secrets
 
-Provider secrets are write-only from the browser perspective. They are never rendered after registration, stored in local/session storage, exposed in query caches, or emitted to client telemetry.
+Provider secrets are write-only from the browser perspective. They are never rendered after registration, stored in local/session storage, persisted by the Experience, exposed in query caches, placed in asynchronous retry stores, or emitted to logs/traces/analytics. Only secret-reference metadata may be displayed.
 
 ### 7.5 Audit
 
@@ -233,11 +249,11 @@ An Experience outage prevents human administration/inspection but does not stop 
 
 ### 8.3 Observability and Telemetry
 
-Frontend telemetry correlates user actions with Notification API traces without collecting recipient payloads, template secrets, or credentials.
+OpenTelemetry correlates browser request, BFF span, and Notification API span without collecting access/refresh tokens, provider credentials, unrestricted recipient payloads, or full rendered communication content.
 
 ### 8.4 Accessibility
 
-Scnehaux UI Platform accessibility standards apply, including keyboard operation, focus management, semantic status feedback, and WCAG 2.2 AA target where governed by the UI Platform.
+WCAG 2.2 AA is the target baseline. Scnehaux UI Platform provides keyboard operation, focus management, and semantic status feedback. Provider status is never represented by color alone, and secret-entry errors never echo credential material.
 
 ### 8.5 Runbook
 
@@ -251,13 +267,22 @@ Immutable frontend artifacts are promoted between governed environments. Environ
 
 ### 9.2 Infrastructure
 
-The internal React SPA uses the adopted enterprise SPA build toolchain and standard web/container delivery path. No provider/task-queue dashboard runtime is deployed as part of the Scnehaux Notification product.
+The Experience is built as one OCI-compatible Go web artifact containing compiled React assets and the same-origin BFF, deployed through the standard Kubernetes web/container delivery path. No provider/broker dashboard runtime is deployed as part of the Scnehaux Notification product.
 
 ### 9.3 CI/CD
 
 Blocking gates include:
 
-- lint/type/build tests
+- Go format/static/build/race tests
+- frontend lint/type/build tests
+- browser/BFF auth-session tests
+- CSRF/origin/CSP/redirect security tests
+- context-switch invalidation tests
+- provider-secret write-only/non-persistence/log-redaction tests
+- template-preview sandbox/CSP/XSS tests
+- test-send rate/authorization/idempotency tests
+- provider acceptance vs final-delivery state tests
+- recipient PII masking/telemetry tests
 - UI Platform contract/accessibility tests
 - Notification API contract compatibility
 - authorization-negative-path E2E tests
@@ -274,9 +299,19 @@ Blocking gates include:
 
 - custom Scnehaux Notification UI
 - Notification Control API as the only Notification runtime boundary exposed to the browser
+- single deployable Go web boundary serving React assets and same-origin BFF
+- server-side browser token/session custody
 - write-only provider-secret registration experience
+- Notification Experience never calls Scheduling, providers, brokers, databases, or Trust Services directly
+- sandboxed template preview
+- bounded privileged test-send path
+- provider acceptance and final delivery are distinct UX states
 
 ### 10.2 Rejected
+
+#### 10.2.0 Pure SPA with Browser Bearer-Token Custody
+
+Rejected for the privileged Notification control surface because it expands credential exposure and makes browser JavaScript responsible for long-lived API token handling.
 
 #### 10.2.1 Third-Party Queue/Provider Dashboard as Notification UI
 
@@ -285,6 +320,10 @@ Rejected because it couples product experience, Tenant semantics, authorization,
 #### 10.2.2 Browser Direct Provider Administration
 
 Rejected because it exposes vendor credentials and bypasses Notification authorization, evidence, and normalized provider semantics.
+
+#### 10.2.2A Unsandboxed Template Preview
+
+Rejected because attacker-controlled or malformed template content must not execute with the administrative application's origin privileges.
 
 #### 10.2.3 Browser Read Access to Stored Provider Secrets
 
@@ -297,4 +336,4 @@ Rejected because credential disclosure is unnecessary for administration and vio
 
 ## 12. Compatibility Strategy
 
-The UI is coupled to versioned Notification APIs, not provider SDKs, database layout, Kafka topics, or Scheduler internals. Provider or internal runtime replacement does not require UX redesign when contracts remain compatible.
+The Experience is coupled to versioned Notification APIs, not provider SDKs, database layout, RabbitMQ queues, Kafka topics, Scheduling internals, or secret-store implementation. Provider replacement or Direct/Queue/Stream messaging-profile change does not require UX redesign when Notification contracts remain compatible.

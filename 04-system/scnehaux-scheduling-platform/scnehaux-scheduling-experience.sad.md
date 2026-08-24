@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-014
   title: Scnehaux Scheduling Experience
   owner: Scheduling Platform Team
-  version: 1.0.1
+  version: 2.0.0
   status: draft
   classification: restricted
   governed_by:
@@ -15,6 +15,8 @@ doc_meta:
   technologies:
     - name: react
       type: frontend-framework
+    - name: golang
+      type: backend-language
     - name: kubernetes
       type: orchestration
     - name: opentelemetry
@@ -27,7 +29,9 @@ doc_meta:
 
 ### 1.1 Objective
 
-Provide a fully Scnehaux-owned administrative and operational user experience for Schedule lifecycle, Occurrence inspection, misfire/replay operations, Tenant/application usage, and Scheduler health without exposing database, messaging-substrate, or third-party task-queue dashboards.
+Provide a fully Scnehaux-owned administrative and operational user experience for Schedule lifecycle, Occurrence inspection, misfire/replay operations, Tenant/application usage, and Scheduler health through a same-origin web boundary without exposing database, messaging-substrate, or third-party task-queue dashboards.
+
+The physical web boundary is one deployable Go application that serves compiled React assets and a same-origin Backend-for-Frontend (BFF). Browser-facing authentication/session custody, CSRF protection, context enforcement, and Scheduling API mediation remain server-side.
 
 ### 1.2 Capability
 
@@ -43,17 +47,25 @@ The application provides:
 - privileged replay and quota-override workflows
 - dispatch-lateness and backlog dashboards
 - audit/evidence correlation links
+- same-origin browser session and Scheduling API mediation
+- hard Tenant/Application context-switch invalidation
 
 ### 1.3 Requirement
 
-Every operation must display explicit Tenant and Application scope, preserve server-side authorization, and use only the governed Scheduling Control API.
+Every operation must display explicit Tenant and Application scope, preserve server-side authorization, and use only the governed Scheduling Control API. The Experience must remain safe under stale browser tabs, duplicate submit/retry, context switches, expired sessions, API partial failure, replay races, and underlying dispatch-profile changes.
 
 ### 1.4 Constraint
 
 - React is the rendering framework
+- Go serves compiled React assets and the same-origin BFF in one deployable unit
 - the internal-tool build follows the adopted SPA build-toolchain decision
 - Scnehaux UI Platform packages provide tokens, primitives, accessibility, and interaction foundations
-- the browser never reads Scheduling PostgreSQL, messaging queues/topics, broker admin endpoints, or internal recurrence-library state
+- browser JavaScript never receives long-lived access/refresh tokens or broker/database credentials
+- browser-to-BFF traffic is same-origin
+- the BFF is the only browser runtime boundary and calls only governed Scheduling Control APIs
+- the browser/BFF never reads Scheduling PostgreSQL, messaging queues/topics, broker admin endpoints, or internal recurrence-library state
+- recurrence/DST correctness is server-authoritative; client preview logic is presentation only
+- context switch invalidates prior scoped cache, pending mutation state, and form state before the new context becomes active
 - Asynqmon, Bull Board, RabbitMQ Management UI, Kafka admin UI, or other vendor/library operational UI is not embedded or exposed as the Scheduler product experience
 - authorization is never inferred from hidden/disabled client controls
 - access and refresh tokens are not persisted in browser local storage
@@ -103,7 +115,7 @@ graph LR
 
 ### 3.2 External
 
-The browser communicates only with enterprise Identity/context endpoints needed for sign-in/context and the Scheduling Control API. It has no direct broker/database/provider integration.
+The browser communicates only with the Scheduling Experience origin. The server-side BFF communicates with enterprise Identity/context endpoints and the Scheduling Control API. It has no direct broker/database/provider integration.
 
 ### 3.3 Internal
 
@@ -123,7 +135,7 @@ UI state does not become Scheduling authority.
 
 ### 4.1 Container
 
-One independently deployable React SPA served through the enterprise web delivery path. It consumes versioned Scheduling APIs and Scnehaux UI Platform packages.
+One independently deployable Go web application serves immutable React assets and a same-origin BFF. The BFF consumes versioned Scheduling APIs and Scnehaux UI Platform packages remain build-time UI foundations.
 
 ### 4.2 Component
 
@@ -135,7 +147,9 @@ app-shell
   -> platform-health
   -> audit-correlation
 
-feature modules -> scheduling-api client
+browser -> same-origin BFF
+BFF -> scheduling-api adapter
+feature modules -> same-origin BFF client
 feature modules -> scnehaux-ui-platform packages
 ```
 
@@ -184,7 +198,7 @@ The SPA consumes only the versioned Scheduling Control API for schedules, occurr
 
 ### 6.2 Events
 
-The browser does not consume Kafka directly. Near-real-time UI updates, if required, are exposed by a Scheduling-owned API projection/stream contract rather than broker credentials in the browser.
+The browser never consumes RabbitMQ, Kafka, or another messaging substrate directly. Near-real-time UI updates, if required, are exposed by a Scheduling-owned HTTP/SSE/WebSocket-style projection rather than broker credentials or broker offsets in the browser.
 
 ### 6.3 Consumed
 
@@ -197,7 +211,7 @@ The browser does not consume Kafka directly. Near-real-time UI updates, if requi
 
 ### 7.1 Authentication
 
-Browser authentication uses the enterprise OIDC flow. Session/token handling follows the UI/IAM standards and does not store long-lived bearer credentials in local storage.
+The BFF owns the enterprise browser OIDC/session integration. Session cookies are Secure, HttpOnly, and SameSite according to enterprise browser policy. Access/refresh tokens are not persisted in browser local/session storage and are not exposed to browser JavaScript.
 
 ### 7.2 Authorization
 
@@ -209,7 +223,7 @@ All runtime network traffic uses enterprise TLS policy.
 
 ### 7.4 Secrets
 
-No Scheduler infrastructure secret, database credential, Kafka credential, or provider credential is shipped to the browser bundle.
+No Scheduler infrastructure secret, database credential, RabbitMQ/Kafka credential, access token, refresh token, or provider credential is shipped to the browser bundle or client telemetry.
 
 ### 7.5 Audit
 
@@ -230,13 +244,16 @@ An Experience outage prevents human administration but does not stop existing Sc
 
 ### 8.3 Observability and Telemetry
 
-Frontend telemetry is OpenTelemetry-compatible where supported and correlates UI actions with Scheduling API traces without recording schedule secrets or sensitive trigger payloads.
+OpenTelemetry correlates browser request, BFF span, and Scheduling API span without recording bearer tokens, CSRF material, schedule secrets, or sensitive trigger payloads.
 
 ### 8.4 Accessibility and Usability
 
 - Scnehaux UI Platform accessibility baseline applies
 - Tenant/Application scope is visually persistent for destructive or privileged operations
 - destructive actions require explicit confirmation and safe defaults
+- WCAG 2.2 AA is the target baseline
+- replay UI makes clear that replay reuses the existing occurrence identity
+- recurrence/time-zone preview is rendered from server-authoritative Scheduling output
 - time is shown with both user-facing zone context and unambiguous canonical instant on detail screens
 
 ### 8.5 Runbook
@@ -251,13 +268,19 @@ Immutable frontend artifacts are promoted across governed environments. Environm
 
 ### 9.2 Infrastructure
 
-The application is built as an internal React SPA using the adopted enterprise build toolchain and deployed through the standard web/container delivery path. No third-party scheduler dashboard runtime is required.
+The application is built as one OCI-compatible Go web artifact containing the compiled React assets and same-origin BFF, deployed through the standard Kubernetes web/container delivery path. No third-party scheduler dashboard runtime is required.
 
 ### 9.3 CI/CD
 
 Blocking gates include:
 
+- Go format/static/build/race tests
 - frontend lint/type/build tests
+- browser/BFF auth-session tests
+- CSRF/origin/CSP/redirect security tests
+- context-switch invalidation tests
+- mutation idempotency/duplicate-submit tests
+- recurrence/DST preview parity tests
 - UI Platform contract tests
 - accessibility checks
 - API contract compatibility
@@ -273,15 +296,21 @@ Blocking gates include:
 
 - fully custom Scnehaux operational experience
 - Scheduling Control API is the only Scheduling runtime boundary exposed to the browser
-- React SPA for this internal operational tool
+- single deployable Go web boundary serving React assets and same-origin BFF
+- server-side browser token/session custody
+- recurrence/DST preview is server-authoritative
 
 ### 10.2 Rejected
+
+#### 10.2.0 Pure SPA with Browser Bearer-Token Custody
+
+Rejected for the privileged Scheduling control surface because it expands credential exposure and makes browser JavaScript responsible for long-lived API token handling.
 
 #### 10.2.1 Embedded Third-Party Queue/Scheduler UI
 
 Rejected because it couples the Scnehaux product surface, authorization model, Tenant semantics, and lifecycle to an internal implementation that must remain replaceable.
 
-#### 10.2.2 Direct PostgreSQL or Kafka Administration from Browser
+#### 10.2.2 Direct Database or Messaging-Substrate Administration from Browser
 
 Rejected because it bypasses domain authorization, evidence, contract versioning, and least privilege.
 
@@ -296,4 +325,4 @@ Rejected because visibility state cannot establish server authority.
 
 ## 12. Compatibility Strategy
 
-The SPA follows Scheduling API versions and supports the enterprise deprecation window. A replacement of PostgreSQL, Kafka, recurrence library, or due-claim mechanism requires no UI rewrite when the Control API remains compatible.
+The Experience follows Scheduling API versions and supports the enterprise deprecation window. A replacement of PostgreSQL, RabbitMQ, Kafka, recurrence library, due-claim mechanism, or Direct/Queue/Stream dispatch profile requires no UI rewrite when the Control API remains compatible.
