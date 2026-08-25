@@ -355,7 +355,20 @@ Multiple substrates in one environment are allowed only for distinct contracts w
 
 ## 4. Exceptions
 
-Deviation from source-local publication atomicity, consumer duplicate safety, or declared delivery durability requires formal architecture review and an approved exception ADR.
+Deviation from source-local publication atomicity, consumer duplicate safety, or declared
+delivery durability requires formal exception approval under GDC-000 with an explicit failure
+model, compensating controls, a named owner, and an expiry date.
+
+The mechanism is the waiver register, not a decision record. GDC-000 §2.6 makes a decision
+record an immutable snapshot of a choice, which cannot expire and cannot be revoked — so
+recording an exception as one grants it permanently and leaves nothing for the expiry audit to
+find. A waiver carries the expiry date that `exception_expired` enforces.
+
+Each of the three deviations must state what a consumer observes when it happens: a publisher
+without source-local atomicity can commit state that no consumer ever hears about, a consumer
+without duplicate safety applies the same effect twice on redelivery, and an undeclared
+durability profile means nobody knows which of the two the outage produced. The request states
+which of those the deviation accepts.
 
 A technology substitution inside the same semantic profile does not require redefining Product authority, but it must prove equivalent delivery, security, observability, and recovery properties and comply with Technology Radar governance.
 

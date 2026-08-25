@@ -12,7 +12,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-GLB-006](_global/ADR-GLB-006-event-versioning.md) | ADR-GLB-006 Enforcing Event Versioning and Schema Evolution Contracts | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-007](_global/ADR-GLB-007-ddd-boundaries.md) | ADR-GLB-007 Standardizing Domain-Driven Design Boundaries and Data Ownership | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-008](_global/ADR-GLB-008-go-project-structure.md) | ADR-GLB-008 Go Project Structure and Layer Enforcement | foundational | accepted | 2026-08-11 | N/A |
-| [ADR-GLB-009](_global/ADR-GLB-009-repository-topology.md) | One Repository per Deployable Unit for the Identity and Organization Foundation | foundational | proposed | 2026-08-12 | N/A |
+| [ADR-GLB-009](_global/ADR-GLB-009-repository-topology.md) | Repository Boundaries Follow Change, Release, Security, and Ownership Cohesion | foundational | proposed | 2026-08-12 | N/A |
 | [ADR-GLB-010](_global/ADR-GLB-010-application-mechanics-in-process.md) | Application Mechanics Stay In-Process; Network Mechanics Move to Infrastructure | foundational | proposed | 2026-08-12 | N/A |
 | [ADR-GLB-011](_global/ADR-GLB-011-durable-scheduling-boundary.md) | ADR-GLB-011 Establish Enterprise Durable Scheduling Boundary | foundational | superseded | 2026-08-22 | N/A |
 | [ADR-GLB-012](_global/ADR-GLB-012-separate-ai-knowledge-and-product-authority.md) | ADR-GLB-012 Separate Product, Knowledge, and AI Execution Authority | foundational | accepted | 2026-08-23 | N/A |
