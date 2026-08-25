@@ -42,7 +42,16 @@
                 "status": {
                   "title": "Allowed Statuses",
                   "type": "string",
-                  "enum": ["adopted", "trial", "assessed", "hold", "approved", "draft", "proposed", "deprecated"]
+                  "enum": [
+                    "adopted",
+                    "trial",
+                    "assessed",
+                    "hold",
+                    "approved",
+                    "draft",
+                    "proposed",
+                    "deprecated"
+                  ]
                 }
               }
             }

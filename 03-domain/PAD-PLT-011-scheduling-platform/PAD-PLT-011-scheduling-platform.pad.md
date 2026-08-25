@@ -86,19 +86,19 @@ A consumer integrates through versioned schedule lifecycle commands and asynchro
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Schedule | Durable runtime temporal registration owned by the Scheduling Platform |
-| Schedule Intent | Consumer-owned reason and requested temporal policy from which a Schedule is created |
-| Occurrence | One stable logical due instance of a Schedule |
-| Scheduled For | Canonical UTC instant at which an Occurrence is due |
-| Trigger | Contract emitted because an Occurrence is due |
-| Target | Registered Product or Platform contract authorized to consume a Trigger |
-| Dispatch | Durable hand-off of an Occurrence to the governed messaging boundary; not business execution |
-| Misfire | A due occurrence that could not be dispatched inside its expected normal window |
-| Misfire Policy | Explicit recovery behavior for elapsed occurrences |
-| Replay | Operator-controlled re-dispatch of the same logical Occurrence identity |
-| Business Completion | Consumer-owned result after Trigger processing; outside Scheduler authority |
+| Term                | Meaning                                                                                      |
+| :------------------ | :------------------------------------------------------------------------------------------- |
+| Schedule            | Durable runtime temporal registration owned by the Scheduling Platform                       |
+| Schedule Intent     | Consumer-owned reason and requested temporal policy from which a Schedule is created         |
+| Occurrence          | One stable logical due instance of a Schedule                                                |
+| Scheduled For       | Canonical UTC instant at which an Occurrence is due                                          |
+| Trigger             | Contract emitted because an Occurrence is due                                                |
+| Target              | Registered Product or Platform contract authorized to consume a Trigger                      |
+| Dispatch            | Durable hand-off of an Occurrence to the governed messaging boundary; not business execution |
+| Misfire             | A due occurrence that could not be dispatched inside its expected normal window              |
+| Misfire Policy      | Explicit recovery behavior for elapsed occurrences                                           |
+| Replay              | Operator-controlled re-dispatch of the same logical Occurrence identity                      |
+| Business Completion | Consumer-owned result after Trigger processing; outside Scheduler authority                  |
 
 ### 3.3 Domain Policies
 

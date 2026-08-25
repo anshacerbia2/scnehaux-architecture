@@ -108,12 +108,12 @@ To maintain the visual root of trust, the platform enforces an absolute zero-byp
 
 To ensure consistent design decisions across product teams, the `Emphasis` layers must obey explicit behavioral guidelines. Misusing layers (e.g., rendering body copy with `contrast` emphasis) is a semantic violation:
 
-| Emphasis Layer | Intended Visual & Semantic Rationale | Typical UX/UI Components |
-| :-- | :-- | :-- |
-| **`subtle`** | Passive contextual surface or border accents representing background canvases and structural sections. | Alert banners, passive cards, table row hover, static badge fills |
-| **`default`** | Standard interactive element surfaces, outlines, and readable copy. | Standard button surfaces, default input borders, readable body copy, main icons |
-| **`strong`** | Elevated prominence representing active visual priority or highlighted emphasis. | Active indicators, bold headings, high-visibility warning borders |
-| **`contrast`** | Maximum readability contrast designed strictly for placement on top of filled surfaces. | Text/icons inside filled brand buttons, indicators on dark badges |
+| Emphasis Layer | Intended Visual & Semantic Rationale                                                                   | Typical UX/UI Components                                                        |
+| :------------- | :----------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
+| **`subtle`**   | Passive contextual surface or border accents representing background canvases and structural sections. | Alert banners, passive cards, table row hover, static badge fills               |
+| **`default`**  | Standard interactive element surfaces, outlines, and readable copy.                                    | Standard button surfaces, default input borders, readable body copy, main icons |
+| **`strong`**   | Elevated prominence representing active visual priority or highlighted emphasis.                       | Active indicators, bold headings, high-visibility warning borders               |
+| **`contrast`** | Maximum readability contrast designed strictly for placement on top of filled surfaces.                | Text/icons inside filled brand buttons, indicators on dark badges               |
 
 #### Domain Semantic Layer (Logical Intent Mapping)
 
@@ -149,12 +149,12 @@ Typography tokens must be grouped by **semantic reading layout**, not by linear 
 
 Timing durations and mathematical easing curves must map to high-level communicative actions, not arbitrary numeric values:
 
-| Motion Token | Communicative Action |
-| :-- | :-- |
-| `motion.enter` | Responsive, snappy spring curves for mounting actions (drawer sliding in, dropdown mounting) |
-| `motion.exit` | Quick, decelerating exits to keep portal interactions efficient and lag-free |
-| `motion.attention` | Soft pulsating scale animations to highlight critical visual actions without disturbing layout flows |
-| `motion.disclosure` | Smooth height expand/collapse transitions for accordions, menus, and detail triggers |
+| Motion Token        | Communicative Action                                                                                 |
+| :------------------ | :--------------------------------------------------------------------------------------------------- |
+| `motion.enter`      | Responsive, snappy spring curves for mounting actions (drawer sliding in, dropdown mounting)         |
+| `motion.exit`       | Quick, decelerating exits to keep portal interactions efficient and lag-free                         |
+| `motion.attention`  | Soft pulsating scale animations to highlight critical visual actions without disturbing layout flows |
+| `motion.disclosure` | Smooth height expand/collapse transitions for accordions, menus, and detail triggers                 |
 
 **Performance Constraint**: All motion tokens must resolve exclusively to `transform` and `opacity` CSS properties. Animating layout properties (`width`, `height`, `margin`) is prohibited under the Zero Layout Thrashing rule (see PAD-PLT-002, Section 5).
 

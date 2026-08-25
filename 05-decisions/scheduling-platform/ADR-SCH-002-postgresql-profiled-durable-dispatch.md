@@ -19,8 +19,8 @@ Use PostgreSQL as Scheduling temporal authority and dispatch due Occurrences thr
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type    | Reviewers                                                                       | Approver               |
+| :--------- | :------- | :---------- | :------------------------------------------------------------------------------ | :--------------------- |
 | 2026-08-24 | accepted | replacement | Scheduling Platform, Platform Engineering, Architecture Authority, Notification | Architecture Authority |
 
 This ADR supersedes **ADR-SCH-001**.
@@ -154,11 +154,11 @@ Startup/config validation must fail when mutually exclusive primary adapters are
 
 Scheduling marks outbox publication accepted only after:
 
-| Profile | Durability point |
-| :-- | :-- |
-| Direct | target durable-acceptance API confirms persisted/idempotent acceptance |
+| Profile  | Durability point                                                                            |
+| :------- | :------------------------------------------------------------------------------------------ |
+| Direct   | target durable-acceptance API confirms persisted/idempotent acceptance                      |
 | RabbitMQ | broker publisher confirm proves acceptance into the configured durable route/queue contract |
-| Kafka | producer acknowledgement proves acceptance under the configured replication contract |
+| Kafka    | producer acknowledgement proves acceptance under the configured replication contract        |
 
 This state means Scheduler dispatch durability only.
 

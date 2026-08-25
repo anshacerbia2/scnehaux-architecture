@@ -91,7 +91,8 @@ def test_validate_internal_links_empty_file_part(tmp_path, monkeypatch):
 def test_validate_inline_references_self_reference():
     # Document citing its own ID (ADR-001) should skip it (line 91)
     content = "This document ADR-001 describes the architecture."
-    v = make_validator(content=content, all_doc_ids={"ADR-001"}, doc_meta={"id": "ADR-001"})
+    v = make_validator(
+        content=content, all_doc_ids={"ADR-001"}, doc_meta={"id": "ADR-001"}
+    )
     _validate_inline_references(v)
     assert len(v.errors) == 0
-

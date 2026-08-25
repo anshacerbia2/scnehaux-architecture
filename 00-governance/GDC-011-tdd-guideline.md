@@ -47,17 +47,17 @@ In addition to the global structural enforcement defined in **[GDC-001](GDC-001-
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
-| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
-| **Section Rules** | Required Sections | <ul><li>Purpose</li><li>Scope</li><li>Technical Context</li><li>Component Design</li><li>Data Model</li><li>API / Interface</li><li>Algorithms / Logic</li><li>Configuration</li><li>Testing Strategy</li><li>Traceability</li></ul> |
-| **Section Rules** | Recommended Sections | <ul><li>Performance Notes</li><li>Security Notes</li><li>Operational Notes</li></ul> |
+| Rule Category      | Parameter            | Enforcement / Value                                                                                                                                                                                                                  |
+| :----------------- | :------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Metadata Rules** | Metadata Rules       | <ul><li>doc_meta</li></ul>                                                                                                                                                                                                           |
+| **Section Rules**  | Required Sections    | <ul><li>Purpose</li><li>Scope</li><li>Technical Context</li><li>Component Design</li><li>Data Model</li><li>API / Interface</li><li>Algorithms / Logic</li><li>Configuration</li><li>Testing Strategy</li><li>Traceability</li></ul> |
+| **Section Rules**  | Recommended Sections | <ul><li>Performance Notes</li><li>Security Notes</li><li>Operational Notes</li></ul>                                                                                                                                                 |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
-| Linter Component | File | Enforcement Logic |
-| :-- | :-- | :-- |
-| **JSON Schema** | `schemas/tdd.schema.json` | Validates `parent_sad` attributes to prevent orphan designs. |
+| Linter Component  | File                                         | Enforcement Logic                                                                                                                                                                                              |
+| :---------------- | :------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **JSON Schema**   | `schemas/tdd.schema.json`                    | Validates `parent_sad` attributes to prevent orphan designs.                                                                                                                                                   |
 | **Python Engine** | `engine/validators/domains/tdd_validator.py` | **Taxonomy**: Validates `allowed_statuses` and `allowed_classifications`.<br>**Domain Validation**: Enforces exact structural mapping of nested Markdown sections (e.g., Sequence Diagrams, Payload examples). |
 
 **Engine Execution Mechanics**:
@@ -127,28 +127,28 @@ doc_meta:
 
 ##### Semantic Versioning Classification
 
-| Version | Trigger / Architectural Change |
-| --- | --- |
+| Version           | Trigger / Architectural Change                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **Major (2.0.0)** | Breaking API contract changes (e.g., removing a required field, changing an endpoint path, fundamentally altering a database schema). |
-| **Minor (1.1.0)** | Adding an optional field to an API response, adding a new non-breaking endpoint. |
-| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
+| **Minor (1.1.0)** | Adding an optional field to an API response, adding a new non-breaking endpoint.                                                      |
+| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links.                                                                         |
 
 #### 2.3.5 Artifact Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
-| Section Name | Objective | Requirement |
-| --- | --- | --- |
-| **Context & Requirements** | Define the upstream and downstream context, what the feature accomplishes, and the specific functional requirements. | Must link to the Parent SAD. |
-| **Design Details** | Provide the C3 component blueprints. Include sequence diagrams, internal interactions, and structural class/module design. | Must be technology-specific. |
-| **API / Schema Contracts** | Outline the exact payloads, database schemas (ERD), API endpoints, or event formats. | Must define validation rules. |
-| **Security & Privacy** | Detail how PII is handled, what specific RBAC or RLS policies apply, and encryption requirements. | Must detail specific RBAC policies, encryption keys, and PII handling routines. |
-| **Failure Handling** | Describe component-level retries, circuit breakers, degradation, and edge case mitigation. | Must be mapped to the SAD Blast Radius. |
-| **Observability** | Document exact metric names, log formats, and distributed tracing spans that will be emitted. | Must define specific SLI/SLO metrics, tracing spans, and alert thresholds. |
-| **Testing Strategy** | Outline unit, integration, and E2E testing approaches. | Must mention edge cases and security testing. |
-| **Rollout Strategy** | Document feature flags, rollout phases, schema migration steps, and backward compatibility. | Must detail rollback procedures. |
-| **Alternatives Considered _(Optional)_** | Analysis of alternate paths rejected during review. | Must list rejected technologies/designs and the rationale for rejection. |
-| **Compatibility Strategy _(Optional)_** | Detailed backward compatibility plans for API changes. | Must outline API versioning or schema migration paths to avoid breaking changes. |
+| Section Name                             | Objective                                                                                                                  | Requirement                                                                      |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Context & Requirements**               | Define the upstream and downstream context, what the feature accomplishes, and the specific functional requirements.       | Must link to the Parent SAD.                                                     |
+| **Design Details**                       | Provide the C3 component blueprints. Include sequence diagrams, internal interactions, and structural class/module design. | Must be technology-specific.                                                     |
+| **API / Schema Contracts**               | Outline the exact payloads, database schemas (ERD), API endpoints, or event formats.                                       | Must define validation rules.                                                    |
+| **Security & Privacy**                   | Detail how PII is handled, what specific RBAC or RLS policies apply, and encryption requirements.                          | Must detail specific RBAC policies, encryption keys, and PII handling routines.  |
+| **Failure Handling**                     | Describe component-level retries, circuit breakers, degradation, and edge case mitigation.                                 | Must be mapped to the SAD Blast Radius.                                          |
+| **Observability**                        | Document exact metric names, log formats, and distributed tracing spans that will be emitted.                              | Must define specific SLI/SLO metrics, tracing spans, and alert thresholds.       |
+| **Testing Strategy**                     | Outline unit, integration, and E2E testing approaches.                                                                     | Must mention edge cases and security testing.                                    |
+| **Rollout Strategy**                     | Document feature flags, rollout phases, schema migration steps, and backward compatibility.                                | Must detail rollback procedures.                                                 |
+| **Alternatives Considered _(Optional)_** | Analysis of alternate paths rejected during review.                                                                        | Must list rejected technologies/designs and the rationale for rejection.         |
+| **Compatibility Strategy _(Optional)_**  | Detailed backward compatibility plans for API changes.                                                                     | Must outline API versioning or schema migration paths to avoid breaking changes. |
 
 ### 2.4 Lifecycle & Audit
 

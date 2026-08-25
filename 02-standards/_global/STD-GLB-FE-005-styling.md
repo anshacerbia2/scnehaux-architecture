@@ -65,16 +65,16 @@ The recommended polyglot styling stack for all applications and component librar
 
 #### Styling Strategy Decision Matrix
 
-| Styling Approach | Authorizations & Restrictions | Target Use Case |
-| --- | --- | --- |
-| **Zero-Runtime Styling** | **PRIMARY MANDATE**. Compiles to static Atomic CSS via AST scanning. Guarantees zero runtime overhead while providing type-safe macros. | UI Component Libraries, Core Design Systems, and High-Performance Portals. |
-| **Utility-First Frameworks** | **ALLOWED** for rapid layout assembly and application-level composition layers in isolated consumer applications. Arbitrary utility values (e.g., `w-[245px]`) are forbidden. | Isolated Feature SPAs, rapid composition. |
-| **CSS Modules (via Preprocessors)** | **APPLICATION OVERRIDES**. Recommended for consumer applications requiring complex structural overrides or custom designs where atomic utilities are insufficient. | Application-specific features, design system overrides. |
-| **Global BEM Stylesheets** | **RESTRICTED**. Permitted only for application-level global layouts, typography foundations, and CSS resets. Risk of specificity wars. | Application foundations, legacy migrations. |
-| **Shadow DOM** | **DISCOURAGED**. Native encapsulation comes with heavy styling interoperability issues and framework integration complexity. | Independent Web Components. |
-| **Design Tokens** | **ALWAYS MANDATORY**. No hardcoded hex colors, arbitrary spacing units, or custom font sizes are allowed. All visual properties must reference the **Scnehaux UI Platform** design tokens as governed by [STD-UIP-TKN-001 (Design Tokens)](../ui-platform/STD-UIP-TKN-001-design-tokens.md). | Color, typography, spacing, border-radius, z-indices. |
-| **Inline Styles** | **RARE**. Restricted strictly to dynamic coordinates calculated by JavaScript (e.g., tracking mouse positions or canvas heights). Static styling via `style` attributes is prohibited. | JavaScript-calculated runtime dimensions. |
-| **`!important` Rule** | **FORBIDDEN** on component-level declarations. Allowed ONLY on system utility helpers (e.g., `.sr-only`). | Screen readers, absolute visibility overrides. |
+| Styling Approach                    | Authorizations & Restrictions                                                                                                                                                                                                                                                                | Target Use Case                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Zero-Runtime Styling**            | **PRIMARY MANDATE**. Compiles to static Atomic CSS via AST scanning. Guarantees zero runtime overhead while providing type-safe macros.                                                                                                                                                      | UI Component Libraries, Core Design Systems, and High-Performance Portals. |
+| **Utility-First Frameworks**        | **ALLOWED** for rapid layout assembly and application-level composition layers in isolated consumer applications. Arbitrary utility values (e.g., `w-[245px]`) are forbidden.                                                                                                                | Isolated Feature SPAs, rapid composition.                                  |
+| **CSS Modules (via Preprocessors)** | **APPLICATION OVERRIDES**. Recommended for consumer applications requiring complex structural overrides or custom designs where atomic utilities are insufficient.                                                                                                                           | Application-specific features, design system overrides.                    |
+| **Global BEM Stylesheets**          | **RESTRICTED**. Permitted only for application-level global layouts, typography foundations, and CSS resets. Risk of specificity wars.                                                                                                                                                       | Application foundations, legacy migrations.                                |
+| **Shadow DOM**                      | **DISCOURAGED**. Native encapsulation comes with heavy styling interoperability issues and framework integration complexity.                                                                                                                                                                 | Independent Web Components.                                                |
+| **Design Tokens**                   | **ALWAYS MANDATORY**. No hardcoded hex colors, arbitrary spacing units, or custom font sizes are allowed. All visual properties must reference the **Scnehaux UI Platform** design tokens as governed by [STD-UIP-TKN-001 (Design Tokens)](../ui-platform/STD-UIP-TKN-001-design-tokens.md). | Color, typography, spacing, border-radius, z-indices.                      |
+| **Inline Styles**                   | **RARE**. Restricted strictly to dynamic coordinates calculated by JavaScript (e.g., tracking mouse positions or canvas heights). Static styling via `style` attributes is prohibited.                                                                                                       | JavaScript-calculated runtime dimensions.                                  |
+| **`!important` Rule**               | **FORBIDDEN** on component-level declarations. Allowed ONLY on system utility helpers (e.g., `.sr-only`).                                                                                                                                                                                    | Screen readers, absolute visibility overrides.                             |
 
 ### 3.2 Framework-Specific Constraints
 
@@ -164,12 +164,12 @@ styles/
 #### Specificity Enforcement & `!important` Policy
 
 - **Usage Restrictions**: The `!important` flag is strictly restricted to prevent cascading bugs. It is governed by the following rules:
-  | Style Context | Permission | Rationale |
-  | --- | --- | --- |
-  | **Utility Classes** (e.g., `.hidden`, `.sr-only`) | ✅ Permitted | Utilities must always override component-level layout values. |
-  | **Reset / Normalizations** | ✅ Permitted | Allowed only within the `@layer reset` context for cross-browser normalization. |
-  | **UI Platform Components** | ❌ Prohibited | Core components must not force styles using `!important`. This guarantees downstream applications can override them cleanly without specificity wars. |
-  | **Theme / Design Tokens** | ❌ Prohibited | Tokens must be configurable and overrideable by themes. |
+  | Style Context                                     | Permission    | Rationale                                                                                                                                             |
+  | ------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | **Utility Classes** (e.g., `.hidden`, `.sr-only`) | ✅ Permitted  | Utilities must always override component-level layout values.                                                                                         |
+  | **Reset / Normalizations**                        | ✅ Permitted  | Allowed only within the `@layer reset` context for cross-browser normalization.                                                                       |
+  | **UI Platform Components**                        | ❌ Prohibited | Core components must not force styles using `!important`. This guarantees downstream applications can override them cleanly without specificity wars. |
+  | **Theme / Design Tokens**                         | ❌ Prohibited | Tokens must be configurable and overrideable by themes.                                                                                               |
 
 #### Style Centralization vs. Colocation Strategy
 

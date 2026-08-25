@@ -86,7 +86,15 @@ def test_lint_file_draft_skip(tmp_path):
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
     assert is_clean is False
     assert errs[0][0] == "INFO"
     assert "skipped due to exempt status" in errs[0][1]
@@ -99,7 +107,15 @@ def test_lint_file_draft_expired(tmp_path):
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
     assert has_blocking is True
     assert any("exceeding limit" in msg for _, msg in errs)
     assert any(sev == "ERROR" for sev, _ in errs)
@@ -111,7 +127,15 @@ def test_lint_file_draft_missing_created_date(tmp_path):
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
     assert has_blocking is True
     assert any("missing 'created_date'" in msg for _, msg in errs)
     assert any(sev == "ERROR" for sev, _ in errs)
@@ -126,7 +150,15 @@ def test_lint_file_unknown_doc_type(tmp_path):
     fpath = _write_md(tmp_path, "ZZZ-999.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
     assert has_blocking is True
     assert any("Unknown doc type" in msg for _, msg in errs)
 
@@ -137,7 +169,15 @@ def test_lint_file_missing_frontmatter(tmp_path):
     fpath.write_text("# No frontmatter here", encoding="utf-8")
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(str(fpath), rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(
+        str(fpath),
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
     assert has_blocking is True
     assert any("frontmatter" in msg.lower() for _, msg in errs)
 
@@ -147,7 +187,15 @@ def test_lint_file_read_error(tmp_path):
     fpath = str(tmp_path / "nonexistent.md")
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    errs, is_clean, has_blocking, di = lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
     assert has_blocking is True
     assert any("Failed to read file" in msg for _, msg in errs)
 
@@ -158,7 +206,15 @@ def test_lint_file_json_format(tmp_path):
     fpath = _write_md(tmp_path, "ZZZ-999.md", fm)
 
     rules = _global_rules()
-    errs, is_clean, has_blocking, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "json")
+    errs, is_clean, has_blocking, di = lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "json",
+    )
     assert isinstance(errs, list)
     assert has_blocking is True
 
@@ -180,6 +236,7 @@ def test_lint_file_missing_specific_rules(tmp_path, monkeypatch):
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
 
     import engine.cli as linter
+
     original_loader = linter.load_json_schema_file
 
     def mock_loader(path):
@@ -191,8 +248,16 @@ def test_lint_file_missing_specific_rules(tmp_path, monkeypatch):
 
     rules = _global_rules()
     with pytest.raises(SystemExit) as exc_info:
-        lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
-    
+        lint_file(
+            fpath,
+            rules,
+            rules.get("severity_levels", {}),
+            tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+            set(),
+            {},
+            "text",
+        )
+
     assert exc_info.value.code == 1
 
 
@@ -388,7 +453,15 @@ def test_lint_file_no_validator(tmp_path, monkeypatch):
     fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
     monkeypatch.setattr(linter, "get_validator", lambda x: None)
     rules = _global_rules()
-    errs, p, b, di = linter.lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    errs, p, b, di = linter.lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
     assert any("No validator implemented" in msg for _, msg in errs)
 
 
@@ -430,7 +503,15 @@ def test_lint_file_with_disables_and_warnings(tmp_path):
     from engine.cli import lint_file
 
     rules = _global_rules()
-    errs, p, b, di = lint_file(fpath, rules, rules.get("severity_levels", {}), tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])), set(), {}, "text")
+    errs, p, b, di = lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
     disabled = di["disabled"]
     rule1_disable = next((d for d in disabled if d[0] == "prohibited_words"), None)
     rule2_disable = next((d for d in disabled if d[0] == "ambiguity_rules"), None)
@@ -466,20 +547,24 @@ def test_tech_radar_failure(tmp_path, monkeypatch):
     )  # Just so it doesn't crash on base schema loading
 
     def mock_load_json(path):
-        return {"x-global-config": {
-                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+        return {
+            "x-global-config": {
+                "severity_levels": {
+                    "mock_group": {r.value: "ERROR" for r in SeverityRule}
+                },
                 "blocking_severities": ["CRITICAL", "ERROR"],
-            "structure_rules": {
-                "artifact_directories": {},
-                "max_directory_depth": 3,
-                "ignored_files": {}
-            },
-            "content_rules": {
-                "exempt_statuses": [],
-                "min_content_length_chars": {"value": 50},
-                "max_review_age_days": {"value": 365}
+                "structure_rules": {
+                    "artifact_directories": {},
+                    "max_directory_depth": 3,
+                    "ignored_files": {},
+                },
+                "content_rules": {
+                    "exempt_statuses": [],
+                    "min_content_length_chars": {"value": 50},
+                    "max_review_age_days": {"value": 365},
+                },
             }
-        }}
+        }
 
     monkeypatch.setattr("engine.cli.load_json_schema_file", mock_load_json)
 
@@ -487,9 +572,6 @@ def test_tech_radar_failure(tmp_path, monkeypatch):
         main()
 
     assert e.value.code == 1
-
-
-
 
 
 def test_tech_radar_yaml_parse_error(tmp_path, monkeypatch):
@@ -509,20 +591,25 @@ def test_tech_radar_yaml_parse_error(tmp_path, monkeypatch):
     monkeypatch.setattr("engine.cli.TECH_RADAR_SCHEMA_PATH", str(schema))
     monkeypatch.setattr("engine.cli.BASE_SCHEMA_PATH", "fake")
     monkeypatch.setattr(
-        "engine.cli.load_json_schema_file", lambda p: {"x-global-config": {
-                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+        "engine.cli.load_json_schema_file",
+        lambda p: {
+            "x-global-config": {
+                "severity_levels": {
+                    "mock_group": {r.value: "ERROR" for r in SeverityRule}
+                },
                 "blocking_severities": ["CRITICAL", "ERROR"],
-            "structure_rules": {
-                "artifact_directories": {},
-                "max_directory_depth": 3,
-                "ignored_files": {}
-            },
-            "content_rules": {
-                "exempt_statuses": [],
-                "min_content_length_chars": {"value": 50},
-                "max_review_age_days": {"value": 365}
+                "structure_rules": {
+                    "artifact_directories": {},
+                    "max_directory_depth": 3,
+                    "ignored_files": {},
+                },
+                "content_rules": {
+                    "exempt_statuses": [],
+                    "min_content_length_chars": {"value": 50},
+                    "max_review_age_days": {"value": 365},
+                },
             }
-        }}
+        },
     )
 
     with pytest.raises(SystemExit) as e:
@@ -551,20 +638,25 @@ def test_tech_radar_validation_error_json(tmp_path, monkeypatch):
     monkeypatch.setattr("engine.cli.TECH_RADAR_SCHEMA_PATH", str(schema))
     monkeypatch.setattr("engine.cli.BASE_SCHEMA_PATH", "fake")
     monkeypatch.setattr(
-        "engine.cli.load_json_schema_file", lambda p: {"x-global-config": {
-                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+        "engine.cli.load_json_schema_file",
+        lambda p: {
+            "x-global-config": {
+                "severity_levels": {
+                    "mock_group": {r.value: "ERROR" for r in SeverityRule}
+                },
                 "blocking_severities": ["CRITICAL", "ERROR"],
-            "structure_rules": {
-                "artifact_directories": {},
-                "max_directory_depth": 3,
-                "ignored_files": {}
-            },
-            "content_rules": {
-                "exempt_statuses": [],
-                "min_content_length_chars": {"value": 50},
-                "max_review_age_days": {"value": 365}
+                "structure_rules": {
+                    "artifact_directories": {},
+                    "max_directory_depth": 3,
+                    "ignored_files": {},
+                },
+                "content_rules": {
+                    "exempt_statuses": [],
+                    "min_content_length_chars": {"value": 50},
+                    "max_review_age_days": {"value": 365},
+                },
             }
-        }}
+        },
     )
 
     with pytest.raises(SystemExit) as e:
@@ -588,21 +680,23 @@ def test_main_filters(tmp_path, monkeypatch):
         "engine.cli.load_json_schema_file",
         lambda p: {
             "x-global-config": {
-                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+                "severity_levels": {
+                    "mock_group": {r.value: "ERROR" for r in SeverityRule}
+                },
                 "blocking_severities": ["CRITICAL", "ERROR"],
                 "structure_rules": {
                     "artifact_directories": {},
                     "max_directory_depth": 3,
                     "ignored_files": {
                         "exact_matches": ["readme.md"],
-                        "patterns": [r".*\.copy\.md$"]
-                    }
+                        "patterns": [r".*\.copy\.md$"],
+                    },
                 },
                 "content_rules": {
                     "exempt_statuses": [],
                     "min_content_length_chars": {"value": 50},
-                    "max_review_age_days": {"value": 365}
-                }
+                    "max_review_age_days": {"value": 365},
+                },
             }
         },
     )
@@ -625,20 +719,26 @@ def test_main_global_auditors_json(tmp_path, monkeypatch):
     monkeypatch.setattr(linter, "TECH_RADAR_YAML_PATH", "fake")
     monkeypatch.setattr(linter, "BASE_SCHEMA_PATH", "fake")
     monkeypatch.setattr(
-        linter, "load_json_schema_file", lambda p: {"x-global-config": {
-                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+        linter,
+        "load_json_schema_file",
+        lambda p: {
+            "x-global-config": {
+                "severity_levels": {
+                    "mock_group": {r.value: "ERROR" for r in SeverityRule}
+                },
                 "blocking_severities": ["CRITICAL", "ERROR"],
-            "structure_rules": {
-                "artifact_directories": {},
-                "max_directory_depth": 3,
-                "ignored_files": {}
-            },
-            "content_rules": {
-                "exempt_statuses": [],
-                "min_content_length_chars": {"value": 50},
-                "max_review_age_days": {"value": 365}
+                "structure_rules": {
+                    "artifact_directories": {},
+                    "max_directory_depth": 3,
+                    "ignored_files": {},
+                },
+                "content_rules": {
+                    "exempt_statuses": [],
+                    "min_content_length_chars": {"value": 50},
+                    "max_review_age_days": {"value": 365},
+                },
             }
-        }}
+        },
     )
 
     # Mock lint_file to pass cleanly so global auditors run
@@ -718,20 +818,26 @@ def test_main_directory_depth_violation(tmp_path, monkeypatch):
     monkeypatch.setattr(linter, "TECH_RADAR_YAML_PATH", "fake")
     monkeypatch.setattr(linter, "BASE_SCHEMA_PATH", "fake")
     monkeypatch.setattr(
-        linter, "load_json_schema_file", lambda p: {"x-global-config": {
-                "severity_levels": {"mock_group": {r.value: "ERROR" for r in SeverityRule}},
+        linter,
+        "load_json_schema_file",
+        lambda p: {
+            "x-global-config": {
+                "severity_levels": {
+                    "mock_group": {r.value: "ERROR" for r in SeverityRule}
+                },
                 "blocking_severities": ["CRITICAL", "ERROR"],
-            "structure_rules": {
-                "artifact_directories": {},
-                "max_directory_depth": 3,
-                "ignored_files": {}
-            },
-            "content_rules": {
-                "exempt_statuses": [],
-                "min_content_length_chars": {"value": 50},
-                "max_review_age_days": {"value": 365}
+                "structure_rules": {
+                    "artifact_directories": {},
+                    "max_directory_depth": 3,
+                    "ignored_files": {},
+                },
+                "content_rules": {
+                    "exempt_statuses": [],
+                    "min_content_length_chars": {"value": 50},
+                    "max_review_age_days": {"value": 365},
+                },
             }
-        }}
+        },
     )
     monkeypatch.setattr(
         linter, "build_metadata_registry", lambda *args, **kwargs: (set(), {}, {})

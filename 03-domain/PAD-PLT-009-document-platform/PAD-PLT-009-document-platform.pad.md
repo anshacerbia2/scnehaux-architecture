@@ -121,19 +121,19 @@ Artifact references cross domain boundaries. Storage implementation does not.
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Artifact | Governed digital content unit independent of Product business meaning |
-| Artifact Version | Immutable revision of Artifact content and version-bound metadata |
-| Content | Binary, textual, media, spreadsheet, or comparable payload |
-| Checksum | Integrity identity used to detect content change |
-| Provenance | Traceable source, producer, and transformation lineage |
-| Derivative | Generated representation linked to a source Artifact Version |
-| Content Safety State | Explicit state such as pending, accepted, quarantined, or rejected according to content policy |
-| Artifact Reference | Stable opaque reference consumed by another domain |
-| Retention Instruction | Governed lifecycle instruction originating from Product or Governance authority |
-| Legal Hold Reference | External governed hold instruction preventing normal disposition |
-| Archive | Preserved lifecycle state under declared retention and access controls |
+| Term                  | Meaning                                                                                        |
+| :-------------------- | :--------------------------------------------------------------------------------------------- |
+| Artifact              | Governed digital content unit independent of Product business meaning                          |
+| Artifact Version      | Immutable revision of Artifact content and version-bound metadata                              |
+| Content               | Binary, textual, media, spreadsheet, or comparable payload                                     |
+| Checksum              | Integrity identity used to detect content change                                               |
+| Provenance            | Traceable source, producer, and transformation lineage                                         |
+| Derivative            | Generated representation linked to a source Artifact Version                                   |
+| Content Safety State  | Explicit state such as pending, accepted, quarantined, or rejected according to content policy |
+| Artifact Reference    | Stable opaque reference consumed by another domain                                             |
+| Retention Instruction | Governed lifecycle instruction originating from Product or Governance authority                |
+| Legal Hold Reference  | External governed hold instruction preventing normal disposition                               |
+| Archive               | Preserved lifecycle state under declared retention and access controls                         |
 
 ### 3.3 Domain Policies
 

@@ -21,12 +21,15 @@ doc_meta:
 ## 1. Purpose & Scope
 
 ### 1.1 Objective
+
 Record physical-design entry constraints for PAD-PLT-016.
 
 ### 1.2 Capability
+
 Durable Agent Definition/Run execution, Harness, Context Assembly, Run/Session Memory mechanics, Tool Binding/mediation, Skill Runtime, delegation/handoff/composition, budgets/stops, evaluation, recovery, telemetry.
 
 ### 1.3 Constraint
+
 - Model/Provider routing belongs to PAD-PLT-008
 - Knowledge belongs to PAD-PLT-015
 - Product owns vertical AI/business meaning, Product Tools, authorization, and outcome
@@ -36,23 +39,25 @@ Durable Agent Definition/Run execution, Harness, Context Assembly, Run/Session M
 - no agent framework/database/broker/memory store/sandbox/runtime topology selected
 
 ### 1.4 Requirement
+
 Future design SHALL preserve durable Agent state and side-effect lineage without becoming Product, Workflow, Knowledge, Tool authority, or universal AI hop.
 
 ### 1.5 Assumption
+
 Validated consumers require agent-loop/durable-run/context/Tool/memory/delegation/pause-resume semantics beyond bounded inference.
 
 ## 2. Enterprise Traceability
 
-| Relationship | Target |
-| :-- | :-- |
-| Parent PAD | PAD-PLT-016 |
+| Relationship      | Target      |
+| :---------------- | :---------- |
+| Parent PAD        | PAD-PLT-016 |
 | Boundary decision | ADR-GLB-015 |
-| Model execution | PAD-PLT-008 |
-| Knowledge | PAD-PLT-015 |
-| Capability | EAD-001 |
-| Data | EAD-003 |
-| Platform/runtime | EAD-005 |
-| Security | EAD-006 |
+| Model execution   | PAD-PLT-008 |
+| Knowledge         | PAD-PLT-015 |
+| Capability        | EAD-001     |
+| Data              | EAD-003     |
+| Platform/runtime  | EAD-005     |
+| Security          | EAD-006     |
 
 ## 3. Solution Context
 
@@ -105,6 +110,7 @@ Future deployables use the enterprise CI/CD paved road and SHALL pass architectu
 ## 10. Architecture Decisions
 
 ### Accepted
+
 - separate from Model & Inference
 - Harness internal
 - Agent Definition != Agent Run
@@ -112,6 +118,7 @@ Future deployables use the enterprise CI/CD paved road and SHALL pass architectu
 - Tool/Knowledge/Product/Workflow authority external
 
 ### Rejected
+
 - implementation against charter
 - framework semantics as enterprise contract
 - long-term Memory as hidden Knowledge authority
@@ -120,13 +127,17 @@ Future deployables use the enterprise CI/CD paved road and SHALL pass architectu
 - Agent Runtime absorbing Workflow/arbitrary Product code
 
 ## 11. Assumptions
+
 Validated Product consumers define concrete Agent profiles before draft approval.
 
 ## 12. Compatibility Strategy
+
 Preserve Agent Definition/Run/Tool/Context/Memory/Delegation contracts across framework replacement.
 
 ## 13. Migration Strategy
+
 Existing agent loops/framework graphs/custom harnesses are migration evidence only.
 
 ## 14. Alternatives
+
 Framework, durable-state engine, persistence, broker, memory store, Tool transport, MCP, sandbox, deployment remain open until `draft`.

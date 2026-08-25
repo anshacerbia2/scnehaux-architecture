@@ -8,7 +8,6 @@ from engine.validators.domains.std_validator import STDValidator
 from engine.validators.domains.tdd_validator import TDDValidator
 
 
-
 def test_missing_doc_meta_for_all():
     rules = {"rules": {"metadata": {}}, "severity_levels": {}}
     for cls, fname in [

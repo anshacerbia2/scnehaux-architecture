@@ -18,8 +18,8 @@ Placement of Cross-Cutting Mechanics: In-Process Application Concerns, Generated
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type     | Reviewers                                     | Approver                         |
+| :--------- | :------- | :----------- | :-------------------------------------------- | :------------------------------- |
 | 2026-08-12 | proposed | foundational | Architecture, Platform, Security, Engineering | Architecture Authority — pending |
 
 ## 3. Context

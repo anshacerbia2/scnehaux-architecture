@@ -128,21 +128,21 @@ Billing is the commercial metering and statement authority between Product usage
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Usage Fact | Product-owned business fact proposed for metering |
-| Usage Record | Billing-accepted measurable usage fact with stable source and correlation |
-| Meter | Versioned definition of what is counted and how the usage contract is interpreted |
-| Rating Configuration | Governed commercial parameters used to convert accepted usage into chargeable value |
-| Rating | Deterministic application of one declared rating version to accepted usage |
-| Charge | Commercial amount produced by rating or adjustment |
-| Billing Cycle | Governed period used to collect Charges into a Bill |
-| Bill | Commercial statement of Charges for a declared account or customer reference |
-| Commercial Invoice | Billing document and not automatically an ERP accounting posting |
-| Credit / Adjustment | Attributable correction applied without silently rewriting historical Charge evidence |
-| Entitlement | Commercial grant owned outside Billing |
-| Financial Posting | ERP or Finance fact owned outside Billing |
-| Reconciliation | Comparison of expected usage, Charges, exports, or downstream acknowledgements |
+| Term                 | Meaning                                                                               |
+| :------------------- | :------------------------------------------------------------------------------------ |
+| Usage Fact           | Product-owned business fact proposed for metering                                     |
+| Usage Record         | Billing-accepted measurable usage fact with stable source and correlation             |
+| Meter                | Versioned definition of what is counted and how the usage contract is interpreted     |
+| Rating Configuration | Governed commercial parameters used to convert accepted usage into chargeable value   |
+| Rating               | Deterministic application of one declared rating version to accepted usage            |
+| Charge               | Commercial amount produced by rating or adjustment                                    |
+| Billing Cycle        | Governed period used to collect Charges into a Bill                                   |
+| Bill                 | Commercial statement of Charges for a declared account or customer reference          |
+| Commercial Invoice   | Billing document and not automatically an ERP accounting posting                      |
+| Credit / Adjustment  | Attributable correction applied without silently rewriting historical Charge evidence |
+| Entitlement          | Commercial grant owned outside Billing                                                |
+| Financial Posting    | ERP or Finance fact owned outside Billing                                             |
+| Reconciliation       | Comparison of expected usage, Charges, exports, or downstream acknowledgements        |
 
 ### 3.3 Domain Policies
 

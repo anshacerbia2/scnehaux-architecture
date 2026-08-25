@@ -12,6 +12,7 @@ doc_meta:
   created_date: 2026-08-23
   last_reviewed: 2026-08-23
 ---
+
 # Enterprise Background Job Execution Standard (STD-GLB-011)
 
 ## 1. Objective & Scope
@@ -167,6 +168,7 @@ Every durable Job implementation **MUST** expose, at minimum:
 - A pure Job Worker **MUST NOT** expose a public/Product-facing business API merely to receive or execute Jobs
 - A mixed API + Worker deployable **MAY** remain one deployable when its SAD identifies API ingress and Worker execution boundaries
 - Health/readiness/metrics listeners remain operational surfaces rather than Job command contracts
+
 ## 4. Exceptions
 
 None.

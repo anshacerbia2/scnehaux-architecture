@@ -25,8 +25,8 @@ Standardizing on Atlas Declarative schema Management for Safe and Traceable Data
 | 2026-08-18 | accepted | foundational | Architecture Review Board | Enterprise Architect |
 
 **Amended 2026-08-18: the destructive gate no longer depends on `atlas migrate lint`.**
-Since Atlas v0.38 that command aborts on the free CLI — *"'atlas migrate lint' is
-available only to Atlas Pro users"* — so the mechanism this decision originally named
+Since Atlas v0.38 that command aborts on the free CLI — _"'atlas migrate lint' is
+available only to Atlas Pro users"_ — so the mechanism this decision originally named
 cannot run without a commercial account. Atlas remains the schema tool; §5 now states the
 gate as a required property and lists the mechanisms that satisfy it.
 

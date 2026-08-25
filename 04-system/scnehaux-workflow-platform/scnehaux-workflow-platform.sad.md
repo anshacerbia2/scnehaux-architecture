@@ -59,13 +59,13 @@ The enterprise Event & Messaging, Scheduling, Notification, Identity, Organizati
 
 ## 2. Enterprise Traceability
 
-| Relationship | Target |
-| :-- | :-- |
-| Realizes | PAD-PLT-004 |
-| Governed by | EAD-001 and EAD-003 |
-| Boundary decision | ADR-GLB-011 |
-| Consumes | PAD-PLT-011 durable temporal wake-up |
-| Consumes | PAD-PLT-005 communication delivery |
+| Relationship      | Target                               |
+| :---------------- | :----------------------------------- |
+| Realizes          | PAD-PLT-004                          |
+| Governed by       | EAD-001 and EAD-003                  |
+| Boundary decision | ADR-GLB-011                          |
+| Consumes          | PAD-PLT-011 durable temporal wake-up |
+| Consumes          | PAD-PLT-005 communication delivery   |
 
 ## 3. Solution Context
 

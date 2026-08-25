@@ -121,20 +121,20 @@ Work Management owns generic work state. Product owns the business resource and 
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Work Item | Reusable unit of actionable operational work |
-| Case | Durable work container grouping related work or activity |
-| Queue | Business-visible work inventory and not a technical message queue |
-| Assignment | Explicit ownership relationship between Work Item and Principal, team, or workload |
-| Claim | Atomic acquisition of eligible work |
-| Release | Return of claimed work to an eligible pool |
-| Priority | Work-management ordering signal influenced by Product-owned semantics |
-| Review | Human or system examination of work |
-| Approval | Recorded Review decision whose business effect remains Product-owned |
-| Work State | Generic lifecycle state of a Work Item and not Product business state |
-| Work History | Append-oriented record of Work Management lifecycle facts |
-| My Work | Query or projection of work assigned, claimed, or eligible for a caller |
+| Term         | Meaning                                                                            |
+| :----------- | :--------------------------------------------------------------------------------- |
+| Work Item    | Reusable unit of actionable operational work                                       |
+| Case         | Durable work container grouping related work or activity                           |
+| Queue        | Business-visible work inventory and not a technical message queue                  |
+| Assignment   | Explicit ownership relationship between Work Item and Principal, team, or workload |
+| Claim        | Atomic acquisition of eligible work                                                |
+| Release      | Return of claimed work to an eligible pool                                         |
+| Priority     | Work-management ordering signal influenced by Product-owned semantics              |
+| Review       | Human or system examination of work                                                |
+| Approval     | Recorded Review decision whose business effect remains Product-owned               |
+| Work State   | Generic lifecycle state of a Work Item and not Product business state              |
+| Work History | Append-oriented record of Work Management lifecycle facts                          |
+| My Work      | Query or projection of work assigned, claimed, or eligible for a caller            |
 
 ### 3.3 Domain Policies
 

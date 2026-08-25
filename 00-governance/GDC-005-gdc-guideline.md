@@ -32,14 +32,14 @@ As the foundational policies of the ecosystem, this artifact defines the determi
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
-| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
-| **Section Rules** | Required Sections | <ul><li>Context & Scope</li><li>Policy Framework</li></ul> |
-| **Section Rules** | Recommended Sections | <ul><li>Enforcement Mechanism</li><li>Enforcement Mechanism & Rule Reconciliation</li><li>Severity & Exceptions</li><li>Document Types (Glossary of Truth)</li><li>Document Lifecycle & State Management</li><li>Linter Execution Flow (CI/CD Automated Gate)</li><li>Compliance & Enforcement</li><li>The Git Workflow & Access Control</li><li>The Reconciliation Flow (Adding or Modifying Policies)</li><li>Directory Structure & Taxonomy</li><li>Directory Structure & Naming Conventions</li><li>Document Template Schema (Metadata Frontmatter)</li><li>Document Section Semantics</li><li>Semantic Versioning Classification</li><li>Appendix: Architectural Clarifications & Trade-Offs</li><li>Appendix: Architectural Trade-Offs</li></ul> |
-| **Content Quality Rules** | Policy Framework (Required) | <ul><li>Semantic Definitions</li></ul> |
-| **Content Quality Rules** | Semantic Definitions (Required Sub Sections) | <ul><li>Naming Conventions</li><li>Taxonomy</li><li>Directory Structure</li><li>Metadata Schema Properties</li><li>Artifact Section</li></ul> |
-| **Content Quality Rules** | Metadata Schema Properties (Required Sub Sections) | <ul><li>Allowed Lifecycle Statuses</li><li>Allowed Classifications</li><li>Semantic Versioning Classification</li></ul> |
+| Rule Category             | Parameter                                          | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| :------------------------ | :------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Metadata Rules**        | Metadata Rules                                     | <ul><li>doc_meta</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **Section Rules**         | Required Sections                                  | <ul><li>Context & Scope</li><li>Policy Framework</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **Section Rules**         | Recommended Sections                               | <ul><li>Enforcement Mechanism</li><li>Enforcement Mechanism & Rule Reconciliation</li><li>Severity & Exceptions</li><li>Document Types (Glossary of Truth)</li><li>Document Lifecycle & State Management</li><li>Linter Execution Flow (CI/CD Automated Gate)</li><li>Compliance & Enforcement</li><li>The Git Workflow & Access Control</li><li>The Reconciliation Flow (Adding or Modifying Policies)</li><li>Directory Structure & Taxonomy</li><li>Directory Structure & Naming Conventions</li><li>Document Template Schema (Metadata Frontmatter)</li><li>Document Section Semantics</li><li>Semantic Versioning Classification</li><li>Appendix: Architectural Clarifications & Trade-Offs</li><li>Appendix: Architectural Trade-Offs</li></ul> |
+| **Content Quality Rules** | Policy Framework (Required)                        | <ul><li>Semantic Definitions</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Content Quality Rules** | Semantic Definitions (Required Sub Sections)       | <ul><li>Naming Conventions</li><li>Taxonomy</li><li>Directory Structure</li><li>Metadata Schema Properties</li><li>Artifact Section</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Content Quality Rules** | Metadata Schema Properties (Required Sub Sections) | <ul><li>Allowed Lifecycle Statuses</li><li>Allowed Classifications</li><li>Semantic Versioning Classification</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -84,9 +84,9 @@ scnehaux-architecture/
 
 ##### Allowed Lifecycle Statuses
 
-| Status | Meaning / Lifecycle Stage |
-| --- | --- |
-| `draft` | The artifact is currently being written or reviewed and is not yet enforceable. Exempt from linter scoring. |
+| Status     | Meaning / Lifecycle Stage                                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `draft`    | The artifact is currently being written or reviewed and is not yet enforceable. Exempt from linter scoring.                      |
 | `approved` | The artifact has been formally reviewed and approved by the Architecture Authority. Its policies are now active and enforceable. |
 
 ##### Allowed Classifications
@@ -112,14 +112,14 @@ While the exact string values are enforced by the CI Linter, their semantic mean
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
-| Section Name | Purpose / Content Requirement |
-| --- | --- |
-| **Context & Scope** | Defines the boundaries, objectives, and scope of the governance policy. |
-| **Policy Framework** | Documents the core guidelines, philosophies, schemas, or models being established. |
-| **Enforcement Mechanism** | (Optional) Redefine ONLY if the artifact has domain-specific linter rules. |
-| **Severity & Exceptions** | (Optional) Redefine ONLY if the artifact explicitly blocks waivers or alters severity scaling. |
-| **Artifact Types (Glossary of Truth)** | (Optional) Defines the glossary of truth. |
-| **Artifact Lifecycle & Statuses** | (Optional) Defines the lifecycle statuses. |
+| Section Name                           | Purpose / Content Requirement                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Context & Scope**                    | Defines the boundaries, objectives, and scope of the governance policy.                        |
+| **Policy Framework**                   | Documents the core guidelines, philosophies, schemas, or models being established.             |
+| **Enforcement Mechanism**              | (Optional) Redefine ONLY if the artifact has domain-specific linter rules.                     |
+| **Severity & Exceptions**              | (Optional) Redefine ONLY if the artifact explicitly blocks waivers or alters severity scaling. |
+| **Artifact Types (Glossary of Truth)** | (Optional) Defines the glossary of truth.                                                      |
+| **Artifact Lifecycle & Statuses**      | (Optional) Defines the lifecycle statuses.                                                     |
 
 ### 2.4 Artifact Lifecycle & Statuses
 
@@ -166,9 +166,9 @@ Failure to follow this reconciliation flow will result in Documentation Drift an
 
 In addition to the global structural enforcement defined in `GDC-001`, GDC artifacts are strictly governed by the following domain-specific linter components:
 
-| Linter Component | File | Enforcement Logic |
-| :-- | :-- | :-- |
-| **Domain Schema** | `schemas/gdc.schema.json` | Specific `review_cycle_days`, strict metadata, and policy structure. |
+| Linter Component  | File                                         | Enforcement Logic                                                                                             |
+| :---------------- | :------------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
+| **Domain Schema** | `schemas/gdc.schema.json`                    | Specific `review_cycle_days`, strict metadata, and policy structure.                                          |
 | **Python Engine** | `engine/validators/domains/gdc_validator.py` | **Taxonomy**: Validates `allowed_statuses` and `allowed_classifications` ensuring proper baseline governance. |
 
 ---

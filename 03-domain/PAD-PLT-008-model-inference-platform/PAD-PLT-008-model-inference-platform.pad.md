@@ -106,14 +106,14 @@ graph LR
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Capability Profile | Stable consumer requirement for model behavior, policy, latency, safety, or residency |
-| Provider Access Profile | Governed human/workload/delegated/cloud/local provider-access mode |
-| Inference Run | One bounded model-execution lifecycle |
-| Route | Evaluated provider/model/endpoint selection satisfying a Capability Profile |
-| Fallback | Evaluated alternate route, never arbitrary provider substitution |
-| Provider Health | Measured provider/endpoint condition used by routing policy |
+| Term                    | Meaning                                                                               |
+| :---------------------- | :------------------------------------------------------------------------------------ |
+| Capability Profile      | Stable consumer requirement for model behavior, policy, latency, safety, or residency |
+| Provider Access Profile | Governed human/workload/delegated/cloud/local provider-access mode                    |
+| Inference Run           | One bounded model-execution lifecycle                                                 |
+| Route                   | Evaluated provider/model/endpoint selection satisfying a Capability Profile           |
+| Fallback                | Evaluated alternate route, never arbitrary provider substitution                      |
+| Provider Health         | Measured provider/endpoint condition used by routing policy                           |
 
 ### 3.3 Domain Policies
 

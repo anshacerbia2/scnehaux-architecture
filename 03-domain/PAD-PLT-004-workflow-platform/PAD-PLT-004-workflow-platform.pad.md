@@ -120,19 +120,19 @@ Workflow coordinates but does not become the authoritative Product system behind
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Workflow Definition | Versioned process model describing allowed coordination states and transitions |
-| Workflow Version | Immutable published realization of a Workflow Definition |
-| Workflow Instance | Durable execution of one published Workflow Version |
-| Task | Process step whose effect may be performed by a human, Product, Platform, or bounded technical handler |
-| Human Task | Workflow step requiring human action and potentially represented as a Work Management Work Item |
-| Work Item | Work Management-owned actionable work record and not Workflow authority |
-| Transition | Workflow-owned movement between process states |
-| Deadline | Process-semantic temporal constraint |
-| Wake-Up | Scheduling-owned due occurrence with no process meaning by itself |
-| Compensation | Workflow-coordinated reaction to prior completed effects when the process requires recovery |
-| Correlation | Stable relationship between Workflow state and external Product or Platform interactions |
+| Term                | Meaning                                                                                                |
+| :------------------ | :----------------------------------------------------------------------------------------------------- |
+| Workflow Definition | Versioned process model describing allowed coordination states and transitions                         |
+| Workflow Version    | Immutable published realization of a Workflow Definition                                               |
+| Workflow Instance   | Durable execution of one published Workflow Version                                                    |
+| Task                | Process step whose effect may be performed by a human, Product, Platform, or bounded technical handler |
+| Human Task          | Workflow step requiring human action and potentially represented as a Work Management Work Item        |
+| Work Item           | Work Management-owned actionable work record and not Workflow authority                                |
+| Transition          | Workflow-owned movement between process states                                                         |
+| Deadline            | Process-semantic temporal constraint                                                                   |
+| Wake-Up             | Scheduling-owned due occurrence with no process meaning by itself                                      |
+| Compensation        | Workflow-coordinated reaction to prior completed effects when the process requires recovery            |
+| Correlation         | Stable relationship between Workflow state and external Product or Platform interactions               |
 
 ### 3.3 Domain Policies
 

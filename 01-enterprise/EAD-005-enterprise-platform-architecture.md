@@ -75,26 +75,26 @@ Adoption / runtime evidence / feedback
 
 ### 4.1 Drivers
 
-| ID | Driver | Platform Consequence |
-| :-- | :-- | :-- |
-| D1 | HCM, Travel, future ERP, and vertical AI Products need shared foundations | Cross-product capabilities have stable logical contracts |
-| D2 | Models/providers change faster than Product semantics | Model/provider abstraction and evaluation are first-class |
-| D7 | Durable agent execution has different state, failure, security, and scaling economics from bounded model invocation | Agent Runtime is a separate Platform Product from Model & Inference |
-| D3 | Enterprise knowledge is strategic and cross-product | Knowledge & Retrieval is separate from AI execution |
-| D4 | Human operational work spans Products | Work Management and Workspace Experience are explicit capabilities |
-| D5 | Durable background execution recurs everywhere | Background Job Execution receives a standard/paved road before an independent Platform Product |
-| D6 | Shared services add dependency and blast radius | Platformization must lower total system complexity |
+| ID  | Driver                                                                                                              | Platform Consequence                                                                           |
+| :-- | :------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------- |
+| D1  | HCM, Travel, future ERP, and vertical AI Products need shared foundations                                           | Cross-product capabilities have stable logical contracts                                       |
+| D2  | Models/providers change faster than Product semantics                                                               | Model/provider abstraction and evaluation are first-class                                      |
+| D7  | Durable agent execution has different state, failure, security, and scaling economics from bounded model invocation | Agent Runtime is a separate Platform Product from Model & Inference                            |
+| D3  | Enterprise knowledge is strategic and cross-product                                                                 | Knowledge & Retrieval is separate from AI execution                                            |
+| D4  | Human operational work spans Products                                                                               | Work Management and Workspace Experience are explicit capabilities                             |
+| D5  | Durable background execution recurs everywhere                                                                      | Background Job Execution receives a standard/paved road before an independent Platform Product |
+| D6  | Shared services add dependency and blast radius                                                                     | Platformization must lower total system complexity                                             |
 
 ### 4.2 Lessons Incorporated
 
-| Lesson | Platform Response |
-| :-- | :-- |
-| Platform root was mistaken for a Platform Product | Root, capability, Platform Product, system, deployable, and team remain distinct |
-| Mechanism vs meaning was framed too absolutely | Platform owns its own bounded semantics; Product owns Product semantics/outcomes |
-| Platform discovery looked waterfall/top-down | Structural need and bottom-up evidence converge |
-| Cognitive load was secondary | DevEx/adoption are first-class Platform Product metrics |
-| Canonical authority overlap was justified as resilience | Projections/replicas may overlap; canonical authority remains singular |
-| AI gateway threatened to become a god-platform | Knowledge, Model & Inference, Agent Runtime, Product workflow, and Product authorization remain separate |
+| Lesson                                                  | Platform Response                                                                                        |
+| :------------------------------------------------------ | :------------------------------------------------------------------------------------------------------- |
+| Platform root was mistaken for a Platform Product       | Root, capability, Platform Product, system, deployable, and team remain distinct                         |
+| Mechanism vs meaning was framed too absolutely          | Platform owns its own bounded semantics; Product owns Product semantics/outcomes                         |
+| Platform discovery looked waterfall/top-down            | Structural need and bottom-up evidence converge                                                          |
+| Cognitive load was secondary                            | DevEx/adoption are first-class Platform Product metrics                                                  |
+| Canonical authority overlap was justified as resilience | Projections/replicas may overlap; canonical authority remains singular                                   |
+| AI gateway threatened to become a god-platform          | Knowledge, Model & Inference, Agent Runtime, Product workflow, and Product authorization remain separate |
 
 ## 5. Architecture Model
 
@@ -355,28 +355,28 @@ Enterprise workload profiles include:
 
 ### 5.13 Technology Portfolio
 
-| Concern | Direction |
-| :-- | :-- |
-| Transactional/control server | Go as primary default where fit |
-| Web/BFF | TypeScript |
-| Data/AI/scientific workloads | Python where ecosystem leverage justifies |
-| Adopted vendor kernels | Vendor runtime scoped to adopted product |
-| Transactional persistence | Managed relational, PostgreSQL-compatible preferred |
-| Object/artifact storage | Managed object storage |
-| Messaging | Managed broker/stream |
-| Cryptographic custody | Managed KMS/HSM and secret management |
-| Telemetry | OpenTelemetry-compatible |
-| Infrastructure | Declarative/version-controlled |
+| Concern                            | Direction                                                                    |
+| :--------------------------------- | :--------------------------------------------------------------------------- |
+| Transactional/control server       | Go as primary default where fit                                              |
+| Web/BFF                            | TypeScript                                                                   |
+| Data/AI/scientific workloads       | Python where ecosystem leverage justifies                                    |
+| Adopted vendor kernels             | Vendor runtime scoped to adopted product                                     |
+| Transactional persistence          | Managed relational, PostgreSQL-compatible preferred                          |
+| Object/artifact storage            | Managed object storage                                                       |
+| Messaging                          | Managed broker/stream                                                        |
+| Cryptographic custody              | Managed KMS/HSM and secret management                                        |
+| Telemetry                          | OpenTelemetry-compatible                                                     |
+| Infrastructure                     | Declarative/version-controlled                                               |
 | Graph/vector/search/model provider | **Not selected at EAD level; selected downstream based on PAD/SAD evidence** |
 
 ### 5.14 Reliability Classes
 
-| Class | Meaning | Target Availability Direction | Default RTO | Default RPO |
-| :-- | :-- | :-- | :-- | :-- |
-| C0 | Trust / safety critical | >=99.99% | <=15m | <=1m |
-| C1 | Mission-critical operations | >=99.95% | <=1h | <=15m |
-| C2 | Business important | >=99.9% | <=4h | <=1h |
-| C3 | Assistive / best effort | Consumer-journey defined | <=24h | By data class |
+| Class | Meaning                     | Target Availability Direction | Default RTO | Default RPO   |
+| :---- | :-------------------------- | :---------------------------- | :---------- | :------------ |
+| C0    | Trust / safety critical     | >=99.99%                      | <=15m       | <=1m          |
+| C1    | Mission-critical operations | >=99.95%                      | <=1h        | <=15m         |
+| C2    | Business important          | >=99.9%                       | <=4h        | <=1h          |
+| C3    | Assistive / best effort     | Consumer-journey defined      | <=24h       | By data class |
 
 AI Products may require a higher reliability profile than an assistive copilot. Criticality is declared by consumer journey, not “AI” as a blanket label.
 
@@ -413,62 +413,73 @@ A shared Platform that persistently increases total-system complexity more than 
 ## 6. Principles & Rules
 
 ### 6.1 Platform Is a Product
+
 - **Fitness function:** every approved shared Platform PAD identifies owner, consumers, NFR, support/lifecycle, and adoption outcome
 
 ### 6.2 Shared Capability Must Lower Total System Complexity
+
 - **Fitness function:** new independent Platform PAD includes reuse/authority/economics justification and negative externalities
 
 ### 6.3 Platform Owns Platform Semantics, Product Owns Product Semantics
+
 - **Fitness function:** platform PAD review finds zero Product-specific authoritative outcome ownership
 
 ### 6.4 Distinct Primary Concerns
+
 - **Fitness function:** every critical fact and primary responsibility has one accountable authority
 
 ### 6.5 Platform Discovery Is Evolutionary
+
 - **Fitness function:** Platform roadmap includes consumer/runtime feedback and explicit refine/retire path
 
 ### 6.6 Simplest Sufficient Runtime
+
 - **Fitness function:** independent distributed runtime choices carry SAD/ADR evidence
 
 ### 6.7 Background Job Is Not a Universal Worker Platform
+
 - **Fitness function:** background-job standard prohibits arbitrary central Product code ownership
 
 ### 6.8 Knowledge, Model & Inference, and Agent Runtime Remain Separate Authorities
+
 - **Fitness function:** Knowledge PAD owns no model/agent execution; Model & Inference PAD owns no Knowledge or durable Agent Run authority; Agent Runtime PAD owns no Knowledge source truth or Product business outcome
 
 ### 6.11 Model Invocation and Agent Execution Are Different Runtime Models
+
 - **Fitness function:** bounded inference contracts do not require Agent Runtime, and Agent Runtime durable state/control-loop semantics are not implemented inside Model & Inference
 
 ### 6.9 Human SSO Is Not Machine Authority
+
 - **Fitness function:** provider access profile inventory distinguishes interactive and workload identities
 
 ### 6.10 Model Portability Is Evaluated
+
 - **Fitness function:** model/provider promotions resolve to evaluation/release evidence
 
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected |
-| :-- | :-- |
-| Platformize every reusable idea | Creates support and dependency cost without leverage |
-| Keep every repeated mechanism Product-local | Multiplies correctness/operational burden |
-| Central Worker Platform now | Prematurely centralizes arbitrary Product execution |
-| One AI Platform owns graph/RAG truth | Conflates knowledge authority with execution |
+| Alternative                                                                   | Why Rejected                                                                                                                   |
+| :---------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| Platformize every reusable idea                                               | Creates support and dependency cost without leverage                                                                           |
+| Keep every repeated mechanism Product-local                                   | Multiplies correctness/operational burden                                                                                      |
+| Central Worker Platform now                                                   | Prematurely centralizes arbitrary Product execution                                                                            |
+| One AI Platform owns graph/RAG truth                                          | Conflates knowledge authority with execution                                                                                   |
 | One AI runtime owns both bounded model invocation and durable Agent execution | Couples latency-oriented provider routing to stateful agent lifecycle, Tool side effects, memory, delegation, and resumability |
-| Graph-only retrieval | Makes one representation mandatory |
-| Provider-specific Product integration | Prevents governed portability and multiplies security/cost controls |
+| Graph-only retrieval                                                          | Makes one representation mandatory                                                                                             |
+| Provider-specific Product integration                                         | Prevents governed portability and multiplies security/cost controls                                                            |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Capability | Blast Radius | Posture |
-| :-- | :-- | :-- |
-| Identity / Organization | Trust/context changes | Local artifacts/projections where permitted |
-| Event & Messaging | Async ecosystem | Durable producers/replay |
-| Scheduling | Future work | Durable state/misfire |
-| Workspace Experience | Shared work surface | Direct Product entry where required |
-| Knowledge & Retrieval | Search/RAG | Explicit degraded mode |
-| Model & Inference | Bounded model execution | Evaluated provider fallback or explicit unavailable state according to Capability Profile |
-| Agent Runtime | Agentic execution | Durable run-state recovery; Product/Workflow state remains outside the runtime; safe failure does not bypass authorization |
-| Shared Work/Workflow | Operational coordination | Durable state and bounded isolation |
+| Capability              | Blast Radius             | Posture                                                                                                                    |
+| :---------------------- | :----------------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| Identity / Organization | Trust/context changes    | Local artifacts/projections where permitted                                                                                |
+| Event & Messaging       | Async ecosystem          | Durable producers/replay                                                                                                   |
+| Scheduling              | Future work              | Durable state/misfire                                                                                                      |
+| Workspace Experience    | Shared work surface      | Direct Product entry where required                                                                                        |
+| Knowledge & Retrieval   | Search/RAG               | Explicit degraded mode                                                                                                     |
+| Model & Inference       | Bounded model execution  | Evaluated provider fallback or explicit unavailable state according to Capability Profile                                  |
+| Agent Runtime           | Agentic execution        | Durable run-state recovery; Product/Workflow state remains outside the runtime; safe failure does not bypass authorization |
+| Shared Work/Workflow    | Operational coordination | Durable state and bounded isolation                                                                                        |
 
 ## 9. Ownership
 

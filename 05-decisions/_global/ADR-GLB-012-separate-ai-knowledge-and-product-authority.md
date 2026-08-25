@@ -22,8 +22,8 @@ Separate Product business authority, governed Knowledge & Retrieval, and AI mode
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type     | Reviewers                                                                           | Approver               |
+| :--------- | :------- | :----------- | :---------------------------------------------------------------------------------- | :--------------------- |
 | 2026-08-23 | accepted | foundational | Architecture Authority, Product Architecture, Data/Knowledge, AI Platform, Security | Architecture Authority |
 
 ## 3. Context

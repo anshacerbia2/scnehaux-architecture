@@ -28,18 +28,18 @@ While automated CI/CD linter tools enforce structural syntax, this manual proces
 
 Reviewers must evaluate the target document against the following 10 parameters. When required, the score sheet must be filled out as a markdown snippet and attached directly to the Pull Request.
 
-| # | Criterion | Enterprise Requirement (10/10 Standard) | Result | Reviewer Notes |
-| --- | :-- | :-- | :-- | :-- |
-| 1 | **Clarity & Precision** | Zero ambiguity. Words like "scalable", "fast", or "secure" are banned unless strictly quantified. No motivational filler. | Pass / Fail / N/A |  |
-| 2 | **Living Scope Boundaries** | System boundaries rigidly defined. For SADs, ensure C4 Level 1/2 topology maps are clear, and prevent implementation encyclopedia leaks. | Pass / Fail / N/A |  |
-| 3 | **Traceability & Inheritance** | Project-level ADRs/STDs inherit from global standards via the `governed_by` list. SADs map to a governing Platform PAD. | Pass / Fail / N/A |  |
-| 4 | **Architectural Drivers** | Explicit listing of functional constraints, business goals, assumptions, and **integration of past Incident/COE learnings**. | Pass / Fail / N/A |  |
-| 5 | **Measurable NFRs** | Latency (P95/P99), Throughput (RPS), Availability (%), and Error Budgets are documented with concrete targets. | Pass / Fail / N/A |  |
-| 6 | **Cross-Cutting Concerns** | Strictly addresses Observability (SLIs/SLOs/Tracing) and Security (_Data Classification_, **Zero-Trust boundaries**). | Pass / Fail / N/A |  |
-| 7 | **Trade-Offs** | Documents the _Alternatives Considered_ (why other patterns were rejected) and the conscious technical compromises made. | Pass / Fail / N/A |  |
-| 8 | **Risk & Graceful Degradation** | Blast Radius and SPOFs are mapped. **Must define how the system degrades gracefully under failure.** | Pass / Fail / N/A |  |
-| 9 | **TDD Lifecycle & Fates** | Ensures the _Ephemeral TDD Matrix_ is executed (Class B folded to SAD; Class A archived to `historical/` only if matching strict forensic/incident filters). | Pass / Fail / N/A |  |
-| 10 | **Governance & Namespace Hygiene** | Adheres strictly to structural templates. All files must conform to scalable federated namespaces (e.g. `ADR-IAM-000`). | Pass / Fail / N/A |  |
+| #   | Criterion                          | Enterprise Requirement (10/10 Standard)                                                                                                                      | Result            | Reviewer Notes |
+| --- | :--------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------- | :------------- |
+| 1   | **Clarity & Precision**            | Zero ambiguity. Words like "scalable", "fast", or "secure" are banned unless strictly quantified. No motivational filler.                                    | Pass / Fail / N/A |                |
+| 2   | **Living Scope Boundaries**        | System boundaries rigidly defined. For SADs, ensure C4 Level 1/2 topology maps are clear, and prevent implementation encyclopedia leaks.                     | Pass / Fail / N/A |                |
+| 3   | **Traceability & Inheritance**     | Project-level ADRs/STDs inherit from global standards via the `governed_by` list. SADs map to a governing Platform PAD.                                      | Pass / Fail / N/A |                |
+| 4   | **Architectural Drivers**          | Explicit listing of functional constraints, business goals, assumptions, and **integration of past Incident/COE learnings**.                                 | Pass / Fail / N/A |                |
+| 5   | **Measurable NFRs**                | Latency (P95/P99), Throughput (RPS), Availability (%), and Error Budgets are documented with concrete targets.                                               | Pass / Fail / N/A |                |
+| 6   | **Cross-Cutting Concerns**         | Strictly addresses Observability (SLIs/SLOs/Tracing) and Security (_Data Classification_, **Zero-Trust boundaries**).                                        | Pass / Fail / N/A |                |
+| 7   | **Trade-Offs**                     | Documents the _Alternatives Considered_ (why other patterns were rejected) and the conscious technical compromises made.                                     | Pass / Fail / N/A |                |
+| 8   | **Risk & Graceful Degradation**    | Blast Radius and SPOFs are mapped. **Must define how the system degrades gracefully under failure.**                                                         | Pass / Fail / N/A |                |
+| 9   | **TDD Lifecycle & Fates**          | Ensures the _Ephemeral TDD Matrix_ is executed (Class B folded to SAD; Class A archived to `historical/` only if matching strict forensic/incident filters). | Pass / Fail / N/A |                |
+| 10  | **Governance & Namespace Hygiene** | Adheres strictly to structural templates. All files must conform to scalable federated namespaces (e.g. `ADR-IAM-000`).                                      | Pass / Fail / N/A |                |
 
 ---
 
@@ -47,16 +47,16 @@ Reviewers must evaluate the target document against the following 10 parameters.
 
 While the Peer Reviewer executes the rubric above, the Architecture Review Board (ARB) must take over if the PR triggers a high-risk pivot. It is the strict responsibility of the **Peer Reviewer** to identify these conditions and escalate the Pull Request by explicitly tagging the ARB for formal review. ARB escalation is **mandatory** under the following conditions:
 
-| Trigger Type | Description & Hard Thresholds |
-| :-- | :-- |
-| **Structural Architecture Audits** | Evaluating brand new, or significantly modified, Enterprise Architecture (EAD), Domain (PAD), or core System (SAD) documents. |
-| **Exception & Waiver Requests** | Reviewing Pull Requests that explicitly request an exception or waiver from an established engineering standard. |
-| **Security & Compliance Risks** | Modifying architectures containing core IAM logic, sensitive data (PCI/PII/HIPAA), or altering network zero-trust boundaries. |
-| **Cross-Domain Coupling** | Introducing a new synchronous hard-dependency between two previously isolated bounded contexts (violating PAD isolation). |
-| **Public Contract Breaking** | Introducing backward-incompatible changes to external-facing Public APIs or enterprise-wide event schemas. |
-| **Significant Financial Impact** | Architectural changes projected to increase cloud infrastructure or vendor licensing costs by $>20\%$ within the domain. |
-| **Vendor Lock-In Decisions** | Integrating a deeply-coupled 3rd-party SaaS or managed service where future migration would require $>3$ months of engineering effort. |
-| **Technology Radar Shifts** | Moving a core technology standard from `Adopted` to `Hold` or `Deprecated`. |
+| Trigger Type                       | Description & Hard Thresholds                                                                                                          |
+| :--------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| **Structural Architecture Audits** | Evaluating brand new, or significantly modified, Enterprise Architecture (EAD), Domain (PAD), or core System (SAD) documents.          |
+| **Exception & Waiver Requests**    | Reviewing Pull Requests that explicitly request an exception or waiver from an established engineering standard.                       |
+| **Security & Compliance Risks**    | Modifying architectures containing core IAM logic, sensitive data (PCI/PII/HIPAA), or altering network zero-trust boundaries.          |
+| **Cross-Domain Coupling**          | Introducing a new synchronous hard-dependency between two previously isolated bounded contexts (violating PAD isolation).              |
+| **Public Contract Breaking**       | Introducing backward-incompatible changes to external-facing Public APIs or enterprise-wide event schemas.                             |
+| **Significant Financial Impact**   | Architectural changes projected to increase cloud infrastructure or vendor licensing costs by $>20\%$ within the domain.               |
+| **Vendor Lock-In Decisions**       | Integrating a deeply-coupled 3rd-party SaaS or managed service where future migration would require $>3$ months of engineering effort. |
+| **Technology Radar Shifts**        | Moving a core technology standard from `Adopted` to `Hold` or `Deprecated`.                                                            |
 
 ---
 
@@ -126,15 +126,15 @@ Every Pull Request targeting `main` must satisfy the following algorithmic and h
 1. **The Machine Gate (GDC-001)**: The CI/CD Linter must return an `Exit 0`. If the linter fails, the Pull Request is hard-blocked.
 2. **The Human Gate (Lead Approval)**: Because architecture documentation acts as a binding contract, standard "Peer Review" is insufficient. Every Pull Request must be explicitly approved by the **Lead** of the respective owning team according to the following matrix. **CRITICAL:** This must be enforced via GitHub Branch Protection Rules requiring at least 1 review from a `CODEOWNERS` matched team.
 
-| Document Type | Target Scope | Required Lead Approver (PR Reviewer) |
-| :-- | :-- | :-- |
-| **GDC** (Governance) | Enterprise Policy | **ARB** (Architecture Review Board) |
-| **EAD** (Enterprise) | Enterprise Strategy | **ARB** (Architecture Review Board) |
-| **STD** (Standard) | Contextual Policy | **Inherited Lead** (ARB for Global STDs, Domain/System Lead for Local STDs) |
-| **PAD** (Platform) | Domain Capability | **Domain Team Lead** |
-| **SAD** (Software) | System Solution | **System Team Lead** |
-| **TDD** (Technical Design) | Component Blueprint | **Component Team Lead** |
-| **ADR** (Decision Record) | Contextual Pivot | **Inherited Lead** (ARB for Global ADRs, Domain/System Lead for Local ADRs) |
+| Document Type              | Target Scope        | Required Lead Approver (PR Reviewer)                                        |
+| :------------------------- | :------------------ | :-------------------------------------------------------------------------- |
+| **GDC** (Governance)       | Enterprise Policy   | **ARB** (Architecture Review Board)                                         |
+| **EAD** (Enterprise)       | Enterprise Strategy | **ARB** (Architecture Review Board)                                         |
+| **STD** (Standard)         | Contextual Policy   | **Inherited Lead** (ARB for Global STDs, Domain/System Lead for Local STDs) |
+| **PAD** (Platform)         | Domain Capability   | **Domain Team Lead**                                                        |
+| **SAD** (Software)         | System Solution     | **System Team Lead**                                                        |
+| **TDD** (Technical Design) | Component Blueprint | **Component Team Lead**                                                     |
+| **ADR** (Decision Record)  | Contextual Pivot    | **Inherited Lead** (ARB for Global ADRs, Domain/System Lead for Local ADRs) |
 
 3. **The ARB Gate (Two Escalation Paths)**: The Architecture Review Board (ARB) must approve the Pull Request if it reaches their desk via either of these two paths:
    - **Path A (Automated Git Routing)**: The Pull Request modifies globally restricted documents (e.g., GDC, EAD, or ADR). Git will automatically block the merge and assign the ARB via the `CODEOWNERS` file. _Exception for Trivial Changes: If the Pull Request is strictly a typo, formatting, or dead-link fix (a `Patch` version bump), any single ARB member may "Fast-Track" approve the PR in seconds without conducting a formal 7-dimension audit._
@@ -157,25 +157,25 @@ If a rare collision occurs, standard Git rebasing protocols apply. The later PR 
 
 ### 4.1 Konsep Tiga Tanggal (Tri-Date Concept)
 
-Di dalam ekosistem Scnehaux, status `reviewed` TIDAK SAMA dengan `updated`. Sebuah arsitektur bisa saja tidak berubah selama setahun, tetapi butuh di-*review* secara berkala untuk memastikan desain tersebut masih valid dengan keadaan sistem saat ini. Oleh karena itu, kita memecah *metadata date* menjadi tiga:
+Di dalam ekosistem Scnehaux, status `reviewed` TIDAK SAMA dengan `updated`. Sebuah arsitektur bisa saja tidak berubah selama setahun, tetapi butuh di-_review_ secara berkala untuk memastikan desain tersebut masih valid dengan keadaan sistem saat ini. Oleh karena itu, kita memecah _metadata date_ menjadi tiga:
 
-1. **`created_date` (Wajib untuk semua dokumen)**: Tanggal dokumen pertama kali dibuat (*Immutable*).
-   - *Tujuan*: Sebagai *anchor* (acuan) utama untuk mengukur batas umur dokumen, khususnya yang berstatus `draft`.
+1. **`created_date` (Wajib untuk semua dokumen)**: Tanggal dokumen pertama kali dibuat (_Immutable_).
+   - _Tujuan_: Sebagai _anchor_ (acuan) utama untuk mengukur batas umur dokumen, khususnya yang berstatus `draft`.
 2. **`last_updated` (Otomatis/Disarankan)**: Tanggal dokumen terakhir kali diubah isinya.
-   - *Tujuan*: Mengukur tingkat keaktifan revisi dokumen.
+   - _Tujuan_: Mengukur tingkat keaktifan revisi dokumen.
 3. **`last_reviewed` (Wajib HANYA untuk dokumen Aktif/Final)**: Tanggal dokumen terakhir diaudit/disetujui.
-   - *Tujuan*: Untuk mendeteksi dan mencegah *Architecture Rot* (desain yang basi). Dokumen `active` harus di-review secara berkala (misal tiap 6-12 bulan).
+   - _Tujuan_: Untuk mendeteksi dan mencegah _Architecture Rot_ (desain yang basi). Dokumen `active` harus di-review secara berkala (misal tiap 6-12 bulan).
 
 ### 4.2 Paradigma CI/CD untuk "Draft"
 
-Konsep *Docs as Code* menuntut kolaborasi sedini mungkin. Jika *draft* dilarang masuk ke `main`, *engineer* akan menahan dokumen tersebut di *local branch* mereka, mengurangi transparansi dan kolaborasi antar tim. Oleh karena itu, dokumen `draft` **BOLEH dan SANGAT DISARANKAN** di-merge ke `main`.
+Konsep _Docs as Code_ menuntut kolaborasi sedini mungkin. Jika _draft_ dilarang masuk ke `main`, _engineer_ akan menahan dokumen tersebut di _local branch_ mereka, mengurangi transparansi dan kolaborasi antar tim. Oleh karena itu, dokumen `draft` **BOLEH dan SANGAT DISARANKAN** di-merge ke `main`.
 
 Konsep CI/CD Rule-nya adalah:
 
-1. **Pengecualian Linter (INFO)**: Saat sebuah PR berisi dokumen berstatus `draft`, CI Linter akan men-*skip* aturan-aturan ketat (seperti jumlah kata minimal, larangan kata-kata ambigu, kelengkapan arsitektur). CI akan mengembalikan warna hijau (PASS) dengan pesan `INFO: Document validation skipped due to exempt status: 'draft'`.
-2. **Anti-Evasion Mechanism (ERROR / CRITICAL)**: *Draft* boleh diam di `main`, **TETAPI** tidak boleh berjamur! Kita mematok parameter `max_draft_age_days = 30`.
+1. **Pengecualian Linter (INFO)**: Saat sebuah PR berisi dokumen berstatus `draft`, CI Linter akan men-_skip_ aturan-aturan ketat (seperti jumlah kata minimal, larangan kata-kata ambigu, kelengkapan arsitektur). CI akan mengembalikan warna hijau (PASS) dengan pesan `INFO: Document validation skipped due to exempt status: 'draft'`.
+2. **Anti-Evasion Mechanism (ERROR / CRITICAL)**: _Draft_ boleh diam di `main`, **TETAPI** tidak boleh berjamur! Kita mematok parameter `max_draft_age_days = 30`.
    - Linter akan mengecek: `Hari Ini - created_date`.
-   - Jika `> 30 Hari`, CI akan meledak (`ERROR`/`CRITICAL`) memblokir *pipeline*. Ini secara sistematis memaksa *Approver/Author* untuk mem-*finalize* dokumen (ubah status dari `draft` ke `active`) atau menghapus dokumennya jika inisiatif tersebut batal.
+   - Jika `> 30 Hari`, CI akan meledak (`ERROR`/`CRITICAL`) memblokir _pipeline_. Ini secara sistematis memaksa _Approver/Author_ untuk mem-_finalize_ dokumen (ubah status dari `draft` ke `active`) atau menghapus dokumennya jika inisiatif tersebut batal.
 
 ---
 

@@ -52,43 +52,43 @@ AI does not receive a special trust exemption. Model inference, retrieval, tool 
 
 ### 4.1 Drivers
 
-| ID | Driver | Security Consequence |
-| :-- | :-- | :-- |
-| S1 | AI Products can invoke consequential tools | Delegated authority, side-effect classification, and human approval are explicit |
-| S2 | Knowledge crosses sensitive Product boundaries | Retrieval authorization precedes context assembly |
-| S3 | Providers support API, workload, OAuth, SSO/seat, and local modes | Access profiles are typed, scoped, attributable, and lifecycle-managed |
-| S4 | Provider/model routing is dynamic | Policy constrains data egress, classification, and allowed providers |
-| S5 | Agent/tool ecosystems ingest untrusted content | Prompt/tool injection and sandbox boundaries are explicit |
-| S6 | Workloads/jobs are pervasive | Human credentials are never shared as workload authority |
-| S7 | Background workers are pervasive and often unattended | Pure worker runtimes minimize inbound network surface and do not expose business ingress by default |
+| ID  | Driver                                                            | Security Consequence                                                                                |
+| :-- | :---------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
+| S1  | AI Products can invoke consequential tools                        | Delegated authority, side-effect classification, and human approval are explicit                    |
+| S2  | Knowledge crosses sensitive Product boundaries                    | Retrieval authorization precedes context assembly                                                   |
+| S3  | Providers support API, workload, OAuth, SSO/seat, and local modes | Access profiles are typed, scoped, attributable, and lifecycle-managed                              |
+| S4  | Provider/model routing is dynamic                                 | Policy constrains data egress, classification, and allowed providers                                |
+| S5  | Agent/tool ecosystems ingest untrusted content                    | Prompt/tool injection and sandbox boundaries are explicit                                           |
+| S6  | Workloads/jobs are pervasive                                      | Human credentials are never shared as workload authority                                            |
+| S7  | Background workers are pervasive and often unattended             | Pure worker runtimes minimize inbound network surface and do not expose business ingress by default |
 
 ### 4.2 Lessons Incorporated
 
-| Lesson | Response |
-| :-- | :-- |
-| Human SSO seat was treated as backend credential | Interactive and machine authority are distinct |
-| AI agent inherited unrestricted user power | Delegation is bounded by tool, scope, time, risk, and purpose |
-| Knowledge filtering occurred after model input | Retrieval is authorized before disclosure |
-| Provider key lived in Product code | Credential custody stays in Trust Services |
+| Lesson                                                         | Response                                                                                                                              |
+| :------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
+| Human SSO seat was treated as backend credential               | Interactive and machine authority are distinct                                                                                        |
+| AI agent inherited unrestricted user power                     | Delegation is bounded by tool, scope, time, risk, and purpose                                                                         |
+| Knowledge filtering occurred after model input                 | Retrieval is authorized before disclosure                                                                                             |
+| Provider key lived in Product code                             | Credential custody stays in Trust Services                                                                                            |
 | Pure background worker exposed a public/business HTTP listener | Worker execution and business ingress are separated; only explicitly justified internal probe/metrics/admin surfaces remain reachable |
-| Tool protocol was treated as authorization | MCP/API transport does not grant Product permission |
-| Model output was treated as approval | High-impact effects retain Product authorization/human control |
+| Tool protocol was treated as authorization                     | MCP/API transport does not grant Product permission                                                                                   |
+| Model output was treated as approval                           | High-impact effects retain Product authorization/human control                                                                        |
 
 ## 5. Architecture Model
 
 ### 5.1 Zero Trust Boundary
 
-| Dimension | Authority |
-| :-- | :-- |
-| Principal identity | Identity & Access |
-| Application/workload trust | Identity + Software Catalog / Application Trust |
-| Tenant/Workspace context | Organization |
-| Commercial grant | Subscription & Entitlement |
-| Product resource authorization | Product + Security Policy support |
-| Knowledge access | Source/Product policy + Knowledge Retrieval enforcement |
-| AI provider access | AI Platform policy + Trust Services credential custody |
-| Tool business authorization | Tool-owning Product/Platform |
-| Evidence | Source system + Audit & Evidence |
+| Dimension                      | Authority                                               |
+| :----------------------------- | :------------------------------------------------------ |
+| Principal identity             | Identity & Access                                       |
+| Application/workload trust     | Identity + Software Catalog / Application Trust         |
+| Tenant/Workspace context       | Organization                                            |
+| Commercial grant               | Subscription & Entitlement                              |
+| Product resource authorization | Product + Security Policy support                       |
+| Knowledge access               | Source/Product policy + Knowledge Retrieval enforcement |
+| AI provider access             | AI Platform policy + Trust Services credential custody  |
+| Tool business authorization    | Tool-owning Product/Platform                            |
+| Evidence                       | Source system + Audit & Evidence                        |
 
 ### 5.2 AI Provider Access Profiles
 
@@ -232,80 +232,95 @@ These surfaces are not business APIs. They remain internal, network-policy restr
 A deployable MAY intentionally contain both an API adapter and background Worker components. In that topology, the deployable has business ingress because of the API role; the Worker role itself does not create a second business ingress contract.
 
 Provider webhooks/callbacks terminate at an authenticated ingress/API adapter and may enqueue owned work. They do not require exposing the background Worker directly.
+
 ## 6. Principles & Rules
 
 ### 6.1 Explicit Trust
+
 - **Fitness function:** protected paths report zero network-location-only trust
 
 ### 6.2 Identity Has Narrow Authority
+
 - **Fitness function:** Identity domain has no Tenant/Membership/Product permission authority
 
 ### 6.3 Product Authorization Is Enforced Near Resource
+
 - **Fitness function:** tool/business APIs enforce resource authorization independently of AI/tool gateway
 
 ### 6.4 Workloads Have Distinct Identities
+
 - **Fitness function:** workload inventory records owner, identity, audience, credential lifecycle
 
 ### 6.5 Interactive SSO Is Not Shared Machine Authority
+
 - **Fitness function:** provider-access inventory has zero unattended jobs using shared human interactive sessions without supported delegation
 
 ### 6.6 Retrieval Authorization Precedes Model Context
+
 - **Fitness function:** cross-Tenant/forbidden knowledge negative tests verify exclusion before model invocation
 
 ### 6.7 Agents Receive Bounded Delegation
+
 - **Fitness function:** agent runs record permitted tools, scopes, budgets, identity, and delegation source
 
 ### 6.8 Untrusted Content Cannot Expand Authority
+
 - **Fitness function:** prompt/tool-injection test suite covers untrusted retrieval/tool/provider inputs
 
 ### 6.9 Secrets Use Managed Custody
+
 - **Fitness function:** Product/AI configuration contains references, not raw production provider credentials
 
 ### 6.10 Provider Egress Is Policy-Constrained
+
 - **Fitness function:** restricted data/provider combinations are denied by tested policy
 
 ### 6.11 High-Risk AI Actions Require Appropriate Human/Policy Control
+
 - **Fitness function:** high-risk action inventory maps authorization, approval, evidence, and rollback/compensation
 
 ### 6.12 AI Evidence Is Reconstructable
+
 - **Fitness function:** significant AI actions can resolve provider/model profile, policy, retrieval/tool correlation, actor/workload, and outcome without storing prohibited secrets
 
 ### 6.13 Background Workers Minimize Inbound Surface
+
 - **Fitness function:** pure background Worker deployments expose zero public/business inbound listeners; permitted probe/metrics/admin listeners are internal and network-policy restricted
+
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected |
-| :-- | :-- |
-| AI gateway trusted inside network | Violates Zero Trust |
-| One shared API key for all Products | Removes attribution, isolation, rotation, and cost ownership |
-| Reuse provider web session for workers | Human session lifecycle is not workload identity |
-| Filter RAG after model invocation | Data already disclosed |
-| Agent gateway is final authorization | Product invariants and resource authority are lost |
-| Give agents full user scope | Excessive blast radius |
+| Alternative                            | Why Rejected                                                 |
+| :------------------------------------- | :----------------------------------------------------------- |
+| AI gateway trusted inside network      | Violates Zero Trust                                          |
+| One shared API key for all Products    | Removes attribution, isolation, rotation, and cost ownership |
+| Reuse provider web session for workers | Human session lifecycle is not workload identity             |
+| Filter RAG after model invocation      | Data already disclosed                                       |
+| Agent gateway is final authorization   | Product invariants and resource authority are lost           |
+| Give agents full user scope            | Excessive blast radius                                       |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Dependency | Blast Radius | Required Posture |
-| :-- | :-- | :-- |
-| Identity | New auth/refresh | Locally verifiable active artifacts where permitted |
-| Organization context | New membership/context changes | Bounded projections with revocation semantics |
-| Trust/Secret Services | New credential acquisition/rotation | Cached secrets only within approved bounded lifecycle |
-| AI provider | AI feature | Evaluated fallback or explicit failure |
-| Knowledge authorization | RAG/search | Fail closed for protected content |
-| Tool owner | Agent task | Fail task, never bypass Product authorization |
+| Dependency              | Blast Radius                        | Required Posture                                      |
+| :---------------------- | :---------------------------------- | :---------------------------------------------------- |
+| Identity                | New auth/refresh                    | Locally verifiable active artifacts where permitted   |
+| Organization context    | New membership/context changes      | Bounded projections with revocation semantics         |
+| Trust/Secret Services   | New credential acquisition/rotation | Cached secrets only within approved bounded lifecycle |
+| AI provider             | AI feature                          | Evaluated fallback or explicit failure                |
+| Knowledge authorization | RAG/search                          | Fail closed for protected content                     |
+| Tool owner              | Agent task                          | Fail task, never bypass Product authorization         |
 
 ## 9. Ownership
 
-| Responsibility | Accountable |
-| :-- | :-- |
-| Enterprise security principles | Security / Architecture Authority |
-| Principal authentication | Identity |
-| Tenant/Workspace context | Organization |
-| Product authorization | Product domain |
-| AI execution policy enforcement | AI Platform |
-| Knowledge retrieval enforcement | Knowledge & Retrieval |
-| Provider credential custody | Trust Services |
-| Tool business authorization | Tool-owning Product/Platform |
+| Responsibility                  | Accountable                       |
+| :------------------------------ | :-------------------------------- |
+| Enterprise security principles  | Security / Architecture Authority |
+| Principal authentication        | Identity                          |
+| Tenant/Workspace context        | Organization                      |
+| Product authorization           | Product domain                    |
+| AI execution policy enforcement | AI Platform                       |
+| Knowledge retrieval enforcement | Knowledge & Retrieval             |
+| Provider credential custody     | Trust Services                    |
+| Tool business authorization     | Tool-owning Product/Platform      |
 
 ## 10. Dependencies
 

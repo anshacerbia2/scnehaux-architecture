@@ -18,8 +18,8 @@ Separate bounded model/provider inference execution from durable stateful Agent 
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type     | Reviewers                                                                               | Approver               |
+| :--------- | :------- | :----------- | :-------------------------------------------------------------------------------------- | :--------------------- |
 | 2026-08-23 | accepted | foundational | Architecture Authority, AI Platform, Knowledge Platform, Product Architecture, Security | Architecture Authority |
 
 This ADR **refines ADR-GLB-012**. ADR-GLB-012 remains accepted for Product/Knowledge/AI macro separation; this ADR decomposes AI execution into two Platform authorities.
@@ -134,19 +134,25 @@ Code/browser/computer/shell/filesystem execution may require a separate Engineer
 ## 8. Alternatives Considered
 
 ### Alternative A — Keep one AI Enablement Platform
+
 Rejected because distinct runtime/state/security/scaling/failure models remain coupled.
 
 ### Alternative B — Product-local Agent harness everywhere
+
 Rejected because durable execution, Tool mediation, context/memory, delegation, evaluation, tracing, recovery would repeat.
 
 ### Alternative C — Agent Runtime mandatory for every AI call
+
 Rejected because bounded inference does not require Agent semantics and a universal hop adds latency/blast radius/cognitive load.
 
 ### Alternative D — Separate Harness/Memory/Skill/MCP/Multi-Agent Platforms now
+
 Rejected because they are cohesive Agent Runtime capabilities/protocols without independent authority/economics sufficient today.
 
 ### Alternative E — Agent Runtime owns Tool/Product effects
+
 Rejected because protected-resource authority remains with Tool/Product owner.
 
 ### Alternative F — Agent Runtime owns enterprise long-term memory truth
+
 Rejected because reusable factual knowledge requires Knowledge governance.

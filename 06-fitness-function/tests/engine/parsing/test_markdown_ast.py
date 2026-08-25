@@ -149,7 +149,6 @@ def test_extract_section_contents_close_map_none():
 
 def test_extract_links_tuple_attrs(monkeypatch):
     from engine.parsing.markdown_ast import extract_links
-    import markdown_it
 
     # Test extract_links where token attrs is a list of tuples [("href", "https://example.com")]
     content = "[Test Link](https://example.com)"
@@ -172,7 +171,7 @@ def test_markdown_ast_walker_branches(monkeypatch):
     # Test extract_links tuple attrs branch (lines 165-167)
     fake_link = FakeToken("link_open", attrs=[("href", "https://tuple-link.com")])
     fake_inline = FakeToken("inline", children=[fake_link])
-    
+
     monkeypatch.setattr(MarkdownIt, "parse", lambda self, content: [fake_inline])
     links = markdown_ast.extract_links("dummy")
     assert "https://tuple-link.com" in links
@@ -184,5 +183,3 @@ def test_markdown_ast_walker_branches(monkeypatch):
     monkeypatch.setattr(MarkdownIt, "parse", lambda self, content: [fake_block])
     cleaned = markdown_ast.clean_content_for_length("dummy")
     assert "Nested prose" in cleaned
-
-

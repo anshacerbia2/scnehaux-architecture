@@ -19,10 +19,10 @@ Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel.
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type    | Reviewers                                  | Approver                         |
+| :--------- | :------- | :---------- | :----------------------------------------- | :------------------------------- |
 | 2026-08-06 | proposed | replacement | Identity, Security, Platform, Architecture | Architecture Authority — pending |
-| 2026-08-11 | accepted | replacement | Identity, Security, Platform, Architecture | Architecture Authority |
+| 2026-08-11 | accepted | replacement | Identity, Security, Platform, Architecture | Architecture Authority           |
 
 Three earlier identity decisions covering epoch-based sessions, token signing with an ephemeral development signer, and in-process credential hashing were withdrawn on acceptance. None had reached staging, so they were removed rather than retained as superseded records. This decision replaces them in full.
 
@@ -326,5 +326,5 @@ None at proposal time. Any preview feature, unsupported extension, or deviation 
 Provision a reserved identity with the realm, holding a fixed `principal_id`, and use it to create the first real operator. This was the first candidate considered for §5.11.
 
 - **Pros**: needs no new code — the ordinary API creates the first Principal like any other, and `SAD-001` already establishes an evidenced break-glass posture for the Admin Console, so the concept is not new to the estate.
-- **Cons**: it creates a credential that can create Principals *forever*, which is a permanent standing authority in exchange for solving a problem that occurs once. Its `principal_id` is in no registry, so every downstream consumer must tolerate an identifier the authority cannot resolve. And because it must exist before the service does, it can only be placed by the out-of-band write this architecture prohibits — the problem is relocated, not solved.
+- **Cons**: it creates a credential that can create Principals _forever_, which is a permanent standing authority in exchange for solving a problem that occurs once. Its `principal_id` is in no registry, so every downstream consumer must tolerate an identifier the authority cannot resolve. And because it must exist before the service does, it can only be placed by the out-of-band write this architecture prohibits — the problem is relocated, not solved.
 - **Why Rejected**: a one-time problem does not justify a standing capability. The console break-glass in `SAD-001` is not a precedent for this: it is time-bounded, group-scoped, and evidenced per session, and it operates on the kernel rather than minting canonical identifiers. §5.11 keeps the property that matters — a legitimate entry point — while the capability expires by construction after one use.

@@ -54,11 +54,11 @@ In addition to the global structural enforcement defined in **[GDC-001](GDC-001-
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
-| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
-| **Section Rules** | Required Sections | <ul><li>Purpose</li><li>Scope</li><li>Enterprise Context</li><li>Architectural Drivers & Lessons</li><li>Architecture Model</li><li>Principles & Rules</li><li>Alternatives Considered</li><li>Single Points of Failure & Graceful Degradation</li><li>Ownership</li><li>Dependencies</li><li>Traceability</li></ul> |
-| **Section Rules** | Recommended Sections | <ul><li>Assumptions</li><li>Constraints</li><li>Risks</li><li>Future Direction</li><li>References</li></ul> |
+| Rule Category      | Parameter            | Enforcement / Value                                                                                                                                                                                                                                                                                                  |
+| :----------------- | :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Metadata Rules** | Metadata Rules       | <ul><li>doc_meta</li></ul>                                                                                                                                                                                                                                                                                           |
+| **Section Rules**  | Required Sections    | <ul><li>Purpose</li><li>Scope</li><li>Enterprise Context</li><li>Architectural Drivers & Lessons</li><li>Architecture Model</li><li>Principles & Rules</li><li>Alternatives Considered</li><li>Single Points of Failure & Graceful Degradation</li><li>Ownership</li><li>Dependencies</li><li>Traceability</li></ul> |
+| **Section Rules**  | Recommended Sections | <ul><li>Assumptions</li><li>Constraints</li><li>Risks</li><li>Future Direction</li><li>References</li></ul>                                                                                                                                                                                                          |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
@@ -130,24 +130,24 @@ Every EAD artifact must include a YAML frontmatter block containing metadata suc
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
-| Section Name | Objective | Requirement |
-| --- | --- | --- |
-| **Purpose** | State the exact reason for the document's existence. | Required. Must explicitly outline what this specific EAD aims to govern. |
-| **Scope** | Define the jurisdictional boundary. | Required. Must define exactly who in the enterprise is bound by these rules. |
-| **Enterprise Context** | Explain how this fits into the broader company strategy. | Required. Must link to the overarching business goals or regulatory requirements. |
-| **Architectural Drivers & Lessons** | Document business goals, value stream mapping, and COE-driven design responses. | Required. Must explicitly list the business goals driving the architecture and any lessons from past incidents. |
-| **Architecture Model** | Provide the visual mapping of the architecture. | Required. Must include a Mermaid diagram (e.g. Capability Map, Context Map, Landscape). |
-| **Principles & Rules** | Establish the non-negotiable, immutable rules with paired fitness functions. | Required. Each principle must be paired with a machine-verifiable or audit-verifiable fitness function. |
-| **Alternatives Considered** | Document rejected architectural alternatives and consciously accepted trade-offs. | Required. Must list rejected alternatives with rationale and debt accepted. |
-| **Single Points of Failure & Graceful Degradation** | Map enterprise SPOFs and define degradation posture. | Required. Must identify universal dependencies and their blast radius with mitigation strategies. |
-| **Ownership** | Explicitly define the Team Topology. | Required. Must state exactly which organizational unit or collective owns the capability. |
-| **Dependencies** | List upstream/downstream integrations or constraints. | Required. Must map out external or internal dependencies required for this architecture. |
-| **Traceability** | Provide logical linkage to other artifacts. | Required. Must reference associated EADs, ADRs, or downstream standards. |
-| **Assumptions** _(Optional)_ | Document external dependencies or business assumptions. | Recommended. Must list business, external, or operational assumptions the design relies upon. |
-| **Constraints** _(Optional)_ | List hard structural constraints. | Recommended. Must list non-negotiable structural constraints. |
-| **Risks** _(Optional)_ | Risk matrix with likelihood, impact, and mitigation. | Recommended. Must document risks with likelihood, impact, and mitigation strategy. |
-| **Future Direction** _(Optional)_ | Anticipated evolution. | Recommended. Must describe how the architecture is expected to evolve. |
-| **References** _(Optional)_ | Industry references and standards. | Recommended. Must cite industry standards, books, or frameworks referenced. |
+| Section Name                                        | Objective                                                                         | Requirement                                                                                                     |
+| --------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Purpose**                                         | State the exact reason for the document's existence.                              | Required. Must explicitly outline what this specific EAD aims to govern.                                        |
+| **Scope**                                           | Define the jurisdictional boundary.                                               | Required. Must define exactly who in the enterprise is bound by these rules.                                    |
+| **Enterprise Context**                              | Explain how this fits into the broader company strategy.                          | Required. Must link to the overarching business goals or regulatory requirements.                               |
+| **Architectural Drivers & Lessons**                 | Document business goals, value stream mapping, and COE-driven design responses.   | Required. Must explicitly list the business goals driving the architecture and any lessons from past incidents. |
+| **Architecture Model**                              | Provide the visual mapping of the architecture.                                   | Required. Must include a Mermaid diagram (e.g. Capability Map, Context Map, Landscape).                         |
+| **Principles & Rules**                              | Establish the non-negotiable, immutable rules with paired fitness functions.      | Required. Each principle must be paired with a machine-verifiable or audit-verifiable fitness function.         |
+| **Alternatives Considered**                         | Document rejected architectural alternatives and consciously accepted trade-offs. | Required. Must list rejected alternatives with rationale and debt accepted.                                     |
+| **Single Points of Failure & Graceful Degradation** | Map enterprise SPOFs and define degradation posture.                              | Required. Must identify universal dependencies and their blast radius with mitigation strategies.               |
+| **Ownership**                                       | Explicitly define the Team Topology.                                              | Required. Must state exactly which organizational unit or collective owns the capability.                       |
+| **Dependencies**                                    | List upstream/downstream integrations or constraints.                             | Required. Must map out external or internal dependencies required for this architecture.                        |
+| **Traceability**                                    | Provide logical linkage to other artifacts.                                       | Required. Must reference associated EADs, ADRs, or downstream standards.                                        |
+| **Assumptions** _(Optional)_                        | Document external dependencies or business assumptions.                           | Recommended. Must list business, external, or operational assumptions the design relies upon.                   |
+| **Constraints** _(Optional)_                        | List hard structural constraints.                                                 | Recommended. Must list non-negotiable structural constraints.                                                   |
+| **Risks** _(Optional)_                              | Risk matrix with likelihood, impact, and mitigation.                              | Recommended. Must document risks with likelihood, impact, and mitigation strategy.                              |
+| **Future Direction** _(Optional)_                   | Anticipated evolution.                                                            | Recommended. Must describe how the architecture is expected to evolve.                                          |
+| **References** _(Optional)_                         | Industry references and standards.                                                | Recommended. Must cite industry standards, books, or frameworks referenced.                                     |
 
 ### 2.4 Lifecycle & Audit
 

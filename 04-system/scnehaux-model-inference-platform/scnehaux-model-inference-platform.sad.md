@@ -21,12 +21,15 @@ doc_meta:
 ## 1. Purpose & Scope
 
 ### 1.1 Objective
+
 Record physical-design entry constraints for PAD-PLT-008.
 
 ### 1.2 Capability
+
 Provider/model access, Capability Profiles, bounded inference, routing, model evaluation/release, provider health, usage/cost, inference telemetry.
 
 ### 1.3 Constraint
+
 - Agent Runtime belongs to PAD-PLT-016
 - Knowledge & Retrieval owns Knowledge/retrieval authority
 - Product owns vertical AI/business meaning and authorization
@@ -34,21 +37,23 @@ Provider/model access, Capability Profiles, bounded inference, routing, model ev
 - no provider/gateway/framework/database/broker/runtime topology is selected
 
 ### 1.4 Requirement
+
 Future design SHALL realize PAD-PLT-008 without durable Agent Run/Memory/Tool/Workflow/Knowledge authority.
 
 ### 1.5 Assumption
+
 Consumer profiles, provider access, latency/cost, and operating requirements are validated before draft approval.
 
 ## 2. Enterprise Traceability
 
-| Relationship | Target |
-| :-- | :-- |
-| Parent PAD | PAD-PLT-008 |
+| Relationship      | Target      |
+| :---------------- | :---------- |
+| Parent PAD        | PAD-PLT-008 |
 | Boundary decision | ADR-GLB-015 |
-| Capability | EAD-001 |
-| Data | EAD-003 |
-| Platform/runtime | EAD-005 |
-| Security | EAD-006 |
+| Capability        | EAD-001     |
+| Data              | EAD-003     |
+| Platform/runtime  | EAD-005     |
+| Security          | EAD-006     |
 
 ## 3. Solution Context
 
@@ -101,24 +106,30 @@ Future deployables use the enterprise CI/CD paved road and SHALL pass architectu
 ## 10. Architecture Decisions
 
 ### Accepted
+
 - Model & Inference separate from Agent Runtime
 - direct bounded Product inference valid
 - technology selection downstream
 
 ### Rejected
+
 - implementation against charter
 - merging Agent Runtime back for convenience
 - provider SDK types as Product contracts
 - mandatory Knowledge or Agent hop for all inference
 
 ## 11. Assumptions
+
 Consumer/runtime evidence is required before physical design approval.
 
 ## 12. Compatibility Strategy
+
 Preserve PAD-PLT-008 Capability Profile/inference contracts across runtime replacement.
 
 ## 13. Migration Strategy
+
 Existing provider integrations are migration evidence only.
 
 ## 14. Alternatives
+
 Gateway, serving, persistence, broker, evaluation, streaming/batch, and deployment alternatives remain open until `draft`.

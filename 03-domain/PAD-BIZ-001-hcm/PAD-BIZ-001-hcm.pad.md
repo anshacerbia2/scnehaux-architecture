@@ -138,18 +138,18 @@ These subdomains may evolve independently downstream, but they remain inside the
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Employee | Workforce person represented through an active or historical employment relationship |
-| Employment | Contractual or governed workforce relationship whose lifecycle is owned by HCM |
-| HR Organization | Workforce reporting and organizational structure used for HR business meaning |
-| Position | Workforce role or seat inside an HR Organization |
-| Candidate | Person under recruitment evaluation before an accepted Employment relationship |
-| Skill / Competency | HCM-governed workforce capability where HCM is declared authority |
-| Leave | Governed workforce absence business state |
-| Workforce Event | HCM-accepted lifecycle fact such as hire, transfer, termination, leave, or position change |
-| Operating Workspace | Organization-owned operating context and not HR Organization |
-| HCM Copilot | Product-owned AI experience consuming AI and Knowledge Platform capabilities |
+| Term                | Meaning                                                                                    |
+| :------------------ | :----------------------------------------------------------------------------------------- |
+| Employee            | Workforce person represented through an active or historical employment relationship       |
+| Employment          | Contractual or governed workforce relationship whose lifecycle is owned by HCM             |
+| HR Organization     | Workforce reporting and organizational structure used for HR business meaning              |
+| Position            | Workforce role or seat inside an HR Organization                                           |
+| Candidate           | Person under recruitment evaluation before an accepted Employment relationship             |
+| Skill / Competency  | HCM-governed workforce capability where HCM is declared authority                          |
+| Leave               | Governed workforce absence business state                                                  |
+| Workforce Event     | HCM-accepted lifecycle fact such as hire, transfer, termination, leave, or position change |
+| Operating Workspace | Organization-owned operating context and not HR Organization                               |
+| HCM Copilot         | Product-owned AI experience consuming AI and Knowledge Platform capabilities               |
 
 ### 3.3 Domain Policies
 

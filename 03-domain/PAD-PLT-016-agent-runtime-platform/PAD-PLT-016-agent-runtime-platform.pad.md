@@ -109,21 +109,21 @@ graph LR
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
+| Term             | Meaning                                                                                                                     |
+| :--------------- | :-------------------------------------------------------------------------------------------------------------------------- |
 | Agent Definition | Versioned runtime contract for capability requirement, bindings, context/memory policy, guardrails, budget, and composition |
-| Agent Run | One durable execution instance |
-| Agent Turn | One bounded model/reasoning interaction within a Run |
-| Harness | Internal machinery driving turns, context, Tool dispatch, state, budgets, and termination |
-| Context Assembly | Build authorized model context without taking source authority |
-| Context Snapshot | Bounded reproducibility/recovery record or source references |
-| Run Memory | Continuity state with lifetime of one Agent Run |
-| Session Memory | Bounded continuity reused across related turns/runs |
-| Tool Binding | Agent-side binding permitting request of a Tool capability |
-| Delegation | Bounded transfer of execution intent/authority context |
-| Handoff | Explicit transfer of active responsibility |
-| Agent Budget | Bound on time/tokens/cost/turns/Tools/children |
-| Agent Result | Generated execution result, not Product truth until accepted |
+| Agent Run        | One durable execution instance                                                                                              |
+| Agent Turn       | One bounded model/reasoning interaction within a Run                                                                        |
+| Harness          | Internal machinery driving turns, context, Tool dispatch, state, budgets, and termination                                   |
+| Context Assembly | Build authorized model context without taking source authority                                                              |
+| Context Snapshot | Bounded reproducibility/recovery record or source references                                                                |
+| Run Memory       | Continuity state with lifetime of one Agent Run                                                                             |
+| Session Memory   | Bounded continuity reused across related turns/runs                                                                         |
+| Tool Binding     | Agent-side binding permitting request of a Tool capability                                                                  |
+| Delegation       | Bounded transfer of execution intent/authority context                                                                      |
+| Handoff          | Explicit transfer of active responsibility                                                                                  |
+| Agent Budget     | Bound on time/tokens/cost/turns/Tools/children                                                                              |
+| Agent Result     | Generated execution result, not Product truth until accepted                                                                |
 
 ### 3.3 Domain Policies
 

@@ -18,6 +18,11 @@ dependencies = [
 dev = [
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
+    # `make lint-code` runs ruff and this file configures it, so it is a declared dependency
+    # rather than a tool the runner is assumed to carry. Pinned for the same reason every other
+    # dependency here is: a formatter that drifts turns a deterministic gate into one whose
+    # verdict depends on when it ran.
+    "ruff==0.15.20",
 ]
 
 # The engine package physically lives under 06-fitness-function/ (a directory whose

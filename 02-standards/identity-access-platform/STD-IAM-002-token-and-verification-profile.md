@@ -55,12 +55,12 @@ Runtime.
 Every token is issued for exactly one audience class, and the class determines the
 claim set, the lifetime class, and the subject form.
 
-| Class | Meaning | Subject form |
-| :-- | :-- | :-- |
-| `internal` | A Scnehaux-owned protected resource inside the enterprise trust boundary | Shared issuer-scoped `sub` plus `principal_id` |
-| `privileged` | An administrative or control-plane surface performing irreversible or cross-tenant operations | As `internal`, with elevated assurance claims |
-| `workload` | A non-human service, job, connector, or governed agent identity | Workload subject; no human `principal_id` |
-| `external` | A partner, customer-owned, or third-party relying party | Pairwise `sub`; no enterprise correlation identifier |
+| Class        | Meaning                                                                                       | Subject form                                         |
+| :----------- | :-------------------------------------------------------------------------------------------- | :--------------------------------------------------- |
+| `internal`   | A Scnehaux-owned protected resource inside the enterprise trust boundary                      | Shared issuer-scoped `sub` plus `principal_id`       |
+| `privileged` | An administrative or control-plane surface performing irreversible or cross-tenant operations | As `internal`, with elevated assurance claims        |
+| `workload`   | A non-human service, job, connector, or governed agent identity                               | Workload subject; no human `principal_id`            |
+| `external`   | A partner, customer-owned, or third-party relying party                                       | Pairwise `sub`; no enterprise correlation identifier |
 
 - Every access token MUST carry `aud`, and `aud` MUST name registered protected
   resources only.
@@ -72,9 +72,9 @@ claim set, the lifetime class, and the subject form.
 The `privileged` class covers two operations with incompatible context requirements, and
 conflating them made the class unimplementable. A token MUST declare exactly one form.
 
-| Form | Meaning | Context claim |
-| :-- | :-- | :-- |
-| `tenant-scoped` | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant | `tenant_id` MUST, with both version claims |
+| Form             | Meaning                                                                                                                                               | Context claim                               |
+| :--------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------ |
+| `tenant-scoped`  | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant                                     | `tenant_id` MUST, with both version claims  |
 | `provider-scope` | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST; `tenant_id` MUST NOT |
 
 `provider_scope` names the bounded authority the operation runs under, and it exists because
@@ -90,21 +90,21 @@ every later Membership is derived.
 
 ### 3.2 Claim Set
 
-| Claim | `internal` | `privileged` | `workload` | `external` |
-| :-- | :-- | :-- | :-- | :-- |
-| `iss` | MUST | MUST | MUST | MUST |
-| `sub` | MUST | MUST | MUST | MUST, pairwise |
-| `aud` | MUST | MUST | MUST | MUST |
-| `iat`, `exp` | MUST | MUST | MUST | MUST |
-| `principal_id` | MUST | MUST | MUST | MUST NOT |
-| `subject_type` | MUST | MUST | MUST | MUST NOT |
-| `tenant_id` | MUST | MUST when `tenant-scoped`; MUST NOT when `provider-scope` | MUST when tenant-scoped | MUST NOT |
-| `workspace_id` | MAY | MAY | MAY | MUST NOT |
-| `membership_version` | MUST when `tenant_id` present | MUST when `tenant_id` present | MUST when `tenant_id` present | MUST NOT |
-| `tenant_security_version` | MUST when `tenant_id` present | MUST when `tenant_id` present | MUST when `tenant_id` present | MUST NOT |
-| `provider_scope` | MUST NOT | MUST when `provider-scope`; MUST NOT otherwise | MUST NOT | MUST NOT |
-| `acr`, `auth_time` | MAY | MUST | MUST NOT | MAY |
-| `workload_owner` | MUST NOT | MUST NOT | MUST | MUST NOT |
+| Claim                     | `internal`                    | `privileged`                                              | `workload`                    | `external`     |
+| :------------------------ | :---------------------------- | :-------------------------------------------------------- | :---------------------------- | :------------- |
+| `iss`                     | MUST                          | MUST                                                      | MUST                          | MUST           |
+| `sub`                     | MUST                          | MUST                                                      | MUST                          | MUST, pairwise |
+| `aud`                     | MUST                          | MUST                                                      | MUST                          | MUST           |
+| `iat`, `exp`              | MUST                          | MUST                                                      | MUST                          | MUST           |
+| `principal_id`            | MUST                          | MUST                                                      | MUST                          | MUST NOT       |
+| `subject_type`            | MUST                          | MUST                                                      | MUST                          | MUST NOT       |
+| `tenant_id`               | MUST                          | MUST when `tenant-scoped`; MUST NOT when `provider-scope` | MUST when tenant-scoped       | MUST NOT       |
+| `workspace_id`            | MAY                           | MAY                                                       | MAY                           | MUST NOT       |
+| `membership_version`      | MUST when `tenant_id` present | MUST when `tenant_id` present                             | MUST when `tenant_id` present | MUST NOT       |
+| `tenant_security_version` | MUST when `tenant_id` present | MUST when `tenant_id` present                             | MUST when `tenant_id` present | MUST NOT       |
+| `provider_scope`          | MUST NOT                      | MUST when `provider-scope`; MUST NOT otherwise            | MUST NOT                      | MUST NOT       |
+| `acr`, `auth_time`        | MAY                           | MUST                                                      | MUST NOT                      | MAY            |
+| `workload_owner`          | MUST NOT                      | MUST NOT                                                  | MUST                          | MUST NOT       |
 
 The two version claims are conditional on `tenant_id` in every class, including `privileged`.
 An earlier revision made them unconditional there, which was unsatisfiable for a
@@ -139,13 +139,13 @@ carrying no such claim.
 The identity kernel MUST realize the table above through audience-specific client
 scopes rather than realm-wide default mappers:
 
-| Client scope | Required projected claims |
-| :-- | :-- |
-| `scnehaux-internal` | `principal_id`, `subject_type`, and active context/version claims |
-| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` with both version claims |
-| `scnehaux-provider` | `principal_id`, `subject_type`, `provider_scope`, `acr`, `auth_time`; `tenant_id` and version claims prohibited |
-| `scnehaux-workload` | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped |
-| `scnehaux-external` | Pairwise `sub`; enterprise and context claims prohibited |
+| Client scope          | Required projected claims                                                                                       |
+| :-------------------- | :-------------------------------------------------------------------------------------------------------------- |
+| `scnehaux-internal`   | `principal_id`, `subject_type`, and active context/version claims                                               |
+| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` with both version claims                      |
+| `scnehaux-provider`   | `principal_id`, `subject_type`, `provider_scope`, `acr`, `auth_time`; `tenant_id` and version claims prohibited |
+| `scnehaux-workload`   | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped |
+| `scnehaux-external`   | Pairwise `sub`; enterprise and context claims prohibited                                                        |
 
 The client registration authority MUST attach exactly one of these profile scopes. A
 mapper carrying `principal_id` or context claims MUST NOT be a realm default because
@@ -180,12 +180,12 @@ at every enforcing mechanism. It is owned by the control plane and is currently
 budgeted below 10 seconds, with 60 seconds reserved here as the planning figure so a
 degraded propagation path does not silently invalidate the derived lifetime.
 
-| Class | Revocation target | Access token lifetime | Applies to |
-| :-- | :-- | :-- | :-- |
-| `L0` | 5 minutes | 4 minutes | `privileged` in both scope forms; any surface performing irreversible, financial, or cross-tenant operations |
-| `L1` | 10 minutes | 9 minutes | `internal` product APIs handling tenant-scoped business data |
-| `L2` | 16 minutes | 15 minutes | `external` and partner profiles, bounded by the STD-IAM-001 §3.2 ceiling |
-| `L3` | 10 minutes | 9 minutes | `workload`, unless a shorter class is declared by the workload profile |
+| Class | Revocation target | Access token lifetime | Applies to                                                                                                   |
+| :---- | :---------------- | :-------------------- | :----------------------------------------------------------------------------------------------------------- |
+| `L0`  | 5 minutes         | 4 minutes             | `privileged` in both scope forms; any surface performing irreversible, financial, or cross-tenant operations |
+| `L1`  | 10 minutes        | 9 minutes             | `internal` product APIs handling tenant-scoped business data                                                 |
+| `L2`  | 16 minutes        | 15 minutes            | `external` and partner profiles, bounded by the STD-IAM-001 §3.2 ceiling                                     |
+| `L3`  | 10 minutes        | 9 minutes             | `workload`, unless a shorter class is declared by the workload profile                                       |
 
 - Every protected resource MUST be assigned exactly one lifetime class, recorded in
   its registration.

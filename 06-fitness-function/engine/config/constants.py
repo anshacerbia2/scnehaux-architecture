@@ -1,10 +1,13 @@
 """
 Global configuration constants for the Scnehaux Architecture Linter.
 """
+
 import os
 
 # GOVERNANCE_ROOT is strictly 3 levels up from constants.py (config -> engine -> 06-fitness-function -> governance root)
-GOVERNANCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+GOVERNANCE_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..")
+)
 BASE_SCHEMA_PATH = os.path.join(
     GOVERNANCE_ROOT, "00-governance", "schemas", "base.schema.json"
 )

@@ -27,12 +27,12 @@ To avoid premature architectural complexity, shared dependency drift, and runtim
 
 The adoption of a federated micro-frontend architecture utilizing **Module Federation** is conditional and only authorized when the following organizational and operational metrics are met:
 
-| Architectural Metric | Monolithic SPA (Default) | Module Federation (Conditional Approval) |
-| --- | --- | --- |
-| **Organizational Scale** | $\le 3$ independent engineering teams. | $> 3$ independent engineering teams. |
-| **Deployment Autonomy** | Deployment coordination overhead is minimal; teams can release on a shared pipeline. | Zero-coordinated deployments are required; teams must deploy updates independently. |
-| **Release Cadence** | All components share a common release cycle and sprint schedule. | Teams operate on distinct release schedules and independent hotfix cycles. |
-| **Blast Radius Isolation** | A failure in one section of the SPA is acceptable to trigger a full system rollback. | Operational failures must be strictly isolated to individual sub-features. |
+| Architectural Metric       | Monolithic SPA (Default)                                                             | Module Federation (Conditional Approval)                                            |
+| -------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| **Organizational Scale**   | $\le 3$ independent engineering teams.                                               | $> 3$ independent engineering teams.                                                |
+| **Deployment Autonomy**    | Deployment coordination overhead is minimal; teams can release on a shared pipeline. | Zero-coordinated deployments are required; teams must deploy updates independently. |
+| **Release Cadence**        | All components share a common release cycle and sprint schedule.                     | Teams operate on distinct release schedules and independent hotfix cycles.          |
+| **Blast Radius Isolation** | A failure in one section of the SPA is acceptable to trigger a full system rollback. | Operational failures must be strictly isolated to individual sub-features.          |
 
 Module Federation must **NOT** be adopted as a tooling standard for small teams or standardized systems where a monolithic codebase provides faster feedback loops and lower operational maintenance overhead.
 

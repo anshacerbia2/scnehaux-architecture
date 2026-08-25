@@ -73,29 +73,29 @@ In addition to the global structural enforcement defined in **[GDC-001](GDC-001-
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
-| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
-| **Section Rules** | Required Sections | <ul><li>Purpose & Scope</li><li>Enterprise Traceability</li><li>Solution Context</li><li>Architecture Model</li><li>State & Data Architecture</li><li>Integration Contracts</li><li>Security & Trust Boundary</li><li>NFR</li><li>Deployment Strategy</li><li>Architecture Decisions</li></ul> |
-| **Section Rules** | Recommended Sections | <ul><li>Assumptions</li><li>Compatibility Strategy</li><li>Migration Strategy</li><li>Alternatives</li></ul> |
-| **Content Quality Rules** | Context & Scope (Required) | <ul><li>Objective</li><li>Constraint</li><li>Capability</li></ul> |
-| **Content Quality Rules** | Context & Scope (Recommended) | <ul><li>Requirement</li><li>Assumption</li></ul> |
-| **Content Quality Rules** | Solution Context (Recommended) | <ul><li>System Context</li><li>External</li><li>Internal</li></ul> |
-| **Content Quality Rules** | Architecture Model (Recommended Concepts) | <ul><li>Container</li><li>Component</li><li>Sequence</li><li>Runtime Flow</li><li>Event Flow</li></ul> |
-| **Content Quality Rules** | State & Data Architecture (Recommended Concepts) | <ul><li>Storage</li><li>Cache</li><li>Schema</li><li>Stateless</li></ul> |
-| **Content Quality Rules** | Integration Contracts (Recommended Concepts) | <ul><li>API</li><li>Event</li><li>Consumed</li><li>Published</li></ul> |
-| **Content Quality Rules** | Security & Trust Boundary (Recommended Concepts) | <ul><li>Authentication</li><li>Authorization</li><li>Encryption</li><li>Secrets</li><li>Audit</li></ul> |
-| **Content Quality Rules** | Deployment Strategy (Required) | <ul><li>CI/CD</li></ul> |
-| **Content Quality Rules** | Deployment Strategy (Recommended Concepts) | <ul><li>Environment</li><li>Infrastructure</li></ul> |
-| **Content Quality Rules** | Architecture Decisions (Required) | <ul><li>Rejected</li></ul> |
-| **Content Quality Rules** | NFR (Required) | <ul><li>Blast Radius</li></ul> |
-| **Content Quality Rules** | NFR Derivatives (Recommended) | <ul><li>Latency</li><li>Throughput</li><li>RPS</li><li>Scalability</li><li>Caching</li><li>Observability</li><li>Telemetry</li><li>Alerting</li><li>Runbook</li><li>Circuit Breaker</li><li>Retry</li><li>Timeout</li><li>Failover</li></ul> |
+| Rule Category             | Parameter                                        | Enforcement / Value                                                                                                                                                                                                                                                                            |
+| :------------------------ | :----------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Metadata Rules**        | Metadata Rules                                   | <ul><li>doc_meta</li></ul>                                                                                                                                                                                                                                                                     |
+| **Section Rules**         | Required Sections                                | <ul><li>Purpose & Scope</li><li>Enterprise Traceability</li><li>Solution Context</li><li>Architecture Model</li><li>State & Data Architecture</li><li>Integration Contracts</li><li>Security & Trust Boundary</li><li>NFR</li><li>Deployment Strategy</li><li>Architecture Decisions</li></ul> |
+| **Section Rules**         | Recommended Sections                             | <ul><li>Assumptions</li><li>Compatibility Strategy</li><li>Migration Strategy</li><li>Alternatives</li></ul>                                                                                                                                                                                   |
+| **Content Quality Rules** | Context & Scope (Required)                       | <ul><li>Objective</li><li>Constraint</li><li>Capability</li></ul>                                                                                                                                                                                                                              |
+| **Content Quality Rules** | Context & Scope (Recommended)                    | <ul><li>Requirement</li><li>Assumption</li></ul>                                                                                                                                                                                                                                               |
+| **Content Quality Rules** | Solution Context (Recommended)                   | <ul><li>System Context</li><li>External</li><li>Internal</li></ul>                                                                                                                                                                                                                             |
+| **Content Quality Rules** | Architecture Model (Recommended Concepts)        | <ul><li>Container</li><li>Component</li><li>Sequence</li><li>Runtime Flow</li><li>Event Flow</li></ul>                                                                                                                                                                                         |
+| **Content Quality Rules** | State & Data Architecture (Recommended Concepts) | <ul><li>Storage</li><li>Cache</li><li>Schema</li><li>Stateless</li></ul>                                                                                                                                                                                                                       |
+| **Content Quality Rules** | Integration Contracts (Recommended Concepts)     | <ul><li>API</li><li>Event</li><li>Consumed</li><li>Published</li></ul>                                                                                                                                                                                                                         |
+| **Content Quality Rules** | Security & Trust Boundary (Recommended Concepts) | <ul><li>Authentication</li><li>Authorization</li><li>Encryption</li><li>Secrets</li><li>Audit</li></ul>                                                                                                                                                                                        |
+| **Content Quality Rules** | Deployment Strategy (Required)                   | <ul><li>CI/CD</li></ul>                                                                                                                                                                                                                                                                        |
+| **Content Quality Rules** | Deployment Strategy (Recommended Concepts)       | <ul><li>Environment</li><li>Infrastructure</li></ul>                                                                                                                                                                                                                                           |
+| **Content Quality Rules** | Architecture Decisions (Required)                | <ul><li>Rejected</li></ul>                                                                                                                                                                                                                                                                     |
+| **Content Quality Rules** | NFR (Required)                                   | <ul><li>Blast Radius</li></ul>                                                                                                                                                                                                                                                                 |
+| **Content Quality Rules** | NFR Derivatives (Recommended)                    | <ul><li>Latency</li><li>Throughput</li><li>RPS</li><li>Scalability</li><li>Caching</li><li>Observability</li><li>Telemetry</li><li>Alerting</li><li>Runbook</li><li>Circuit Breaker</li><li>Retry</li><li>Timeout</li><li>Failover</li></ul>                                                   |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
-| Linter Component | File | Enforcement Logic |
-| :-- | :-- | :-- |
-| **JSON Schema** | `schemas/sad.schema.json` | Checks for `parent_pad`, enforces `Blast Radius` keywords under the Resilience section, and deployment topologies. |
+| Linter Component  | File                                         | Enforcement Logic                                                                                                                                                                         |
+| :---------------- | :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **JSON Schema**   | `schemas/sad.schema.json`                    | Checks for `parent_pad`, enforces `Blast Radius` keywords under the Resilience section, and deployment topologies.                                                                        |
 | **Python Engine** | `engine/validators/domains/sad_validator.py` | **Taxonomy**: Validates `allowed_statuses` and `allowed_classifications`.<br>**Domain Validation**: Enforces upward traceability by guaranteeing the presence of a valid `parent_pad` ID. |
 
 **Engine Execution Mechanics**:
@@ -164,12 +164,12 @@ doc_meta:
 
 ##### Allowed Lifecycle Statuses
 
-| Status       | Meaning / Lifecycle Stage                                                          |
-| ------------ | ---------------------------------------------------------------------------------- |
-| `chartered` | A physical realization is recognized for traceability, but no system is in active design/build yet. |
-| `draft`      | The physical system architecture is under active design/review; draft-age pressure applies. |
-| `approved`   | The software architecture is formalized and acts as the official design blueprint. |
-| `deprecated` | The system is being phased out or has been replaced.                               |
+| Status       | Meaning / Lifecycle Stage                                                                           |
+| ------------ | --------------------------------------------------------------------------------------------------- |
+| `chartered`  | A physical realization is recognized for traceability, but no system is in active design/build yet. |
+| `draft`      | The physical system architecture is under active design/review; draft-age pressure applies.         |
+| `approved`   | The software architecture is formalized and acts as the official design blueprint.                  |
+| `deprecated` | The system is being phased out or has been replaced.                                                |
 
 ##### Allowed Classifications
 
@@ -181,30 +181,30 @@ doc_meta:
 
 ##### Semantic Versioning Classification
 
-| Version | Trigger / Architectural Change |
-| --- | --- |
+| Version           | Trigger / Architectural Change                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Major (2.0.0)** | Overhauling the core framework, splitting the monolith, changing the persistence layer, or altering physical deployment topologies (e.g., VM to Kubernetes). |
-| **Minor (1.1.0)** | Adding a new bounded context, exposing a new major API version, or integrating a new managed service (e.g., adding an S3 bucket or a Redis cache). |
-| **Patch (1.0.1)** | Editorial updates, formatting, updating the `parent_pad` reference, fixing dead links. |
+| **Minor (1.1.0)** | Adding a new bounded context, exposing a new major API version, or integrating a new managed service (e.g., adding an S3 bucket or a Redis cache).           |
+| **Patch (1.0.1)** | Editorial updates, formatting, updating the `parent_pad` reference, fixing dead links.                                                                       |
 
 #### 2.3.5 Artifact Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
-| Section Name | Objective | Requirement |
-| --- | --- | --- |
-| **Context & Scope** | Explain the technical "Why" behind the system boundary. | Must explicitly link to the governing domain capability PAD and outline objectives and system context. |
-| **System Architecture** | Concrete C2 container diagrams detailing the physical technology stack. | Must illustrate all physical containers and boundaries. |
-| **Runtime Flows** | Detail request lifecycles, asynchronous event publishing, and degradation paths. | Must contain sequence diagrams for critical operations. |
-| **Data Architecture** | Document data classification, persistence layers, and caching strategies. | Must detail database engines, storage, and data sensitivity (PII/PHI). |
-| **Integration** | Specify API endpoints, consumed services, and published events. | Must detail external/internal integrations and data contracts. |
-| **Security** | Detail system-level threat mitigations, input validation, and secrets management. | Must address threat models, data encryption at rest/transit, and IAM boundaries. |
-| **Resilience & Failure Modes** | Identify SPOFs, fallback strategies, and the exact **Blast Radius**. | Must document circuit breaker configurations and fallback states.<br>**Constraint**: Must contain the exact keyword `Blast Radius`. |
-| **Observability & Operations** | Mandate specific SLIs, SLOs, alert thresholds, and distributed tracing spans. | Must define specific monitoring, logging, tracing, and runbook details. |
-| **Deployment** | Document CI/CD pipelines, release environments, and scaling triggers. | Must contain deployment strategies and hardware/container limits. |
-| **Trade-offs & Alternatives** | Document technical alternatives evaluated and their trade-offs. | Must list rejected technologies/designs and the rationale for rejection. |
-| **Assumptions (Optional)** | Document external operational assumptions. | Must list business, external, or operational assumptions the design relies upon. |
-| **Compatibility Strategy (Optional)** | Detail schema migration or API versioning compatibility rules. | Must outline API versioning or schema migration paths to avoid breaking changes. |
+| Section Name                          | Objective                                                                         | Requirement                                                                                                                         |
+| ------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Context & Scope**                   | Explain the technical "Why" behind the system boundary.                           | Must explicitly link to the governing domain capability PAD and outline objectives and system context.                              |
+| **System Architecture**               | Concrete C2 container diagrams detailing the physical technology stack.           | Must illustrate all physical containers and boundaries.                                                                             |
+| **Runtime Flows**                     | Detail request lifecycles, asynchronous event publishing, and degradation paths.  | Must contain sequence diagrams for critical operations.                                                                             |
+| **Data Architecture**                 | Document data classification, persistence layers, and caching strategies.         | Must detail database engines, storage, and data sensitivity (PII/PHI).                                                              |
+| **Integration**                       | Specify API endpoints, consumed services, and published events.                   | Must detail external/internal integrations and data contracts.                                                                      |
+| **Security**                          | Detail system-level threat mitigations, input validation, and secrets management. | Must address threat models, data encryption at rest/transit, and IAM boundaries.                                                    |
+| **Resilience & Failure Modes**        | Identify SPOFs, fallback strategies, and the exact **Blast Radius**.              | Must document circuit breaker configurations and fallback states.<br>**Constraint**: Must contain the exact keyword `Blast Radius`. |
+| **Observability & Operations**        | Mandate specific SLIs, SLOs, alert thresholds, and distributed tracing spans.     | Must define specific monitoring, logging, tracing, and runbook details.                                                             |
+| **Deployment**                        | Document CI/CD pipelines, release environments, and scaling triggers.             | Must contain deployment strategies and hardware/container limits.                                                                   |
+| **Trade-offs & Alternatives**         | Document technical alternatives evaluated and their trade-offs.                   | Must list rejected technologies/designs and the rationale for rejection.                                                            |
+| **Assumptions (Optional)**            | Document external operational assumptions.                                        | Must list business, external, or operational assumptions the design relies upon.                                                    |
+| **Compatibility Strategy (Optional)** | Detail schema migration or API versioning compatibility rules.                    | Must outline API versioning or schema migration paths to avoid breaking changes.                                                    |
 
 #### 2.3.6 Parent PAD Activation Gate
 
@@ -216,6 +216,7 @@ SAD lifecycle is subordinate to the parent PAD commitment state.
 - promotion of the parent PAD does not automatically approve the SAD; physical design still follows the SAD review lifecycle
 
 The SAD validator enforces this cross-layer activation rule.
+
 ### 2.4 Lifecycle & Audit
 
 All SAD artifacts must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.

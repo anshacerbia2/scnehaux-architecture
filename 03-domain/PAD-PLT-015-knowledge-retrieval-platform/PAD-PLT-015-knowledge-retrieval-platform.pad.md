@@ -135,24 +135,24 @@ Knowledge Graph and retrieval indexes are governed derived representations. Sour
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Knowledge Asset | Governed reusable knowledge unit with owner, source, version, and provenance |
-| Source | Authoritative or governed origin from which knowledge is derived |
-| Source Version | Identified source state from which a Knowledge representation was produced |
-| Claim | Provenanced assertion that may be authoritative, derived, disputed, or proposed |
-| Authority Class | Metadata describing whether a Claim is source-authoritative, derived, inferred, or proposed |
-| Entity | Identified concept represented in knowledge |
-| Relationship | Provenanced connection between Entities |
-| Ontology | Governed schema and vocabulary for knowledge representation |
-| Enterprise Core Ontology | Small durable cross-domain concept set |
-| Domain Ontology | Domain-owned extension preserving domain ubiquitous language |
-| Knowledge Graph | Derived graph representation of Entities, Relationships, and Claims |
-| Retrieval Index | Rebuildable lexical, vector, graph, or metadata structure |
-| Retrieval Profile | Consumer-declared quality, latency, freshness, evidence, and degradation behavior |
-| Citation | Traceable reference to governed source, version, Claim, or Evidence |
-| Staleness | Declared condition where a Knowledge or Index version exceeds the allowed freshness profile |
-| Publication | Governed point at which a Knowledge Asset or version becomes available to authorized consumers |
+| Term                     | Meaning                                                                                        |
+| :----------------------- | :--------------------------------------------------------------------------------------------- |
+| Knowledge Asset          | Governed reusable knowledge unit with owner, source, version, and provenance                   |
+| Source                   | Authoritative or governed origin from which knowledge is derived                               |
+| Source Version           | Identified source state from which a Knowledge representation was produced                     |
+| Claim                    | Provenanced assertion that may be authoritative, derived, disputed, or proposed                |
+| Authority Class          | Metadata describing whether a Claim is source-authoritative, derived, inferred, or proposed    |
+| Entity                   | Identified concept represented in knowledge                                                    |
+| Relationship             | Provenanced connection between Entities                                                        |
+| Ontology                 | Governed schema and vocabulary for knowledge representation                                    |
+| Enterprise Core Ontology | Small durable cross-domain concept set                                                         |
+| Domain Ontology          | Domain-owned extension preserving domain ubiquitous language                                   |
+| Knowledge Graph          | Derived graph representation of Entities, Relationships, and Claims                            |
+| Retrieval Index          | Rebuildable lexical, vector, graph, or metadata structure                                      |
+| Retrieval Profile        | Consumer-declared quality, latency, freshness, evidence, and degradation behavior              |
+| Citation                 | Traceable reference to governed source, version, Claim, or Evidence                            |
+| Staleness                | Declared condition where a Knowledge or Index version exceeds the allowed freshness profile    |
+| Publication              | Governed point at which a Knowledge Asset or version becomes available to authorized consumers |
 
 ### 3.3 Domain Policies
 

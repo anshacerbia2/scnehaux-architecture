@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-013
   title: Scnehaux Scheduling Runtime
   owner: Scheduling Platform Team
-  version: 2.0.0
+  version: 2.0.1
   status: approved
   classification: restricted
   governed_by:
@@ -73,7 +73,7 @@ The runtime remains correct under:
 
 The inherited mature default SLO remains 99.9% of due Occurrences durably dispatched within 30 seconds of `scheduled_for`.
 
-### 1.4 Constraints
+### 1.4 Constraint
 
 - Go is the application runtime
 - PostgreSQL is the authoritative Scheduling store
@@ -116,19 +116,19 @@ The inherited mature default SLO remains 99.9% of due Occurrences durably dispat
 
 ## 2. Enterprise Traceability
 
-| Relationship | Target |
-| :-- | :-- |
-| Realizes | PAD-PLT-011 Enterprise Scheduling Platform |
-| Governed by | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch |
-| Conforms to | ADR-GLB-016 Transactional Publication and Durable Messaging Profiles |
-| Conforms to | ADR-GLB-017 Enterprise Durable Scheduling Boundary with Profiled Dispatch |
-| Conforms to | ADR-GLB-014 Background Worker Network Boundary |
-| Conforms to | ADR-GLB-004 Declarative Schema Lifecycle |
-| Conforms to | STD-GLB-002 Database Standard |
-| Conforms to | STD-GLB-003 Observability Standard |
-| Conforms to | STD-GLB-004 Event-Driven Architecture & Messaging Standard |
-| Conforms to | STD-GLB-005 Resilience Standard |
-| Conforms to | STD-GLB-010 Durable Scheduled Work Standard |
+| Relationship | Target                                                                     |
+| :----------- | :------------------------------------------------------------------------- |
+| Realizes     | PAD-PLT-011 Enterprise Scheduling Platform                                 |
+| Governed by  | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch |
+| Conforms to  | ADR-GLB-016 Transactional Publication and Durable Messaging Profiles       |
+| Conforms to  | ADR-GLB-017 Enterprise Durable Scheduling Boundary with Profiled Dispatch  |
+| Conforms to  | ADR-GLB-014 Background Worker Network Boundary                             |
+| Conforms to  | ADR-GLB-004 Declarative Schema Lifecycle                                   |
+| Conforms to  | STD-GLB-002 Database Standard                                              |
+| Conforms to  | STD-GLB-003 Observability Standard                                         |
+| Conforms to  | STD-GLB-004 Event-Driven Architecture & Messaging Standard                 |
+| Conforms to  | STD-GLB-005 Resilience Standard                                            |
+| Conforms to  | STD-GLB-010 Durable Scheduled Work Standard                                |
 
 The runtime does not redefine Product, Workflow, Notification, Identity, Organization, Background Job, or Event & Messaging authority.
 
@@ -285,11 +285,11 @@ No external network call occurs inside the authoritative due-state transaction.
 
 ### 4.5 Profile Durability Points
 
-| Profile | Dispatch durability point | Consumer durability point |
-| :-- | :-- | :-- |
-| Direct | registered target confirms persisted/deduplicated acceptance | target Inbox/Operation or atomic effect |
-| RabbitMQ Queue | publisher confirm under durable queue contract | ACK only after local dedup/durability |
-| Kafka Stream | producer acknowledgement under replicated stream contract | offset/consumer acknowledgement only after declared local durability |
+| Profile        | Dispatch durability point                                    | Consumer durability point                                            |
+| :------------- | :----------------------------------------------------------- | :------------------------------------------------------------------- |
+| Direct         | registered target confirms persisted/deduplicated acceptance | target Inbox/Operation or atomic effect                              |
+| RabbitMQ Queue | publisher confirm under durable queue contract               | ACK only after local dedup/durability                                |
+| Kafka Stream   | producer acknowledgement under replicated stream contract    | offset/consumer acknowledgement only after declared local durability |
 
 Scheduler dispatch state never represents Product business completion.
 
@@ -551,11 +551,11 @@ Production runbooks cover:
 
 ### 9.1 Deployment Profiles
 
-| Profile | Runtime dependencies | Intended use |
-| :-- | :-- | :-- |
-| `minimal-direct` | PostgreSQL + governed target HTTPS | local/lab or tightly bounded point-to-point deployments |
-| `queue-rabbitmq` | PostgreSQL + RabbitMQ | **default Scnehaux deployment** for targeted due-trigger delivery |
-| `stream-kafka` | PostgreSQL + Kafka | retained/replayable stream learning or workloads requiring stream semantics |
+| Profile          | Runtime dependencies               | Intended use                                                                |
+| :--------------- | :--------------------------------- | :-------------------------------------------------------------------------- |
+| `minimal-direct` | PostgreSQL + governed target HTTPS | local/lab or tightly bounded point-to-point deployments                     |
+| `queue-rabbitmq` | PostgreSQL + RabbitMQ              | **default Scnehaux deployment** for targeted due-trigger delivery           |
+| `stream-kafka`   | PostgreSQL + Kafka                 | retained/replayable stream learning or workloads requiring stream semantics |
 
 One Occurrence contract uses one primary profile in an environment.
 

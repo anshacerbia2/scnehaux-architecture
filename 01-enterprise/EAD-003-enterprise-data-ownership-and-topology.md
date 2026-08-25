@@ -72,72 +72,72 @@ No downward derived representation silently promotes itself into Product truth.
 
 ### 4.1 Drivers
 
-| ID | Driver | Data Consequence |
-| :-- | :-- | :-- |
-| D1 | Enterprise AI Products require reusable grounded context | Knowledge assets and retrieval indexes have explicit authority and provenance |
-| D2 | Graph RAG is a strategic retrieval capability | Graph representation is first-class but not the sole retrieval model |
-| D3 | HCM, Travel, and future ERP hold sensitive authoritative facts | Product transactional authority remains local to the owning domain |
-| D4 | External client/industry systems remain authoritative | Projection freshness and reconciliation are mandatory |
-| D5 | Multi-tenant AI and search cross data boundaries | Retrieval authorization occurs before context disclosure |
-| D6 | Artifacts become sources for knowledge | Artifact identity/version/checksum/provenance survive ingestion |
+| ID  | Driver                                                         | Data Consequence                                                              |
+| :-- | :------------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| D1  | Enterprise AI Products require reusable grounded context       | Knowledge assets and retrieval indexes have explicit authority and provenance |
+| D2  | Graph RAG is a strategic retrieval capability                  | Graph representation is first-class but not the sole retrieval model          |
+| D3  | HCM, Travel, and future ERP hold sensitive authoritative facts | Product transactional authority remains local to the owning domain            |
+| D4  | External client/industry systems remain authoritative          | Projection freshness and reconciliation are mandatory                         |
+| D5  | Multi-tenant AI and search cross data boundaries               | Retrieval authorization occurs before context disclosure                      |
+| D6  | Artifacts become sources for knowledge                         | Artifact identity/version/checksum/provenance survive ingestion               |
 
 ### 4.2 Lessons Incorporated
 
-| Lesson | Data Response |
-| :-- | :-- |
-| Vector stores were treated as knowledge truth | Indexes are derived retrieval structures |
-| Knowledge Graph was treated as a master database | Graph facts preserve source/provenance and do not replace Product authority |
-| AI extraction was accepted as fact automatically | Proposed data requires owning-domain acceptance |
-| Retrieval filters happened after model context assembly | Authorization is applied before context reaches a model |
-| Document copy implied document ownership | Artifact storage and business meaning are separate |
-| Data platformization implied central ownership | Domain-oriented authoritative ownership remains explicit |
+| Lesson                                                  | Data Response                                                               |
+| :------------------------------------------------------ | :-------------------------------------------------------------------------- |
+| Vector stores were treated as knowledge truth           | Indexes are derived retrieval structures                                    |
+| Knowledge Graph was treated as a master database        | Graph facts preserve source/provenance and do not replace Product authority |
+| AI extraction was accepted as fact automatically        | Proposed data requires owning-domain acceptance                             |
+| Retrieval filters happened after model context assembly | Authorization is applied before context reaches a model                     |
+| Document copy implied document ownership                | Artifact storage and business meaning are separate                          |
+| Data platformization implied central ownership          | Domain-oriented authoritative ownership remains explicit                    |
 
 ## 5. Architecture Model
 
 ### 5.1 Data Ownership
 
-| Class | Meaning | Authority Rule |
-| :-- | :-- | :-- |
-| ATI Authoritative Transactional Data | Product/control facts created and governed by ATI | One owning domain |
-| Externally Authoritative Data | Client/partner/industry canonical facts | External authority named explicitly |
-| Operational Execution State | Work, command, outcome, exception, reconciliation | Owning Product domain |
-| Platform Operational State | Schedule, Workflow, Notification, Job-attempt or other Platform-owned state | Owning Platform capability |
-| Non-Authoritative Projection | Copy for local reads/resilience | Source, freshness, conflict, reconciliation declared |
-| Artifact Content | Managed binary/textual payload and immutable versions | Artifact Platform owns lifecycle, Product owns business meaning |
-| Evidence Data | Tamper-evident accountability record | Audit & Evidence owns evidence lifecycle |
-| Analytical / Derived Data | Metrics/features/aggregates | Named Data/Product owner with source lineage |
-| Knowledge Asset | Governed knowledge unit with source/provenance/version | Knowledge/Product owner according to source semantics |
-| Knowledge Claim | Governed claim about an entity/relation | Provenance and confidence required |
-| Ontology | Governed vocabulary/schema for knowledge representation | Core owned by Knowledge; domain extensions owned with domain stewardship |
-| Knowledge Graph Projection | Derived entity/relationship/claim representation | Never silently becomes Product transactional authority |
-| Retrieval Index | Lexical/vector/graph/metadata acceleration structure | Derived and rebuildable from governed source |
-| Embedding | Derived model-specific representation | Not knowledge authority |
-| Inference Run | Bounded model invocation state, route, usage, and result metadata | Model & Inference Platform operational record |
-| Agent Run / Turn | Durable agent execution and turn state | Agent Runtime Platform operational record |
-| Agent Context Snapshot | Bounded assembled execution context or references required for reproducibility/recovery | Agent Runtime operational record; source facts retain original authority |
-| Run / Session Memory | Agent execution continuity state | Agent Runtime within declared lifetime; never enterprise Knowledge authority by itself |
-| Proposed / AI-Generated Output | Suggested content/classification/decision | Never authoritative until accepted by owning Product/domain |
+| Class                                | Meaning                                                                                 | Authority Rule                                                                         |
+| :----------------------------------- | :-------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
+| ATI Authoritative Transactional Data | Product/control facts created and governed by ATI                                       | One owning domain                                                                      |
+| Externally Authoritative Data        | Client/partner/industry canonical facts                                                 | External authority named explicitly                                                    |
+| Operational Execution State          | Work, command, outcome, exception, reconciliation                                       | Owning Product domain                                                                  |
+| Platform Operational State           | Schedule, Workflow, Notification, Job-attempt or other Platform-owned state             | Owning Platform capability                                                             |
+| Non-Authoritative Projection         | Copy for local reads/resilience                                                         | Source, freshness, conflict, reconciliation declared                                   |
+| Artifact Content                     | Managed binary/textual payload and immutable versions                                   | Artifact Platform owns lifecycle, Product owns business meaning                        |
+| Evidence Data                        | Tamper-evident accountability record                                                    | Audit & Evidence owns evidence lifecycle                                               |
+| Analytical / Derived Data            | Metrics/features/aggregates                                                             | Named Data/Product owner with source lineage                                           |
+| Knowledge Asset                      | Governed knowledge unit with source/provenance/version                                  | Knowledge/Product owner according to source semantics                                  |
+| Knowledge Claim                      | Governed claim about an entity/relation                                                 | Provenance and confidence required                                                     |
+| Ontology                             | Governed vocabulary/schema for knowledge representation                                 | Core owned by Knowledge; domain extensions owned with domain stewardship               |
+| Knowledge Graph Projection           | Derived entity/relationship/claim representation                                        | Never silently becomes Product transactional authority                                 |
+| Retrieval Index                      | Lexical/vector/graph/metadata acceleration structure                                    | Derived and rebuildable from governed source                                           |
+| Embedding                            | Derived model-specific representation                                                   | Not knowledge authority                                                                |
+| Inference Run                        | Bounded model invocation state, route, usage, and result metadata                       | Model & Inference Platform operational record                                          |
+| Agent Run / Turn                     | Durable agent execution and turn state                                                  | Agent Runtime Platform operational record                                              |
+| Agent Context Snapshot               | Bounded assembled execution context or references required for reproducibility/recovery | Agent Runtime operational record; source facts retain original authority               |
+| Run / Session Memory                 | Agent execution continuity state                                                        | Agent Runtime within declared lifetime; never enterprise Knowledge authority by itself |
+| Proposed / AI-Generated Output       | Suggested content/classification/decision                                               | Never authoritative until accepted by owning Product/domain                            |
 
 ### 5.2 Canonical Ownership Matrix
 
-| Data Family | Canonical Authority |
-| :-- | :-- |
-| Principal, authenticator, session, protocol trust | Identity & Access |
-| Organization, Tenant, Workspace, Membership | Organization |
-| Employee, Employment, HR Organization, Position, Leave | HCM |
-| Future ERP financial operational facts | Owning ERP Product/domain when chartered |
-| Work Item / Case business state | Owning Product for domain-specific meaning; Work Management for generic work lifecycle when consumed |
-| Workflow definition/instance/task coordination | Workflow Platform |
-| Schedule/Occurrence/dispatch | Scheduling Platform |
-| Rule definition/runtime lifecycle | Rules & Decisioning Platform; domain rule meaning remains Product-owned |
-| Artifact binary/version/checksum | Artifact & Document Platform |
-| Notification/delivery state | Notification Platform |
-| Accepted Usage Meter / Rating / Charge / Bill state | Usage Metering & Billing Platform |
-| Enterprise evidence | Audit & Evidence Platform |
-| Knowledge asset/ontology/index lifecycle | Knowledge & Retrieval Platform within declared scope |
-| Product business facts represented in knowledge | Original Product/external authority remains canonical |
-| Model/provider access, Capability Profile, and Inference Run state | Model & Inference Platform |
-| Agent Definition runtime registration, Agent Run/Turn, Context Snapshot, and run/session memory mechanics | Agent Runtime Platform |
+| Data Family                                                                                               | Canonical Authority                                                                                  |
+| :-------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| Principal, authenticator, session, protocol trust                                                         | Identity & Access                                                                                    |
+| Organization, Tenant, Workspace, Membership                                                               | Organization                                                                                         |
+| Employee, Employment, HR Organization, Position, Leave                                                    | HCM                                                                                                  |
+| Future ERP financial operational facts                                                                    | Owning ERP Product/domain when chartered                                                             |
+| Work Item / Case business state                                                                           | Owning Product for domain-specific meaning; Work Management for generic work lifecycle when consumed |
+| Workflow definition/instance/task coordination                                                            | Workflow Platform                                                                                    |
+| Schedule/Occurrence/dispatch                                                                              | Scheduling Platform                                                                                  |
+| Rule definition/runtime lifecycle                                                                         | Rules & Decisioning Platform; domain rule meaning remains Product-owned                              |
+| Artifact binary/version/checksum                                                                          | Artifact & Document Platform                                                                         |
+| Notification/delivery state                                                                               | Notification Platform                                                                                |
+| Accepted Usage Meter / Rating / Charge / Bill state                                                       | Usage Metering & Billing Platform                                                                    |
+| Enterprise evidence                                                                                       | Audit & Evidence Platform                                                                            |
+| Knowledge asset/ontology/index lifecycle                                                                  | Knowledge & Retrieval Platform within declared scope                                                 |
+| Product business facts represented in knowledge                                                           | Original Product/external authority remains canonical                                                |
+| Model/provider access, Capability Profile, and Inference Run state                                        | Model & Inference Platform                                                                           |
+| Agent Definition runtime registration, Agent Run/Turn, Context Snapshot, and run/session memory mechanics | Agent Runtime Platform                                                                               |
 
 ### 5.3 Knowledge Topology
 
@@ -219,14 +219,14 @@ Every knowledge unit derived from a managed artifact can resolve, where applicab
 
 ### 5.7 Transactional & Analytical Boundary
 
-| Plane | Mutation Rule |
-| :-- | :-- |
-| Authoritative Transactional | Only owning Product/control commands mutate authoritative state |
-| Operational Projection | Updated from declared authority; never independent truth |
-| Evidence | Append/integrity lifecycle under Audit & Evidence |
-| Analytical | Derives from governed source; no direct source mutation |
-| Knowledge | Organizes provenanced assets/claims/relations without stealing source authority |
-| Model / Agent Execution | Produces derived/proposed output and execution state until owning Product accepts any resulting business fact/effect |
+| Plane                       | Mutation Rule                                                                                                        |
+| :-------------------------- | :------------------------------------------------------------------------------------------------------------------- |
+| Authoritative Transactional | Only owning Product/control commands mutate authoritative state                                                      |
+| Operational Projection      | Updated from declared authority; never independent truth                                                             |
+| Evidence                    | Append/integrity lifecycle under Audit & Evidence                                                                    |
+| Analytical                  | Derives from governed source; no direct source mutation                                                              |
+| Knowledge                   | Organizes provenanced assets/claims/relations without stealing source authority                                      |
+| Model / Agent Execution     | Produces derived/proposed output and execution state until owning Product accepts any resulting business fact/effect |
 
 ### 5.8 Data Movement Strategy
 
@@ -274,38 +274,38 @@ Data Governance defines classification, lineage, quality, residency, retention, 
 
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected |
-| :-- | :-- |
-| One central enterprise database | Destroys bounded authority and independent lifecycle |
+| Alternative                                   | Why Rejected                                                          |
+| :-------------------------------------------- | :-------------------------------------------------------------------- |
+| One central enterprise database               | Destroys bounded authority and independent lifecycle                  |
 | Knowledge Graph as enterprise master database | Converts a derived representation into hidden transactional authority |
-| Vector-only RAG | Insufficient for all query/evidence/relationship needs |
-| Graph-only RAG | Overfits one retrieval shape and increases complexity |
-| Model or Agent runtime owns all knowledge | Couples knowledge lifecycle to execution and creates hidden authority |
-| Filter after LLM context assembly | Discloses data before authorization is applied |
+| Vector-only RAG                               | Insufficient for all query/evidence/relationship needs                |
+| Graph-only RAG                                | Overfits one retrieval shape and increases complexity                 |
+| Model or Agent runtime owns all knowledge     | Couples knowledge lifecycle to execution and creates hidden authority |
+| Filter after LLM context assembly             | Discloses data before authorization is applied                        |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Dependency | Blast Radius | Required Posture |
-| :-- | :-- | :-- |
-| Authoritative Product store | Product-specific | Derived systems never override unavailable truth |
-| Knowledge ingestion | Stale knowledge | Existing version remains queryable with freshness visible |
-| Vector/graph/lexical index | Retrieval mode degradation | Other evaluated retrieval modes may continue |
-| Knowledge & Retrieval control | Search/RAG degradation | Product fails explicitly or uses approved fallback |
-| Model provider / Model & Inference | AI-output degradation | Knowledge remains independently queryable; evaluated alternate route or explicit failure |
-| Agent Runtime | Agentic execution degradation | Durable run state may resume; Product truth and Knowledge authority remain outside Agent state |
+| Dependency                         | Blast Radius                  | Required Posture                                                                               |
+| :--------------------------------- | :---------------------------- | :--------------------------------------------------------------------------------------------- |
+| Authoritative Product store        | Product-specific              | Derived systems never override unavailable truth                                               |
+| Knowledge ingestion                | Stale knowledge               | Existing version remains queryable with freshness visible                                      |
+| Vector/graph/lexical index         | Retrieval mode degradation    | Other evaluated retrieval modes may continue                                                   |
+| Knowledge & Retrieval control      | Search/RAG degradation        | Product fails explicitly or uses approved fallback                                             |
+| Model provider / Model & Inference | AI-output degradation         | Knowledge remains independently queryable; evaluated alternate route or explicit failure       |
+| Agent Runtime                      | Agentic execution degradation | Durable run state may resume; Product truth and Knowledge authority remain outside Agent state |
 
 ## 9. Ownership
 
-| Responsibility | Accountable |
-| :-- | :-- |
-| Product transactional facts | Product Domain Owner |
-| External facts | External authority + ATI Natural Owner |
-| Knowledge capability | Knowledge & Retrieval Platform Owner |
-| Domain knowledge semantics | Source Product/domain |
-| Artifact lifecycle | Artifact & Document Platform Owner |
-| Model/inference execution data | Model & Inference Platform Owner |
-| Agent execution/context/run-memory data | Agent Runtime Platform Owner |
-| Data governance principles | Data Governance Authority |
+| Responsibility                          | Accountable                            |
+| :-------------------------------------- | :------------------------------------- |
+| Product transactional facts             | Product Domain Owner                   |
+| External facts                          | External authority + ATI Natural Owner |
+| Knowledge capability                    | Knowledge & Retrieval Platform Owner   |
+| Domain knowledge semantics              | Source Product/domain                  |
+| Artifact lifecycle                      | Artifact & Document Platform Owner     |
+| Model/inference execution data          | Model & Inference Platform Owner       |
+| Agent execution/context/run-memory data | Agent Runtime Platform Owner           |
+| Data governance principles              | Data Governance Authority              |
 
 ## 10. Dependencies
 

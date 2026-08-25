@@ -72,6 +72,7 @@ It excludes request deadlines, short retry backoff, tight connector polling loop
 - The owning Product/Platform **MUST** re-read or otherwise validate required authoritative facts under current policy before creating Notification
 
 Every scheduled communication contract **MUST** make its selected mode explicit so operators can tell whether facts are frozen at creation time or resolved/revalidated at due time.
+
 ### 3.2 Identity and Ownership
 
 - Every Schedule **MUST** have a globally unique, non-enumerable `schedule_id`

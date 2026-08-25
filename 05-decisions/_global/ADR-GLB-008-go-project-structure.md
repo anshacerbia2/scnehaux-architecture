@@ -18,8 +18,8 @@ Adopt a vertical-slice package layout with three machine-enforced layers for eve
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type     | Reviewers                             | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------ | :--------------------- |
 | 2026-08-11 | accepted | foundational | Architecture, Core Platform, Identity | Architecture Authority |
 
 ## 3. Context
@@ -94,10 +94,10 @@ This rule is a cheaper and more precise test than an import list, because it cat
 
 Two boundaries, two opposite rules, and conflating them is a known and expensive error:
 
-| Boundary | Contract owner | Reason |
-| :-- | :-- | :-- |
-| Inside one deployable | The **consumer**. `app/` declares the interface, `adapter/` implements it | Dependency inversion; `app/` becomes testable against a fake |
-| Between deployables | The **provider**, per EAD-004 §6.3 | A contract owned by each consumer becomes a different contract per consumer |
+| Boundary              | Contract owner                                                            | Reason                                                                      |
+| :-------------------- | :------------------------------------------------------------------------ | :-------------------------------------------------------------------------- |
+| Inside one deployable | The **consumer**. `app/` declares the interface, `adapter/` implements it | Dependency inversion; `app/` becomes testable against a fake                |
+| Between deployables   | The **provider**, per EAD-004 §6.3                                        | A contract owned by each consumer becomes a different contract per consumer |
 
 ### 5.6 Composition Root and Module Assembly
 
@@ -117,7 +117,7 @@ The handle type SHALL be the substrate type rather than the driver type, so the 
 
 ### 5.8 Goroutine Ownership
 
-A loop driven by a clock, a broker, or a queue decides *when* work happens and never *what* the work is. It is an inbound driver and SHALL live in `adapter/`, calling `app/` once per iteration. `app/` and `domain/` SHALL NOT start a goroutine.
+A loop driven by a clock, a broker, or a queue decides _when_ work happens and never _what_ the work is. It is an inbound driver and SHALL live in `adapter/`, calling `app/` once per iteration. `app/` and `domain/` SHALL NOT start a goroutine.
 
 Every goroutine SHALL have a named owner able to stop it and wait for it. The composition root SHALL own the root context, the signal handler, and shutdown ordering.
 

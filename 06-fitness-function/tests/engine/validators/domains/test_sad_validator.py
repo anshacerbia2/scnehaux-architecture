@@ -109,9 +109,7 @@ def test_draft_sad_rejected_under_chartered_pad():
         filename="SAD-001.md",
     )
     v.validate_type_specific()
-    assert any(
-        "only when its parent PAD is 'approved'" in msg for sev, msg in v.errors
-    )
+    assert any("only when its parent PAD is 'approved'" in msg for sev, msg in v.errors)
 
 
 def test_draft_sad_allowed_under_approved_pad():

@@ -82,7 +82,9 @@ def test_audit_traceability_graph_acyclic_clean():
 
 def test_audit_hierarchy_and_orphans_non_dict():
     meta = {"INVALID_KEY": "not_a_dict_metadata"}
-    sev = {"structural_integrity_violation": "CRITICAL", "traceability_violation": "ERROR"}
+    sev = {
+        "structural_integrity_violation": "CRITICAL",
+        "traceability_violation": "ERROR",
+    }
     assert audit_hierarchy_tiers(meta, sev) == []
     assert audit_orphans(meta, sev) == []
-

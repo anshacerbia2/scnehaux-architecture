@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-004
   title: Enterprise Event-Driven Architecture & Messaging Standard
   owner: Enterprise Architect
-  version: 3.0.0
+  version: 3.0.1
   status: approved
   classification: public
   governed_by:
@@ -61,11 +61,11 @@ The class determines ownership and expected delivery semantics. Transport does n
 
 A contract **MUST** select the minimum profile that satisfies its required semantics.
 
-| Profile | Select when | Do not select merely because |
-| :-- | :-- | :-- |
-| **Direct Durable Delivery** | bounded point-to-point delivery, stable target, no broker replay/routing/competing-consumer requirement | communication is asynchronous |
-| **Queue-Oriented Messaging** | targeted commands/jobs/triggers, competing consumers, routing, ACK/NACK, backpressure, DLQ | the system has many services |
-| **Stream-Oriented Messaging** | retained replay, independent consumer groups, CDC, stream processing, per-key log ordering | Kafka is already known or considered enterprise-grade |
+| Profile                       | Select when                                                                                             | Do not select merely because                          |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------ | :---------------------------------------------------- |
+| **Direct Durable Delivery**   | bounded point-to-point delivery, stable target, no broker replay/routing/competing-consumer requirement | communication is asynchronous                         |
+| **Queue-Oriented Messaging**  | targeted commands/jobs/triggers, competing consumers, routing, ACK/NACK, backpressure, DLQ              | the system has many services                          |
+| **Stream-Oriented Messaging** | retained replay, independent consumer groups, CDC, stream processing, per-key log ordering              | Kafka is already known or considered enterprise-grade |
 
 The architecture **MUST NOT** use a higher-complexity profile without a concrete semantic, reliability, scale, or operational driver.
 
@@ -341,11 +341,11 @@ Unbounded queue, stream retention, retry, or direct-delivery backlog is prohibit
 
 Scnehaux adopted implementations:
 
-| Semantic profile | Adopted implementation |
-| :-- | :-- |
-| Queue-Oriented Messaging | RabbitMQ |
-| Stream-Oriented Messaging | Kafka protocol |
-| Direct Durable Delivery | governed HTTPS + source outbox/relay + target durable acceptance |
+| Semantic profile          | Adopted implementation                                           |
+| :------------------------ | :--------------------------------------------------------------- |
+| Queue-Oriented Messaging  | RabbitMQ                                                         |
+| Stream-Oriented Messaging | Kafka protocol                                                   |
+| Direct Durable Delivery   | governed HTTPS + source outbox/relay + target durable acceptance |
 
 `adopted` is profile-scoped. A deployment does not run both brokers solely because both are supported.
 
@@ -359,16 +359,15 @@ Deviation from source-local publication atomicity, consumer duplicate safety, or
 delivery durability requires formal exception approval under GDC-000 with an explicit failure
 model, compensating controls, a named owner, and an expiry date.
 
-The mechanism is the waiver register, not a decision record. GDC-000 §2.6 makes a decision
-record an immutable snapshot of a choice, which cannot expire and cannot be revoked — so
-recording an exception as one grants it permanently and leaves nothing for the expiry audit to
-find. A waiver carries the expiry date that `exception_expired` enforces.
+Each of the three deviations must state what a consumer observes when it occurs, because that is
+the part a reviewer cannot derive from the request itself. A publisher without source-local
+atomicity can commit state no consumer ever hears about. A consumer without duplicate safety
+applies the same effect twice on redelivery. An undeclared durability profile means nobody can
+say which of those two an outage produced. The request states which one it accepts.
 
-Each of the three deviations must state what a consumer observes when it happens: a publisher
-without source-local atomicity can commit state that no consumer ever hears about, a consumer
-without duplicate safety applies the same effect twice on redelivery, and an undeclared
-durability profile means nobody knows which of the two the outage produced. The request states
-which of those the deviation accepts.
+An expiry date is not optional here. Each of these deviations is silent in production — none of
+the three announces itself, and the estate learns about it from a reconciliation gap long after
+the delivery it explains.
 
 A technology substitution inside the same semantic profile does not require redefining Product authority, but it must prove equivalent delivery, security, observability, and recovery properties and comply with Technology Radar governance.
 

@@ -19,10 +19,10 @@ Separate Organization authority from Identity and use Keycloak only as a bounded
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type    | Reviewers                                                | Approver                         |
+| :--------- | :------- | :---------- | :------------------------------------------------------- | :------------------------------- |
 | 2026-08-06 | proposed | replacement | Architecture, Identity, Core Platform, Security, Product | Architecture Authority — pending |
-| 2026-08-11 | accepted | replacement | Architecture, Identity, Core Platform, Security, Product | Architecture Authority |
+| 2026-08-11 | accepted | replacement | Architecture, Identity, Core Platform, Security, Product | Architecture Authority           |
 
 On acceptance, the former Enterprise Workspace Platform boundary was retired. Its PAD and its SAD were removed from the active set, and PAD-PLT-002 now carries the Organization Platform.
 

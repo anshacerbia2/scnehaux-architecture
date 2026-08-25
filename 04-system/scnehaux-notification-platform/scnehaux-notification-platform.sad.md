@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-005
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
-  version: 2.0.0
+  version: 2.0.1
   status: approved
   classification: restricted
   governed_by:
@@ -77,7 +77,7 @@ The runtime remains correct under:
 - Direct-profile ambiguous acceptance
 - noisy-neighbor Tenant/provider load
 
-### 1.4 Constraints
+### 1.4 Constraint
 
 - Go is the application runtime
 - PostgreSQL is the private authoritative Notification store
@@ -121,20 +121,20 @@ The runtime remains correct under:
 
 ## 2. Enterprise Traceability
 
-| Relationship | Target |
-| :-- | :-- |
-| Realizes | PAD-PLT-005 Enterprise Notification Platform |
-| Consumes | PAD-PLT-011 Scheduling for frozen future delivery |
-| Consumes | Document Platform for immutable attachment references |
-| Consumes | Identity/Organization/Application Trust |
-| Consumes | Trust Services for provider credential material |
-| Conforms to | ADR-GLB-016 Transactional Publication and Durable Messaging Profiles |
-| Conforms to | ADR-GLB-017 Enterprise Durable Scheduling Boundary with Profiled Dispatch |
-| Conforms to | STD-GLB-002 Database Standard |
-| Conforms to | STD-GLB-003 Observability Standard |
-| Conforms to | STD-GLB-004 Event-Driven Architecture & Messaging Standard |
-| Conforms to | STD-GLB-005 Resilience Standard |
-| Conforms to | STD-GLB-010 Durable Scheduled Work Standard |
+| Relationship | Target                                                                    |
+| :----------- | :------------------------------------------------------------------------ |
+| Realizes     | PAD-PLT-005 Enterprise Notification Platform                              |
+| Consumes     | PAD-PLT-011 Scheduling for frozen future delivery                         |
+| Consumes     | Document Platform for immutable attachment references                     |
+| Consumes     | Identity/Organization/Application Trust                                   |
+| Consumes     | Trust Services for provider credential material                           |
+| Conforms to  | ADR-GLB-016 Transactional Publication and Durable Messaging Profiles      |
+| Conforms to  | ADR-GLB-017 Enterprise Durable Scheduling Boundary with Profiled Dispatch |
+| Conforms to  | STD-GLB-002 Database Standard                                             |
+| Conforms to  | STD-GLB-003 Observability Standard                                        |
+| Conforms to  | STD-GLB-004 Event-Driven Architecture & Messaging Standard                |
+| Conforms to  | STD-GLB-005 Resilience Standard                                           |
+| Conforms to  | STD-GLB-010 Durable Scheduled Work Standard                               |
 
 ## 3. Solution Context
 
@@ -646,11 +646,11 @@ Runbooks cover:
 
 ### 9.1 Messaging Profiles
 
-| Profile | Runtime dependencies | Intended use |
-| :-- | :-- | :-- |
-| `minimal-direct` | PostgreSQL + governed HTTPS acceptance | local/lab or bounded point-to-point Notification integration |
-| `queue-rabbitmq` | PostgreSQL + RabbitMQ | **default Scnehaux deployment** |
-| `stream-kafka` | PostgreSQL + Kafka | retained event-stream/replay exercises or workloads requiring stream semantics |
+| Profile          | Runtime dependencies                   | Intended use                                                                   |
+| :--------------- | :------------------------------------- | :----------------------------------------------------------------------------- |
+| `minimal-direct` | PostgreSQL + governed HTTPS acceptance | local/lab or bounded point-to-point Notification integration                   |
+| `queue-rabbitmq` | PostgreSQL + RabbitMQ                  | **default Scnehaux deployment**                                                |
+| `stream-kafka`   | PostgreSQL + Kafka                     | retained event-stream/replay exercises or workloads requiring stream semantics |
 
 Notification provider Delivery Workers continue to use Notification-owned database state in all profiles.
 

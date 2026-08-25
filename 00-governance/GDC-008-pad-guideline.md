@@ -57,24 +57,24 @@ In addition to the global structural enforcement defined in **[GDC-001](GDC-001-
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
-| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
-| **Section Rules** | Required Sections | <ul><li>Purpose & Scope</li><li>Enterprise Traceability</li><li>Domain & Context Model</li><li>Integration Contracts</li><li>Trust & Data Boundaries</li><li>Capability NFR</li><li>Ownership & Governance</li></ul> |
-| **Section Rules** | Recommended Sections | <ul><li>Assumptions & Constraints</li><li>Architectural Decisions</li><li>Evolution</li><li>References</li></ul> |
-| **Content Quality Rules** | Purpose & Scope (Required Concepts) | <ul><li>Out Of Scope</li></ul> |
-| **Content Quality Rules** | Enterprise Traceability (Required Concepts) | <ul><li>Realizes</li><li>Relationships</li><li>Consumed By</li></ul> |
-| **Content Quality Rules** | Domain & Context Model (Required Concepts) | <ul><li>Bounded Context</li><li>Ubiquitous Language</li></ul> |
-| **Content Quality Rules** | Integration Contracts (Required Concepts) | <ul><li>Integration Provided</li><li>Integration Consumed</li></ul> |
-| **Content Quality Rules** | Trust & Data Boundaries (Required Concepts) | <ul><li>Trust Boundary</li><li>Identity Access</li><li>Data Classification</li></ul> |
-| **Content Quality Rules** | Capability NFR (Recommended Derivatives) | <ul><li>SLA</li><li>SLO</li><li>RTO</li><li>RPO</li><li>Availability</li><li>Scalability</li><li>Peak Load</li><li>Concurrency</li><li>Compliance</li><li>Data Privacy</li><li>Data Residency</li><li>Audit</li><li>Usability</li><li>Accessibility</li><li>Interoperability</li><li>Cost Target</li></ul> |
-| **Content Quality Rules** | Ownership & Governance (Required Concepts) | <ul><li>Team Ownership</li><li>Realizing Systems</li></ul> |
+| Rule Category             | Parameter                                   | Enforcement / Value                                                                                                                                                                                                                                                                                        |
+| :------------------------ | :------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Metadata Rules**        | Metadata Rules                              | <ul><li>doc_meta</li></ul>                                                                                                                                                                                                                                                                                 |
+| **Section Rules**         | Required Sections                           | <ul><li>Purpose & Scope</li><li>Enterprise Traceability</li><li>Domain & Context Model</li><li>Integration Contracts</li><li>Trust & Data Boundaries</li><li>Capability NFR</li><li>Ownership & Governance</li></ul>                                                                                       |
+| **Section Rules**         | Recommended Sections                        | <ul><li>Assumptions & Constraints</li><li>Architectural Decisions</li><li>Evolution</li><li>References</li></ul>                                                                                                                                                                                           |
+| **Content Quality Rules** | Purpose & Scope (Required Concepts)         | <ul><li>Out Of Scope</li></ul>                                                                                                                                                                                                                                                                             |
+| **Content Quality Rules** | Enterprise Traceability (Required Concepts) | <ul><li>Realizes</li><li>Relationships</li><li>Consumed By</li></ul>                                                                                                                                                                                                                                       |
+| **Content Quality Rules** | Domain & Context Model (Required Concepts)  | <ul><li>Bounded Context</li><li>Ubiquitous Language</li></ul>                                                                                                                                                                                                                                              |
+| **Content Quality Rules** | Integration Contracts (Required Concepts)   | <ul><li>Integration Provided</li><li>Integration Consumed</li></ul>                                                                                                                                                                                                                                        |
+| **Content Quality Rules** | Trust & Data Boundaries (Required Concepts) | <ul><li>Trust Boundary</li><li>Identity Access</li><li>Data Classification</li></ul>                                                                                                                                                                                                                       |
+| **Content Quality Rules** | Capability NFR (Recommended Derivatives)    | <ul><li>SLA</li><li>SLO</li><li>RTO</li><li>RPO</li><li>Availability</li><li>Scalability</li><li>Peak Load</li><li>Concurrency</li><li>Compliance</li><li>Data Privacy</li><li>Data Residency</li><li>Audit</li><li>Usability</li><li>Accessibility</li><li>Interoperability</li><li>Cost Target</li></ul> |
+| **Content Quality Rules** | Ownership & Governance (Required Concepts)  | <ul><li>Team Ownership</li><li>Realizing Systems</li></ul>                                                                                                                                                                                                                                                 |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
-| Linter Component | File | Enforcement Logic |
-| :-- | :-- | :-- |
-| **JSON Schema** | `schemas/pad.schema.json` | Enforces C1/C2 macro-topology boundaries and integration contracts. |
+| Linter Component  | File                                         | Enforcement Logic                                                                                                                                                                                                       |
+| :---------------- | :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **JSON Schema**   | `schemas/pad.schema.json`                    | Enforces C1/C2 macro-topology boundaries and integration contracts.                                                                                                                                                     |
 | **Python Engine** | `engine/validators/domains/pad_validator.py` | **Taxonomy**: Validates `allowed_statuses` and `allowed_classifications`.<br>**Domain Validation**: Enforces that `fulfilled_by` exists and is a populated list of SAD IDs, guaranteeing C1 to C2 boundary composition. |
 
 **Engine Execution Mechanics**:
@@ -134,12 +134,12 @@ doc_meta:
 
 ##### Allowed Lifecycle Statuses
 
-| Status       | Meaning / Lifecycle Stage                                                 |
-| ------------ | ------------------------------------------------------------------------- |
-| `chartered` | The logical capability boundary is recognized as a valid candidate, but no shared Product/Platform implementation commitment exists yet. |
-| `draft`      | The PAD is under active architecture design or Architecture Authority review; draft-age pressure applies. |
-| `approved`   | The domain architecture is formalized and acts as the official contract.  |
-| `deprecated` | The domain capability is being phased out or has been replaced.           |
+| Status       | Meaning / Lifecycle Stage                                                                                                                |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `chartered`  | The logical capability boundary is recognized as a valid candidate, but no shared Product/Platform implementation commitment exists yet. |
+| `draft`      | The PAD is under active architecture design or Architecture Authority review; draft-age pressure applies.                                |
+| `approved`   | The domain architecture is formalized and acts as the official contract.                                                                 |
+| `deprecated` | The domain capability is being phased out or has been replaced.                                                                          |
 
 ##### Allowed Classifications
 
@@ -151,29 +151,29 @@ doc_meta:
 
 ##### Semantic Versioning Classification
 
-| Version | Trigger / Architectural Change |
-| --- | --- |
+| Version           | Trigger / Architectural Change                                                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Major (2.0.0)** | Redesigning the boundary, shifting significant logical responsibilities to another domain, or breaking integration contracts (e.g., API rewrites). |
-| **Minor (1.1.0)** | Adding a new subsystem or capability without breaking existing integrations. |
-| **Patch (1.0.1)** | Editorial updates, formatting, fixing dead links. |
+| **Minor (1.1.0)** | Adding a new subsystem or capability without breaking existing integrations.                                                                       |
+| **Patch (1.0.1)** | Editorial updates, formatting, fixing dead links.                                                                                                  |
 
 #### 2.3.5 Artifact Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
-| Section Name | Objective | Requirement |
-| --- | --- | --- |
-| **Purpose & Scope** | Define the boundaries, goals, and non-goals of this capability. | Must explicitly outline what is **Out of Scope** to prevent feature creep. |
-| **Enterprise Traceability** | Map the logical capability to the Enterprise Architecture Document (EAD). | Must declare what it **Realizes**, what it **Depends On**, and what is **Referenced By** it. |
-| **Domain & Context Model** | Establish the bounded contexts, conceptual models, and business logic. | Must define the **Bounded Context** and **Ubiquitous Language**. _Domain Policies_ (e.g. Retry Policy, MFA Policy) are highly recommended here. |
-| **Integration Contracts** | Specify strict logical API boundaries and event publishing. | Must define the capabilities that are **Provided** and **Consumed**. |
-| **Trust & Data Boundaries** | Map the isolation levels, identity propagation, and tenant separation models. | Must detail the **Trust Boundary**, **Identity & Access** logic, and **Data Classification**. |
-| **Capability NFR** | Explicit, quantifiable Non-Functional Requirements (NFR) targets. | Must quantify metrics focusing on business SLAs, RTO, RPO, and Auditability (Operational Excellence belongs in SAD). |
-| **Ownership & Governance** | Map the logical capability to the physical systems (SADs) that fulfill it. | Must explicitly document **Team Ownership** and list the **Realizing Systems**. |
-| **Assumptions & Constraints _(Optional)_** | Document any external dependencies or business assumptions. | Must list business, external, or operational constraints the design relies upon. |
-| **Architectural Decisions _(Optional)_** | Document architectural decisions made within the domain. | Can summarize local decisions or link out to full ADRs for complex cross-domain decisions. |
-| **Evolution _(Optional)_** | Describe the future architectural trajectory (not a timeline roadmap). | Explains how the architecture intends to evolve long-term (e.g., migrating from REST to Event-Driven). |
-| **References _(Optional)_** | Additional context or external documents. | List any relevant documentation, standard guidelines, or upstream mandates. |
+| Section Name                               | Objective                                                                     | Requirement                                                                                                                                     |
+| ------------------------------------------ | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Purpose & Scope**                        | Define the boundaries, goals, and non-goals of this capability.               | Must explicitly outline what is **Out of Scope** to prevent feature creep.                                                                      |
+| **Enterprise Traceability**                | Map the logical capability to the Enterprise Architecture Document (EAD).     | Must declare what it **Realizes**, what it **Depends On**, and what is **Referenced By** it.                                                    |
+| **Domain & Context Model**                 | Establish the bounded contexts, conceptual models, and business logic.        | Must define the **Bounded Context** and **Ubiquitous Language**. _Domain Policies_ (e.g. Retry Policy, MFA Policy) are highly recommended here. |
+| **Integration Contracts**                  | Specify strict logical API boundaries and event publishing.                   | Must define the capabilities that are **Provided** and **Consumed**.                                                                            |
+| **Trust & Data Boundaries**                | Map the isolation levels, identity propagation, and tenant separation models. | Must detail the **Trust Boundary**, **Identity & Access** logic, and **Data Classification**.                                                   |
+| **Capability NFR**                         | Explicit, quantifiable Non-Functional Requirements (NFR) targets.             | Must quantify metrics focusing on business SLAs, RTO, RPO, and Auditability (Operational Excellence belongs in SAD).                            |
+| **Ownership & Governance**                 | Map the logical capability to the physical systems (SADs) that fulfill it.    | Must explicitly document **Team Ownership** and list the **Realizing Systems**.                                                                 |
+| **Assumptions & Constraints _(Optional)_** | Document any external dependencies or business assumptions.                   | Must list business, external, or operational constraints the design relies upon.                                                                |
+| **Architectural Decisions _(Optional)_**   | Document architectural decisions made within the domain.                      | Can summarize local decisions or link out to full ADRs for complex cross-domain decisions.                                                      |
+| **Evolution _(Optional)_**                 | Describe the future architectural trajectory (not a timeline roadmap).        | Explains how the architecture intends to evolve long-term (e.g., migrating from REST to Event-Driven).                                          |
+| **References _(Optional)_**                | Additional context or external documents.                                     | List any relevant documentation, standard guidelines, or upstream mandates.                                                                     |
 
 #### 2.3.6 Platform Commitment & Approval Gate
 
@@ -202,6 +202,7 @@ Approval also requires:
 Architecture completeness, taxonomy symmetry, hypothetical reuse, or a mature-looking document **do not by themselves justify `approved` status**.
 
 A `chartered` PAD may have a `chartered` SAD placeholder for traceability. A SAD may enter `draft` or `approved` only after its parent PAD is `approved`; this is enforced by the SAD validator.
+
 ### 2.4 Lifecycle & Audit
 
 As the Single Source of Truth (SSOT) for Product Architecture Documents (PAD), the PAD represents highly stable domain capabilities. They must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.

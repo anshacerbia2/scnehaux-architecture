@@ -19,9 +19,9 @@ Use PostgreSQL as the initial durable temporal authority and the enterprise Kafk
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
-| 2026-08-22 | accepted | implementation | Scheduling Platform, Platform Engineering, Architecture Authority | Architecture Authority |
+| Date       | Status     | ADR Type       | Reviewers                                                                       | Approver               |
+| :--------- | :--------- | :------------- | :------------------------------------------------------------------------------ | :--------------------- |
+| 2026-08-22 | accepted   | implementation | Scheduling Platform, Platform Engineering, Architecture Authority               | Architecture Authority |
 | 2026-08-24 | superseded | implementation | Scheduling Platform, Platform Engineering, Architecture Authority, Notification | Architecture Authority |
 
 ## 3. Context

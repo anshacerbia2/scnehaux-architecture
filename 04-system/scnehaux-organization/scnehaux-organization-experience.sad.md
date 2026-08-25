@@ -421,17 +421,17 @@ Cross-tenant bulk selection is prohibited unless the provider role and operation
 
 ### 9.1 Resilience & Failure Modes
 
-| Failure | Behavior | Blast Radius |
-| :-- | :-- | :-- |
-| One web replica fails | load balancer retries or user refreshes; server session remains recoverable | One request/session interaction |
-| Control API unavailable | read/mutation pages show controlled outage; no local authority fallback | Tenancy administration only; normal Product/IAM projection use continues |
-| Keycloak unavailable | new login, token refresh, step-up and logout completion may fail | New/expiring admin sessions |
-| UI Platform registry unavailable | existing immutable build continues | New build/deployment only |
-| Server session store/cookie invalid | user reauthenticates; no privilege retained locally | One administrative session |
-| Stale aggregate version | command rejected; UI reloads and requests confirmation | One attempted mutation |
-| Bulk operation partly fails | per-item status shown; valid items are not silently rolled back unless backend contract states atomic | Submitted batch/items |
-| Telemetry unavailable | core administration continues; telemetry backlog/drop is alerted according to policy | Observability only |
-| Bad client release | canary/rollback restores previous immutable artifact | Administrative UI users on affected release |
+| Failure                             | Behavior                                                                                              | Blast Radius                                                             |
+| :---------------------------------- | :---------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------- |
+| One web replica fails               | load balancer retries or user refreshes; server session remains recoverable                           | One request/session interaction                                          |
+| Control API unavailable             | read/mutation pages show controlled outage; no local authority fallback                               | Tenancy administration only; normal Product/IAM projection use continues |
+| Keycloak unavailable                | new login, token refresh, step-up and logout completion may fail                                      | New/expiring admin sessions                                              |
+| UI Platform registry unavailable    | existing immutable build continues                                                                    | New build/deployment only                                                |
+| Server session store/cookie invalid | user reauthenticates; no privilege retained locally                                                   | One administrative session                                               |
+| Stale aggregate version             | command rejected; UI reloads and requests confirmation                                                | One attempted mutation                                                   |
+| Bulk operation partly fails         | per-item status shown; valid items are not silently rolled back unless backend contract states atomic | Submitted batch/items                                                    |
+| Telemetry unavailable               | core administration continues; telemetry backlog/drop is alerted according to policy                  | Observability only                                                       |
+| Bad client release                  | canary/rollback restores previous immutable artifact                                                  | Administrative UI users on affected release                              |
 
 #### 9.1.1 Degradation
 
@@ -474,16 +474,16 @@ Tokens, invitation proof, unrestricted PII, and secret data are excluded.
 
 #### 9.3.2 SLIs and Alerts
 
-| SLI | Initial Target / Alert |
-| :-- | :-- |
-| Web application availability | target 99.9% monthly after evidence |
-| Server page/BFF p95 | ≤ 500 ms excluding backend long-running operation |
-| Control API dependency error | alert on sustained > 2% over 5 minutes |
-| Authentication callback error | alert on sustained increase by client/version |
-| CSRF/session validation failure | anomaly alert |
-| Cross-tenant authorization denial | security signal when pattern deviates |
-| Frontend unhandled error | alert by release and route |
-| Accessibility regression | CI hard block for defined automated checks |
+| SLI                               | Initial Target / Alert                            |
+| :-------------------------------- | :------------------------------------------------ |
+| Web application availability      | target 99.9% monthly after evidence               |
+| Server page/BFF p95               | ≤ 500 ms excluding backend long-running operation |
+| Control API dependency error      | alert on sustained > 2% over 5 minutes            |
+| Authentication callback error     | alert on sustained increase by client/version     |
+| CSRF/session validation failure   | anomaly alert                                     |
+| Cross-tenant authorization denial | security signal when pattern deviates             |
+| Frontend unhandled error          | alert by release and route                        |
+| Accessibility regression          | CI hard block for defined automated checks        |
 
 #### 9.3.3 Runbooks
 

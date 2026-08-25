@@ -16,16 +16,16 @@ def gather_markdown_paths(
 ):
     """
     Scans and deduplicates Markdown file paths from target directories.
-    Deduplication here applies strictly to file paths (to handle overlapping input directories), 
-    NOT to document IDs. Enforces Fail-Closed security by strictly checking `allowed_root_dirs` 
-    and bypassing deeply nested exclusions. If `repo_root` is provided, it guarantees that only 
-    directories explicitly within the repository boundary are scanned; any external paths will 
+    Deduplication here applies strictly to file paths (to handle overlapping input directories),
+    NOT to document IDs. Enforces Fail-Closed security by strictly checking `allowed_root_dirs`
+    and bypassing deeply nested exclusions. If `repo_root` is provided, it guarantees that only
+    directories explicitly within the repository boundary are scanned; any external paths will
     trigger a hard crash.
 
     <pre>Args:
         - target_dirs (str | list): Target paths/files to scan.
         - repo_root (str, optional): Repository root for boundary validation.
-        - allowed_root_dirs (set, optional): Whitelisted top-level directories. External paths 
+        - allowed_root_dirs (set, optional): Whitelisted top-level directories. External paths
           trigger a hard crash.
 
     Returns:
@@ -149,12 +149,12 @@ def build_metadata_registry(
     ignored_patterns=None,
 ):
     """
-    Builds a central registry of architecture documents by parsing YAML frontmatter. Enforces the 
+    Builds a central registry of architecture documents by parsing YAML frontmatter. Enforces the
     SSOT (Single Source of Truth) invariant by detecting duplicate IDs.
-    **Note**: This phase strictly GATHERS data by calling `gather_markdown_paths`. We then call 
-    `parse_frontmatter` but intentionally IGNORE any parsing errors (e.g., missing `doc_meta` or 
-    invalid YAML). This is because this phase is NOT for structural validation, its sole purpose 
-    is to build a registry to detect duplicate IDs. All other metadata validation is delegated to 
+    **Note**: This phase strictly GATHERS data by calling `gather_markdown_paths`. We then call
+    `parse_frontmatter` but intentionally IGNORE any parsing errors (e.g., missing `doc_meta` or
+    invalid YAML). This is because this phase is NOT for structural validation, its sole purpose
+    is to build a registry to detect duplicate IDs. All other metadata validation is delegated to
     the main engine.
 
     <pre>Args:

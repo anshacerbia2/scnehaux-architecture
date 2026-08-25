@@ -66,25 +66,25 @@ The compliant path should be the easiest path through automation, paved roads, a
 
 ### 4.1 Drivers
 
-| ID | Driver | Governance Consequence |
-| :-- | :-- | :-- |
-| G1 | Multi-tenant travel/HR/finance operations carry material risk | Controls scale with impact and irreversibility |
-| G2 | AI can retrieve sensitive data and invoke tools | AI governance, evaluation, human oversight, and evidence are explicit |
-| G3 | Architecture-as-code already exists | Policy/fitness functions automate conformance |
-| G4 | Platform dependencies can create enterprise blast radius | Platform qualification and reliability evidence are reviewed |
-| G5 | Manual review does not scale | Automated assurance is preferred |
-| G6 | Excess governance causes bypass | Review is risk-based and has controlled exceptions |
+| ID  | Driver                                                        | Governance Consequence                                                |
+| :-- | :------------------------------------------------------------ | :-------------------------------------------------------------------- |
+| G1  | Multi-tenant travel/HR/finance operations carry material risk | Controls scale with impact and irreversibility                        |
+| G2  | AI can retrieve sensitive data and invoke tools               | AI governance, evaluation, human oversight, and evidence are explicit |
+| G3  | Architecture-as-code already exists                           | Policy/fitness functions automate conformance                         |
+| G4  | Platform dependencies can create enterprise blast radius      | Platform qualification and reliability evidence are reviewed          |
+| G5  | Manual review does not scale                                  | Automated assurance is preferred                                      |
+| G6  | Excess governance causes bypass                               | Review is risk-based and has controlled exceptions                    |
 
 ### 4.2 Lessons Incorporated
 
-| Lesson | Response |
-| :-- | :-- |
-| Approved document was treated as implementation evidence | Designed, implemented, tested, monitored states remain separate |
-| Audit platform was treated as compliance authority | Governance defines evidence obligation; Audit preserves evidence |
-| Every deviation required similar ceremony | Governance is proportional to blast radius |
-| Security review lived only in documents | Machine-verifiable controls and runtime evidence are preferred |
-| AI governance was conflated with AI Platform ownership | Governance defines policy; AI Platform enforces within capability |
-| Permanent exceptions became shadow standards | Every exception has owner, scope, expiry, evidence, and review |
+| Lesson                                                   | Response                                                          |
+| :------------------------------------------------------- | :---------------------------------------------------------------- |
+| Approved document was treated as implementation evidence | Designed, implemented, tested, monitored states remain separate   |
+| Audit platform was treated as compliance authority       | Governance defines evidence obligation; Audit preserves evidence  |
+| Every deviation required similar ceremony                | Governance is proportional to blast radius                        |
+| Security review lived only in documents                  | Machine-verifiable controls and runtime evidence are preferred    |
+| AI governance was conflated with AI Platform ownership   | Governance defines policy; AI Platform enforces within capability |
+| Permanent exceptions became shadow standards             | Every exception has owner, scope, expiry, evidence, and review    |
 
 ## 5. Architecture Model
 
@@ -129,17 +129,17 @@ These are concern families, not mandatory independent systems.
 
 ### 5.3 Decision Rights
 
-| Decision | Accountable |
-| :-- | :-- |
-| Business investment/priority | Business/Management authority |
-| Product business semantics/outcome | Product Domain Owner |
-| Platform capability contract | Platform Product Owner |
-| Cross-product structural architecture | Architecture Authority |
-| Security policy | Security Authority |
-| Data/knowledge governance | Data/Knowledge Governance Authority |
-| AI risk/evaluation/autonomy policy | AI Governance + Security/Data/Product authorities by scope |
-| Local reversible implementation | Owning Engineering Team within standards |
-| Exception approval | Named authority appropriate to violated control/risk |
+| Decision                              | Accountable                                                |
+| :------------------------------------ | :--------------------------------------------------------- |
+| Business investment/priority          | Business/Management authority                              |
+| Product business semantics/outcome    | Product Domain Owner                                       |
+| Platform capability contract          | Platform Product Owner                                     |
+| Cross-product structural architecture | Architecture Authority                                     |
+| Security policy                       | Security Authority                                         |
+| Data/knowledge governance             | Data/Knowledge Governance Authority                        |
+| AI risk/evaluation/autonomy policy    | AI Governance + Security/Data/Product authorities by scope |
+| Local reversible implementation       | Owning Engineering Team within standards                   |
+| Exception approval                    | Named authority appropriate to violated control/risk       |
 
 ### 5.4 Governance Intensity
 
@@ -229,67 +229,77 @@ An exception that becomes permanent either becomes an explicit architectural/sta
 ## 6. Principles & Rules
 
 ### 6.1 Governance Defines, Assurance Proves
+
 - **Fitness function:** critical controls map requirement to current evidence
 
 ### 6.2 Governance Is Proportional
+
 - **Fitness function:** review process classifies decisions by risk/blast radius and avoids mandatory board review for local reversible decisions
 
 ### 6.3 Governance Is Not a Runtime Business Authority
+
 - **Fitness function:** Product request paths contain zero synchronous Architecture/Governance approval calls
 
 ### 6.4 Compliant Path Is the Easy Path
+
 - **Fitness function:** adopted controls identify automation/paved-road enforcement where technically feasible
 
 ### 6.5 Architecture Status Is Not Implementation Status
+
 - **Fitness function:** implemented/tested claims resolve to system/runtime evidence
 
 ### 6.6 Audit Preserves Evidence; Governance Defines Obligation
+
 - **Fitness function:** Audit PAD contains no enterprise policy/approval authority
 
 ### 6.7 AI Governance Is Cross-Cutting
+
 - **Fitness function:** AI high-risk capability inventory maps Product, AI Platform, Security/Data, and evidence responsibilities
 
 ### 6.8 Exceptions Expire or Become Explicit Policy
+
 - **Fitness function:** active exception inventory has owner, scope, expiry, and review state
 
 ### 6.9 Controls Have Lifecycle
+
 - **Fitness function:** standards/controls have owner, review cycle, enforcement, and retirement path
 
 ### 6.10 Governance Measures Its Own Friction
+
 - **Fitness function:** governance reviews track CI false positives, manual review latency, exception volume, and bypass indicators
 
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected |
-| :-- | :-- |
-| Governance as third runtime plane | Governance is a cross-cutting control/evidence concern, not business/runtime authority |
-| Architecture Board approves everything | Does not scale and creates shadow decisions |
-| Documentation-only compliance | Cannot prove implementation/runtime behavior |
-| Security/Data/AI governance each create universal gateways | Central runtime bottlenecks and split ownership |
-| No exception mechanism | Drives silent non-compliance |
+| Alternative                                                | Why Rejected                                                                           |
+| :--------------------------------------------------------- | :------------------------------------------------------------------------------------- |
+| Governance as third runtime plane                          | Governance is a cross-cutting control/evidence concern, not business/runtime authority |
+| Architecture Board approves everything                     | Does not scale and creates shadow decisions                                            |
+| Documentation-only compliance                              | Cannot prove implementation/runtime behavior                                           |
+| Security/Data/AI governance each create universal gateways | Central runtime bottlenecks and split ownership                                        |
+| No exception mechanism                                     | Drives silent non-compliance                                                           |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Dependency | Blast Radius | Required Posture |
-| :-- | :-- | :-- |
-| CI/fitness engine | New changes/releases | Existing runtime continues; controlled recovery for pipeline |
-| Evidence sink | Assurance visibility | Source systems retain/retry required evidence |
-| Architecture registry | New governance/admin | Existing approved contracts remain usable |
-| Human review authority | High-risk changes | Delegation/escalation path, not bypass |
-| Policy distribution | New policy activation | Versioned last-known-good policy where safe |
+| Dependency             | Blast Radius          | Required Posture                                             |
+| :--------------------- | :-------------------- | :----------------------------------------------------------- |
+| CI/fitness engine      | New changes/releases  | Existing runtime continues; controlled recovery for pipeline |
+| Evidence sink          | Assurance visibility  | Source systems retain/retry required evidence                |
+| Architecture registry  | New governance/admin  | Existing approved contracts remain usable                    |
+| Human review authority | High-risk changes     | Delegation/escalation path, not bypass                       |
+| Policy distribution    | New policy activation | Versioned last-known-good policy where safe                  |
 
 ## 9. Ownership
 
-| Responsibility | Accountable |
-| :-- | :-- |
-| Architecture governance model | Architecture Authority |
-| Security policy/assurance | Security Authority |
-| Data/knowledge governance | Data Governance Authority |
-| Reliability evidence | System/Platform Owner + Reliability governance |
-| AI governance | AI Governance with Product/Security/Data authorities |
-| Compliance obligations | Compliance/Legal authority |
-| Evidence lifecycle | Audit & Evidence Platform |
-| Control implementation | Owning Product/Platform/System team |
+| Responsibility                | Accountable                                          |
+| :---------------------------- | :--------------------------------------------------- |
+| Architecture governance model | Architecture Authority                               |
+| Security policy/assurance     | Security Authority                                   |
+| Data/knowledge governance     | Data Governance Authority                            |
+| Reliability evidence          | System/Platform Owner + Reliability governance       |
+| AI governance                 | AI Governance with Product/Security/Data authorities |
+| Compliance obligations        | Compliance/Legal authority                           |
+| Evidence lifecycle            | Audit & Evidence Platform                            |
+| Control implementation        | Owning Product/Platform/System team                  |
 
 ## 10. Dependencies
 

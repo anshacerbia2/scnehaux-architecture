@@ -127,13 +127,15 @@ def generate_from_x_global_config(data):
     if severity_levels:
         if rules:
             lines.extend(["", "### Severity Levels", ""])
-        
+
         for group_name, group_codes in severity_levels.items():
-            lines.extend([
-                f"#### {group_name}",
-                "| Error Code | Severity (CI Action) |",
-                "| :--- | :--- |"
-            ])
+            lines.extend(
+                [
+                    f"#### {group_name}",
+                    "| Error Code | Severity (CI Action) |",
+                    "| :--- | :--- |",
+                ]
+            )
             for code, level in group_codes.items():
                 lines.append(f"| `{code}` | **{level}** |")
             lines.append("")

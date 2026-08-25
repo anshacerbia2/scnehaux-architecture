@@ -45,18 +45,18 @@ In addition to the global structural enforcement defined in **[GDC-001](GDC-001-
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
-| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
-| **Section Rules** | Required Sections | <ul><li>Objective & Scope</li><li>Design Principles</li><li>Normative Rules</li><li>Exceptions</li><li>Enforcement Mechanism</li></ul> |
-| **Section Rules** | Recommended Sections | <ul></ul> |
-| **Content Quality Rules** | Exceptions (Prohibited) | <ul><li>waiver</li><li>ADR</li><li>ARB</li><li>Approval Requirements</li></ul> |
+| Rule Category             | Parameter               | Enforcement / Value                                                                                                                    |
+| :------------------------ | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| **Metadata Rules**        | Metadata Rules          | <ul><li>doc_meta</li></ul>                                                                                                             |
+| **Section Rules**         | Required Sections       | <ul><li>Objective & Scope</li><li>Design Principles</li><li>Normative Rules</li><li>Exceptions</li><li>Enforcement Mechanism</li></ul> |
+| **Section Rules**         | Recommended Sections    | <ul></ul>                                                                                                                              |
+| **Content Quality Rules** | Exceptions (Prohibited) | <ul><li>waiver</li><li>ADR</li><li>ARB</li><li>Approval Requirements</li></ul>                                                         |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
-| Linter Component | File | Enforcement Logic |
-| :-- | :-- | :-- |
-| **Domain Schema** | `schemas/std.schema.json` | Validates normative rule structures and exact exception tracking. |
+| Linter Component  | File                                         | Enforcement Logic                                                                                                                                                                                                                      |
+| :---------------- | :------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Domain Schema** | `schemas/std.schema.json`                    | Validates normative rule structures and exact exception tracking.                                                                                                                                                                      |
 | **Python Engine** | `engine/validators/domains/std_validator.py` | **Taxonomy**: Validates `allowed_statuses` and `allowed_classifications`.<br>**Domain Validation**: Triggers `operational_stability_violation` if a document's status is `hold`, explicitly preventing adoption of retired components. |
 
 **Engine Execution Mechanics**: The automated linter will execute a Hard Block (Exit 1) on any STD artifact that mandates a technology currently marked as `Hold` in its respective lifecycle phase.
@@ -163,23 +163,23 @@ doc_meta:
 
 ##### Semantic Versioning Classification
 
-| Version | Trigger / Architectural Change |
-| --- | --- |
+| Version           | Trigger / Architectural Change                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Major (2.0.0)** | Radically changing a mandatory baseline (e.g., swapping approved database engines or introducing a new mandatory compliance layer). Breaks existing systems. |
-| **Minor (1.1.0)** | Adding a new supplemental best-practice or an optional paved road. Backwards-compatible. |
-| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links. |
+| **Minor (1.1.0)** | Adding a new supplemental best-practice or an optional paved road. Backwards-compatible.                                                                     |
+| **Patch (1.0.1)** | Editorial updates, typo fixes, formatting, fixing dead links.                                                                                                |
 
 #### 2.3.5 Artifact Section
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
-| Section Name | Objective | Requirement |
-| --- | --- | --- |
-| **Objective & Scope** | Defines what the standard covers and who it applies to. | Must define the boundary of the standard and explicitly list any exclusions. |
-| **Design Principles** | The architectural philosophy behind the standard (the "why"). | Must justify the technical axioms guiding the standard. |
-| **Normative Rules** | The core constraints and DOs/DONTs. _(Optional: Include Examples/Snippets directly under the relevant rules to provide clarity)._ | Must use RFC-2119 terminology (MUST, SHOULD, MUST NOT) for clear compliance. |
-| **Exceptions** | A direct mapping of normative rules to the specific technical conditions under which they may be bypassed. If no valid exceptions exist, this section must explicitly state `None.`.<br>**Constraint**: Prohibited keywords include `waiver`, `ADR`, `ARB`, `Approval Requirements`. Governance procedures must NOT be documented here; this section only describes technical boundary edges. | Must strictly define boundary conditions for deviation. Do NOT include governance procedures. |
-| **Enforcement Mechanism** | How compliance is measured (e.g., CI/CD Linter, Architecture Authority Review). _(Optional: Specify the Severity of the violation)._ | Must specify the automated linter, pipeline hook, or review process enforcing the standard. |
+| Section Name              | Objective                                                                                                                                                                                                                                                                                                                                                                                     | Requirement                                                                                   |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Objective & Scope**     | Defines what the standard covers and who it applies to.                                                                                                                                                                                                                                                                                                                                       | Must define the boundary of the standard and explicitly list any exclusions.                  |
+| **Design Principles**     | The architectural philosophy behind the standard (the "why").                                                                                                                                                                                                                                                                                                                                 | Must justify the technical axioms guiding the standard.                                       |
+| **Normative Rules**       | The core constraints and DOs/DONTs. _(Optional: Include Examples/Snippets directly under the relevant rules to provide clarity)._                                                                                                                                                                                                                                                             | Must use RFC-2119 terminology (MUST, SHOULD, MUST NOT) for clear compliance.                  |
+| **Exceptions**            | A direct mapping of normative rules to the specific technical conditions under which they may be bypassed. If no valid exceptions exist, this section must explicitly state `None.`.<br>**Constraint**: Prohibited keywords include `waiver`, `ADR`, `ARB`, `Approval Requirements`. Governance procedures must NOT be documented here; this section only describes technical boundary edges. | Must strictly define boundary conditions for deviation. Do NOT include governance procedures. |
+| **Enforcement Mechanism** | How compliance is measured (e.g., CI/CD Linter, Architecture Authority Review). _(Optional: Specify the Severity of the violation)._                                                                                                                                                                                                                                                          | Must specify the automated linter, pipeline hook, or review process enforcing the standard.   |
 
 ### 2.4 Lifecycle & Audit
 

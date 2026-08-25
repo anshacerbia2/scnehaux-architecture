@@ -155,47 +155,47 @@ Consumers use authoritative administration contracts, bounded Tenant/Membership 
 
 ### 3.1 Bounded Context
 
-| Bounded Context | Owns | Does Not Own |
-| :-- | :-- | :-- |
-| Organization Registry | Organization identity, type, status, and organization-relevant relationships | Subscriber commercial state, Client Contract, HCM hierarchy |
-| Tenant Lifecycle | Tenant identity, status, sponsorship references, lifecycle, isolation/residency profile reference | physical infrastructure or Product data |
-| Workspace Lifecycle | Workspace identity, type, status, and parent Tenant | BPO workstream, HCM department, Product, Application |
-| Membership | Principal/workload relationship to Tenant or Workspace, status, validity, provenance, security version | Principal credentials, Product roles or permissions |
-| Invitation & Onboarding | Membership invitation intent, sponsor, expiry, prerequisite coordination | identity proof or authenticator enrollment |
-| Operating Context | eligible Tenant/Workspace contexts, context version, switching and containment rules | Product authorization |
-| Tenancy Administration | Tenant/Workspace administrative roles and provider cross-tenant scope | Product administration or business approvals |
-| Projection & Reconciliation | lifecycle publication, bootstrap, replay, consumer freshness, divergence detection | consumer-owned cache or persistence |
-| Tenant Offboarding | access freeze and cross-domain retirement coordination | Product-domain deletion, export, or legal-hold authority |
+| Bounded Context             | Owns                                                                                                   | Does Not Own                                                |
+| :-------------------------- | :----------------------------------------------------------------------------------------------------- | :---------------------------------------------------------- |
+| Organization Registry       | Organization identity, type, status, and organization-relevant relationships                           | Subscriber commercial state, Client Contract, HCM hierarchy |
+| Tenant Lifecycle            | Tenant identity, status, sponsorship references, lifecycle, isolation/residency profile reference      | physical infrastructure or Product data                     |
+| Workspace Lifecycle         | Workspace identity, type, status, and parent Tenant                                                    | BPO workstream, HCM department, Product, Application        |
+| Membership                  | Principal/workload relationship to Tenant or Workspace, status, validity, provenance, security version | Principal credentials, Product roles or permissions         |
+| Invitation & Onboarding     | Membership invitation intent, sponsor, expiry, prerequisite coordination                               | identity proof or authenticator enrollment                  |
+| Operating Context           | eligible Tenant/Workspace contexts, context version, switching and containment rules                   | Product authorization                                       |
+| Tenancy Administration      | Tenant/Workspace administrative roles and provider cross-tenant scope                                  | Product administration or business approvals                |
+| Projection & Reconciliation | lifecycle publication, bootstrap, replay, consumer freshness, divergence detection                     | consumer-owned cache or persistence                         |
+| Tenant Offboarding          | access freeze and cross-domain retirement coordination                                                 | Product-domain deletion, export, or legal-hold authority    |
 
 These contexts may be realized by one or more physical systems without changing the PAD.
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Organization | Legal or business party participating as provider, customer, partner, publisher, or another governed type. |
-| Provider Organization | Organization operating the Scnehaux Enterprise Cloud; initially ATI Business Group. |
-| Customer Organization | Organization consuming ATI products or managed services. |
-| Publisher Organization | Organization accountable for Product or Application ownership through the appropriate catalog. |
-| Subscriber Account | Commercial purchaser of a Product Offering; authoritative outside this platform. |
-| Client Account | BPO service-delivery relationship governed by Contract and Workstream authorities. |
-| Tenant | Technical isolation, configuration, data, and operating boundary. |
-| Workspace | Collaboration or operating context inside exactly one Tenant. |
-| Principal | Stable human, service, workload, or governed-agent security subject owned by Identity. |
-| Membership | Time-bounded contextual relationship between a Principal/workload and a Tenant or Workspace. |
-| Membership Type | Classification of the contextual relationship, not a Product permission. |
-| Operating Context | Trusted Tenant and optional Workspace context in which a Principal or workload acts. |
-| Context Switch | Selection of another valid Membership context without replacing the Principal. |
-| Tenant Administrator | Role authorized only for governed tenancy administration. |
-| Cross-Tenant Administration | Explicit provider authority spanning a bounded set of Tenants or operations. |
-| Invitation Intent | Request to establish future Membership; not an identity proof or credential. |
-| Isolation Profile | Governed tenant-isolation requirement referenced by runtime and data systems. |
-| Residency Profile | Governed geographic or sovereignty requirement associated with a Tenant. |
-| Desired Provisioning State | Tenant lifecycle intent sent to the provisioning authority. |
-| Realized Provisioning State | Infrastructure/configuration state reported by the provisioning authority. |
-| Projection | Non-authoritative local representation of Tenant, Workspace, or Membership facts. |
-| Membership Security Version | Monotonic contextual-access version used by distributed consumers. |
-| Offboarding | Coordinated access freeze, export/retention obligation, resource retirement, and final Tenant closure. |
+| Term                        | Meaning                                                                                                    |
+| :-------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| Organization                | Legal or business party participating as provider, customer, partner, publisher, or another governed type. |
+| Provider Organization       | Organization operating the Scnehaux Enterprise Cloud; initially ATI Business Group.                        |
+| Customer Organization       | Organization consuming ATI products or managed services.                                                   |
+| Publisher Organization      | Organization accountable for Product or Application ownership through the appropriate catalog.             |
+| Subscriber Account          | Commercial purchaser of a Product Offering; authoritative outside this platform.                           |
+| Client Account              | BPO service-delivery relationship governed by Contract and Workstream authorities.                         |
+| Tenant                      | Technical isolation, configuration, data, and operating boundary.                                          |
+| Workspace                   | Collaboration or operating context inside exactly one Tenant.                                              |
+| Principal                   | Stable human, service, workload, or governed-agent security subject owned by Identity.                     |
+| Membership                  | Time-bounded contextual relationship between a Principal/workload and a Tenant or Workspace.               |
+| Membership Type             | Classification of the contextual relationship, not a Product permission.                                   |
+| Operating Context           | Trusted Tenant and optional Workspace context in which a Principal or workload acts.                       |
+| Context Switch              | Selection of another valid Membership context without replacing the Principal.                             |
+| Tenant Administrator        | Role authorized only for governed tenancy administration.                                                  |
+| Cross-Tenant Administration | Explicit provider authority spanning a bounded set of Tenants or operations.                               |
+| Invitation Intent           | Request to establish future Membership; not an identity proof or credential.                               |
+| Isolation Profile           | Governed tenant-isolation requirement referenced by runtime and data systems.                              |
+| Residency Profile           | Governed geographic or sovereignty requirement associated with a Tenant.                                   |
+| Desired Provisioning State  | Tenant lifecycle intent sent to the provisioning authority.                                                |
+| Realized Provisioning State | Infrastructure/configuration state reported by the provisioning authority.                                 |
+| Projection                  | Non-authoritative local representation of Tenant, Workspace, or Membership facts.                          |
+| Membership Security Version | Monotonic contextual-access version used by distributed consumers.                                         |
+| Offboarding                 | Coordinated access freeze, export/retention obligation, resource retirement, and final Tenant closure.     |
 
 ### 3.3 Domain Invariants
 
@@ -303,17 +303,17 @@ Cross-tenant administration additionally requires bounded provider scope, elevat
 
 ### 5.3 Data Classification
 
-| Data Class | Examples | Classification |
-| :-- | :-- | :-- |
-| Organization Data | organization identity, type, relationship, status | Internal or Restricted by field |
-| Tenant Data | Tenant identifier, lifecycle, isolation/residency references | Restricted |
-| Workspace Data | Workspace identifier, type, status, parent Tenant | Restricted |
-| Membership Data | Principal reference, context, status, validity, provenance | Restricted |
-| Administrative Data | owner/admin assignment, approval, provider scope | Restricted |
-| Invitation Data | target reference, sponsor, expiry, status | Restricted |
-| Projection Metadata | lifecycle/security version, cursor, freshness | Internal or Restricted |
-| Security Events | suspension, revocation, cross-tenant action | Restricted |
-| Public Presentation Reference | explicitly published Tenant/organization branding | Public only when approved |
+| Data Class                    | Examples                                                     | Classification                  |
+| :---------------------------- | :----------------------------------------------------------- | :------------------------------ |
+| Organization Data             | organization identity, type, relationship, status            | Internal or Restricted by field |
+| Tenant Data                   | Tenant identifier, lifecycle, isolation/residency references | Restricted                      |
+| Workspace Data                | Workspace identifier, type, status, parent Tenant            | Restricted                      |
+| Membership Data               | Principal reference, context, status, validity, provenance   | Restricted                      |
+| Administrative Data           | owner/admin assignment, approval, provider scope             | Restricted                      |
+| Invitation Data               | target reference, sponsor, expiry, status                    | Restricted                      |
+| Projection Metadata           | lifecycle/security version, cursor, freshness                | Internal or Restricted          |
+| Security Events               | suspension, revocation, cross-tenant action                  | Restricted                      |
+| Public Presentation Reference | explicitly published Tenant/organization branding            | Public only when approved       |
 
 The platform does not retain authentication secrets, unrestricted identity profiles, Product business records, payroll records, Contract documents, or payment data.
 

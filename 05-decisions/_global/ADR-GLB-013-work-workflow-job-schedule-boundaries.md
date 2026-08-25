@@ -22,8 +22,8 @@ Establish enterprise semantic boundaries for Work Item, Workflow, Job, Schedule,
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type     | Reviewers                                                                               | Approver               |
+| :--------- | :------- | :----------- | :-------------------------------------------------------------------------------------- | :--------------------- |
 | 2026-08-23 | accepted | foundational | Architecture Authority, Product Engineering, Workflow, Scheduling, Platform Engineering | Architecture Authority |
 
 ## 3. Context

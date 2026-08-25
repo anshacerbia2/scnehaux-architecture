@@ -21,11 +21,11 @@ Mandating the Transactional Outbox Pattern for Secure Asynchronous Domain Event 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
-| 2026-08-21 | accepted | foundational | Architecture Review Board | Enterprise Architect |
-| 2026-08-23 | accepted | foundational | Architecture Authority, Platform Engineering | Architecture Authority |
+| Date       | Status     | ADR Type     | Reviewers                                    | Approver               |
+| ---------- | ---------- | ------------ | -------------------------------------------- | ---------------------- |
+| 2026-05-01 | accepted   | foundational | Architecture Review Board                    | Enterprise Architect   |
+| 2026-08-21 | accepted   | foundational | Architecture Review Board                    | Enterprise Architect   |
+| 2026-08-23 | accepted   | foundational | Architecture Authority, Platform Engineering | Architecture Authority |
 | 2026-08-24 | superseded | foundational | Architecture Authority, Platform Engineering | Architecture Authority |
 
 The 2026-08-21 entry records two corrections. The broker product is fixed to the Kafka protocol in section 5; the original text named a different product in passing without ever deciding one, so the dispatcher was written against a delivery contract no artifact had chosen. The outbox table is also renamed from `auth_outbox` to `platform.outbox`, matching the schema `foundation-platform` ships. The transactional-outbox decision itself is unchanged.
@@ -79,16 +79,17 @@ A central Outbox database or network service **MUST NOT** be inserted into the s
 Shared outbox libraries/schema conventions, relay implementations, CDC infrastructure, Kafka producer adapters, event-schema tooling, telemetry, dashboards, and retention automation are allowed. Shared machinery does not move ownership of the outbox record away from the source Product/Platform transaction.
 
 The pattern is required when a local authoritative transaction and an external event must be logically atomic. A service that only consumes events, or a flow with no local authoritative mutation to coordinate, does not need an outbox merely because it is event-driven.
+
 ### Broker Product: the Kafka Protocol
 
 Both stages publish into the same broker, and that broker is fixed here because the dispatcher is written against one delivery contract rather than against a family of them.
 
 **We commit to the Kafka protocol, not to a single Kafka distribution.** The protocol is the contract; the implementation is an operational choice per environment:
 
-| Environment | Implementation |
-| :-- | :-- |
-| Production | A managed Kafka service with a replication factor of `3` spread across availability zones |
-| Local development and CI | A single-binary Kafka-API broker, or Kafka in KRaft mode |
+| Environment              | Implementation                                                                            |
+| :----------------------- | :---------------------------------------------------------------------------------------- |
+| Production               | A managed Kafka service with a replication factor of `3` spread across availability zones |
+| Local development and CI | A single-binary Kafka-API broker, or Kafka in KRaft mode                                  |
 
 Four properties decided it:
 
@@ -98,7 +99,6 @@ Four properties decided it:
 4. **The analytical replication path in `EAD-003` uses the same backbone.** Change Data Capture into the analytical estate is a first-class, widely deployed Kafka capability, so Stage 2 and the analytical estate share one transport instead of two.
 
 **Ordering is per partition, never global.** The stream position allocated by the outbox is monotonic within a publisher, and Kafka preserves order only inside one partition. Producers therefore partition by `aggregate_id`, which yields per-aggregate ordering — the guarantee consumers depend on. Consumers reconcile authority through version comparison and deduplicate on `event_id`, so a later position arriving before an earlier one is a handled case rather than a defect. A producer that partitions on any other key silently removes the per-aggregate guarantee while every test continues to pass.
-
 
 ### Stage 1: Polling with SKIP LOCKED (Pragmatic Default)
 
@@ -222,6 +222,7 @@ None.
 - **Pros**: The longest production record of the candidates as a message broker, mature routing topologies, native dead-letter exchanges, per-queue priority, and quorum queues for high availability. The Streams feature supplies an append-only log with offset-based consumption, so the replay requirement is reachable.
 - **Cons**: Reaching the replay requirement means adopting Streams alongside classic queues, which places two delivery models in one deployment. The schema-registry and Change Data Capture ecosystems are markedly smaller than the Kafka protocol's, so both enterprise mandates again become bespoke work.
 - **Why Rejected**: Capable of the mechanics, and it carries the same two ecosystem gaps as Alternative C while adding a second delivery model to operate.
+
 ### Alternative E: Centralized Outbox Platform / Database
 
 - **Pros**: One operational surface and one apparent event-publishing service

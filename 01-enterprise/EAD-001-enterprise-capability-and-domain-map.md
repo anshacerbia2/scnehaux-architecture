@@ -78,39 +78,39 @@ The Platform Plane remains grouped into five enduring concern families. These ro
 
 ### 4.1 Business Goals
 
-| ID | Business Goal | Architectural Consequence |
-| :-- | :-- | :-- |
-| G1 | Transform Travel Operations first while supporting HCM, ERP, and adjacent enterprise Products | Business Plane remains value-stream and authority driven |
-| G2 | Reuse trusted capability without creating a god-platform | Shared Platforms own bounded Platform semantics, never consuming Product business outcomes |
-| G3 | Support organizations, tenants, workspaces, Products, applications, people, workloads, and agents | Identity, Organization, application trust, entitlement, workforce business data, and authorization remain distinct |
-| G4 | Build durable vertical AI Products without locking Product logic to one model/provider | Model & Inference, Agent Runtime, Knowledge & Retrieval, and Product semantics are separate authorities |
-| G5 | Reduce repeated engineering friction without platform sprawl | Platformization requires structural need, friction/reuse evidence, runtime economics, or material risk reduction |
-| G6 | Preserve external client and industry systems of record | External authority remains explicit; ATI owns execution and reconciliation where appropriate |
-| G7 | Keep architecture implementable and evolvable | PAD approval locks logical boundary; physical design remains a SAD decision |
+| ID  | Business Goal                                                                                     | Architectural Consequence                                                                                          |
+| :-- | :------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------- |
+| G1  | Transform Travel Operations first while supporting HCM, ERP, and adjacent enterprise Products     | Business Plane remains value-stream and authority driven                                                           |
+| G2  | Reuse trusted capability without creating a god-platform                                          | Shared Platforms own bounded Platform semantics, never consuming Product business outcomes                         |
+| G3  | Support organizations, tenants, workspaces, Products, applications, people, workloads, and agents | Identity, Organization, application trust, entitlement, workforce business data, and authorization remain distinct |
+| G4  | Build durable vertical AI Products without locking Product logic to one model/provider            | Model & Inference, Agent Runtime, Knowledge & Retrieval, and Product semantics are separate authorities            |
+| G5  | Reduce repeated engineering friction without platform sprawl                                      | Platformization requires structural need, friction/reuse evidence, runtime economics, or material risk reduction   |
+| G6  | Preserve external client and industry systems of record                                           | External authority remains explicit; ATI owns execution and reconciliation where appropriate                       |
+| G7  | Keep architecture implementable and evolvable                                                     | PAD approval locks logical boundary; physical design remains a SAD decision                                        |
 
 ### 4.2 Value Streams to Capability Families
 
-| Value Stream | Primary Capability Families |
-| :-- | :-- |
-| Travel servicing and operations | Travel Products, Work Management, Workflow, Rules, Artifact, Notification, Integration, Knowledge, AI |
-| Workforce lifecycle | HCM, Identity, Organization, Work Management, Workflow, Workspace Experience, Knowledge, AI |
-| Finance and enterprise resource operations | ERP target Products, Workflow, Rules, Artifact, Integration, Audit |
-| Client/service onboarding and BPO operations | BPO Products, Organization, Work Management, Workflow, Notification |
-| Knowledge-assisted operations | Product domains, Knowledge & Retrieval, AI Enablement, Workspace Experience |
-| Software delivery and runtime | Engineering & Runtime |
-| Enterprise control and assurance | Foundation & Control plus Governance & Assurance |
+| Value Stream                                 | Primary Capability Families                                                                           |
+| :------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
+| Travel servicing and operations              | Travel Products, Work Management, Workflow, Rules, Artifact, Notification, Integration, Knowledge, AI |
+| Workforce lifecycle                          | HCM, Identity, Organization, Work Management, Workflow, Workspace Experience, Knowledge, AI           |
+| Finance and enterprise resource operations   | ERP target Products, Workflow, Rules, Artifact, Integration, Audit                                    |
+| Client/service onboarding and BPO operations | BPO Products, Organization, Work Management, Workflow, Notification                                   |
+| Knowledge-assisted operations                | Product domains, Knowledge & Retrieval, AI Enablement, Workspace Experience                           |
+| Software delivery and runtime                | Engineering & Runtime                                                                                 |
+| Enterprise control and assurance             | Foundation & Control plus Governance & Assurance                                                      |
 
 ### 4.3 Lessons Incorporated
 
-| Lesson | Enterprise Response |
-| :-- | :-- |
-| Application and team inventories were mistaken for domain architecture | Plane roots and domain boundaries derive from enduring responsibility and authority |
-| "Platform provides mechanism, Product provides meaning" was too absolute | Platforms own meaningful semantics within their bounded capability; Products retain authoritative Product semantics and outcomes |
-| Top-down capability mapping alone can over-platformize | Platform discovery combines structural need with bottom-up friction, measured reuse, and runtime evidence |
-| Developer experience was treated as secondary | Platform Products measure adoption, lead time, cognitive load, support burden, reliability, and cost |
-| Resilience was confused with overlapping authority | Projections, caches, replicas, and local enforcement may duplicate representation; canonical authority does not silently duplicate |
-| HCM workforce meaning was conflated with technical Organization/Workspace context | HCM owns employee/workforce business truth; Organization owns Tenant/Workspace/Membership operating context |
-| AI, RAG, knowledge, agents, and Product workflow were treated as one platform | Model & Inference, Agent Runtime, Knowledge & Retrieval, Workflow, and Product semantics are distinct bounded capabilities |
+| Lesson                                                                            | Enterprise Response                                                                                                                |
+| :-------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| Application and team inventories were mistaken for domain architecture            | Plane roots and domain boundaries derive from enduring responsibility and authority                                                |
+| "Platform provides mechanism, Product provides meaning" was too absolute          | Platforms own meaningful semantics within their bounded capability; Products retain authoritative Product semantics and outcomes   |
+| Top-down capability mapping alone can over-platformize                            | Platform discovery combines structural need with bottom-up friction, measured reuse, and runtime evidence                          |
+| Developer experience was treated as secondary                                     | Platform Products measure adoption, lead time, cognitive load, support burden, reliability, and cost                               |
+| Resilience was confused with overlapping authority                                | Projections, caches, replicas, and local enforcement may duplicate representation; canonical authority does not silently duplicate |
+| HCM workforce meaning was conflated with technical Organization/Workspace context | HCM owns employee/workforce business truth; Organization owns Tenant/Workspace/Membership operating context                        |
+| AI, RAG, knowledge, agents, and Product workflow were treated as one platform     | Model & Inference, Agent Runtime, Knowledge & Retrieval, Workflow, and Product semantics are distinct bounded capabilities         |
 
 ## 5. Architecture Model
 
@@ -190,14 +190,14 @@ The capability map is logical. A box does not imply an independent service, data
 
 ### 5.2 Business Plane
 
-| Business Family | Authoritative Responsibility | Posture |
-| :-- | :-- | :-- |
-| Travel Operations | Travel-domain operational state, decisions, rules, exceptions, reconciliation, and outcomes | Primary transformation family |
-| Adjacent / BPO Service Domains | Client-service operational outcomes, quality, service-delivery state, and domain-specific execution | Adjacent business family |
-| HCM | Employee, Employment, HR organization, position, attendance, leave, talent, workforce business truth | Approved supporting Product |
-| ERP | Finance, accounting, procurement, inventory, and related enterprise-resource business truth as bounded through future PADs | Target supporting Product family |
-| Workforce Management | Staffing, roster, capacity, shift, adherence, and operational workforce-management semantics if separately justified | Candidate Business Product, not horizontal Platform |
-| Product Experience | Domain-specific journey and business interaction semantics | Product-owned |
+| Business Family                | Authoritative Responsibility                                                                                               | Posture                                             |
+| :----------------------------- | :------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- |
+| Travel Operations              | Travel-domain operational state, decisions, rules, exceptions, reconciliation, and outcomes                                | Primary transformation family                       |
+| Adjacent / BPO Service Domains | Client-service operational outcomes, quality, service-delivery state, and domain-specific execution                        | Adjacent business family                            |
+| HCM                            | Employee, Employment, HR organization, position, attendance, leave, talent, workforce business truth                       | Approved supporting Product                         |
+| ERP                            | Finance, accounting, procurement, inventory, and related enterprise-resource business truth as bounded through future PADs | Target supporting Product family                    |
+| Workforce Management           | Staffing, roster, capacity, shift, adherence, and operational workforce-management semantics if separately justified       | Candidate Business Product, not horizontal Platform |
+| Product Experience             | Domain-specific journey and business interaction semantics                                                                 | Product-owned                                       |
 
 A work function, department, screen, database, or existing application does not automatically become a Business Product.
 
@@ -254,18 +254,18 @@ Knowledge Graph is a first-class knowledge representation and graph retrieval is
 
 ### 5.4 Canonical Work and Execution Taxonomy
 
-| Term | Meaning | Primary Authority |
-| :-- | :-- | :-- |
-| Work Item | Business/operational work requiring ownership or action | Work Management when shared; otherwise owning Product |
-| Case | Durable grouping of related operational work | Work Management when shared; otherwise owning Product |
-| Workflow | Durable multi-step process coordination | Workflow Platform |
-| Job | Bounded technical unit of background execution | Owning runtime/job-execution capability; business meaning remains Product-owned |
-| Schedule | Durable temporal registration and occurrence lifecycle | Scheduling Platform |
-| Worker | Runtime process executing a registered handler | System/runtime, never business authority by itself |
-| Queue | Buffering, ordering, assignment, or dispatch mechanism whose semantics depend on context | Owning capability |
-| Workspace | Canonical Tenant operating context | Organization Platform |
-| Workspace Experience | Human work environment and cross-Product composition | Workspace Experience Platform |
-| Workforce | People/employment/staffing business concept | HCM or future Workforce Management Product |
+| Term                 | Meaning                                                                                  | Primary Authority                                                               |
+| :------------------- | :--------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
+| Work Item            | Business/operational work requiring ownership or action                                  | Work Management when shared; otherwise owning Product                           |
+| Case                 | Durable grouping of related operational work                                             | Work Management when shared; otherwise owning Product                           |
+| Workflow             | Durable multi-step process coordination                                                  | Workflow Platform                                                               |
+| Job                  | Bounded technical unit of background execution                                           | Owning runtime/job-execution capability; business meaning remains Product-owned |
+| Schedule             | Durable temporal registration and occurrence lifecycle                                   | Scheduling Platform                                                             |
+| Worker               | Runtime process executing a registered handler                                           | System/runtime, never business authority by itself                              |
+| Queue                | Buffering, ordering, assignment, or dispatch mechanism whose semantics depend on context | Owning capability                                                               |
+| Workspace            | Canonical Tenant operating context                                                       | Organization Platform                                                           |
+| Workspace Experience | Human work environment and cross-Product composition                                     | Workspace Experience Platform                                                   |
+| Workforce            | People/employment/staffing business concept                                              | HCM or future Workforce Management Product                                      |
 
 ### 5.5 AI, Knowledge, and Vertical Product Boundary
 
@@ -345,35 +345,35 @@ PAD approval is not physical-system design approval.
 
 ### 5.8 Domain Ownership Matrix
 
-| Concern | Primary Authority |
-| :-- | :-- |
-| Business Product semantics and outcomes | Owning Business Product/domain |
-| Principal and authentication trust | Identity & Access |
-| Organization, Tenant, Workspace, Membership | Organization |
-| Shared work lifecycle | Work Management |
-| Durable multi-step process state | Workflow |
-| Deterministic rule runtime lifecycle | Rules & Decisioning |
-| Durable future temporal state | Scheduling |
-| Knowledge Asset/retrieval lifecycle | Knowledge & Retrieval |
-| Model/provider access and bounded inference execution | Model & Inference |
-| Durable Agent execution, Harness, context assembly, Tool Binding, and run/session memory mechanics | Agent Runtime |
-| Artifact content/version lifecycle | Artifact & Document |
-| Evidence lifecycle | Audit & Evidence |
-| Cross-cutting governance requirement | Named Governance Authority |
+| Concern                                                                                            | Primary Authority              |
+| :------------------------------------------------------------------------------------------------- | :----------------------------- |
+| Business Product semantics and outcomes                                                            | Owning Business Product/domain |
+| Principal and authentication trust                                                                 | Identity & Access              |
+| Organization, Tenant, Workspace, Membership                                                        | Organization                   |
+| Shared work lifecycle                                                                              | Work Management                |
+| Durable multi-step process state                                                                   | Workflow                       |
+| Deterministic rule runtime lifecycle                                                               | Rules & Decisioning            |
+| Durable future temporal state                                                                      | Scheduling                     |
+| Knowledge Asset/retrieval lifecycle                                                                | Knowledge & Retrieval          |
+| Model/provider access and bounded inference execution                                              | Model & Inference              |
+| Durable Agent execution, Harness, context assembly, Tool Binding, and run/session memory mechanics | Agent Runtime                  |
+| Artifact content/version lifecycle                                                                 | Artifact & Document            |
+| Evidence lifecycle                                                                                 | Audit & Evidence               |
+| Cross-cutting governance requirement                                                               | Named Governance Authority     |
 
 A fact or responsibility has one primary authority even when representations, projections, enforcement, or operational participation are distributed.
 
 ### 5.9 Strategic Domain Classification
 
-| Classification | Default Posture |
-| :-- | :-- |
-| Core Business Product | Build/evolve from domain and operational evidence |
-| Foundational Control Capability | Own architecture; adopt mature substrate/kernels where safer |
-| Shared Execution Capability | Approve logical Platform only when authority/reuse/friction justifies |
-| Shared Knowledge/AI Capability | Share governed substrate while preserving Product/source authority |
-| Shared Experience Capability | Optimize reusable interaction/composition without Product-journey ownership |
-| Shared Engineering Capability | Standardize/pave where operational economics justify |
-| Commodity Substrate | Prefer proven/managed technology behind Scnehaux contracts |
+| Classification                  | Default Posture                                                             |
+| :------------------------------ | :-------------------------------------------------------------------------- |
+| Core Business Product           | Build/evolve from domain and operational evidence                           |
+| Foundational Control Capability | Own architecture; adopt mature substrate/kernels where safer                |
+| Shared Execution Capability     | Approve logical Platform only when authority/reuse/friction justifies       |
+| Shared Knowledge/AI Capability  | Share governed substrate while preserving Product/source authority          |
+| Shared Experience Capability    | Optimize reusable interaction/composition without Product-journey ownership |
+| Shared Engineering Capability   | Standardize/pave where operational economics justify                        |
+| Commodity Substrate             | Prefer proven/managed technology behind Scnehaux contracts                  |
 
 Classification determines investment posture, not deployment topology.
 
@@ -456,40 +456,40 @@ Governance defines constraints and evidence; Products and Platforms execute thei
 
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected | Debt Accepted |
-| :-- | :-- | :-- |
-| Organization chart as architecture | Team structure changes faster than authority | Architecture-to-team alignment requires deliberate ownership work |
-| One Platform per reusable idea | Creates Platform sprawl and shared dependency cost | Some duplication is accepted until qualification is met |
-| Central Business Execution god-platform | Absorbs Product semantics and creates universal blast radius | Multiple bounded Platforms and local mechanisms coexist |
-| AI god-platform owning knowledge, workflow, and Product actions | Creates ambiguous authority and provider lock-in | Cross-platform contracts and additional integration discipline |
-| Central Data team owns all Product data | Breaks domain ownership and creates distributed monolith | Domain data products and shared self-service data capability |
-| Workforce as horizontal Platform | Workforce is business meaning, not generic machinery | HCM and future Workforce Management remain Business Products |
+| Alternative                                                     | Why Rejected                                                 | Debt Accepted                                                     |
+| :-------------------------------------------------------------- | :----------------------------------------------------------- | :---------------------------------------------------------------- |
+| Organization chart as architecture                              | Team structure changes faster than authority                 | Architecture-to-team alignment requires deliberate ownership work |
+| One Platform per reusable idea                                  | Creates Platform sprawl and shared dependency cost           | Some duplication is accepted until qualification is met           |
+| Central Business Execution god-platform                         | Absorbs Product semantics and creates universal blast radius | Multiple bounded Platforms and local mechanisms coexist           |
+| AI god-platform owning knowledge, workflow, and Product actions | Creates ambiguous authority and provider lock-in             | Cross-platform contracts and additional integration discipline    |
+| Central Data team owns all Product data                         | Breaks domain ownership and creates distributed monolith     | Domain data products and shared self-service data capability      |
+| Workforce as horizontal Platform                                | Workforce is business meaning, not generic machinery         | HCM and future Workforce Management remain Business Products      |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Dependency | Potential Blast Radius | Enterprise Posture |
-| :-- | :-- | :-- |
-| Identity / trust control | Authentication and trust establishment | Local validation, bounded sessions, tested recovery |
-| Organization control | New context changes | Locally usable context/projections where safe |
-| Event & Messaging | Delayed asynchronous work | Durable source state, replay, backpressure |
-| Scheduling | Delayed future triggers | Persisted occurrences and bounded misfire recovery |
-| Work Management / Workflow | Delayed shared operational coordination | Product authority remains intact; manual/local fallback where designed |
-| Knowledge & Retrieval | Search/RAG degradation | Product transactional operation remains independent where safe |
-| Model provider / Model & Inference | Bounded inference degradation | Evaluated provider fallback, explicit unavailability, or Product non-AI fallback |
-| Agent Runtime | Agentic execution degradation | Durable Agent Run state survives restart; Product/Workflow authority remains intact and unsafe automation fails closed |
-| Workspace Experience | Cross-Product shell degradation | Direct Product access or bounded degraded experience where designed |
-| Governance tooling | Delayed assurance/admin activity | Existing compliant runtime continues; policy enforcement is not a universal runtime dependency |
+| Dependency                         | Potential Blast Radius                  | Enterprise Posture                                                                                                     |
+| :--------------------------------- | :-------------------------------------- | :--------------------------------------------------------------------------------------------------------------------- |
+| Identity / trust control           | Authentication and trust establishment  | Local validation, bounded sessions, tested recovery                                                                    |
+| Organization control               | New context changes                     | Locally usable context/projections where safe                                                                          |
+| Event & Messaging                  | Delayed asynchronous work               | Durable source state, replay, backpressure                                                                             |
+| Scheduling                         | Delayed future triggers                 | Persisted occurrences and bounded misfire recovery                                                                     |
+| Work Management / Workflow         | Delayed shared operational coordination | Product authority remains intact; manual/local fallback where designed                                                 |
+| Knowledge & Retrieval              | Search/RAG degradation                  | Product transactional operation remains independent where safe                                                         |
+| Model provider / Model & Inference | Bounded inference degradation           | Evaluated provider fallback, explicit unavailability, or Product non-AI fallback                                       |
+| Agent Runtime                      | Agentic execution degradation           | Durable Agent Run state survives restart; Product/Workflow authority remains intact and unsafe automation fails closed |
+| Workspace Experience               | Cross-Product shell degradation         | Direct Product access or bounded degraded experience where designed                                                    |
+| Governance tooling                 | Delayed assurance/admin activity        | Existing compliant runtime continues; policy enforcement is not a universal runtime dependency                         |
 
 ## 9. Ownership
 
-| Responsibility | Accountable |
-| :-- | :-- |
-| Enterprise capability taxonomy | Architecture Authority |
-| Business meaning and outcome | Product domain owner |
-| Shared Platform semantics and lifecycle | Platform Product owner |
-| Technology/runtime realization | System owner |
-| Cross-cutting governance requirements | Authorities defined by EAD-007 |
-| Team alignment | Engineering/Business leadership informed by architecture boundaries |
+| Responsibility                          | Accountable                                                         |
+| :-------------------------------------- | :------------------------------------------------------------------ |
+| Enterprise capability taxonomy          | Architecture Authority                                              |
+| Business meaning and outcome            | Product domain owner                                                |
+| Shared Platform semantics and lifecycle | Platform Product owner                                              |
+| Technology/runtime realization          | System owner                                                        |
+| Cross-cutting governance requirements   | Authorities defined by EAD-007                                      |
+| Team alignment                          | Engineering/Business leadership informed by architecture boundaries |
 
 ## 10. Dependencies
 

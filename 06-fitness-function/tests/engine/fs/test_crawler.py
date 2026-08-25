@@ -172,12 +172,14 @@ def test_gather_markdown_paths_unallowed_directory_in_tree(tmp_path):
     allowed = repo / "00-governance"
     allowed.mkdir()
     (allowed / "gdc.md").write_text("# GDC")
-    
+
     unallowed = repo / "unallowed_subdir"
     unallowed.mkdir()
     (unallowed / "extra.md").write_text("# Extra")
 
     # Scanning whole repo with allowed_root_dirs set to {"00-governance"}
-    files = gather_markdown_paths(str(repo), repo_root=str(repo), allowed_root_dirs={"00-governance"})
+    files = gather_markdown_paths(
+        str(repo), repo_root=str(repo), allowed_root_dirs={"00-governance"}
+    )
     assert any("gdc.md" in f for f in files)
     assert not any("extra.md" in f for f in files)

@@ -125,10 +125,10 @@ graph LR
 
 This system is realized by two repositories, because one of its containers is rendered by Keycloak and the rest are not:
 
-| Repository | Containers realized | Toolchain | Release cadence |
-| :-- | :-- | :-- | :-- |
-| `identity-kernel` | Hosted Login Theme/Extension | Keycloak theme assets | Bound to the pinned Keycloak release |
-| `identity-experience` | Account Security Experience, Identity Admin Portal, Developer Identity Console, Identity Experience BFF | TypeScript | Independent |
+| Repository            | Containers realized                                                                                     | Toolchain             | Release cadence                      |
+| :-------------------- | :------------------------------------------------------------------------------------------------------ | :-------------------- | :----------------------------------- |
+| `identity-kernel`     | Hosted Login Theme/Extension                                                                            | Keycloak theme assets | Bound to the pinned Keycloak release |
+| `identity-experience` | Account Security Experience, Identity Admin Portal, Developer Identity Console, Identity Experience BFF | TypeScript            | Independent                          |
 
 The hosted login pages are Keycloak-rendered through supported theme extension points, so they are versioned and upgrade-tested alongside the kernel that renders them. Placing them with the TypeScript applications would decouple them from the release whose template contract they depend on.
 
@@ -465,15 +465,15 @@ Runbooks cover:
 
 ### 8.8 Blast Radius
 
-| Failure | Blast Radius | Containment |
-| :-- | :-- | :-- |
-| Login theme asset regression | Authentication presentation | rollback immutable theme artifact; runtime remains intact |
-| Account Experience | Self-service security management | login/token issuance continues; support path activated |
-| Admin Portal/BFF | Identity administration | ordinary login continues; restricted break-fix path only |
-| Developer Console | new Application onboarding | existing clients and login continue |
-| UI Platform package registry | new builds | deployed immutable assets continue |
-| Browser session compromise | one Experience session | revoke BFF and Keycloak session, rotate cookies, investigate |
-| Cross-Tenant UI defect | affected administrative data exposure | fail closed, contain actor/session, evidence and incident process |
+| Failure                      | Blast Radius                          | Containment                                                       |
+| :--------------------------- | :------------------------------------ | :---------------------------------------------------------------- |
+| Login theme asset regression | Authentication presentation           | rollback immutable theme artifact; runtime remains intact         |
+| Account Experience           | Self-service security management      | login/token issuance continues; support path activated            |
+| Admin Portal/BFF             | Identity administration               | ordinary login continues; restricted break-fix path only          |
+| Developer Console            | new Application onboarding            | existing clients and login continue                               |
+| UI Platform package registry | new builds                            | deployed immutable assets continue                                |
+| Browser session compromise   | one Experience session                | revoke BFF and Keycloak session, rotate cookies, investigate      |
+| Cross-Tenant UI defect       | affected administrative data exposure | fail closed, contain actor/session, evidence and incident process |
 
 ## 9. Deployment Strategy
 

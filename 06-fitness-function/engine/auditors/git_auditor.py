@@ -1,8 +1,6 @@
 import subprocess
 import os
 import logging
-from engine.config.severity import SeverityRule
-from engine.parsing.markdown_ast import parse_frontmatter
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,6 @@ def audit_version_bump(
     Disabled per project requirements (all docs stay at 1.0.0 and created_date 2026-01-01).
     """
     return []
-
 
     # # Try to find the git root. If we are not in a git repo, skip this audit.
     # try:

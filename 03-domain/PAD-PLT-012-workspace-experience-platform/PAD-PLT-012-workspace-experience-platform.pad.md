@@ -127,19 +127,19 @@ Workspace Experience composes contracts and navigation. Protected Product reques
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Workspace Experience | Human-facing digital environment that composes Product experiences |
-| Operating Workspace | Organization-owned canonical operating context |
-| Application Shell | Shared chrome, navigation, layout, and composition boundary |
-| Product Surface | Product-owned UI mounted, embedded, linked, or otherwise composed into the experience |
-| Active Context | Locally represented current Organization, Tenant, and Workspace context |
-| Context Switch | User-initiated request to change active Organization-owned operating context |
-| My Work | Composed view of Work Management contracts and not authoritative work state |
-| Composition Slot | Governed location for Product, search, notification, or copilot experience |
-| Deep Link | Stable navigation reference into a Product-owned route and context |
-| Experience Preference | User-facing presentation preference without Product business authority |
-| Degraded Surface | Explicit representation that one composed capability is unavailable while unrelated surfaces remain usable |
+| Term                  | Meaning                                                                                                    |
+| :-------------------- | :--------------------------------------------------------------------------------------------------------- |
+| Workspace Experience  | Human-facing digital environment that composes Product experiences                                         |
+| Operating Workspace   | Organization-owned canonical operating context                                                             |
+| Application Shell     | Shared chrome, navigation, layout, and composition boundary                                                |
+| Product Surface       | Product-owned UI mounted, embedded, linked, or otherwise composed into the experience                      |
+| Active Context        | Locally represented current Organization, Tenant, and Workspace context                                    |
+| Context Switch        | User-initiated request to change active Organization-owned operating context                               |
+| My Work               | Composed view of Work Management contracts and not authoritative work state                                |
+| Composition Slot      | Governed location for Product, search, notification, or copilot experience                                 |
+| Deep Link             | Stable navigation reference into a Product-owned route and context                                         |
+| Experience Preference | User-facing presentation preference without Product business authority                                     |
+| Degraded Surface      | Explicit representation that one composed capability is unavailable while unrelated surfaces remain usable |
 
 ### 3.3 Domain Policies
 

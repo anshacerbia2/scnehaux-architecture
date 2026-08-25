@@ -20,10 +20,10 @@ Standardizing on the Modular Monolith Pattern as the Default Architecture for Co
 
 ## 2. Status
 
-| Date       | Status            | ADR Type     | Reviewers                        | Approver                        |
-| ---------- | ----------------- | ------------ | -------------------------------- | ------------------------------- |
-| 2026-05-01 | accepted          | foundational | Architecture Review Board        | Enterprise Architect            |
-| 2026-08-12 | accepted, amended | foundational | Architecture, Platform, Identity | Architecture Authority          |
+| Date       | Status            | ADR Type     | Reviewers                        | Approver               |
+| ---------- | ----------------- | ------------ | -------------------------------- | ---------------------- |
+| 2026-05-01 | accepted          | foundational | Architecture Review Board        | Enterprise Architect   |
+| 2026-08-12 | accepted, amended | foundational | Architecture, Platform, Identity | Architecture Authority |
 
 ### Amendment Record
 

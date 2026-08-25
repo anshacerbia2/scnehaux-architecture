@@ -6,17 +6,17 @@
 
 | Artifact Layer       | Total Documents | Active / Approved | Proposed / Trial | Deprecated / Hold |
 | :------------------- | :-------------- | :---------------- | :--------------- | :---------------- |
-| **EAD** (Enterprise) | 6               | 6                 | 0                | 0                 |
+| **EAD** (Enterprise) | 7               | 7                 | 0                | 0                 |
 | **GDC** (Governance) | 12              | 12                | 0                | 0                 |
-| **PAD** (Domain)     | 3               | -                 | -                | -                 |
-| **SAD** (System)     | 4               | -                 | -                | -                 |
-| **STD** (Standard)   | 25              | 22                | 3                | 0                 |
-| **ADR** (Decisions)  | 23              | 1                 | 2                | 0                 |
+| **PAD** (Domain)     | 19              | -                 | -                | -                 |
+| **SAD** (System)     | 22              | -                 | -                | -                 |
+| **STD** (Standard)   | 30              | 30                | 0                | 0                 |
+| **ADR** (Decisions)  | 35              | 0                 | 2                | 0                 |
 
 ## 2. Capability Coverage
 
-- **Total Systems (SADs)**: 4
-- **Total Domains (PADs)**: 3
+- **Total Systems (SADs)**: 22
+- **Total Domains (PADs)**: 19
 
 ## 3. Operations & Compliance
 

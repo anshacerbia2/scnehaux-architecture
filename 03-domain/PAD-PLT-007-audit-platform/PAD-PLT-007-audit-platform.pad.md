@@ -123,19 +123,19 @@ Audit is an evidence authority, not a central runtime gateway through which Prod
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Evidence Event | Source-produced fact submitted for governed evidence preservation |
-| Evidence Record | Accepted durable representation preserved by the Platform |
-| Evidence Claim | Governance or source-declared statement that the evidence supports |
-| Evidence Source | Product, Platform, control, person, workload, or external authority that produced the evidence |
-| Acceptance | Point at which the Platform acknowledges durable Evidence Record responsibility |
-| Chain of Custody | Attributable history of evidence handling, access, export, hold, and disposition |
-| Integrity Verification | Detection or proof that accepted evidence was not silently altered |
-| Evidence Reference | Stable reference to another Artifact or source record |
-| Retention Policy Reference | Governance-owned rule reference enforced by Audit |
-| Legal Hold | Governed instruction preventing normal disposition |
-| Reconciliation | Verification that expected evidence was accepted and retained as required |
+| Term                       | Meaning                                                                                        |
+| :------------------------- | :--------------------------------------------------------------------------------------------- |
+| Evidence Event             | Source-produced fact submitted for governed evidence preservation                              |
+| Evidence Record            | Accepted durable representation preserved by the Platform                                      |
+| Evidence Claim             | Governance or source-declared statement that the evidence supports                             |
+| Evidence Source            | Product, Platform, control, person, workload, or external authority that produced the evidence |
+| Acceptance                 | Point at which the Platform acknowledges durable Evidence Record responsibility                |
+| Chain of Custody           | Attributable history of evidence handling, access, export, hold, and disposition               |
+| Integrity Verification     | Detection or proof that accepted evidence was not silently altered                             |
+| Evidence Reference         | Stable reference to another Artifact or source record                                          |
+| Retention Policy Reference | Governance-owned rule reference enforced by Audit                                              |
+| Legal Hold                 | Governed instruction preventing normal disposition                                             |
+| Reconciliation             | Verification that expected evidence was accepted and retained as required                      |
 
 ### 3.3 Domain Policies
 

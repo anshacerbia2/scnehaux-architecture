@@ -64,7 +64,9 @@ def test_stable_versions_and_unversioned_artifacts_pass():
     assert len(v.errors) == 0
 
     # A ten-major-version artifact must not be caught by a naive "starts with 0" test.
-    v = make_validator(doc_meta={"status": "approved", "version": "10.2.3"}, rules=rules)
+    v = make_validator(
+        doc_meta={"status": "approved", "version": "10.2.3"}, rules=rules
+    )
     _validate_approved_version_stability(v)
     assert len(v.errors) == 0
 
@@ -120,13 +122,13 @@ def test_validate_exempt_age():
                     "status": "draft",
                     "depend_on": "created_date",
                     "max_age_days": 30,
-                    "error_message": "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days."
+                    "error_message": "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days.",
                 }
             ]
         },
-        "severity_levels": {SeverityRule.DRAFT_STATUS_VIOLATION: "WARNING"}
+        "severity_levels": {SeverityRule.DRAFT_STATUS_VIOLATION: "WARNING"},
     }
-    
+
     # Missing created_date
     errs = validate_exempt_age({}, "draft", "WARNING", global_rules)
     assert len(errs) == 1
@@ -134,13 +136,17 @@ def test_validate_exempt_age():
 
     # Exceeds max draft age
     old_date = (datetime.date.today() - datetime.timedelta(days=35)).isoformat()
-    errs2 = validate_exempt_age({"created_date": old_date}, "draft", "WARNING", global_rules)
+    errs2 = validate_exempt_age(
+        {"created_date": old_date}, "draft", "WARNING", global_rules
+    )
     assert len(errs2) == 1
     assert "exceeding limit of 30 days" in errs2[0][1]
 
     # Within max draft age
     fresh_date = (datetime.date.today() - datetime.timedelta(days=10)).isoformat()
-    errs3 = validate_exempt_age({"created_date": fresh_date}, "draft", "WARNING", global_rules)
+    errs3 = validate_exempt_age(
+        {"created_date": fresh_date}, "draft", "WARNING", global_rules
+    )
     assert len(errs3) == 0
 
 
@@ -148,7 +154,9 @@ def test_validate_exempt_age_missing_config():
     global_rules = {"content_rules": {}}
     fresh_date = datetime.date.today().isoformat()
     # Missing config gracefully returns empty list (no validation performed)
-    errs = validate_exempt_age({"created_date": fresh_date}, "draft", "WARNING", global_rules)
+    errs = validate_exempt_age(
+        {"created_date": fresh_date}, "draft", "WARNING", global_rules
+    )
     assert len(errs) == 0
 
 
@@ -159,7 +167,7 @@ def test_validate_technologies_whitelist():
             "unapproved_technology": "ERROR",
         }
     }
-    
+
     # 1. No doc_meta / no technologies
     v1 = make_validator(doc_meta={}, rules=rules)
     v1.doc_type_name = "SAD"
@@ -181,12 +189,14 @@ def test_validate_technologies_whitelist():
     assert len(v2.errors) >= 1
     assert any("not defined in the Enterprise Tech Radar" in e[1] for e in v2.errors)
 
-
     # 3. Technologies whitelist check with 'base' property
     v3 = make_validator(
         doc_meta={
             "technologies": [
-                {"name": "postgresql", "base": "jquery"}  # jquery is on HOLD in tech-radar
+                {
+                    "name": "postgresql",
+                    "base": "jquery",
+                }  # jquery is on HOLD in tech-radar
             ]
         },
         rules=rules,
@@ -210,7 +220,3 @@ def test_validate_technologies_whitelist_missing_tech_radar(monkeypatch, tmp_pat
     monkeypatch.setattr("os.path.exists", lambda path: False)
     _validate_technologies_whitelist(v)
     assert len(v.errors) == 0
-
-
-
-

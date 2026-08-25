@@ -122,19 +122,19 @@ The direct path and shared Integration path are both valid governed topologies. 
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Integration Contract | Versioned agreement between an owning domain and another system or provider |
-| Natural Owner | Product or Platform accountable for business meaning and the external relationship |
-| Connector | Reusable technical adapter to a protocol, provider, or system |
-| Provider | External or internal system exposing an integration capability |
-| Consumer | Domain consuming a governed Integration contract |
-| Transformation | Mapping between representations without changing business authority |
-| Routing | Technical determination of a governed message or command destination |
-| Anti-Corruption Boundary | Boundary preventing provider or vendor models from leaking into domain models |
-| Direct Adapter | Governed adapter implemented by the Natural Owner when shared Integration is not justified |
-| Delivery Attempt | One technical interaction attempt with a provider or system |
-| Reconciliation | Process of resolving uncertain, delayed, or divergent integration outcome against declared authorities |
+| Term                     | Meaning                                                                                                |
+| :----------------------- | :----------------------------------------------------------------------------------------------------- |
+| Integration Contract     | Versioned agreement between an owning domain and another system or provider                            |
+| Natural Owner            | Product or Platform accountable for business meaning and the external relationship                     |
+| Connector                | Reusable technical adapter to a protocol, provider, or system                                          |
+| Provider                 | External or internal system exposing an integration capability                                         |
+| Consumer                 | Domain consuming a governed Integration contract                                                       |
+| Transformation           | Mapping between representations without changing business authority                                    |
+| Routing                  | Technical determination of a governed message or command destination                                   |
+| Anti-Corruption Boundary | Boundary preventing provider or vendor models from leaking into domain models                          |
+| Direct Adapter           | Governed adapter implemented by the Natural Owner when shared Integration is not justified             |
+| Delivery Attempt         | One technical interaction attempt with a provider or system                                            |
+| Reconciliation           | Process of resolving uncertain, delayed, or divergent integration outcome against declared authorities |
 
 ### 3.3 Domain Policies
 

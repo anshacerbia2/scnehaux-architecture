@@ -14,7 +14,12 @@ def test_base_validator_lint_disable():
         "dummy.md",
         content,
         {},
-        {"severity_levels": {"missing_metadata": "WARNING", "prohibited_words": "WARNING"}},
+        {
+            "severity_levels": {
+                "missing_metadata": "WARNING",
+                "prohibited_words": "WARNING",
+            }
+        },
         {},
         set(),
         {},
@@ -56,7 +61,9 @@ def test_base_validator_execution_loop():
     content = "---\ndoc_meta:\n  status: draft\n---\nHello World"
     doc_meta = {"status": "draft", "owner": "team", "classification": "public"}
 
-    validator = make_validator(BaseValidator, "ADR-001.md", content, doc_meta, rules, {}, set(), {})
+    validator = make_validator(
+        BaseValidator, "ADR-001.md", content, doc_meta, rules, {}, set(), {}
+    )
     validator.validate_type_specific = lambda: None
 
     errors = validator.validate()
@@ -64,7 +71,9 @@ def test_base_validator_execution_loop():
 
 
 def test_base_validator_default():
-    validator = make_validator(BaseValidator, "ADR-001.md", "", {}, {"rules": {}}, {}, set(), {})
+    validator = make_validator(
+        BaseValidator, "ADR-001.md", "", {}, {"rules": {}}, {}, set(), {}
+    )
     validator.validate_type_specific()
     assert True
 
@@ -79,14 +88,32 @@ def test_base_validator_lint_disable_honored_with_reason():
     content = (
         "<!-- lint_disable: prohibited_words (reason: ARB waiver in ADR-GLB-009) -->"
     )
-    v = make_validator(BaseValidator, "x.md", content, {}, {"severity_levels": {"prohibited_words": "WARNING"}}, {}, set(), {})
+    v = make_validator(
+        BaseValidator,
+        "x.md",
+        content,
+        {},
+        {"severity_levels": {"prohibited_words": "WARNING"}},
+        {},
+        set(),
+        {},
+    )
     assert "prohibited_words" in v.block_disables
     assert v.block_disables["prohibited_words"][0][2] == "ARB waiver in ADR-GLB-009"
 
 
 def test_base_validator_lint_disable_undocumented_has_none_reason():
     content = "<!-- lint_disable: prohibited_words -->"
-    v = make_validator(BaseValidator, "x.md", content, {}, {"severity_levels": {"prohibited_words": "WARNING"}}, {}, set(), {})
+    v = make_validator(
+        BaseValidator,
+        "x.md",
+        content,
+        {},
+        {"severity_levels": {"prohibited_words": "WARNING"}},
+        {},
+        set(),
+        {},
+    )
     assert v.block_disables["prohibited_words"][0][2] is None
 
 
@@ -94,10 +121,10 @@ def test_base_validator_lint_disable_invalid_rule_fails_fast():
     rules = {"severity_levels": {"invalid_lint_disable": "ERROR"}}
     content = "<!-- lint_disable: some_typo_rule -->"
     v = make_validator(BaseValidator, "x.md", content, {}, rules, {}, set(), {})
-    
+
     # Should automatically inject an error for the unknown rule
     assert len(v.errors) == 1
-    assert v.errors[0][0] == "ERROR" # severity
+    assert v.errors[0][0] == "ERROR"  # severity
     assert "Unrecognized rule ID 'some_typo_rule'" in v.errors[0][1]
 
 
@@ -107,11 +134,11 @@ def test_base_validator_lint_disable_inline_scope_limited():
     # markdown-it parses this paragraph as lines [0, 1]. So start=1, end=2.
     content = "This is a paragraph <!-- lint_disable: prohibited_words -->\n\nThis is another paragraph."
     v = make_validator(BaseValidator, "x.md", content, {}, rules, {}, set(), {})
-    
+
     # Should suppress on line 1
     v.add_error("prohibited_words", "weasel word", line_num=1)
     assert len(v.errors) == 0
-    
+
     # Should NOT suppress on line 3 (the next paragraph)
     v.add_error("prohibited_words", "weasel word", line_num=3)
     assert len(v.errors) == 1
@@ -153,7 +180,14 @@ def test_schema_validation_enum():
         },
     }
     v = make_validator(
-        BaseValidator, "test.md", "content", {"status": "draft"}, _mock_rules(), schema, set(), {}
+        BaseValidator,
+        "test.md",
+        "content",
+        {"status": "draft"},
+        _mock_rules(),
+        schema,
+        set(),
+        {},
     )
     v.validate()
     assert any("Schema validation failed at doc_meta" in e[1] for e in v.errors)
@@ -162,7 +196,14 @@ def test_schema_validation_enum():
 def test_schema_validation_pattern():
     schema = {"type": "object", "properties": {"Context": {"pattern": "^[a-z]+$"}}}
     v = make_validator(
-        BaseValidator, "test.md", "## Context\n\n123", {}, _mock_rules(), schema, set(), {}
+        BaseValidator,
+        "test.md",
+        "## Context\n\n123",
+        {},
+        _mock_rules(),
+        schema,
+        set(),
+        {},
     )
     v.validate()
     assert any("expected pattern" in e[1] for e in v.errors)
@@ -171,7 +212,14 @@ def test_schema_validation_pattern():
 def test_schema_validation_other():
     schema = {"type": "object", "properties": {"doc_meta": {"type": "string"}}}
     v = make_validator(
-        BaseValidator, "test.md", "content", {"status": "draft"}, _mock_rules(), schema, set(), {}
+        BaseValidator,
+        "test.md",
+        "content",
+        {"status": "draft"},
+        _mock_rules(),
+        schema,
+        set(),
+        {},
     )
     v.validate()
     assert any("type" in e[1] or "Schema validation failed" in e[1] for e in v.errors)

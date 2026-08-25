@@ -29,8 +29,6 @@ from engine.config.constants import (
     BASE_SCHEMA_PATH,
     TECH_RADAR_YAML_PATH,
     TECH_RADAR_SCHEMA_PATH,
-    SCHEMA_KEY_GLOBAL_CONFIG,
-    SCHEMA_KEY_SEVERITY_LEVELS,
     SCHEMA_KEY_BLOCKING_SEVERITIES,
     SCHEMA_KEY_STRUCTURE_RULES,
     SCHEMA_KEY_ARTIFACT_DIRS,
@@ -108,7 +106,7 @@ def _disable_info(validator: Any) -> dict:
     for rule_id, blocks in validator.block_disables.items():
         for start_line, end_line, reason in blocks:
             disabled_list.append((rule_id, reason, start_line, end_line))
-            
+
     return {
         "disabled": disabled_list,
         "rejected": set(getattr(validator, "rejected_disables", set())),
@@ -146,11 +144,6 @@ def lint_file(
     </pre>
     """
     # @flow-lint: StartLint(("2. Start Document Validation")) --> Read[2.1. Read raw markdown]
-    try:
-        rel_path = os.path.relpath(file_path, ".").replace("\\", "/")
-    except ValueError:
-        # Occurs on Windows if file_path and CWD are on different drives (e.g. C: vs D: in pytest temp dirs)
-        rel_path = file_path.replace("\\", "/")
     filename = os.path.basename(file_path)
 
     # Step 1: Read the raw markdown content
@@ -162,7 +155,12 @@ def lint_file(
         # @flow-lint: RecordErrUnreadable --> Return
         file_errors, is_clean, is_blocking = print_errors(
             file_path,
-            [(severity_levels[SeverityRule.UNREADABLE_ARTIFACT], f"Failed to read file: {e}")],
+            [
+                (
+                    severity_levels[SeverityRule.UNREADABLE_ARTIFACT],
+                    f"Failed to read file: {e}",
+                )
+            ],
             output_format,
             blocking_severities,
         )
@@ -176,35 +174,39 @@ def lint_file(
         # @flow-lint: RecordErrFM --> Return
         # Fatal syntax error in frontmatter means we cannot even determine doc type
         file_errors, is_clean, is_blocking = print_errors(
-            file_path, 
-            [(severity_levels[SeverityRule.CORRUPT_FRONTMATTER], meta_err)], 
-            output_format, 
-            blocking_severities
+            file_path,
+            [(severity_levels[SeverityRule.CORRUPT_FRONTMATTER], meta_err)],
+            output_format,
+            blocking_severities,
         )
         return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
 
     # @flow-lint: ParseFM -->|Yes| CheckExempt{"2.3. Is document exempt?"}
     # @flow-lint: CheckExempt -->|Yes| ValidateExemptAge["2.4. <b>metadata_rules.py - validate_exempt_age()</b>: Validate exempt duration"]
     # @flow-lint: CheckExempt -->|No| DetectType["2.6. <b>registry.py - detect_doc_type()</b>: Detect document type"]
-    
+
     # Step 3: Validate exempt status and age
-    exempt_statuses_config = global_rules.get(SCHEMA_KEY_CONTENT_RULES, {}).get(SCHEMA_KEY_EXEMPT_STATUSES, [])
+    exempt_statuses_config = global_rules.get(SCHEMA_KEY_CONTENT_RULES, {}).get(
+        SCHEMA_KEY_EXEMPT_STATUSES, []
+    )
     exempt_statuses = [
-        cfg.get("status", "").lower() 
-        for cfg in exempt_statuses_config 
+        cfg.get("status", "").lower()
+        for cfg in exempt_statuses_config
         if isinstance(cfg, dict) and cfg.get("status")
     ]
-    
+
     # Satisfy static type checkers (Pylance/MyPy) since parse_frontmatter is now guaranteed to return a dict here
     doc_meta = cast(dict, doc_meta)
 
     doc_status = str(doc_meta.get("status", "")).lower()
-    
+
     if doc_status in exempt_statuses:
         # Enforce max age limits for exempt statuses
         violation_severity = severity_levels[SeverityRule.DRAFT_STATUS_VIOLATION]
         try:
-            exempt_errs = validate_exempt_age(doc_meta, doc_status, violation_severity, global_rules)
+            exempt_errs = validate_exempt_age(
+                doc_meta, doc_status, violation_severity, global_rules
+            )
         except ValueError as e:
             logger.error("FATAL: %s", str(e))
             sys.exit(1)
@@ -217,16 +219,26 @@ def lint_file(
             file_errors, is_clean, is_blocking = print_errors(
                 file_path, exempt_errs, output_format, blocking_severities
             )
-            return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
+            return (
+                file_errors,
+                is_clean,
+                is_blocking,
+                {"disabled": {}, "rejected": set()},
+            )
 
         # @flow-lint: IsExemptErr -->|No| RecordInfoExempt["<code>Record Info</code>: Exempt Document Skipped"]
         # @flow-lint: RecordInfoExempt --> Return
         # Record the exemption as an INFO warning so it's tracked in compliance reports, not counted as PASS
         file_errors, is_clean, is_blocking = print_errors(
-            file_path, 
-            [(severity_levels[SeverityRule.EXEMPT_DOCUMENT_SKIPPED], f"Document validation skipped due to exempt status: '{doc_status}'")], 
-            output_format, 
-            blocking_severities
+            file_path,
+            [
+                (
+                    severity_levels[SeverityRule.EXEMPT_DOCUMENT_SKIPPED],
+                    f"Document validation skipped due to exempt status: '{doc_status}'",
+                )
+            ],
+            output_format,
+            blocking_severities,
         )
         return file_errors, is_clean, is_blocking, {"disabled": {}, "rejected": set()}
 
@@ -301,7 +313,9 @@ def lint_file(
     errors = validator.validate()
     # @flow-lint: Execute --> Return[2.13. Return list of errors]
 
-    file_errors, is_clean, is_blocking = print_errors(file_path, errors, output_format, blocking_severities)
+    file_errors, is_clean, is_blocking = print_errors(
+        file_path, errors, output_format, blocking_severities
+    )
     return file_errors, is_clean, is_blocking, _disable_info(validator)
 
 
@@ -384,7 +398,9 @@ def main() -> None:
         base_schema = load_json_schema_file(BASE_SCHEMA_PATH)
         # @flow: CheckGlobalRules -->|Yes| IsConfigValid{"Valid Global Config & Severity? </br> <b>loader.py - (validate_global_config_structure, validate_severity_schema, validate_blocking_severities)</b>"}
         # @flow: IsConfigValid -->|No| ExitFailConfig((sys.exit 1))
-        global_rules, severity_levels, blocking_severities = parse_and_validate_global_config(base_schema)
+        global_rules, severity_levels, blocking_severities = (
+            parse_and_validate_global_config(base_schema)
+        )
     except (FileNotFoundError, ValueError, RuntimeError) as e:
         logger.error("FATAL: %s", str(e))
         sys.exit(1)
@@ -393,13 +409,17 @@ def main() -> None:
         SCHEMA_KEY_ARTIFACT_DIRS, {}
     )
     allowed_root_dirs = set(std_dirs.values()) if std_dirs else None
-    
+
     ignored_config = global_rules.get(SCHEMA_KEY_STRUCTURE_RULES, {}).get(
         SCHEMA_KEY_IGNORED_FILES, {}
     )
     if ignored_config:
-        ignored_files_lower = {f.lower() for f in ignored_config.get(SCHEMA_KEY_EXACT_MATCHES, [])}
-        ignored_patterns = [re.compile(p, re.IGNORECASE) for p in ignored_config.get("patterns", [])]
+        ignored_files_lower = {
+            f.lower() for f in ignored_config.get(SCHEMA_KEY_EXACT_MATCHES, [])
+        }
+        ignored_patterns = [
+            re.compile(p, re.IGNORECASE) for p in ignored_config.get("patterns", [])
+        ]
     else:
         ignored_files_lower = set()
         ignored_patterns = []
@@ -436,7 +456,7 @@ def main() -> None:
 
     # TARGET_REPO_ROOT is strictly defined by the CWD. No magic tree climbing, no arguments.
     TARGET_REPO_ROOT = cwd
-    
+
     try:
         local_registry = build_metadata_registry(
             TARGET_REPO_ROOT,
@@ -550,7 +570,6 @@ def main() -> None:
     # @flow: CheckFilter -->|"Yes (Skip)"| FindTarget
     # @flow: CheckFilter -->|"No (Keep)"| LoopFile{"1.7. Iterate file paths"}
     for full_path in files_to_lint:
-
         # @flow: LoopFile --> CheckDepth{"Exceeds maximum directory depth?"}
         # @flow: CheckDepth -->|Yes| RecordDepthError["<code>Record Error</code>: Directory Depth Violation"]
         # @flow: RecordDepthError --> LoopFile
@@ -578,9 +597,7 @@ def main() -> None:
                 total_files += 1
 
                 if args.format in ("json", "sarif"):
-                    results.append(
-                        {"file": full_path, "errors": depth_errors}
-                    )
+                    results.append({"file": full_path, "errors": depth_errors})
                 continue
         except ValueError:
             # Dead code: fs/crawler.py already strictly blocks cross-drive paths with sys.exit(1).
@@ -636,7 +653,9 @@ def main() -> None:
     repo_findings.extend(audit_orphans(local_doc_metadata, severity_levels))
     repo_findings.extend(audit_version_bump(local_doc_metadata, severity_levels))
 
-    for fpath, sev, msg in audit_waiver_expirations(local_doc_metadata, severity_levels):
+    for fpath, sev, msg in audit_waiver_expirations(
+        local_doc_metadata, severity_levels
+    ):
         repo_findings.append((sev, msg, fpath))
 
     for fpath, sev, msg in audit_circular_dependencies(
@@ -645,9 +664,7 @@ def main() -> None:
         repo_findings.append((sev, msg, fpath))
 
     for category, msg in audit_traceability_graph(local_doc_metadata):
-        repo_findings.append(
-            (severity_levels[category], msg, "TRACEABILITY-GRAPH")
-        )
+        repo_findings.append((severity_levels[category], msg, "TRACEABILITY-GRAPH"))
 
     for sev, msg, pfile in repo_findings:
         if sev in blocking_severities:
@@ -689,7 +706,8 @@ def main() -> None:
         print("\n--- Lint Disable Usage ---")
         for fpath, disabled_list in disabled_usages.items():
             rendered = ", ".join(
-                f"{r} [L{start}-{end if end != float('inf') else 'EOF'}] (reason: {reason})" if reason 
+                f"{r} [L{start}-{end if end != float('inf') else 'EOF'}] (reason: {reason})"
+                if reason
                 else f"{r} [L{start}-{end if end != float('inf') else 'EOF'}] (UNDOCUMENTED)"
                 for r, reason, start, end in disabled_list
             )
@@ -714,11 +732,21 @@ def main() -> None:
 
             # --- Break-Glass Audit Trail (C3 fix) ---
             # Write a persistent, structured audit event so the claim above is truthful.
-            _invoker = os.environ.get("GITHUB_ACTOR") or os.environ.get("USER") or os.environ.get("USERNAME") or "unknown"
+            _invoker = (
+                os.environ.get("GITHUB_ACTOR")
+                or os.environ.get("USER")
+                or os.environ.get("USERNAME")
+                or "unknown"
+            )
             try:
-                _invoker = subprocess.check_output(
-                    ["git", "config", "user.email"], text=True, stderr=subprocess.DEVNULL
-                ).strip() or _invoker
+                _invoker = (
+                    subprocess.check_output(
+                        ["git", "config", "user.email"],
+                        text=True,
+                        stderr=subprocess.DEVNULL,
+                    ).strip()
+                    or _invoker
+                )
             except Exception:
                 pass
 

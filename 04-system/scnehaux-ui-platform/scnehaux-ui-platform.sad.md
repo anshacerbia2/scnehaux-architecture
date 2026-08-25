@@ -117,13 +117,13 @@ The `@scnx/system` package ships a dedicated **Base Layer** to equalize default 
 
 <!-- lint_disable: inline_reference_missing (reason: Table contains illustrative TDD references) -->
 
-| TDD | Scope |
-| :-- | :-- |
-| `TDD-SCNX-UI-JS-001` | Build-Time Extraction Pipeline (Panda + Sass + tsup, dual ESM/CJS, `"use client"` restoration, packaging). |
-| `STD-UIP-ENG-001` | Polymorphic Headless Primitives (`@scnx/core-ui` — `Slot`/`asChild`, `as`-prop, primitive + compound inventory, `data-slot` contract). |
-| `TDD-SCNX-UI-JS-003` | Semantic Token Dictionary & OKLCH Reference (3-tier engine, `generate-scheme-matrix`, validator, `--ds-*` contract). |
-| `TDD-SCNX-UI-JS-004` | Design System Components (`@scnx/system` atoms/layouts/organisms; SCSS-class vs Panda-recipe styling). |
-| `TDD-SCNX-UI-JS-005` | Theme Transitions & Context Engine (`ScnxThemeProvider`, Transition OFSM, Disclosure registry). |
+| TDD                  | Scope                                                                                                                                  |
+| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| `TDD-SCNX-UI-JS-001` | Build-Time Extraction Pipeline (Panda + Sass + tsup, dual ESM/CJS, `"use client"` restoration, packaging).                             |
+| `STD-UIP-ENG-001`    | Polymorphic Headless Primitives (`@scnx/core-ui` — `Slot`/`asChild`, `as`-prop, primitive + compound inventory, `data-slot` contract). |
+| `TDD-SCNX-UI-JS-003` | Semantic Token Dictionary & OKLCH Reference (3-tier engine, `generate-scheme-matrix`, validator, `--ds-*` contract).                   |
+| `TDD-SCNX-UI-JS-004` | Design System Components (`@scnx/system` atoms/layouts/organisms; SCSS-class vs Panda-recipe styling).                                 |
+| `TDD-SCNX-UI-JS-005` | Theme Transitions & Context Engine (`ScnxThemeProvider`, Transition OFSM, Disclosure registry).                                        |
 
 ### 2.5 Component Taxonomy & Theme Families (Physical)
 

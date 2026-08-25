@@ -49,49 +49,49 @@ Shared Integration may provide connector/protocol/transformation machinery. The 
 
 ### 4.1 Drivers
 
-| ID | Driver | Integration Consequence |
-| :-- | :-- | :-- |
-| D1 | Multiple durable execution forms | Commands, Jobs, Workflows, and Schedules remain distinct |
-| D2 | AI model and tool ecosystems change rapidly | Provider and tool contracts are capability-based and protocol-neutral |
-| D3 | RAG crosses Product/data boundaries | Retrieval is an explicit authorized contract |
-| D4 | External outcomes are ambiguous | Acceptance, completion, reconciliation, and evidence are distinct |
-| D5 | Model/provider switching is desired | Portability requires evaluation, not assumed equivalence |
-| D6 | Shared integration must not become central coupling | Natural Owner rule remains mandatory |
-| D7 | Local authoritative state changes may require external event publication | Atomic publication intent remains inside the source transaction boundary; shared delivery machinery does not become a second authority |
-| D8 | Asynchronous relationships need different delivery semantics | Direct durable delivery, queue-oriented messaging, and stream-oriented messaging remain distinct profiles selected below Product authority |
+| ID  | Driver                                                                   | Integration Consequence                                                                                                                    |
+| :-- | :----------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Multiple durable execution forms                                         | Commands, Jobs, Workflows, and Schedules remain distinct                                                                                   |
+| D2  | AI model and tool ecosystems change rapidly                              | Provider and tool contracts are capability-based and protocol-neutral                                                                      |
+| D3  | RAG crosses Product/data boundaries                                      | Retrieval is an explicit authorized contract                                                                                               |
+| D4  | External outcomes are ambiguous                                          | Acceptance, completion, reconciliation, and evidence are distinct                                                                          |
+| D5  | Model/provider switching is desired                                      | Portability requires evaluation, not assumed equivalence                                                                                   |
+| D6  | Shared integration must not become central coupling                      | Natural Owner rule remains mandatory                                                                                                       |
+| D7  | Local authoritative state changes may require external event publication | Atomic publication intent remains inside the source transaction boundary; shared delivery machinery does not become a second authority     |
+| D8  | Asynchronous relationships need different delivery semantics             | Direct durable delivery, queue-oriented messaging, and stream-oriented messaging remain distinct profiles selected below Product authority |
 
 ### 4.2 Lessons Incorporated
 
-| Lesson | Response |
-| :-- | :-- |
-| Async transport acknowledgement was treated as business completion | Commands and outcomes remain distinct |
-| Queue was treated as work/business state | Queue remains a delivery/buffering mechanism unless a domain explicitly owns queue semantics |
-| MCP/provider SDK was treated as architecture | Protocol adapters sit behind stable tool/provider contracts |
-| SSO and API credentials were treated as interchangeable | Interactive and workload access profiles are distinct |
-| Integration mediated every external provider | Shared Integration remains optional machinery |
-| Model change was treated as configuration-only | Evaluation and release gates protect semantic compatibility |
-| A central outbox service was treated as the transaction boundary | Outbox state stays local to the authoritative mutation; shared relays/CDC may transport it after commit |
-| One broker product was treated as the architecture | Delivery profile follows point-to-point, queue, or retained-stream semantics; concrete products remain downstream choices |
+| Lesson                                                             | Response                                                                                                                  |
+| :----------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------ |
+| Async transport acknowledgement was treated as business completion | Commands and outcomes remain distinct                                                                                     |
+| Queue was treated as work/business state                           | Queue remains a delivery/buffering mechanism unless a domain explicitly owns queue semantics                              |
+| MCP/provider SDK was treated as architecture                       | Protocol adapters sit behind stable tool/provider contracts                                                               |
+| SSO and API credentials were treated as interchangeable            | Interactive and workload access profiles are distinct                                                                     |
+| Integration mediated every external provider                       | Shared Integration remains optional machinery                                                                             |
+| Model change was treated as configuration-only                     | Evaluation and release gates protect semantic compatibility                                                               |
+| A central outbox service was treated as the transaction boundary   | Outbox state stays local to the authoritative mutation; shared relays/CDC may transport it after commit                   |
+| One broker product was treated as the architecture                 | Delivery profile follows point-to-point, queue, or retained-stream semantics; concrete products remain downstream choices |
 
 ## 5. Architecture Model
 
 ### 5.1 Strategic Interaction Types
 
-| Pattern | Use |
-| :-- | :-- |
-| Synchronous Request/Response | Immediate authoritative response is required |
-| Asynchronous Command | Bounded work is accepted without immediate completion |
-| Domain Event | Accepted fact is published to independent consumers |
-| Background Job | Technical bounded execution inside an owning Product/Platform |
-| Durable Workflow | Persisted multi-step coordination, human/system tasks, compensation |
-| Durable Schedule | Future temporal trigger independent of consumer restart |
-| Bounded Projection | Local resilient reads/enforcement |
-| Batch / File | High-volume or partner-driven exchange |
-| Webhook / Callback | External provider asynchronous notification |
-| Retrieval | Authorized knowledge/search query returning provenance/evidence |
-| AI Inference | Model execution under an AI capability profile |
-| Agent Run | Bounded iterative model/tool execution |
-| Tool Invocation | Delegated operation against a registered Product/Platform tool contract |
+| Pattern                      | Use                                                                     |
+| :--------------------------- | :---------------------------------------------------------------------- |
+| Synchronous Request/Response | Immediate authoritative response is required                            |
+| Asynchronous Command         | Bounded work is accepted without immediate completion                   |
+| Domain Event                 | Accepted fact is published to independent consumers                     |
+| Background Job               | Technical bounded execution inside an owning Product/Platform           |
+| Durable Workflow             | Persisted multi-step coordination, human/system tasks, compensation     |
+| Durable Schedule             | Future temporal trigger independent of consumer restart                 |
+| Bounded Projection           | Local resilient reads/enforcement                                       |
+| Batch / File                 | High-volume or partner-driven exchange                                  |
+| Webhook / Callback           | External provider asynchronous notification                             |
+| Retrieval                    | Authorized knowledge/search query returning provenance/evidence         |
+| AI Inference                 | Model execution under an AI capability profile                          |
+| Agent Run                    | Bounded iterative model/tool execution                                  |
+| Tool Invocation              | Delegated operation against a registered Product/Platform tool contract |
 
 ### 5.2 Work/Workflow/Job/Schedule Interaction
 
@@ -109,17 +109,18 @@ A Queue may support any of these but does not redefine their authority.
 
 Scheduled communication supports three compositions with different authority and efficiency characteristics.
 
-| Mode | Flow | Best fit | Main trade-off |
-| :-- | :-- | :-- | :-- |
-| Frozen Notification | `Product -> Notification -> Scheduling -> Notification` | Communication already accepted and recipient/content/version semantics must be preserved from creation time | One additional upfront call, but smallest Scheduler payload, earliest validation, stable Notification lifecycle, and clean cancellation/status |
-| Deferred Notification Command | `Product -> Scheduling -> Notification` | A lightweight communication command may be created only when due and bounded trigger data is sufficient | Fewer upfront calls, but validation is delayed and Scheduler is coupled to a registered Notification command contract |
-| Revalidated Business Action | `Product -> Scheduling -> Product Worker -> Notification` | Eligibility, recipient, content, or business state may change before due time | Extra execution hop, but preserves Product authority and current-state correctness |
+| Mode                          | Flow                                                      | Best fit                                                                                                    | Main trade-off                                                                                                                                 |
+| :---------------------------- | :-------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frozen Notification           | `Product -> Notification -> Scheduling -> Notification`   | Communication already accepted and recipient/content/version semantics must be preserved from creation time | One additional upfront call, but smallest Scheduler payload, earliest validation, stable Notification lifecycle, and clean cancellation/status |
+| Deferred Notification Command | `Product -> Scheduling -> Notification`                   | A lightweight communication command may be created only when due and bounded trigger data is sufficient     | Fewer upfront calls, but validation is delayed and Scheduler is coupled to a registered Notification command contract                          |
+| Revalidated Business Action   | `Product -> Scheduling -> Product Worker -> Notification` | Eligibility, recipient, content, or business state may change before due time                               | Extra execution hop, but preserves Product authority and current-state correctness                                                             |
 
 **Default:** use Frozen Notification for pure scheduled communication.
 
 Deferred Notification Command is permitted only when it does not turn Scheduling into a communication-data store. Scheduler carries a registered target plus bounded identifiers or immutable trigger input. Provider credentials, SMTP configuration, provider secrets, unbounded content, and arbitrary recipient/contact datasets remain outside Scheduling.
 
 If current Product state must be revalidated, the due occurrence targets the owning Product/Platform Worker before Notification is requested.
+
 ### 5.3 AI Provider Contract
 
 AI consumers request a stable capability/profile. Provider selection is performed by AI Enablement policy and evaluation.
@@ -216,11 +217,11 @@ Gateway, broker, connector, AI gateway, and tool gateway are technical roles rat
 
 Asynchronous communication does not imply one universal broker. The required delivery semantics select the minimum durable profile:
 
-| Profile | Best fit | Required properties |
-| :-- | :-- | :-- |
-| Direct Durable Delivery | bounded point-to-point asynchronous relationship | source-local publication durability when needed, idempotent target acceptance, retry, ambiguity handling, reconciliation |
-| Queue-Oriented Messaging | commands, jobs, targeted triggers, competing consumers, routing | durable queue, acknowledgement, backpressure, bounded retry, failure parking |
-| Stream-Oriented Messaging | replayable facts, many independent consumers, CDC, stream processing | retained append-only log, partition/key ordering, offsets, replay, consumer groups |
+| Profile                   | Best fit                                                             | Required properties                                                                                                      |
+| :------------------------ | :------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| Direct Durable Delivery   | bounded point-to-point asynchronous relationship                     | source-local publication durability when needed, idempotent target acceptance, retry, ambiguity handling, reconciliation |
+| Queue-Oriented Messaging  | commands, jobs, targeted triggers, competing consumers, routing      | durable queue, acknowledgement, backpressure, bounded retry, failure parking                                             |
+| Stream-Oriented Messaging | replayable facts, many independent consumers, CDC, stream processing | retained append-only log, partition/key ordering, offsets, replay, consumer groups                                       |
 
 A Product/Platform contract declares the semantic need. SAD/ADR/TDD layers select concrete HTTP, RabbitMQ, Kafka, or equivalent implementation.
 
@@ -251,71 +252,83 @@ The following may be shared without moving authority:
 - telemetry and operational dashboards
 
 Outbox state itself remains owned by the source Product/Platform transaction.
+
 ## 6. Principles & Rules
 
 ### 6.1 Contract First
+
 - **Fitness function:** every production integration resolves to a registered owner and contract
 
 ### 6.2 Pattern Follows Responsibility
+
 - **Fitness function:** critical relationships identify whether they are query, command, event, Job, Workflow, Schedule, retrieval, inference, or tool invocation
 
 ### 6.3 Natural Owner Retains Meaning
+
 - **Fitness function:** shared Integration PADs contain zero Product-specific outcomes
 
 ### 6.4 Provider Portability Is Evaluated
+
 - **Fitness function:** provider/model promotion has quality/safety/cost/latency evidence appropriate to the Product profile
 
 ### 6.5 Interactive and Machine Credentials Are Distinct
+
 - **Fitness function:** credential inventory classifies human interactive versus workload authority
 
 ### 6.6 Tool Calls Preserve Product Authorization
+
 - **Fitness function:** high-risk AI tool paths enforce Product authorization and required approval at the resource boundary
 
 ### 6.7 Retrieval Is Authorized Before Disclosure
+
 - **Fitness function:** cross-tenant/unauthorized retrieval negative tests run before model context assembly
 
 ### 6.8 No Universal Integration Hop
+
 - **Fitness function:** architecture review reports zero mandatory hops justified solely by uniformity
 
 ### 6.9 Critical External Outcomes Reconcile
+
 - **Fitness function:** critical provider contracts declare unresolved-state and reconciliation ownership
 
 ### 6.10 Atomic Publication Stays With Source Authority
+
 - **Fitness function:** transactional publishers have zero network write to a separate outbox authority inside the source commit path; publication intent is atomically persisted with the authoritative mutation or an equivalent atomic mechanism is proven
+
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected |
-| :-- | :-- |
-| REST everywhere | Misfits long-running and asynchronous work |
-| Event-driven everything | Confuses commands, current queries, and outcomes |
-| Queue means workflow/job | Hides ownership and lifecycle distinctions |
-| Universal ESB / Integration hop | Centralizes coupling and obscures ownership |
-| MCP as mandatory tool architecture | Couples enterprise contract to one transport |
-| Provider SDKs directly in Products | Leaks provider semantics and prevents governed portability |
+| Alternative                         | Why Rejected                                                      |
+| :---------------------------------- | :---------------------------------------------------------------- |
+| REST everywhere                     | Misfits long-running and asynchronous work                        |
+| Event-driven everything             | Confuses commands, current queries, and outcomes                  |
+| Queue means workflow/job            | Hides ownership and lifecycle distinctions                        |
+| Universal ESB / Integration hop     | Centralizes coupling and obscures ownership                       |
+| MCP as mandatory tool architecture  | Couples enterprise contract to one transport                      |
+| Provider SDKs directly in Products  | Leaks provider semantics and prevents governed portability        |
 | Reuse human SSO session for workers | Destroys attribution, lifecycle, and workload identity boundaries |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Dependency | Blast Radius | Required Posture |
-| :-- | :-- | :-- |
-| Messaging | Delayed commands/events | Durable accepted work and replay |
-| Integration connector | Provider-specific | Isolate by provider/tenant and reconcile |
-| AI provider | AI profile | Evaluated fallback or explicit degradation |
-| Knowledge retrieval | Grounded AI/search | Explicit degraded mode; no fabricated evidence |
-| Tool provider/Product API | Agent task | Tool failure does not grant alternate authority |
-| Scheduling | Future triggers | Durable recovery/misfire |
-| Workflow | Stateful process | Durable resumability |
+| Dependency                | Blast Radius            | Required Posture                                |
+| :------------------------ | :---------------------- | :---------------------------------------------- |
+| Messaging                 | Delayed commands/events | Durable accepted work and replay                |
+| Integration connector     | Provider-specific       | Isolate by provider/tenant and reconcile        |
+| AI provider               | AI profile              | Evaluated fallback or explicit degradation      |
+| Knowledge retrieval       | Grounded AI/search      | Explicit degraded mode; no fabricated evidence  |
+| Tool provider/Product API | Agent task              | Tool failure does not grant alternate authority |
+| Scheduling                | Future triggers         | Durable recovery/misfire                        |
+| Workflow                  | Stateful process        | Durable resumability                            |
 
 ## 9. Ownership
 
-| Responsibility | Accountable |
-| :-- | :-- |
-| Enterprise interaction principles | Architecture Authority |
-| Business contract | Provider/Natural Owner |
-| Shared integration machinery | Integration Platform |
-| AI provider execution contract | AI Platform |
-| Retrieval contract | Knowledge & Retrieval Platform |
-| Tool business operation | Owning Product/Platform |
+| Responsibility                    | Accountable                    |
+| :-------------------------------- | :----------------------------- |
+| Enterprise interaction principles | Architecture Authority         |
+| Business contract                 | Provider/Natural Owner         |
+| Shared integration machinery      | Integration Platform           |
+| AI provider execution contract    | AI Platform                    |
+| Retrieval contract                | Knowledge & Retrieval Platform |
+| Tool business operation           | Owning Product/Platform        |
 
 ## 10. Dependencies
 

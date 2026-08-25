@@ -1,4 +1,4 @@
-.PHONY: lint lint-code format test install-hooks generate-docs all coverage docker-build docker-run clean
+.PHONY: lint lint-code lint-docs-format lint-sarif format format-code format-docs test install install-hooks generate-docs verify-generated check-waivers all coverage docker-build docker-run clean
 
 # Run all processes (setup, generate docs, linting, and testing)
 all: install install-hooks generate-docs lint test
@@ -19,6 +19,18 @@ generate-docs:
 	python 06-fitness-function/generators/generate_adr_index.py
 	python 06-fitness-function/generators/generate_pad_sad_index.py
 	python 06-fitness-function/generators/generate_traceability_graph.py
+	python 06-fitness-function/generators/generate_maturity_dashboard.py
+
+# Verify the committed state equals generate-then-format.
+#
+# The two steps must run in this order and the check must come after both. The generators inject
+# blocks into documents that `lint-docs-format` also governs, and their raw output is not
+# Prettier-formatted -- so comparing straight after generation asks the repository to hold
+# formatted and unformatted content simultaneously, which no commit can satisfy. Generating and
+# then formatting is the definition of the committed state, and this target is what proves a
+# checkout still matches it.
+verify-generated: generate-docs format-docs
+	git diff --exit-code || (echo "Generated documentation is out of sync. Run 'make verify-generated' locally and commit the result." && exit 1)
 
 # Run the core architecture linter to validate document compliance (C4, NFRs, etc.)
 lint:
@@ -39,7 +51,7 @@ format-code:
 
 # Auto-format Markdown & JSON documents using Prettier
 format-docs:
-	npx prettier --write "**/*.md" "**/*.json"
+	npx --yes prettier@3.9.6 --write "**/*.md" "**/*.json"
 
 # Auto-format ALL files (Python, Markdown, and JSON) at once
 format: format-code format-docs
@@ -51,7 +63,7 @@ lint-code:
 
 # Check document formatting (no auto-fix, used by CI/CD & Git hooks)
 lint-docs-format:
-	npx prettier --check "**/*.md" "**/*.json"
+	npx --yes prettier@3.9.6 --check "**/*.md" "**/*.json"
 
 # Run unit tests for the linter engine (using pytest)
 test:

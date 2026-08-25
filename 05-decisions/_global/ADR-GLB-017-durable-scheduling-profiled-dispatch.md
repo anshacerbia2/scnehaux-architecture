@@ -21,8 +21,8 @@ Preserve the shared durable Scheduling authority boundary while replacing univer
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type    | Reviewers                                                                                             | Approver               |
+| :--------- | :------- | :---------- | :---------------------------------------------------------------------------------------------------- | :--------------------- |
 | 2026-08-24 | accepted | replacement | Architecture Authority, Platform Engineering, Scheduling, Notification, Workflow, Product Engineering | Architecture Authority |
 
 This ADR supersedes **ADR-GLB-011** in full. Its Scheduling, Product, Workflow, Notification, and Worker authority boundaries are retained. Only the transport assumption is rebaselined through ADR-GLB-016.
@@ -58,14 +58,14 @@ The enterprise boundary must outlive any transport choice.
 
 ### 5.1 Authority Split
 
-| Concern | Authority |
-| :-- | :-- |
-| Business timing meaning, eligibility, business state, worker code, business retry, irreversible outcome | Owning Product/Platform |
-| Durable Schedule lifecycle, canonical due time, Occurrence identity, misfire state, trigger-dispatch state | Scheduling Platform |
-| Durable process state, workflow timeout/deadline meaning, compensation, human/system task coordination | Workflow Platform |
-| Accepted communication intent, template/channel realization, provider routing, communication retry, delivery status | Notification Platform |
-| Keys, credentials, certificates, provider secrets | Trust / Secret Services |
-| Durable delivery mechanics | Engineering & Runtime messaging substrate selected under ADR-GLB-016 |
+| Concern                                                                                                             | Authority                                                            |
+| :------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------- |
+| Business timing meaning, eligibility, business state, worker code, business retry, irreversible outcome             | Owning Product/Platform                                              |
+| Durable Schedule lifecycle, canonical due time, Occurrence identity, misfire state, trigger-dispatch state          | Scheduling Platform                                                  |
+| Durable process state, workflow timeout/deadline meaning, compensation, human/system task coordination              | Workflow Platform                                                    |
+| Accepted communication intent, template/channel realization, provider routing, communication retry, delivery status | Notification Platform                                                |
+| Keys, credentials, certificates, provider secrets                                                                   | Trust / Secret Services                                              |
+| Durable delivery mechanics                                                                                          | Engineering & Runtime messaging substrate selected under ADR-GLB-016 |
 
 A Worker is execution topology, not authority.
 
@@ -137,10 +137,10 @@ Scheduling publishes `OccurrenceDue` through the delivery semantics defined by A
 
 Supported profiles are:
 
-| Profile | Scheduling use |
-| :-- | :-- |
-| Direct Durable Delivery | minimal/bounded topology using a registered consumer durable-acceptance API |
-| Queue-Oriented Messaging | default Scnehaux trigger-delivery profile using RabbitMQ |
+| Profile                   | Scheduling use                                                              |
+| :------------------------ | :-------------------------------------------------------------------------- |
+| Direct Durable Delivery   | minimal/bounded topology using a registered consumer durable-acceptance API |
+| Queue-Oriented Messaging  | default Scnehaux trigger-delivery profile using RabbitMQ                    |
 | Stream-Oriented Messaging | retained/replayable profile using Kafka when stream semantics are justified |
 
 The Schedule and Occurrence contracts contain no RabbitMQ/Kafka concepts.

@@ -20,8 +20,8 @@ Minimize inbound network surface for background Worker runtimes without confusin
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type     | Reviewers                                                                   | Approver               |
+| :--------- | :------- | :----------- | :-------------------------------------------------------------------------- | :--------------------- |
 | 2026-08-23 | accepted | foundational | Architecture Authority, Security, Platform Engineering, Product Engineering | Architecture Authority |
 
 ## 3. Context

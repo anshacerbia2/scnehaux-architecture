@@ -176,19 +176,19 @@ graph TB
 
 ### 4.2 Application Modules
 
-| Module | Responsibility |
-| :-- | :-- |
-| Organization Registry | Organization identity, type, status, relationship, succession, external references |
-| Tenant Lifecycle | Tenant identity, lifecycle, sponsor/reference links, security version, desired profile |
-| Workspace Lifecycle | Workspace identity, type, parent Tenant, lifecycle, context version |
-| Membership | Principal/workload context, status, validity, provenance, administrative roles |
-| Invitation | invitation intent, sponsor, expiry, identity-onboarding correlation |
-| Operating Context | eligible contexts, context-switch validation, current authoritative query |
-| Projection | snapshots, lifecycle stream, revocation priority, consumer cursor, reconciliation |
-| Provisioning Coordination | desired provisioning state and realized-status correlation |
-| Offboarding | access freeze, obligation tracking, final retirement |
-| Administration | provider/Tenant scoped commands, approvals, reason, evidence facts |
-| Migration | legacy mapping, dual-read comparison, cutover, rollback, deprecation |
+| Module                    | Responsibility                                                                         |
+| :------------------------ | :------------------------------------------------------------------------------------- |
+| Organization Registry     | Organization identity, type, status, relationship, succession, external references     |
+| Tenant Lifecycle          | Tenant identity, lifecycle, sponsor/reference links, security version, desired profile |
+| Workspace Lifecycle       | Workspace identity, type, parent Tenant, lifecycle, context version                    |
+| Membership                | Principal/workload context, status, validity, provenance, administrative roles         |
+| Invitation                | invitation intent, sponsor, expiry, identity-onboarding correlation                    |
+| Operating Context         | eligible contexts, context-switch validation, current authoritative query              |
+| Projection                | snapshots, lifecycle stream, revocation priority, consumer cursor, reconciliation      |
+| Provisioning Coordination | desired provisioning state and realized-status correlation                             |
+| Offboarding               | access freeze, obligation tracking, final retirement                                   |
+| Administration            | provider/Tenant scoped commands, approvals, reason, evidence facts                     |
+| Migration                 | legacy mapping, dual-read comparison, cutover, rollback, deprecation                   |
 
 ### 4.3 Dependency Rule
 
@@ -381,16 +381,16 @@ The system uses managed PostgreSQL with private network access, encrypted storag
 
 Logical schema ownership:
 
-| Schema / Module | Primary Records |
-| :-- | :-- |
-| `organization` | organizations, relationships, external references |
-| `tenant` | tenants, lifecycle transitions, profile references, security version |
-| `workspace` | workspaces, lifecycle, context version |
-| `membership` | memberships, validity, provenance, admin assignments, security version |
-| `invitation` | invitation intent, target reference, expiry, onboarding correlation |
-| `operation` | lifecycle operations, approvals, offboarding obligations |
-| `projection` | consumer registration, cursor, snapshot generation, reconciliation status |
-| `platform` | idempotency keys, outbox, inbox, migration maps, repair tasks |
+| Schema / Module | Primary Records                                                           |
+| :-------------- | :------------------------------------------------------------------------ |
+| `organization`  | organizations, relationships, external references                         |
+| `tenant`        | tenants, lifecycle transitions, profile references, security version      |
+| `workspace`     | workspaces, lifecycle, context version                                    |
+| `membership`    | memberships, validity, provenance, admin assignments, security version    |
+| `invitation`    | invitation intent, target reference, expiry, onboarding correlation       |
+| `operation`     | lifecycle operations, approvals, offboarding obligations                  |
+| `projection`    | consumer registration, cursor, snapshot generation, reconciliation status |
+| `platform`      | idempotency keys, outbox, inbox, migration maps, repair tasks             |
 
 ### 6.2 Core Keys and Constraints
 
@@ -554,17 +554,17 @@ Provider administration requires:
 
 Threats and controls include:
 
-| Threat | Control |
-| :-- | :-- |
-| Tenant-context spoofing | derive authoritative scope from token and current Membership, not request headers |
-| IDOR across Tenant | scope-aware repository, RLS defense, negative tests |
-| stale revoked access | priority event, version, bounded freshness, reconciliation |
-| privilege escalation | narrow tenancy roles, step-up, approval, deny by default |
-| duplicate/racing lifecycle commands | idempotency and optimistic concurrency |
-| event loss | transactional outbox and delivery reconciliation |
-| direct Keycloak drift | Identity Control Service reconciliation; Tenancy remains source |
-| destructive offboarding | staged obligations and explicit finalization |
-| invitation takeover | Identity-owned verification and expiry; invitation is not proof |
+| Threat                              | Control                                                                           |
+| :---------------------------------- | :-------------------------------------------------------------------------------- |
+| Tenant-context spoofing             | derive authoritative scope from token and current Membership, not request headers |
+| IDOR across Tenant                  | scope-aware repository, RLS defense, negative tests                               |
+| stale revoked access                | priority event, version, bounded freshness, reconciliation                        |
+| privilege escalation                | narrow tenancy roles, step-up, approval, deny by default                          |
+| duplicate/racing lifecycle commands | idempotency and optimistic concurrency                                            |
+| event loss                          | transactional outbox and delivery reconciliation                                  |
+| direct Keycloak drift               | Identity Control Service reconciliation; Tenancy remains source                   |
+| destructive offboarding             | staged obligations and explicit finalization                                      |
+| invitation takeover                 | Identity-owned verification and expiry; invitation is not proof                   |
 
 ## 9. NFR
 
@@ -572,19 +572,19 @@ Threats and controls include:
 
 #### 9.1.1 Failure Matrix
 
-| Failure | Behavior | Blast Radius |
-| :-- | :-- | :-- |
-| One application replica fails | load balancer removes replica; remaining replicas continue | In-flight requests on one replica |
-| PostgreSQL primary fails | managed failover; mutations pause briefly; no local fallback authority | All new Tenancy mutations; existing consumer projections continue |
-| Event broker unavailable | mutations commit with outbox; publication backlog grows and alerts | New projection propagation across consumers; authoritative API remains available |
-| Identity Control Service unavailable | events remain on broker; Keycloak projection becomes stale according to policy | New/changed IAM context only; Tenancy authority remains correct |
-| Keycloak unavailable | administrative login/new identity journeys pause; authenticated service operations with valid token may continue by policy | New admin sessions and identity onboarding |
-| Provisioning unavailable | new Tenant activation/profile change pauses; current active Tenants continue | Affected provisioning operations |
-| One consumer projection diverges | consumer marked stale; targeted rebuild/reconciliation | One consumer/system, unless security policy forces broader containment |
-| Bad bulk import | transaction/item constraints reject invalid items; resumable report | Submitted batch/items only |
-| Cross-tenant policy defect | emergency provider-admin disable and affected Tenant containment | Potential multi-Tenant; treated Sev-1 |
-| Database restore to older point | security-version reconciliation and containment before normal operation | Full Tenancy control plane until reconciled |
-| Offboarding dependency never completes | Tenant remains offboarding/frozen; no final deletion | One Tenant |
+| Failure                                | Behavior                                                                                                                   | Blast Radius                                                                     |
+| :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| One application replica fails          | load balancer removes replica; remaining replicas continue                                                                 | In-flight requests on one replica                                                |
+| PostgreSQL primary fails               | managed failover; mutations pause briefly; no local fallback authority                                                     | All new Tenancy mutations; existing consumer projections continue                |
+| Event broker unavailable               | mutations commit with outbox; publication backlog grows and alerts                                                         | New projection propagation across consumers; authoritative API remains available |
+| Identity Control Service unavailable   | events remain on broker; Keycloak projection becomes stale according to policy                                             | New/changed IAM context only; Tenancy authority remains correct                  |
+| Keycloak unavailable                   | administrative login/new identity journeys pause; authenticated service operations with valid token may continue by policy | New admin sessions and identity onboarding                                       |
+| Provisioning unavailable               | new Tenant activation/profile change pauses; current active Tenants continue                                               | Affected provisioning operations                                                 |
+| One consumer projection diverges       | consumer marked stale; targeted rebuild/reconciliation                                                                     | One consumer/system, unless security policy forces broader containment           |
+| Bad bulk import                        | transaction/item constraints reject invalid items; resumable report                                                        | Submitted batch/items only                                                       |
+| Cross-tenant policy defect             | emergency provider-admin disable and affected Tenant containment                                                           | Potential multi-Tenant; treated Sev-1                                            |
+| Database restore to older point        | security-version reconciliation and containment before normal operation                                                    | Full Tenancy control plane until reconciled                                      |
+| Offboarding dependency never completes | Tenant remains offboarding/frozen; no final deletion                                                                       | One Tenant                                                                       |
 
 #### 9.1.2 Degradation
 
@@ -630,17 +630,17 @@ Secrets, tokens, unrestricted PII, and invitation proof material are excluded.
 
 #### 9.3.2 SLIs and Alerts
 
-| SLI | Initial Target / Alert |
-| :-- | :-- |
-| Administrative API availability | target 99.95% monthly after evidence |
-| Mutation p95 latency | ≤ 500 ms excluding downstream workflows |
-| Authoritative read p95 | ≤ 200 ms |
-| Outbox oldest unpublished age | warning > 30 s; critical > 2 min for security-priority events |
-| Revocation publication delay | warning/critical thresholds defined by security profile |
-| Projection reconciliation age | consumer-specific; critical when stale policy exceeded |
-| Cross-tenant authorization denial | monitored for anomaly and regression |
-| Database replication/failover health | critical on managed-service thresholds |
-| Offboarding overdue obligation | warning before contract deadline; critical after deadline |
+| SLI                                  | Initial Target / Alert                                        |
+| :----------------------------------- | :------------------------------------------------------------ |
+| Administrative API availability      | target 99.95% monthly after evidence                          |
+| Mutation p95 latency                 | ≤ 500 ms excluding downstream workflows                       |
+| Authoritative read p95               | ≤ 200 ms                                                      |
+| Outbox oldest unpublished age        | warning > 30 s; critical > 2 min for security-priority events |
+| Revocation publication delay         | warning/critical thresholds defined by security profile       |
+| Projection reconciliation age        | consumer-specific; critical when stale policy exceeded        |
+| Cross-tenant authorization denial    | monitored for anomaly and regression                          |
+| Database replication/failover health | critical on managed-service thresholds                        |
+| Offboarding overdue obligation       | warning before contract deadline; critical after deadline     |
 
 Current SLO is `not-yet-established` until production measurement begins.
 

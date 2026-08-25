@@ -13,15 +13,16 @@ from engine.config.loader import validate_severity_schema, validate_blocking_sev
 
 from functools import lru_cache
 
+
 @lru_cache(maxsize=1)
 def _get_real_config() -> tuple[dict, dict, tuple]:
     from engine.config.loader import parse_and_validate_global_config
-    
+
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     schema_path = os.path.join(root_dir, "00-governance", "schemas", "base.schema.json")
     with open(schema_path, "r", encoding="utf-8") as f:
         schema = json.load(f)
-        
+
     return parse_and_validate_global_config(schema)
 
 
@@ -52,20 +53,20 @@ def make_validator(
         all_doc_metadata = {}
 
     real_global, real_severity, real_blocking = _get_real_config()
-    
+
     # Merge rules with real defaults
     merged_rules = dict(real_global)
     merged_rules.update(rules)
-    
+
     # Merge severity levels
     merged_severity = dict(real_severity)
     if "severity_levels" in rules:
         merged_severity.update(rules["severity_levels"])
-        
+
     # Get blocking severities
     merged_blocking = rules.get("blocking_severities", list(real_blocking))
     merged_blocking = tuple(merged_blocking)
-    
+
     # Validate exactly like cli.py does, ensuring tests are "pro"
     validate_severity_schema(merged_severity)
     validate_blocking_severities(merged_blocking)

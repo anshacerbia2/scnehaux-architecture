@@ -20,8 +20,8 @@ Separate source-transaction publication correctness from durable delivery-substr
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
+| Date       | Status   | ADR Type    | Reviewers                                                                                   | Approver               |
+| :--------- | :------- | :---------- | :------------------------------------------------------------------------------------------ | :--------------------- |
 | 2026-08-24 | accepted | replacement | Architecture Authority, Platform Engineering, Product Engineering, Scheduling, Notification | Architecture Authority |
 
 This ADR supersedes **ADR-GLB-003** in full. The source-local Transactional Outbox invariant is retained. The former universal Kafka product mandate is replaced by profile-based delivery selection.
@@ -111,11 +111,11 @@ Transport acceptance is not business completion.
 
 Scnehaux defines three standard delivery profiles.
 
-| Profile | Primary fit | Required semantic properties | Reference implementation |
-| :-- | :-- | :-- | :-- |
-| **Direct Durable Delivery** | bounded point-to-point asynchronous relationship | idempotent durable target acceptance, retry, timeout, reconciliation, source outbox when atomic publication is required | HTTPS to a governed durable-acceptance API |
-| **Queue-Oriented Messaging** | commands, jobs, targeted triggers, competing consumers, routing, backpressure | durable queue, publisher acknowledgement, consumer ACK/NACK, DLQ/parking, bounded retry | RabbitMQ |
-| **Stream-Oriented Messaging** | replayable domain/lifecycle facts, many independent consumers, CDC, retained event history | retained append-only log, partition/key ordering, offsets, consumer groups, replay | Kafka protocol |
+| Profile                       | Primary fit                                                                                | Required semantic properties                                                                                            | Reference implementation                   |
+| :---------------------------- | :----------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- | :----------------------------------------- |
+| **Direct Durable Delivery**   | bounded point-to-point asynchronous relationship                                           | idempotent durable target acceptance, retry, timeout, reconciliation, source outbox when atomic publication is required | HTTPS to a governed durable-acceptance API |
+| **Queue-Oriented Messaging**  | commands, jobs, targeted triggers, competing consumers, routing, backpressure              | durable queue, publisher acknowledgement, consumer ACK/NACK, DLQ/parking, bounded retry                                 | RabbitMQ                                   |
+| **Stream-Oriented Messaging** | replayable domain/lifecycle facts, many independent consumers, CDC, retained event history | retained append-only log, partition/key ordering, offsets, consumer groups, replay                                      | Kafka protocol                             |
 
 These profiles define **delivery semantics**, not business authority.
 

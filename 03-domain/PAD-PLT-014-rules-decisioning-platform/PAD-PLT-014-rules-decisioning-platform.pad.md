@@ -118,21 +118,21 @@ Rules executes deterministic evaluation. The consuming Product decides how the r
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Rule | Deterministic evaluable statement within a Product-owned semantic domain |
-| Rule Set | Versioned grouping evaluated under a declared input and output contract |
-| Rule Version | Immutable released representation |
-| Effective Period | Declared validity interval |
-| Input Contract | Canonical facts required for deterministic evaluation |
-| Evaluation | Application of a released Rule Set to supplied facts and context |
-| Decision | Deterministic result produced by Evaluation |
-| Decision Trace | Explainable record of version, relevant inputs, branches, and result |
-| Simulation | Non-authoritative evaluation against test or scenario inputs |
-| Promotion | Controlled activation of a tested Rule Version |
-| Rollback | Controlled return to a prior compatible released version |
-| Rule Provenance | Source and ownership lineage for Rule meaning |
-| Failure Policy | Consumer-declared behavior when required deterministic evaluation is unavailable |
+| Term             | Meaning                                                                          |
+| :--------------- | :------------------------------------------------------------------------------- |
+| Rule             | Deterministic evaluable statement within a Product-owned semantic domain         |
+| Rule Set         | Versioned grouping evaluated under a declared input and output contract          |
+| Rule Version     | Immutable released representation                                                |
+| Effective Period | Declared validity interval                                                       |
+| Input Contract   | Canonical facts required for deterministic evaluation                            |
+| Evaluation       | Application of a released Rule Set to supplied facts and context                 |
+| Decision         | Deterministic result produced by Evaluation                                      |
+| Decision Trace   | Explainable record of version, relevant inputs, branches, and result             |
+| Simulation       | Non-authoritative evaluation against test or scenario inputs                     |
+| Promotion        | Controlled activation of a tested Rule Version                                   |
+| Rollback         | Controlled return to a prior compatible released version                         |
+| Rule Provenance  | Source and ownership lineage for Rule meaning                                    |
+| Failure Policy   | Consumer-declared behavior when required deterministic evaluation is unavailable |
 
 ### 3.3 Domain Policies
 

@@ -20,11 +20,11 @@ Mandating PostgreSQL Row-Level Security (RLS) as the Primary Multi-Tenant Isolat
 
 ## 2. Status
 
-| Date       | Status            | ADR Type     | Reviewers                      | Approver               |
-| ---------- | ----------------- | ------------ | ------------------------------ | ---------------------- |
-| 2026-05-01 | accepted          | foundational | Architecture Review Board      | Enterprise Architect   |
-| 2026-08-12 | accepted, amended | foundational | Architecture, Security, Data   | Architecture Authority |
-| 2026-08-22 | accepted, amended | foundational | Architecture, Security, Data   | Architecture Authority |
+| Date       | Status            | ADR Type     | Reviewers                    | Approver               |
+| ---------- | ----------------- | ------------ | ---------------------------- | ---------------------- |
+| 2026-05-01 | accepted          | foundational | Architecture Review Board    | Enterprise Architect   |
+| 2026-08-12 | accepted, amended | foundational | Architecture, Security, Data | Architecture Authority |
+| 2026-08-22 | accepted, amended | foundational | Architecture, Security, Data | Architecture Authority |
 
 ### Amendment Record
 
@@ -92,6 +92,7 @@ Compliance is verified by reading `pg_class.relforcerowsecurity` in addition to 
 - **Hardened Security Boundary**: Prevents cross-tenant data leaks at the engine level, provided the policy applies to the connecting role under §5.2.
 
   An earlier revision of this bullet named "an empty or null tenant context evaluates to false and returns zero rows" as the benefit. It is the opposite: a control that fails by returning an empty result presents as ordinary absence of data, and an operator reading an empty page has nothing to investigate. §5.2 therefore requires `missing_ok = false`, so an unbound connection raises and the failure is visible.
+
 - **Second Line of Defence**: An accidental omission of a tenant predicate does not by itself expose data. This does not remove the obligation to authorize in the application; a system that relies on RLS as its only tenant control has one mechanism, not two.
 - **Verifiable Compliance**: Auditable for SOC 2 and ISO 27001 through the catalog query in §5.3, which reads forced status and effective role privilege rather than the enable flag alone.
 

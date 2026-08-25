@@ -1,6 +1,5 @@
 import json
 import logging
-import sys
 
 from .constants import (
     SCHEMA_KEY_STRUCTURE_RULES,
@@ -161,28 +160,38 @@ def parse_and_validate_global_config(base_schema: dict) -> tuple[dict, dict, tup
         RuntimeError: If the configuration is missing or structurally invalid.
     </pre>
     """
-    from .constants import SCHEMA_KEY_GLOBAL_CONFIG, SCHEMA_KEY_SEVERITY_LEVELS, SCHEMA_KEY_BLOCKING_SEVERITIES
+    from .constants import (
+        SCHEMA_KEY_GLOBAL_CONFIG,
+        SCHEMA_KEY_SEVERITY_LEVELS,
+        SCHEMA_KEY_BLOCKING_SEVERITIES,
+    )
 
     global_rules = base_schema.get(SCHEMA_KEY_GLOBAL_CONFIG)
     if not global_rules:
-        raise RuntimeError(f"FATAL: Missing '{SCHEMA_KEY_GLOBAL_CONFIG}' in base schema.")
+        raise RuntimeError(
+            f"FATAL: Missing '{SCHEMA_KEY_GLOBAL_CONFIG}' in base schema."
+        )
 
     raw_severity_levels = global_rules.get(SCHEMA_KEY_SEVERITY_LEVELS, {})
     severity_levels = {
-        code: level 
-        for group, config in raw_severity_levels.items() 
+        code: level
+        for group, config in raw_severity_levels.items()
         for code, level in config.items()
     }
     if not severity_levels:
-        raise RuntimeError(f"FATAL: Missing '{SCHEMA_KEY_SEVERITY_LEVELS}' in base schema.")
+        raise RuntimeError(
+            f"FATAL: Missing '{SCHEMA_KEY_SEVERITY_LEVELS}' in base schema."
+        )
 
     # Overwrite the nested dictionary with flattened version for O(1) lookups
     global_rules[SCHEMA_KEY_SEVERITY_LEVELS] = severity_levels
 
     blocking_severities = global_rules.get(SCHEMA_KEY_BLOCKING_SEVERITIES)
     if not blocking_severities:
-        raise RuntimeError(f"FATAL: Missing '{SCHEMA_KEY_BLOCKING_SEVERITIES}' in base schema.")
-        
+        raise RuntimeError(
+            f"FATAL: Missing '{SCHEMA_KEY_BLOCKING_SEVERITIES}' in base schema."
+        )
+
     blocking_severities_tuple = tuple(blocking_severities)
 
     # Perform strict architectural validations
@@ -191,5 +200,3 @@ def parse_and_validate_global_config(base_schema: dict) -> tuple[dict, dict, tup
     validate_blocking_severities(blocking_severities_tuple)
 
     return global_rules, severity_levels, blocking_severities_tuple
-
-

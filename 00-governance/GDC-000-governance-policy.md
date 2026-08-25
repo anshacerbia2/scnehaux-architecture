@@ -3,7 +3,7 @@ doc_meta:
   id: GDC-000
   title: Documentation Governance Policy
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by: []
@@ -58,15 +58,15 @@ To physically execute the [Separation of Concerns](#12-core-philosophy-the-exist
 
 By applying these 9 interconnected dimensions, every architectural artifact is categorized into one of 7 distinct **Artifact Domains** and rigidly mapped in the following matrix:
 
-| Artifact Domain | Asset Owned | Scope | Abstraction | Primary Owner | Target Audience | Blast Radius | Horizon | Change Freq | NFR Focus |
-| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| **[GDC](GDC-005-gdc-guideline.md)** (Governance Document Contract) | Governance Framework | Ecosystem | Meta-Framework | Architecture Authority | All SWEs | Ecosystem | Permanent | Low | Gov Metrics |
-| **[EAD](GDC-006-ead-guideline.md)** (Enterprise Architecture Document) | Enterprise Strategy | Enterprise | Macro-Strategy | Architecture Authority | C-Level, VP, Architecture Authority | Massive (One-Way) | Strategic | Low | Cost Optimization, Sustainability, Security |
-| **[STD](GDC-007-std-guideline.md)** (Standard Document) | Standards & Methodologies | Inherited (Enterprise/Domain/System) | Guardrails | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team) | Inherited (Massive/Domain/System) | Living | Medium | Inherited (Context) |
-| **[PAD](GDC-008-pad-guideline.md)** (Product Architecture Document) | Domain Capability | Domain | Domain Capability | Domain Team | Domain Team, PMs | Domain-wide | Long-term | Med-Low | Performance Efficiency, Reliability, Security |
-| **[SAD](GDC-009-sad-guideline.md)** (System Architecture Document) | Cohesive Physical System Architecture | System | Container Topo | System Team | System Team | System-level | Mid-term | Medium | Performance Efficiency, Reliability, Operational Excellence |
-| **[TDD](GDC-011-tdd-guideline.md)** (Technical Design Document) | Component & Implementation Design | Component | Code Contracts | Component Team | Component Team | Component | Ephemeral | High | Reliability, Security, Operational Excellence |
-| **[ADR](GDC-010-adr-guideline.md)** (Architecture Decision Record) | Architectural Decisions | Inherited (Enterprise/Domain/System) | Rationale | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team) | Inherited (Massive/Domain/System) | Point-in-time | Immutable | Inherited (Context) |
+| Artifact Domain                                                        | Asset Owned                           | Scope                                | Abstraction       | Primary Owner                                            | Target Audience                     | Blast Radius                      | Horizon       | Change Freq | NFR Focus                                                   |
+| :--------------------------------------------------------------------- | :------------------------------------ | :----------------------------------- | :---------------- | :------------------------------------------------------- | :---------------------------------- | :-------------------------------- | :------------ | :---------- | :---------------------------------------------------------- |
+| **[GDC](GDC-005-gdc-guideline.md)** (Governance Document Contract)     | Governance Framework                  | Ecosystem                            | Meta-Framework    | Architecture Authority                                   | All SWEs                            | Ecosystem                         | Permanent     | Low         | Gov Metrics                                                 |
+| **[EAD](GDC-006-ead-guideline.md)** (Enterprise Architecture Document) | Enterprise Strategy                   | Enterprise                           | Macro-Strategy    | Architecture Authority                                   | C-Level, VP, Architecture Authority | Massive (One-Way)                 | Strategic     | Low         | Cost Optimization, Sustainability, Security                 |
+| **[STD](GDC-007-std-guideline.md)** (Standard Document)                | Standards & Methodologies             | Inherited (Enterprise/Domain/System) | Guardrails        | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team)  | Inherited (Massive/Domain/System) | Living        | Medium      | Inherited (Context)                                         |
+| **[PAD](GDC-008-pad-guideline.md)** (Product Architecture Document)    | Domain Capability                     | Domain                               | Domain Capability | Domain Team                                              | Domain Team, PMs                    | Domain-wide                       | Long-term     | Med-Low     | Performance Efficiency, Reliability, Security               |
+| **[SAD](GDC-009-sad-guideline.md)** (System Architecture Document)     | Cohesive Physical System Architecture | System                               | Container Topo    | System Team                                              | System Team                         | System-level                      | Mid-term      | Medium      | Performance Efficiency, Reliability, Operational Excellence |
+| **[TDD](GDC-011-tdd-guideline.md)** (Technical Design Document)        | Component & Implementation Design     | Component                            | Code Contracts    | Component Team                                           | Component Team                      | Component                         | Ephemeral     | High        | Reliability, Security, Operational Excellence               |
+| **[ADR](GDC-010-adr-guideline.md)** (Architecture Decision Record)     | Architectural Decisions               | Inherited (Enterprise/Domain/System) | Rationale         | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team)  | Inherited (Massive/Domain/System) | Point-in-time | Immutable   | Inherited (Context)                                         |
 
 To illustrate this separation of concerns practically, consider the analogy of a nation's infrastructure planning: EAD acts as the national planning agency (Bappenas) setting macro objectives, PAD acts as regional planning (Bappeda) mapping domain capabilities, SAD acts as public works planning (PU Perencanaan) designing physical container topologies, and TDD acts as the public works execution (PU Pelaksanaan) building the granular components.
 
@@ -77,14 +77,14 @@ The 9 dimensions of the SoC Philosophy (Scope, Abstraction, NFR Focus, etc.) are
 - **C4 Model (The Vertical Axis)**: Standard C4 is used as the foundational Y-axis (depth) of our ecosystem. It dictates how we zoom in from the Enterprise level (System Landscape / C0) down to the Component level (C3). This guarantees that every artifact operates at the correct level of abstraction and naturally serves the right audience (from C-Level executives at C0 down to SWEs at C3) without mixing technical depths.
   - _Why not UML or ArchiMate?_ UML is too syntax-heavy and demands specialized training, while ArchiMate is often disconnected from the reality of code. C4 provides a lightweight, intuitive "map-like" mental model that developers natively understand without requiring proprietary modeling tools.
 
-  | Level | C4 Name | Scnehaux Artifacts | SoC Scope | Location |
-  | :-- | :-- | :-- | :-- | :-- |
-  | **Meta** | **Cross-Cutting** | **GDC**, **ADR**, **STD** | Ecosystem / Inherited | Root Repo (`00`, `02`, `05`) |
-  | **C0** | **System Landscape** | **EAD** | Enterprise | Root Repo (`01-enterprise`) |
-  | **C1** | **System Context** | **PAD** | Domain | Root Repo (`03-domain`) |
-  | **C2** | **Container** | **SAD** | System | Root Repo (`04-system`) |
-  | **C3** | **Component** | **TDD** | Component | **Specific Project Repository** |
-  | **C4** | **Code** | Source Code / Implementation | Code Base | **Specific Project Repository** |
+  | Level    | C4 Name              | Scnehaux Artifacts           | SoC Scope             | Location                        |
+  | :------- | :------------------- | :--------------------------- | :-------------------- | :------------------------------ |
+  | **Meta** | **Cross-Cutting**    | **GDC**, **ADR**, **STD**    | Ecosystem / Inherited | Root Repo (`00`, `02`, `05`)    |
+  | **C0**   | **System Landscape** | **EAD**                      | Enterprise            | Root Repo (`01-enterprise`)     |
+  | **C1**   | **System Context**   | **PAD**                      | Domain                | Root Repo (`03-domain`)         |
+  | **C2**   | **Container**        | **SAD**                      | System                | Root Repo (`04-system`)         |
+  | **C3**   | **Component**        | **TDD**                      | Component             | **Specific Project Repository** |
+  | **C4**   | **Code**             | Source Code / Implementation | Code Base             | **Specific Project Repository** |
 
 - **Domain-Driven Design (DDD) & Team Topologies (The Business Anchor)**: While C4 handles technical zoom, DDD and Team Topologies provide the strategic anchor. At the macro level, **DDD Strategic Design** (Bounded Contexts) constructs the long-term foundations of our EAD and PAD artifacts, enforcing a strict separation between horizontal Platform services and vertical Business Products. As we zoom in, **DDD Tactical Design** (Aggregates, Entities) shapes the physical boundaries within our SADs and TDDs. Concurrently, **Team Topologies** enforces Conway's Law across the entire ecosystem, dictating the ownership and collaboration models for every single artifact.
   - _Why not TOGAF?_ TOGAF's 4 domains (Business, Data, Application, Technology) are often too rigid and academic for hyper-growth cloud-native engineering teams. DDD provides the most pragmatic vocabulary for forcing technologists to define "What bounded context are we actually building?" while Team Topologies enforces Conway's Law in our documentation ownership.
@@ -115,7 +115,7 @@ doc_meta:
   id: ADR-IDP-001
   title: Use Keycloak for Identity Provider
   owner: Identity Platform Team (Domain Team)
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by: [GDC-000, GDC-001]
@@ -388,14 +388,14 @@ To enforce the AWS WAF quality standard established in [Section 1.4 The Hybrid M
 
 Because the exhaustive list of valid derivatives varies heavily by domain (e.g., a PAD requires different NFR constraints than a SAD), their strict enforcement is delegated entirely to the respective domain guidelines. This Constitution only provides illustrative examples below:
 
-| AWS WAF Pillar | Illustrative Engineering Derivatives |
-| :-- | :-- |
-| **Operational Excellence** | Observability, CI/CD, Runbook, Alerting, Telemetry, Deployment, etc. |
-| **Security** | IAM, AuthZ, AuthN, Encryption, Zero Trust, Compliance, Audit, Data Privacy, etc. |
-| **Reliability** | SLA, SLO, SLI, RTO, RPO, Resilience, Circuit Breaker, Retry, Timeout, Availability, etc. |
-| **Performance Efficiency** | Latency, Throughput, RPS, Scalability, Caching, etc. |
-| **Cost Optimization** | FinOps, Budget, TCO, Cost Allocation, etc. |
-| **Sustainability** | GreenOps, Carbon Footprint, Utilization, etc. |
+| AWS WAF Pillar             | Illustrative Engineering Derivatives                                                     |
+| :------------------------- | :--------------------------------------------------------------------------------------- |
+| **Operational Excellence** | Observability, CI/CD, Runbook, Alerting, Telemetry, Deployment, etc.                     |
+| **Security**               | IAM, AuthZ, AuthN, Encryption, Zero Trust, Compliance, Audit, Data Privacy, etc.         |
+| **Reliability**            | SLA, SLO, SLI, RTO, RPO, Resilience, Circuit Breaker, Retry, Timeout, Availability, etc. |
+| **Performance Efficiency** | Latency, Throughput, RPS, Scalability, Caching, etc.                                     |
+| **Cost Optimization**      | FinOps, Budget, TCO, Cost Allocation, etc.                                               |
+| **Sustainability**         | GreenOps, Carbon Footprint, Utilization, etc.                                            |
 
 ### 2.6 Artifact Lifecycle & Versioning
 
@@ -407,6 +407,7 @@ Architecture artifacts are not static, they represent the evolving truth of the 
 4. **Immutable Snapshots vs. Semantic Versioning**: Immutable artifacts (ADRs) are not versioned, if a decision changes, a _new_ artifact must supersede the old one. All other artifacts (including GDCs, EADs, STDs, PADs, SADs, and TDDs) are treated as Versioned Artifacts and must utilize Semantic Versioning.
 5. **The Version Bump Mandate**: Once a versioned artifact reaches an `approved` state, any subsequent modification to its architectural content MUST include a corresponding version bump in its YAML metadata.
 6. **The Baseline Stability Mandate**: A versioned artifact whose status asserts it is, or has been, an official baseline (`approved`, `deprecated`) MUST carry a stable Semantic Version of `1.0.0` or higher. Semantic Versioning reserves major version zero for initial development, where anything MAY change at any time; an artifact cannot simultaneously be the blueprint other teams build against and a document whose contract may move underneath them. Pre-baseline statuses (`chartered`, `draft`, `proposed`) are the correct home for `0.y.z` and remain unconstrained — promotion to a baseline status and promotion to `1.0.0` are one act, not two. Enforced by the `approved_version_not_stable` fitness function.
+7. **The Baseline Stability Mandate**: A versioned artifact whose status asserts it is, or has been, an official baseline (`approved`, `deprecated`) MUST carry a stable Semantic Version of `1.0.0` or higher. Semantic Versioning reserves major version zero for initial development, where anything MAY change at any time; an artifact cannot simultaneously be the blueprint other teams build against and a document whose contract may move underneath them. Pre-baseline statuses (`chartered`, `draft`, `proposed`) are the correct home for `0.y.z` and remain unconstrained — promotion to a baseline status and promotion to `1.0.0` are one act, not two. Enforced by the `approved_version_not_stable` fitness function.
 
 ### 2.7 Policy-as-Code
 
@@ -464,20 +465,20 @@ To manage governance across federated repositories without creating a human bott
 
 ### 4.1 The Glossary of Truth & Execution Gateways
 
-| Code | Full Name | Authoritative Owner & Purpose |
-| :-- | :-- | :-- |
-| **PRD** | Product Requirements Document | **[Owner: Product Managers]** Business "What" and "Why" (Non-technical). Not part of this framework. |
-| **GDC (Vision)** | Global Design Concept | **[REJECTED]** High-Level Vision (C1). Replaced by the **EAD** (for enterprise strategy) and integrated into the **Domain Capability** section of **PAD**s. |
-| **GDC (Gov)** | Governance Document Contract | **[Owner: Architecture Authority]** Automated policy definitions and deterministic fitness function enforcement. _(See [Appendix 4.2](#appendix-4-2) for acronym clarification)._ |
-| **EAD** | Enterprise Architecture Document | **[Owner: Architecture Authority]** Strategic "North Star" (C1), cross-domain policies, and enterprise capability models. |
-| **PAD** | Product Architecture Document | **[Owner: Domain Team]** Domain Capability (C2). Defines domain capabilities, integration contracts, and system positioning. |
-| **SAD** | System Architecture Document | **[Owner: System Team]** System Architecture (C2). Defines internal structure, deployment topology, observability, and resilience mechanics. |
-| **ADR** | Architecture Decision Record | **[Owner: Inherited (Architecture Authority or Domain/System Team)]** Meta. Rationale for significant technical pivots and trade-offs (`05-decisions`). |
-| **STD** | Standard Document | **[Owner: Inherited (Architecture Authority or Domain/System Team)]** Meta. Mandatory engineering policies and guardrails (`02-standards`). |
-| **TRD** | Technical Requirements Document | **[REJECTED]** Scnehaux rejects TRDs to prevent documentation fragmentation. _(See [Appendix 4.3](#appendix-4-3) for rationale)._ |
-| **TDD (Design)** | Technical Design Document | **[Owner: Component Team]** Component artifacts (C3), API contracts, ERDs, Security, and Failure Handling. |
-| **TDD (Testing)** | Test Driven Development | **[Owner: Component Team]** Engineering Methodology. The discipline used to implement the Test Strategy. |
-| **ERD** | Entity Relationship Diagram | **[Owner: Component Team]** Data Schema. The structural foundation of the TDD (Design). |
+| Code              | Full Name                        | Authoritative Owner & Purpose                                                                                                                                                     |
+| :---------------- | :------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **PRD**           | Product Requirements Document    | **[Owner: Product Managers]** Business "What" and "Why" (Non-technical). Not part of this framework.                                                                              |
+| **GDC (Vision)**  | Global Design Concept            | **[REJECTED]** High-Level Vision (C1). Replaced by the **EAD** (for enterprise strategy) and integrated into the **Domain Capability** section of **PAD**s.                       |
+| **GDC (Gov)**     | Governance Document Contract     | **[Owner: Architecture Authority]** Automated policy definitions and deterministic fitness function enforcement. _(See [Appendix 4.2](#appendix-4-2) for acronym clarification)._ |
+| **EAD**           | Enterprise Architecture Document | **[Owner: Architecture Authority]** Strategic "North Star" (C1), cross-domain policies, and enterprise capability models.                                                         |
+| **PAD**           | Product Architecture Document    | **[Owner: Domain Team]** Domain Capability (C2). Defines domain capabilities, integration contracts, and system positioning.                                                      |
+| **SAD**           | System Architecture Document     | **[Owner: System Team]** System Architecture (C2). Defines internal structure, deployment topology, observability, and resilience mechanics.                                      |
+| **ADR**           | Architecture Decision Record     | **[Owner: Inherited (Architecture Authority or Domain/System Team)]** Meta. Rationale for significant technical pivots and trade-offs (`05-decisions`).                           |
+| **STD**           | Standard Document                | **[Owner: Inherited (Architecture Authority or Domain/System Team)]** Meta. Mandatory engineering policies and guardrails (`02-standards`).                                       |
+| **TRD**           | Technical Requirements Document  | **[REJECTED]** Scnehaux rejects TRDs to prevent documentation fragmentation. _(See [Appendix 4.3](#appendix-4-3) for rationale)._                                                 |
+| **TDD (Design)**  | Technical Design Document        | **[Owner: Component Team]** Component artifacts (C3), API contracts, ERDs, Security, and Failure Handling.                                                                        |
+| **TDD (Testing)** | Test Driven Development          | **[Owner: Component Team]** Engineering Methodology. The discipline used to implement the Test Strategy.                                                                          |
+| **ERD**           | Entity Relationship Diagram      | **[Owner: Component Team]** Data Schema. The structural foundation of the TDD (Design).                                                                                           |
 
 <a id="appendix-4-2"></a>
 
@@ -512,10 +513,10 @@ In accordance with the 10th parameter of the Quality Rubric (Trade-Offs), the Ar
 
 To prevent ambiguity, the term "Fractal" is used in three distinct but related contexts within this ecosystem:
 
-| Term | Meaning | Primary Reference |
-| :-- | :-- | :-- |
-| **Fractal Boundary** | The SoC principle that governance policies are themselves decentralized using the same decomposition they impose on architecture artifacts | §2.3 |
-| **Fractal Triad** | The 1:1:1 implementation pattern: Guideline + Schema + Validator for each artifact domain | §2.3.2, GDC-001 |
-| **Circular Governance** | The metaprogramming principle that governance artifacts are validated by the same engine they mandate | §2.9 |
+| Term                    | Meaning                                                                                                                                    | Primary Reference |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- | :---------------- |
+| **Fractal Boundary**    | The SoC principle that governance policies are themselves decentralized using the same decomposition they impose on architecture artifacts | §2.3              |
+| **Fractal Triad**       | The 1:1:1 implementation pattern: Guideline + Schema + Validator for each artifact domain                                                  | §2.3.2, GDC-001   |
+| **Circular Governance** | The metaprogramming principle that governance artifacts are validated by the same engine they mandate                                      | §2.9              |
 
 These three concepts are complementary but operate at different abstraction layers: Fractal Boundary is the organizational principle, Fractal Triad is the implementation pattern, and Circular Governance is the self-referential enforcement property.

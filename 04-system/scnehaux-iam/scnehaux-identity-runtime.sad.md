@@ -147,10 +147,10 @@ Internal system containers are:
 
 This system is realized by two repositories with different toolchains and different release cadences:
 
-| Repository | Containers realized | Toolchain | Release cadence |
-| :-- | :-- | :-- | :-- |
-| `identity-kernel` | Keycloak Identity Kernel, Identity Event Adapter, realm configuration, login theme, digest-pinned image build | JVM and container | Bound to the pinned Keycloak release |
-| `identity-control` | Identity Control Service | Go | Independent |
+| Repository         | Containers realized                                                                                           | Toolchain         | Release cadence                      |
+| :----------------- | :------------------------------------------------------------------------------------------------------------ | :---------------- | :----------------------------------- |
+| `identity-kernel`  | Keycloak Identity Kernel, Identity Event Adapter, realm configuration, login theme, digest-pinned image build | JVM and container | Bound to the pinned Keycloak release |
+| `identity-control` | Identity Control Service                                                                                      | Go                | Independent                          |
 
 The split is required rather than preferred. A Keycloak upgrade forces a rebuild and a full compatibility suite across everything in `identity-kernel`; holding the Go service in the same repository would make every kernel upgrade block an unrelated control-plane release. Extension governance in §4.5 also requires each extension to declare its own source repository and supported Keycloak range.
 
@@ -528,14 +528,14 @@ The propagation budget is 60 seconds as the planning figure, against an operatio
 and where a subject reaches several audiences the delay is the **worst** class, not the typical
 one. A stated delay that assumed the common case would be wrong exactly when it mattered.
 
-| Class | Enforcing mechanisms, in order | Lifetime term | Maximum delay |
-| :-- | :-- | :-- | :-- |
-| Session | kernel session removal | class of that session's audience | 60s + class |
-| Principal | kernel user disable → remove every kernel session → remove projected context → quarantine the control-plane mapping | worst class the Principal holds | 60s + worst class |
-| Authenticator | kernel authenticator removal | none for future ceremonies | 60s, and the Session delay in addition when the removal is a compromise response |
-| Client or grant | client disable → grant revocation → refresh invalidation | class of that client's audience | 60s + class |
-| Workload | workload credential disable → grant and session removal | `L3`, 9 minutes | 10 minutes |
-| Contextual Membership | Organization priority event → Identity Control removes projected context → kernel session removal → consumer projection update | `L1`, 9 minutes | 10 minutes |
+| Class                 | Enforcing mechanisms, in order                                                                                                 | Lifetime term                    | Maximum delay                                                                    |
+| :-------------------- | :----------------------------------------------------------------------------------------------------------------------------- | :------------------------------- | :------------------------------------------------------------------------------- |
+| Session               | kernel session removal                                                                                                         | class of that session's audience | 60s + class                                                                      |
+| Principal             | kernel user disable → remove every kernel session → remove projected context → quarantine the control-plane mapping            | worst class the Principal holds  | 60s + worst class                                                                |
+| Authenticator         | kernel authenticator removal                                                                                                   | none for future ceremonies       | 60s, and the Session delay in addition when the removal is a compromise response |
+| Client or grant       | client disable → grant revocation → refresh invalidation                                                                       | class of that client's audience  | 60s + class                                                                      |
+| Workload              | workload credential disable → grant and session removal                                                                        | `L3`, 9 minutes                  | 10 minutes                                                                       |
+| Contextual Membership | Organization priority event → Identity Control removes projected context → kernel session removal → consumer projection update | `L1`, 9 minutes                  | 10 minutes                                                                       |
 
 **Ordering inside the Principal and Membership classes is load-bearing.** The projected context
 is removed before the kernel sessions. Reversed, a refresh landing between the two steps mints a
@@ -567,11 +567,11 @@ Three mechanisms above are declared and not yet realized, and the resulting dela
 rather than merely longer. Recorded here because a table of intentions that reads like a table of
 controls is worse than no table:
 
-| Mechanism | Blocked on | Consequence today |
-| :-- | :-- | :-- |
-| Consumer projection update | the event broker and `SAD-004` | a Membership revocation reaches no consumer; only token expiry limits it |
-| Long-lived connection termination | a connection registry in the consuming system | a held connection survives every revocation class |
-| Projected context removal | the Keycloak projection path in `TDD-identity-control-002` | Principal and Membership revocation currently rely on kernel session removal alone |
+| Mechanism                         | Blocked on                                                 | Consequence today                                                                  |
+| :-------------------------------- | :--------------------------------------------------------- | :--------------------------------------------------------------------------------- |
+| Consumer projection update        | the event broker and `SAD-004`                             | a Membership revocation reaches no consumer; only token expiry limits it           |
+| Long-lived connection termination | a connection registry in the consuming system              | a held connection survives every revocation class                                  |
+| Projected context removal         | the Keycloak projection path in `TDD-identity-control-002` | Principal and Membership revocation currently rely on kernel session removal alone |
 
 Until each lands, the Identity Runtime MUST NOT report a maximum enforcement delay for the
 Contextual Membership class, and the production gate MUST include measured
@@ -666,16 +666,16 @@ Multi-region active-active remains a future architecture decision.
 
 ### 8.8 Blast Radius
 
-| Failure | Blast Radius | Containment |
-| :-- | :-- | :-- |
-| One Keycloak replica | Reduced authentication capacity | Remove replica and continue cluster service |
-| Keycloak cluster | New login, token, refresh, federation | Existing valid tokens remain locally verifiable |
-| Keycloak database | Identity issuance and administration | Fail unsafe mutations closed; restore/failover database |
-| Control Service | New provisioning, drift repair, canonical event translation | Keycloak login continues; freeze unmanaged changes |
-| Control database | Control/reconciliation and migration | Keycloak login continues; restore control state/outbox |
-| External IdP | One federation provider/journey | Isolate provider; local and other providers continue |
-| Signing key | Issuance or verification trust | activate incident key procedure; preserve valid verification window |
-| Membership projection stale | Context-specific access | apply consumer freshness policy and high-risk fail-closed behavior |
+| Failure                     | Blast Radius                                                | Containment                                                         |
+| :-------------------------- | :---------------------------------------------------------- | :------------------------------------------------------------------ |
+| One Keycloak replica        | Reduced authentication capacity                             | Remove replica and continue cluster service                         |
+| Keycloak cluster            | New login, token, refresh, federation                       | Existing valid tokens remain locally verifiable                     |
+| Keycloak database           | Identity issuance and administration                        | Fail unsafe mutations closed; restore/failover database             |
+| Control Service             | New provisioning, drift repair, canonical event translation | Keycloak login continues; freeze unmanaged changes                  |
+| Control database            | Control/reconciliation and migration                        | Keycloak login continues; restore control state/outbox              |
+| External IdP                | One federation provider/journey                             | Isolate provider; local and other providers continue                |
+| Signing key                 | Issuance or verification trust                              | activate incident key procedure; preserve valid verification window |
+| Membership projection stale | Context-specific access                                     | apply consumer freshness policy and high-risk fail-closed behavior  |
 
 ## 9. Deployment Strategy
 

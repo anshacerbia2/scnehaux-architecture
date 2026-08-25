@@ -59,12 +59,12 @@ Concrete shared connectors will be justified by multiple consumers, independent 
 
 ## 2. Enterprise Traceability
 
-| Relationship | Target |
-| :-- | :-- |
-| Realizes | PAD-PLT-006 |
-| Governed by | EAD-001 and EAD-004 |
-| Aligns with | EAD-002 Shared Integration is not a universal gateway |
-| Consumes | Event & Messaging, Trust, Identity/Application Trust, Audit/Observability |
+| Relationship | Target                                                                    |
+| :----------- | :------------------------------------------------------------------------ |
+| Realizes     | PAD-PLT-006                                                               |
+| Governed by  | EAD-001 and EAD-004                                                       |
+| Aligns with  | EAD-002 Shared Integration is not a universal gateway                     |
+| Consumes     | Event & Messaging, Trust, Identity/Application Trust, Audit/Observability |
 
 ## 3. Solution Context
 

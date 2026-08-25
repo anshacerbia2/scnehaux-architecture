@@ -146,18 +146,18 @@ Consumers use authentication journeys, delegated authorization flows, signed or 
 
 The logical bounded contexts are:
 
-| Bounded Context | Owns | Does Not Own |
-| :-- | :-- | :-- |
-| Principal & Identity Realm | Stable Principal, Principal type, Realm, identity status, correlation policy | Membership, employee, Product profile |
-| Identifier & Identity Linkage | Login identifiers, verification, external identity link, account linking | Tenant or Product access |
-| Authenticator & Recovery | Authenticator enrollment, verifier state, compromise, recovery | Product authorization |
-| Authentication & Assurance | Authentication result, method, recency, assurance, step-up | Membership and Entitlement |
-| Session & Containment | Session, refresh grant, session inventory, revocation, compromise response | Business workflow state |
-| Protocol Trust | OAuth/OIDC grants, tokens, consent, client/resource security registration | Application ownership and Product permission |
-| Federation | External issuer trust, assertion validation, local identity linking | External source identity administration |
-| Workload Identity | Service/workload Principal, credential lifecycle, delegated agent identity | Runtime deployment ownership |
-| Identity Administration | Identity, credential, session, federation, and protocol-trust administration | Tenant and Product administration |
-| Identity Security Events | Local durable identity facts and publication obligation | Enterprise evidence ledger |
+| Bounded Context               | Owns                                                                         | Does Not Own                                 |
+| :---------------------------- | :--------------------------------------------------------------------------- | :------------------------------------------- |
+| Principal & Identity Realm    | Stable Principal, Principal type, Realm, identity status, correlation policy | Membership, employee, Product profile        |
+| Identifier & Identity Linkage | Login identifiers, verification, external identity link, account linking     | Tenant or Product access                     |
+| Authenticator & Recovery      | Authenticator enrollment, verifier state, compromise, recovery               | Product authorization                        |
+| Authentication & Assurance    | Authentication result, method, recency, assurance, step-up                   | Membership and Entitlement                   |
+| Session & Containment         | Session, refresh grant, session inventory, revocation, compromise response   | Business workflow state                      |
+| Protocol Trust                | OAuth/OIDC grants, tokens, consent, client/resource security registration    | Application ownership and Product permission |
+| Federation                    | External issuer trust, assertion validation, local identity linking          | External source identity administration      |
+| Workload Identity             | Service/workload Principal, credential lifecycle, delegated agent identity   | Runtime deployment ownership                 |
+| Identity Administration       | Identity, credential, session, federation, and protocol-trust administration | Tenant and Product administration            |
+| Identity Security Events      | Local durable identity facts and publication obligation                      | Enterprise evidence ledger                   |
 
 These contexts may be realized by one or more physical systems without changing the PAD.
 
@@ -280,17 +280,17 @@ Privileged identity administration requires stronger assurance, narrow scope, at
 
 ### 5.3 Data Classification
 
-| Data Class | Examples | Classification Direction |
-| :-- | :-- | :-- |
-| Authentication secret | password during verification, private credential, recovery secret | Restricted; never retained in plaintext |
-| Credential verifier | password verifier, recovery verifier, refresh verifier | Restricted |
-| Principal PII | verified email, phone, identifiers | Restricted |
-| Identity linkage | external issuer/subject and linkage state | Restricted |
-| Authenticator and session metadata | method, device, session, revocation state | Restricted |
-| Protocol registration | redirect URI, audience, grant policy | Internal; secrets Restricted |
-| Consent and grant | client, resource, scope, purpose | Restricted |
-| Public verification material | issuer metadata, public keys | Public by design |
-| Security and investigation facts | failures, anomalies, privileged actions | Restricted |
+| Data Class                         | Examples                                                          | Classification Direction                |
+| :--------------------------------- | :---------------------------------------------------------------- | :-------------------------------------- |
+| Authentication secret              | password during verification, private credential, recovery secret | Restricted; never retained in plaintext |
+| Credential verifier                | password verifier, recovery verifier, refresh verifier            | Restricted                              |
+| Principal PII                      | verified email, phone, identifiers                                | Restricted                              |
+| Identity linkage                   | external issuer/subject and linkage state                         | Restricted                              |
+| Authenticator and session metadata | method, device, session, revocation state                         | Restricted                              |
+| Protocol registration              | redirect URI, audience, grant policy                              | Internal; secrets Restricted            |
+| Consent and grant                  | client, resource, scope, purpose                                  | Restricted                              |
+| Public verification material       | issuer metadata, public keys                                      | Public by design                        |
+| Security and investigation facts   | failures, anomalies, privileged actions                           | Restricted                              |
 
 The platform minimizes attributes and claim release by purpose, audience, and identity population.
 

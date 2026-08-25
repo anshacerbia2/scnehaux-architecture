@@ -77,22 +77,27 @@ def _validate_compliance_placement(v: BaseValidator) -> None:
 
     # 2. Filename identity check
     if doc_id:
-        if not filename.endswith(".sad.md") and not filename.endswith(".pad.md") and not filename.startswith(doc_id):
+        if (
+            not filename.endswith(".sad.md")
+            and not filename.endswith(".pad.md")
+            and not filename.startswith(doc_id)
+        ):
             v.add_error(
                 "compliance_filename_match",
                 f"Filename '{filename}' must start with the document ID '{doc_id}'.",
             )
 
 
-
 def _validate_content_quality(v: BaseValidator) -> None:
     """Ensure the content avoids prohibited boilerplate words and vague claims based on the governance constraints."""
     # Strip fences and frontmatter but preserve line numbers
     text_content = strip_code_fences(v.content)
+
     def replacer(m):
         return "\n" * m.group(0).count("\n")
+
     text_content = re.sub(r"^---\s+.*?\s+---", replacer, text_content, flags=re.DOTALL)
-    
+
     rules_content = v.global_rules
     content_rules = rules_content.get("content_rules", {})
 
@@ -109,5 +114,5 @@ def _validate_content_quality(v: BaseValidator) -> None:
 
         for pattern in patterns:
             for match in re.finditer(pattern, text_content, re.IGNORECASE):
-                line_num = text_content.count('\n', 0, match.start()) + 1
+                line_num = text_content.count("\n", 0, match.start()) + 1
                 v.add_error(rule_id, message, line_num=line_num)

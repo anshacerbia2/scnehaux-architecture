@@ -33,12 +33,12 @@ Data ownership must be explicit and domain-bounded. Each domain retains exclusiv
 
 To safeguard sensitive information, all application data fields must map to one of four classification tiers:
 
-| Tier | Classification | Description & Examples | Encryption Requirement |
-| :-- | :-- | :-- | :-- |
-| **Tier 1** | **Restricted PII** | Passwords, private keys, national IDs, payroll details. | Column-level envelope encryption at rest. |
-| **Tier 2** | **Identifiable PII** | Full name, email address, physical address, phone number. | Standard database encryption at rest. |
-| **Tier 3** | **Internal Data** | Tenant internal configs, system logs, business workflows. | Standard database encryption at rest. |
-| **Tier 4** | **Public Data** | Marketing assets, public documentation, open API specs. |  |
+| Tier       | Classification       | Description & Examples                                    | Encryption Requirement                    |
+| :--------- | :------------------- | :-------------------------------------------------------- | :---------------------------------------- |
+| **Tier 1** | **Restricted PII**   | Passwords, private keys, national IDs, payroll details.   | Column-level envelope encryption at rest. |
+| **Tier 2** | **Identifiable PII** | Full name, email address, physical address, phone number. | Standard database encryption at rest.     |
+| **Tier 3** | **Internal Data**    | Tenant internal configs, system logs, business workflows. | Standard database encryption at rest.     |
+| **Tier 4** | **Public Data**      | Marketing assets, public documentation, open API specs.   |                                           |
 
 - **Log Sanitization**: Under no circumstances can Tier 1 or Tier 2 data be written to logging streams or application stdout. Middleware must scrub all logs.
 
@@ -94,12 +94,12 @@ Domain Data Owners are accountable for the lifecycle of their domain data, speci
 
 All data schemas, tables, and attributes must align to this domain ownership matrix:
 
-| Domain | Data Scope Examples | Domain Data Owner |
-| :-- | :-- | :-- |
+| Domain                                 | Data Scope Examples                                                               | Domain Data Owner               |
+| :------------------------------------- | :-------------------------------------------------------------------------------- | :------------------------------ |
 | **Identity & Access Management (IAM)** | User credentials, multi-factor auth states, OAuth tokens, authorization policies. | Security & IAM Engineering Team |
-| **Core Human Resources (HR)** | Employee records, organizational hierarchies, contracts, onboarding workflows. | Core HR Systems Team |
-| **Payroll & Compensation** | Bank account details, salary structures, tax filings, payroll transactions. | Payroll Engineering Team |
-| **Time & Attendance** | Time-clock records, check-in locations, leave requests, overtime approvals. | Workforce Operations Team |
+| **Core Human Resources (HR)**          | Employee records, organizational hierarchies, contracts, onboarding workflows.    | Core HR Systems Team            |
+| **Payroll & Compensation**             | Bank account details, salary structures, tax filings, payroll transactions.       | Payroll Engineering Team        |
+| **Time & Attendance**                  | Time-clock records, check-in locations, leave requests, overtime approvals.       | Workforce Operations Team       |
 
 ---
 

@@ -71,5 +71,3 @@ def test_dependency_scanner_fallback_srd_text(tmpdir):
     }
     graph, _ = build_dependency_graph(all_doc_metadata)
     assert "DOC-2" in graph.get("DOC-1", set())
-
-

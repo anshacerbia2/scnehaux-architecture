@@ -95,24 +95,24 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Notification | Accepted communication intent tracked by the platform |
-| Recipient Snapshot | Immutable destination endpoint and bounded recipient metadata used for one Notification |
-| Template Family | Stable semantic communication type managed through platform lifecycle |
-| Template Version | Immutable governed version of template content and data contract |
-| Channel Variant | Email, WhatsApp, SMS, Push, Webhook, or other realization of one Template Version |
-| Channel Profile | Sender identity, provider binding, routing policy, and secret references for one channel context |
+| Term                             | Meaning                                                                                                                                                                              |
+| :------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Notification                     | Accepted communication intent tracked by the platform                                                                                                                                |
+| Recipient Snapshot               | Immutable destination endpoint and bounded recipient metadata used for one Notification                                                                                              |
+| Template Family                  | Stable semantic communication type managed through platform lifecycle                                                                                                                |
+| Template Version                 | Immutable governed version of template content and data contract                                                                                                                     |
+| Channel Variant                  | Email, WhatsApp, SMS, Push, Webhook, or other realization of one Template Version                                                                                                    |
+| Channel Profile                  | Sender identity, provider binding, routing policy, and secret references for one channel context                                                                                     |
 | Application Notification Profile | Notification-owned configuration that binds authorized application/Tenant/channel context to sender/channel/provider/template policy without owning the application or Tenant itself |
-| Deferred Notification Command | Bounded registered command delivered by Scheduling that causes Notification creation at due time rather than at schedule-registration time |
-| Provider Binding | Notification-owned provider configuration that references secrets held by Trust Services |
-| Delivery | One recipient/channel delivery lifecycle |
-| Delivery Attempt | One provider interaction attempt within a Delivery lifecycle |
-| Provider Acceptance | Provider accepted a send request; not necessarily final channel delivery |
-| Delivery Receipt | Provider/channel evidence of final or intermediate delivery where available |
-| Delivery Status | Provider-independent normalized state owned by Notification |
-| Scheduled Notification | Accepted Notification whose communication semantics are frozen and which awaits a durable future wake-up from Scheduling |
-| Scheduling Binding | Recoverable association between one Notification scheduling intent and the Scheduler Schedule identity created idempotently for it |
+| Deferred Notification Command    | Bounded registered command delivered by Scheduling that causes Notification creation at due time rather than at schedule-registration time                                           |
+| Provider Binding                 | Notification-owned provider configuration that references secrets held by Trust Services                                                                                             |
+| Delivery                         | One recipient/channel delivery lifecycle                                                                                                                                             |
+| Delivery Attempt                 | One provider interaction attempt within a Delivery lifecycle                                                                                                                         |
+| Provider Acceptance              | Provider accepted a send request; not necessarily final channel delivery                                                                                                             |
+| Delivery Receipt                 | Provider/channel evidence of final or intermediate delivery where available                                                                                                          |
+| Delivery Status                  | Provider-independent normalized state owned by Notification                                                                                                                          |
+| Scheduled Notification           | Accepted Notification whose communication semantics are frozen and which awaits a durable future wake-up from Scheduling                                                             |
+| Scheduling Binding               | Recoverable association between one Notification scheduling intent and the Scheduler Schedule identity created idempotently for it                                                   |
 
 ### 3.3 Domain Policies
 

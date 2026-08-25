@@ -3,7 +3,7 @@ doc_meta:
   id: GDC-001
   title: Architecture Fitness Functions & Compliance Engine
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by: [GDC-000]
@@ -83,6 +83,7 @@ The Master Fitness Function resides entirely within the `06-fitness-function/` d
 > **DO NOT EDIT THIS TREE MANUALLY.** This directory tree is automatically generated from the live physical structure of the `engine/` directory. If the codebase structure changes, regenerate this block by running: `python 06-fitness-function/generators/generate_engine_topography.py`
 
 <!-- BEGIN_ENGINE_TOPOGRAPHY -->
+
 ```text
 scnehaux-architecture/
 └── 06-fitness-function/
@@ -136,7 +137,6 @@ scnehaux-architecture/
 │       │   ├── requires.txt
 │       │   └── top_level.txt
 │       ├── scratch/
-│       ├── scratch_ast.py
 │       ├── scripts/             # (Git hooks and manual CI/CD utilities)
 │       │   ├── INDEX.md
 │       │   ├── codeowners-validator.py
@@ -177,6 +177,7 @@ scnehaux-architecture/
 │                   ├── test_schema_extensions.py
 │                   └── test_structure_rules.py
 ```
+
 <!-- END_ENGINE_TOPOGRAPHY -->
 
 ### 2.2 The Ecosystem Capabilities (Functions & Scripts)
@@ -200,9 +201,9 @@ The engine evaluates JSON Schema configuration files mapped by Document Type.
 
 **Naming Convention Rule**: To achieve dynamic Deep-Merging of the [**Fractal Triad**](./GDC-000-governance-policy.md#222-logical-decentralization-the-fractal-triad), the engine automatically identifies the necessary document-specific schema by extracting the Document Type prefix from the artifact's `doc_meta.id` (e.g., `ADR-IAM-000` -> `ADR`). It then resolves the specific JSON schema file by mapping it to the strict naming convention: `schemas/[doc_type].schema.json` (where `[doc_type]` is the exact acronym in lowercase, e.g., `schemas/adr.schema.json`). If a specific schema is required but missing, the engine MUST trigger a Hard Block.
 
-| Document Type | Ruleset File | Scope / Responsibilities |
-| :-- | :-- | :-- |
-| **Global Baseline** | `schemas/base.schema.json` | The universal parent. Enforces generic syntax, minimum word counts, banned vocabulary, and overarching layout structures. |
+| Document Type                | Ruleset File                     | Scope / Responsibilities                                                                                                                                                                                                                                                                                                                                                                                             |
+| :--------------------------- | :------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Global Baseline**          | `schemas/base.schema.json`       | The universal parent. Enforces generic syntax, minimum word counts, banned vocabulary, and overarching layout structures.                                                                                                                                                                                                                                                                                            |
 | **Domain-Specific Rulesets** | `schemas/[doc_type].schema.json` | To adhere to the Open-Closed Principle, domain-specific JSON schemas are documented exclusively within their respective guidelines:<br>â€¢ [GDC](GDC-005-gdc-guideline.md)<br>â€¢ [EAD](GDC-006-ead-guideline.md)<br>â€¢ [STD](GDC-007-std-guideline.md)<br>â€¢ [PAD](GDC-008-pad-guideline.md)<br>â€¢ [SAD](GDC-009-sad-guideline.md)<br>â€¢ [ADR](GDC-010-adr-guideline.md)<br>â€¢ [TDD](GDC-011-tdd-guideline.md) |
 
 #### 2.3.1 Global Baseline Rules (`schemas/base.schema.json`)
@@ -216,91 +217,96 @@ The global baseline applies universally to all architecture documents across the
 <!-- lint_disable_start: prohibited_words (reason: governance engine documentation) -->
 <!-- AUTO-GENERATED-RULES:START -->
 
-| Rule Category      | Parameter                | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| :----------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Structure Rules** | Artifact Directories | **Gdc**: `00-governance`<br>**Ead**: `01-enterprise`<br>**Std**: `02-standards`<br>**Pad**: `03-domain`<br>**Sad**: `04-system`<br>**Adr**: `05-decisions`<br>**Tdd**: `docs/designs` |
-| **Structure Rules** | Ignored Files | **Exact Matches**: <ul><li>`readme.md`</li><li>`index.md`</li><li>`contributing.md`</li><li>`changelog.md`</li><li>`maturity.md`</li><li>`traceability.md`</li><li>`temp.md`</li><li>`scnehaux_enterprise_architecture_refinement.md`</li></ul><br>**Patterns**: <ul><li>`\.copy\.md$`</li><li>`\.template\.md$`</li><li>`-template\.md$`</li><li>`[\\/]templates[\\/]`</li><li>`[\\/]scratch[\\/]`</li></ul> |
-| **Structure Rules** | Max Directory Depth | `3` |
-| **Content Rules** | Exempt Statuses | <ul><li>`{'status': 'draft', 'depend_on': 'created_date', 'max_age_days': 30, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."}`</li><li>`{'status': 'deprecated', 'depend_on': 'last_updated', 'max_age_days': 180, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be fully retired and deleted."}`</li></ul> |
-| **Content Rules** | Max Review Age Days | **Value**: `365`<br>**Error Message**: `Document review age of {age_days} days exceeds limit of {limit} days.` |
-| **Content Rules** | Min Content Length Chars | **Value**: `50`<br>**Error Message**: `Section '{section_name}' content length ({length} chars) is below minimum of {min_length} chars.` |
-| **Content Rules** | Prohibited Words | **Patterns**: <ul><li>`\bmaybe\b`</li><li>`\bprobably\b`</li><li>`\bshould consider\b`</li><li>`\bTBD\b`</li><li>`\bcoming soon\b`</li><li>`\band so on\b`</li><li>`\bseamless(?:ly)?\b`</li><li>`\bobviously\b`</li><li>`\bblazingly\b`</li><li>`\btrivially\b`</li></ul><br>**Error Message**: `Prohibited boilerplate or hesitant word detected. Use definitive, professional language.` |
-| **Content Rules** | Ambiguity Rules | **Patterns**: <ul><li>`\b(highly\|very\|extremely\|super\|incredibly)\s+(scalable\|fast\|secure\|reliable\|available\|performant\|robust\|efficient)\b`</li></ul><br>**Error Message**: `Vague claim detected. Must be quantified with metrics.` |
-| **Severity Levels** | 0. Engine Execution Domain (System Fatality) | **Unreadable Artifact**: `CRITICAL`<br>**Corrupt Frontmatter**: `CRITICAL`<br>**Unknown Document Type**: `CRITICAL`<br>**Missing Validator**: `CRITICAL`<br>**Missing Domain Schema**: `CRITICAL`<br>**Invalid Lint Disable**: `ERROR` |
-| **Severity Levels** | 1. Topology & Identity Domain (Graph & Lineage) | **Circular Dependency**: `CRITICAL`<br>**Cross Reference Missing**: `ERROR`<br>**Duplicate Id**: `CRITICAL`<br>**Inline Reference Missing**: `WARNING`<br>**Orphan Document**: `ERROR`<br>**Traceability Violation**: `ERROR`<br>**Broken Internal Link**: `ERROR` |
-| **Severity Levels** | 2. Structural Compliance Domain (Shape & Completeness) | **Missing Metadata**: `ERROR`<br>**Missing Required Subsection**: `ERROR`<br>**Missing Section**: `ERROR`<br>**Missing Section Keyword**: `ERROR`<br>**Schema Validation Failed**: `CRITICAL`<br>**Subsection Order Violation**: `WARNING` |
-| **Severity Levels** | 3. Semantic & Quality Domain (Meaning & Language) | **Ambiguity Rules**: `WARNING`<br>**Nfr Taxonomy Violation**: `ERROR`<br>**Prohibited Words**: `ERROR`<br>**Structural Integrity Violation**: `CRITICAL`<br>**Stylistic Deviation**: `WARNING`<br>**Vague Claim In Nfr**: `ERROR` |
-| **Severity Levels** | 4. Lifecycle & Environment Domain (Time, Space, & State) | **Approved Version Not Stable**: `ERROR`<br>**Compliance Filename Match**: `ERROR`<br>**Compliance Macro Directory**: `ERROR`<br>**Draft Status Violation**: `ERROR`<br>**Exception Expired**: `ERROR`<br>**Exempt Document Skipped**: `INFO`<br>**Review Age Violation**: `WARNING`<br>**Version Bump Required**: `ERROR` |
-| **Severity Levels** | 5. Architecture Constraints Domain (Hard Technical Limits) | **Operational Stability Violation**: `ERROR`<br>**Prohibited Technology Violation**: `ERROR`<br>**Security Isolation Violation**: `CRITICAL`<br>**Technology Hold Violation**: `CRITICAL`<br>**Unapproved Technology**: `ERROR` |
-| **Governance** | Blocking Severities | `['CRITICAL', 'ERROR']` |
+| Rule Category       | Parameter                                                  | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| :------------------ | :--------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Structure Rules** | Artifact Directories                                       | **Gdc**: `00-governance`<br>**Ead**: `01-enterprise`<br>**Std**: `02-standards`<br>**Pad**: `03-domain`<br>**Sad**: `04-system`<br>**Adr**: `05-decisions`<br>**Tdd**: `docs/designs`                                                                                                                                                                                                                                                                                                                                                             |
+| **Structure Rules** | Ignored Files                                              | **Exact Matches**: <ul><li>`readme.md`</li><li>`index.md`</li><li>`contributing.md`</li><li>`changelog.md`</li><li>`maturity.md`</li><li>`traceability.md`</li><li>`temp.md`</li><li>`scnehaux_enterprise_architecture_refinement.md`</li></ul><br>**Patterns**: <ul><li>`\.copy\.md$`</li><li>`\.template\.md$`</li><li>`-template\.md$`</li><li>`[\\/]templates[\\/]`</li><li>`[\\/]scratch[\\/]`</li></ul>                                                                                                                                     |
+| **Structure Rules** | Max Directory Depth                                        | `3`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Content Rules**   | Exempt Statuses                                            | <ul><li>`{'status': 'draft', 'depend_on': 'created_date', 'max_age_days': 30, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."}`</li><li>`{'status': 'deprecated', 'depend_on': 'last_updated', 'max_age_days': 180, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be fully retired and deleted."}`</li></ul> |
+| **Content Rules**   | Max Review Age Days                                        | **Value**: `365`<br>**Error Message**: `Document review age of {age_days} days exceeds limit of {limit} days.`                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Content Rules**   | Min Content Length Chars                                   | **Value**: `50`<br>**Error Message**: `Section '{section_name}' content length ({length} chars) is below minimum of {min_length} chars.`                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Content Rules**   | Prohibited Words                                           | **Patterns**: <ul><li>`\bmaybe\b`</li><li>`\bprobably\b`</li><li>`\bshould consider\b`</li><li>`\bTBD\b`</li><li>`\bcoming soon\b`</li><li>`\band so on\b`</li><li>`\bseamless(?:ly)?\b`</li><li>`\bobviously\b`</li><li>`\bblazingly\b`</li><li>`\btrivially\b`</li></ul><br>**Error Message**: `Prohibited boilerplate or hesitant word detected. Use definitive, professional language.`                                                                                                                                                       |
+| **Content Rules**   | Ambiguity Rules                                            | **Patterns**: <ul><li>`\b(highly\|very\|extremely\|super\|incredibly)\s+(scalable\|fast\|secure\|reliable\|available\|performant\|robust\|efficient)\b`</li></ul><br>**Error Message**: `Vague claim detected. Must be quantified with metrics.`                                                                                                                                                                                                                                                                                                  |
+| **Severity Levels** | 0. Engine Execution Domain (System Fatality)               | **Unreadable Artifact**: `CRITICAL`<br>**Corrupt Frontmatter**: `CRITICAL`<br>**Unknown Document Type**: `CRITICAL`<br>**Missing Validator**: `CRITICAL`<br>**Missing Domain Schema**: `CRITICAL`<br>**Invalid Lint Disable**: `ERROR`                                                                                                                                                                                                                                                                                                            |
+| **Severity Levels** | 1. Topology & Identity Domain (Graph & Lineage)            | **Circular Dependency**: `CRITICAL`<br>**Cross Reference Missing**: `ERROR`<br>**Duplicate Id**: `CRITICAL`<br>**Inline Reference Missing**: `WARNING`<br>**Orphan Document**: `ERROR`<br>**Traceability Violation**: `ERROR`<br>**Broken Internal Link**: `ERROR`                                                                                                                                                                                                                                                                                |
+| **Severity Levels** | 2. Structural Compliance Domain (Shape & Completeness)     | **Missing Metadata**: `ERROR`<br>**Missing Required Subsection**: `ERROR`<br>**Missing Section**: `ERROR`<br>**Missing Section Keyword**: `ERROR`<br>**Schema Validation Failed**: `CRITICAL`<br>**Subsection Order Violation**: `WARNING`                                                                                                                                                                                                                                                                                                        |
+| **Severity Levels** | 3. Semantic & Quality Domain (Meaning & Language)          | **Ambiguity Rules**: `WARNING`<br>**Nfr Taxonomy Violation**: `ERROR`<br>**Prohibited Words**: `ERROR`<br>**Structural Integrity Violation**: `CRITICAL`<br>**Stylistic Deviation**: `WARNING`<br>**Vague Claim In Nfr**: `ERROR`                                                                                                                                                                                                                                                                                                                 |
+| **Severity Levels** | 4. Lifecycle & Environment Domain (Time, Space, & State)   | **Approved Version Not Stable**: `ERROR`<br>**Compliance Filename Match**: `ERROR`<br>**Compliance Macro Directory**: `ERROR`<br>**Draft Status Violation**: `ERROR`<br>**Exception Expired**: `ERROR`<br>**Exempt Document Skipped**: `INFO`<br>**Review Age Violation**: `WARNING`<br>**Version Bump Required**: `ERROR`                                                                                                                                                                                                                        |
+| **Severity Levels** | 5. Architecture Constraints Domain (Hard Technical Limits) | **Operational Stability Violation**: `ERROR`<br>**Prohibited Technology Violation**: `ERROR`<br>**Security Isolation Violation**: `CRITICAL`<br>**Technology Hold Violation**: `CRITICAL`<br>**Unapproved Technology**: `ERROR`                                                                                                                                                                                                                                                                                                                   |
+| **Governance**      | Blocking Severities                                        | `['CRITICAL', 'ERROR']`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ### Severity Levels
 
 #### 0. Engine Execution Domain (System Fatality)
-| Error Code | Severity (CI Action) |
-| :--- | :--- |
-| `unreadable_artifact` | **CRITICAL** |
-| `corrupt_frontmatter` | **CRITICAL** |
-| `unknown_document_type` | **CRITICAL** |
-| `missing_validator` | **CRITICAL** |
-| `missing_domain_schema` | **CRITICAL** |
-| `invalid_lint_disable` | **ERROR** |
+
+| Error Code              | Severity (CI Action) |
+| :---------------------- | :------------------- |
+| `unreadable_artifact`   | **CRITICAL**         |
+| `corrupt_frontmatter`   | **CRITICAL**         |
+| `unknown_document_type` | **CRITICAL**         |
+| `missing_validator`     | **CRITICAL**         |
+| `missing_domain_schema` | **CRITICAL**         |
+| `invalid_lint_disable`  | **ERROR**            |
 
 #### 1. Topology & Identity Domain (Graph & Lineage)
-| Error Code | Severity (CI Action) |
-| :--- | :--- |
-| `circular_dependency` | **CRITICAL** |
-| `cross_reference_missing` | **ERROR** |
-| `duplicate_id` | **CRITICAL** |
-| `inline_reference_missing` | **WARNING** |
-| `orphan_document` | **ERROR** |
-| `traceability_violation` | **ERROR** |
-| `broken_internal_link` | **ERROR** |
+
+| Error Code                 | Severity (CI Action) |
+| :------------------------- | :------------------- |
+| `circular_dependency`      | **CRITICAL**         |
+| `cross_reference_missing`  | **ERROR**            |
+| `duplicate_id`             | **CRITICAL**         |
+| `inline_reference_missing` | **WARNING**          |
+| `orphan_document`          | **ERROR**            |
+| `traceability_violation`   | **ERROR**            |
+| `broken_internal_link`     | **ERROR**            |
 
 #### 2. Structural Compliance Domain (Shape & Completeness)
-| Error Code | Severity (CI Action) |
-| :--- | :--- |
-| `missing_metadata` | **ERROR** |
-| `missing_required_subsection` | **ERROR** |
-| `missing_section` | **ERROR** |
-| `missing_section_keyword` | **ERROR** |
-| `schema_validation_failed` | **CRITICAL** |
-| `subsection_order_violation` | **WARNING** |
+
+| Error Code                    | Severity (CI Action) |
+| :---------------------------- | :------------------- |
+| `missing_metadata`            | **ERROR**            |
+| `missing_required_subsection` | **ERROR**            |
+| `missing_section`             | **ERROR**            |
+| `missing_section_keyword`     | **ERROR**            |
+| `schema_validation_failed`    | **CRITICAL**         |
+| `subsection_order_violation`  | **WARNING**          |
 
 #### 3. Semantic & Quality Domain (Meaning & Language)
-| Error Code | Severity (CI Action) |
-| :--- | :--- |
-| `ambiguity_rules` | **WARNING** |
-| `nfr_taxonomy_violation` | **ERROR** |
-| `prohibited_words` | **ERROR** |
-| `structural_integrity_violation` | **CRITICAL** |
-| `stylistic_deviation` | **WARNING** |
-| `vague_claim_in_nfr` | **ERROR** |
+
+| Error Code                       | Severity (CI Action) |
+| :------------------------------- | :------------------- |
+| `ambiguity_rules`                | **WARNING**          |
+| `nfr_taxonomy_violation`         | **ERROR**            |
+| `prohibited_words`               | **ERROR**            |
+| `structural_integrity_violation` | **CRITICAL**         |
+| `stylistic_deviation`            | **WARNING**          |
+| `vague_claim_in_nfr`             | **ERROR**            |
 
 #### 4. Lifecycle & Environment Domain (Time, Space, & State)
-| Error Code | Severity (CI Action) |
-| :--- | :--- |
-| `approved_version_not_stable` | **ERROR** |
-| `compliance_filename_match` | **ERROR** |
-| `compliance_macro_directory` | **ERROR** |
-| `draft_status_violation` | **ERROR** |
-| `exception_expired` | **ERROR** |
-| `exempt_document_skipped` | **INFO** |
-| `review_age_violation` | **WARNING** |
-| `version_bump_required` | **ERROR** |
+
+| Error Code                    | Severity (CI Action) |
+| :---------------------------- | :------------------- |
+| `approved_version_not_stable` | **ERROR**            |
+| `compliance_filename_match`   | **ERROR**            |
+| `compliance_macro_directory`  | **ERROR**            |
+| `draft_status_violation`      | **ERROR**            |
+| `exception_expired`           | **ERROR**            |
+| `exempt_document_skipped`     | **INFO**             |
+| `review_age_violation`        | **WARNING**          |
+| `version_bump_required`       | **ERROR**            |
 
 #### 5. Architecture Constraints Domain (Hard Technical Limits)
-| Error Code | Severity (CI Action) |
-| :--- | :--- |
-| `operational_stability_violation` | **ERROR** |
-| `prohibited_technology_violation` | **ERROR** |
-| `security_isolation_violation` | **CRITICAL** |
-| `technology_hold_violation` | **CRITICAL** |
-| `unapproved_technology` | **ERROR** |
 
+| Error Code                        | Severity (CI Action) |
+| :-------------------------------- | :------------------- |
+| `operational_stability_violation` | **ERROR**            |
+| `prohibited_technology_violation` | **ERROR**            |
+| `security_isolation_violation`    | **CRITICAL**         |
+| `technology_hold_violation`       | **CRITICAL**         |
+| `unapproved_technology`           | **ERROR**            |
 
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
+| Rule Category              | Parameter              | Enforcement / Value                                                                                        |
+| :------------------------- | :--------------------- | :--------------------------------------------------------------------------------------------------------- |
 | **Common Metadata Fields** | Common Metadata Fields | <ul><li>id (string)</li><li>title (string)</li><li>status (string)</li><li>created_date (string)</li></ul> |
 
 <!-- AUTO-GENERATED-RULES:END -->
@@ -334,16 +340,16 @@ The architecture of the engine is divided into two primary domains:
 
 The abstract parent class. Executes the merged JSON schema, handles global errors, and dictates severity.
 
-| Function / Property Signature | Responsibilities & Logic |
-| :-- | :-- |
-| **Instance Variables** | `file_path`, `content`, `doc_meta`, `rules`, `all_doc_ids`, `errors`, `rel_path`, `filename`, `disabled_rules` |
-| `@property`<br>`mandatory_sections(self)` | Retrieves `rules.structure.required_sections` from the JSON rules. |
-| `@property`<br>`optional_sections(self)` | Retrieves `rules.structure.optional_sections` from the JSON rules. |
-| `@property`<br>`required_metadata_fields(self)` | Retrieves `rules.metadata.required_fields` from the JSON rules. |
-| `__init__(self, file_path: str, content: str, doc_meta: dict, rules: dict, all_doc_ids: set)` | Instantiates the context variables. Parses `<!-- lint_disable: rule_name, rule_name -->` HTML comments in `content` to populate the `disabled_rules` set. |
-| `add_error(self, category: str, message: str)` | Evaluates if `category` exists in `disabled_rules`. If not, maps the category to a severity using `severity_levels` in the schema (defaults to `'ERROR'`), and appends `(severity, message)` to `self.errors`. |
-| `validate(self) -> list[tuple[str, str]]` | Orchestrates the execution: triggers `run_common_validations(self)` from `global_rules.py`, invokes `self.validate_type_specific()`, and returns `self.errors`. |
-| `validate_type_specific(self)` | Abstract interface intended to be overridden by child classes for domain isolation (`pass` by default). |
+| Function / Property Signature                                                                 | Responsibilities & Logic                                                                                                                                                                                       |
+| :-------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Instance Variables**                                                                        | `file_path`, `content`, `doc_meta`, `rules`, `all_doc_ids`, `errors`, `rel_path`, `filename`, `disabled_rules`                                                                                                 |
+| `@property`<br>`mandatory_sections(self)`                                                     | Retrieves `rules.structure.required_sections` from the JSON rules.                                                                                                                                             |
+| `@property`<br>`optional_sections(self)`                                                      | Retrieves `rules.structure.optional_sections` from the JSON rules.                                                                                                                                             |
+| `@property`<br>`required_metadata_fields(self)`                                               | Retrieves `rules.metadata.required_fields` from the JSON rules.                                                                                                                                                |
+| `__init__(self, file_path: str, content: str, doc_meta: dict, rules: dict, all_doc_ids: set)` | Instantiates the context variables. Parses `<!-- lint_disable: rule_name, rule_name -->` HTML comments in `content` to populate the `disabled_rules` set.                                                      |
+| `add_error(self, category: str, message: str)`                                                | Evaluates if `category` exists in `disabled_rules`. If not, maps the category to a severity using `severity_levels` in the schema (defaults to `'ERROR'`), and appends `(severity, message)` to `self.errors`. |
+| `validate(self) -> list[tuple[str, str]]`                                                     | Orchestrates the execution: triggers `run_common_validations(self)` from `global_rules.py`, invokes `self.validate_type_specific()`, and returns `self.errors`.                                                |
+| `validate_type_specific(self)`                                                                | Abstract interface intended to be overridden by child classes for domain isolation (`pass` by default).                                                                                                        |
 
 #### 2.4.2 Domain-Specific Validators
 
@@ -361,13 +367,13 @@ To adhere to the Open-Closed Principle, domain-specific Python logic (the `valid
 
 The `engine/` directory contains critical utility modules that power the core Engine, providing AST parsing, global schema validation, and cross-reference resolutions.
 
-| Component | File | Responsibilities & Logic |
-| :-- | :-- | :-- |
-| **Crawler** | `engine/fs/crawler.py` | **Fast-Scan Phase**: Recursively walks the repository to build a global registry of all valid document IDs (by extracting `doc_meta.id`). This registry is injected into the validators to guarantee cross-reference integrity (e.g., ensuring `fulfilled_by` or `parent_pad` points to existing documents). It additionally detects **duplicate IDs** (SSOT uniqueness violations) rather than silently overwriting them. |
-| **Config Loader** | `engine/config/loader.py` | **Type-Safety Enforcement**: Utilizes `jsonschema` to strictly cast and validate the `doc_meta` block against the deep-merged `.schema.json` configurations. Features include enforcing strict Semantic Versioning (`X.Y.Z`) on the `version` field and guaranteeing schema constraints for nested objects. |
-| **AST Parser** | `engine/parsing/markdown_ast.py` | **AST Processing**: Uses `markdown_it` to tokenize the markdown into an Abstract Syntax Tree (AST). Provides modular functions to accurately extract section content, strip styling for character counts, harvest `href` links, strip code fences/inline code for safe directive parsing, harvest inline ID citations, and normalize YAML `datetime` values. |
-| **Graph Auditor** | `engine/auditors/graph_auditor.py` | **Graph Audit**: Builds the upward-reference graph (`parent_pad` / `parent_sad` / `governed_by`) across the full registry once per run. It detects circular dependencies and enforces C4-tier strict attachments (e.g., TDD must attach to SAD). |
-| **Git Auditor** | `engine/auditors/git_auditor.py` | **Immutability Lock**: Interfaces directly with `git HEAD` to extract the historical status of a document. Enforces that any document that has already achieved `approved` status cannot be modified structurally without a mandatory `version` bump. |
+| Component         | File                               | Responsibilities & Logic                                                                                                                                                                                                                                                                                                                                                                                                   |
+| :---------------- | :--------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Crawler**       | `engine/fs/crawler.py`             | **Fast-Scan Phase**: Recursively walks the repository to build a global registry of all valid document IDs (by extracting `doc_meta.id`). This registry is injected into the validators to guarantee cross-reference integrity (e.g., ensuring `fulfilled_by` or `parent_pad` points to existing documents). It additionally detects **duplicate IDs** (SSOT uniqueness violations) rather than silently overwriting them. |
+| **Config Loader** | `engine/config/loader.py`          | **Type-Safety Enforcement**: Utilizes `jsonschema` to strictly cast and validate the `doc_meta` block against the deep-merged `.schema.json` configurations. Features include enforcing strict Semantic Versioning (`X.Y.Z`) on the `version` field and guaranteeing schema constraints for nested objects.                                                                                                                |
+| **AST Parser**    | `engine/parsing/markdown_ast.py`   | **AST Processing**: Uses `markdown_it` to tokenize the markdown into an Abstract Syntax Tree (AST). Provides modular functions to accurately extract section content, strip styling for character counts, harvest `href` links, strip code fences/inline code for safe directive parsing, harvest inline ID citations, and normalize YAML `datetime` values.                                                               |
+| **Graph Auditor** | `engine/auditors/graph_auditor.py` | **Graph Audit**: Builds the upward-reference graph (`parent_pad` / `parent_sad` / `governed_by`) across the full registry once per run. It detects circular dependencies and enforces C4-tier strict attachments (e.g., TDD must attach to SAD).                                                                                                                                                                           |
+| **Git Auditor**   | `engine/auditors/git_auditor.py`   | **Immutability Lock**: Interfaces directly with `git HEAD` to extract the historical status of a document. Enforces that any document that has already achieved `approved` status cannot be modified structurally without a mandatory `version` bump.                                                                                                                                                                      |
 
 ### 2.3 Inline Policy Exemptions (`lint_disable`)
 

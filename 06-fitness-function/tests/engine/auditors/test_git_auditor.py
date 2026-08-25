@@ -116,7 +116,6 @@ def test_audit_version_bump_and_resolve_ref(monkeypatch):
     # Version bump check disabled per user directive
     assert len(findings) == 0
 
-
     # Test fallback to HEAD when subprocess fails
     def mock_run_fail(cmd, *args, **kwargs):
         raise ValueError("git not found")

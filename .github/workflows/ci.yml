@@ -51,9 +51,7 @@ jobs:
           make lint-docs-format
 
       - name: Verify Generators Sync (SSOT reconciliation)
-        run: |
-          make generate-docs
-          git diff --exit-code || (echo "Generators are out of sync. Run 'make generate-docs' locally and commit the result." && exit 1)
+        run: make verify-generated
 
       - name: Verify Waiver Expirations
         run: make check-waivers

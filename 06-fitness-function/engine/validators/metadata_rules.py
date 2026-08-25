@@ -23,7 +23,9 @@ _TECHNOLOGY_HOLD_DOC_TYPES = frozenset({"SAD", "TDD"})
 _BASELINE_STATUSES = frozenset({"approved", "deprecated"})
 
 
-def validate_exempt_age(doc_meta: dict, doc_status: str, violation_severity: str, global_rules: dict) -> list[tuple[str, str]]:
+def validate_exempt_age(
+    doc_meta: dict, doc_status: str, violation_severity: str, global_rules: dict
+) -> list[tuple[str, str]]:
     """
     Check if an exempt document (like a draft) has exceeded the maximum allowed age.
     This prevents documents from indefinitely evading governance while holding an exempt status.
@@ -42,28 +44,41 @@ def validate_exempt_age(doc_meta: dict, doc_status: str, violation_severity: str
     </pre>
     """
     exempt_errs = []
-    
-    exempt_configs = global_rules.get(SCHEMA_KEY_CONTENT_RULES, {}).get(SCHEMA_KEY_EXEMPT_STATUSES, [])
-    
+
+    exempt_configs = global_rules.get(SCHEMA_KEY_CONTENT_RULES, {}).get(
+        SCHEMA_KEY_EXEMPT_STATUSES, []
+    )
+
     # Find the specific config for this status
-    status_config = next((cfg for cfg in exempt_configs if isinstance(cfg, dict) and cfg.get("status", "").lower() == doc_status), None)
-    
+    status_config = next(
+        (
+            cfg
+            for cfg in exempt_configs
+            if isinstance(cfg, dict) and cfg.get("status", "").lower() == doc_status
+        ),
+        None,
+    )
+
     if not status_config:
         return exempt_errs
-        
+
     for required_key in ["depend_on", "max_age_days", "error_message"]:
-        if required_key not in status_config or status_config[required_key] is None or status_config[required_key] == "":
+        if (
+            required_key not in status_config
+            or status_config[required_key] is None
+            or status_config[required_key] == ""
+        ):
             raise ValueError(
                 f"Global rules misconfiguration: 'exempt_statuses' for status '{doc_status}' "
                 f"is missing or has empty required field '{required_key}'."
             )
-            
+
     depend_on_field = status_config["depend_on"]
     max_age_days = status_config["max_age_days"]
     err_msg_template = status_config["error_message"]
 
     date_raw = doc_meta.get(depend_on_field)
-    
+
     if not date_raw:
         exempt_errs.append(
             (
@@ -72,12 +87,17 @@ def validate_exempt_age(doc_meta: dict, doc_status: str, violation_severity: str
             )
         )
         return exempt_errs
-        
+
     parsed_date = parse_date(date_raw)
     if parsed_date:
         age_days = (datetime.date.today() - parsed_date).days
         if age_days > max_age_days:
-            err_msg = err_msg_template.format(doc_status=doc_status, age_days=age_days, limit=max_age_days, depend_on=depend_on_field)
+            err_msg = err_msg_template.format(
+                doc_status=doc_status,
+                age_days=age_days,
+                limit=max_age_days,
+                depend_on=depend_on_field,
+            )
             exempt_errs.append(
                 (
                     violation_severity,

@@ -239,17 +239,17 @@ def strip_code_fences(content: str) -> str:
     Remove fenced and indented code blocks safely using AST parsing.
     This replaces the blocks with an equivalent number of newlines to preserve line numbering,
     avoiding regex false positives with nested backticks, indented blocks, or unclosed fences.
-    
+
     Args:
         content (str): The raw Markdown text to be processed.
-        
+
     Returns:
         str: The Markdown text with all code blocks replaced by blank lines.
     """
     md = MarkdownIt()
     tokens = md.parse(content)
-    
-    lines = content.split('\n')
+
+    lines = content.split("\n")
     for t in tokens:
         # "fence"      = code block using backticks (```) or tildes (~~~)
         # "code_block" = code block using 4-space indentation
@@ -260,7 +260,7 @@ def strip_code_fences(content: str) -> str:
                 for i in range(start_line, end_line):
                     if i < len(lines):
                         lines[i] = ""
-                        
+
     return "\n".join(lines)
 
 

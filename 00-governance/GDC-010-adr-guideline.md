@@ -46,18 +46,18 @@ In addition to the global structural enforcement defined in **[GDC-001](GDC-001-
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
-| Rule Category | Parameter | Enforcement / Value |
-| :--- | :--- | :--- |
-| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
-| **Metadata Rules** | exception_info Required Fields | <ul><li>approved_by</li><li>expiry_date</li><li>risk_classification</li><li>exception_reason</li></ul> |
-| **Section Rules** | Required Sections | <ul><li>Title</li><li>Status</li><li>Context</li><li>Decision Drivers</li><li>Decision</li><li>Consequences</li><li>Compliance Impact</li><li>Alternatives Considered</li></ul> |
-| **Section Rules** | Recommended Sections | <ul></ul> |
+| Rule Category      | Parameter                      | Enforcement / Value                                                                                                                                                             |
+| :----------------- | :----------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Metadata Rules** | Metadata Rules                 | <ul><li>doc_meta</li></ul>                                                                                                                                                      |
+| **Metadata Rules** | exception_info Required Fields | <ul><li>approved_by</li><li>expiry_date</li><li>risk_classification</li><li>exception_reason</li></ul>                                                                          |
+| **Section Rules**  | Required Sections              | <ul><li>Title</li><li>Status</li><li>Context</li><li>Decision Drivers</li><li>Decision</li><li>Consequences</li><li>Compliance Impact</li><li>Alternatives Considered</li></ul> |
+| **Section Rules**  | Recommended Sections           | <ul></ul>                                                                                                                                                                       |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 
-| Linter Component | File | Enforcement Logic |
-| :-- | :-- | :-- |
-| **JSON Schema** | `schemas/adr.schema.json` | Enforces the `decision_record` properties and specific `allowed_statuses` for the ADR lifecycle. |
+| Linter Component  | File                                         | Enforcement Logic                                                                                                                                                                                                                                                                                              |
+| :---------------- | :------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **JSON Schema**   | `schemas/adr.schema.json`                    | Enforces the `decision_record` properties and specific `allowed_statuses` for the ADR lifecycle.                                                                                                                                                                                                               |
 | **Python Engine** | `engine/validators/domains/adr_validator.py` | **Taxonomy**: Validates `allowed_statuses` and `allowed_classifications`.<br>**Domain Validation**: Verifies immutability limits for `accepted` ADRs to prevent silent historical alterations.<br>**Temporal Enforcement**: Executes time-based checks against `expiry_date` to trigger expired waiver errors. |
 
 **Engine Execution Mechanics**:
@@ -93,15 +93,15 @@ scnehaux-architecture/
 
 #### 2.3.4 Metadata Schema Properties
 
-| Metadata Field | Type | Description / Purpose |
-| --- | --- | --- |
-| `id` | String | Unique identifier (e.g., `ADR-IAM-000`). |
-| `title` | String | Descriptive title of the document. |
-| `adr_type` | Enum | The intent of the decision (must match Allowed Types in §2.1). |
-| `status` | Enum | The current lifecycle state (must match Allowed Statuses below). |
-| `created` | Date | The creation date (YYYY-MM-DD). |
-| `created_by` | String | The author of the ADR. |
-| `governed_by` | List[String] | **Required**: Must point to EAD, PAD, SAD, or GDC-000 (if purely technical/global). Links the ADR to the DAG. |
+| Metadata Field | Type         | Description / Purpose                                                                                         |
+| -------------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| `id`           | String       | Unique identifier (e.g., `ADR-IAM-000`).                                                                      |
+| `title`        | String       | Descriptive title of the document.                                                                            |
+| `adr_type`     | Enum         | The intent of the decision (must match Allowed Types in §2.1).                                                |
+| `status`       | Enum         | The current lifecycle state (must match Allowed Statuses below).                                              |
+| `created`      | Date         | The creation date (YYYY-MM-DD).                                                                               |
+| `created_by`   | String       | The author of the ADR.                                                                                        |
+| `governed_by`  | List[String] | **Required**: Must point to EAD, PAD, SAD, or GDC-000 (if purely technical/global). Links the ADR to the DAG. |
 
 **Exception Info Required Fields (Conditional)** _Required only if `adr_type` is `exception`._
 
@@ -134,16 +134,16 @@ _N/A for Architecture Decision Records (ADRs). ADRs are immutable historical rec
 
 The linter enforces the presence of these sections. Their semantic purposes are:
 
-| Section Name | Objective | Requirement |
-| --- | --- | --- |
-| **Title** | The ADR ID and a descriptive title header. | Must follow the naming convention and clearly state the architecture decision. |
-| **Status** | Chronological table tracking state transitions (`Date`, `Status`), the `ADR Type`, the `Reviewers` (or SMEs) consulted, and the final `Approver`. | Must track the chronological state transitions, reviewers, and approvers. |
-| **Context** | The technical problem, constraints, and business requirements driving the decision. | Must objectively describe the problem space and constraints driving the decision. |
-| **Decision Drivers** | The core technical and business factors forcing the decision. | Must list the critical technical and business factors forcing the choice. |
-| **Decision** | The chosen course of action with concrete, binding statements. | Must explicitly define the chosen course of action in binding terms. |
-| **Consequences** | The results (Positive, Negative, Operational) of the decision. | Must analyze the positive, negative, and operational impacts of the decision. |
-| **Compliance Impact** | Defines related standards, compliance status, and required waivers. | Must list any standards violated and link to the required waivers. |
-| **Alternatives Considered** | Analysis of alternate paths rejected during review. | Must provide a comparative analysis of rejected options. |
+| Section Name                | Objective                                                                                                                                         | Requirement                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Title**                   | The ADR ID and a descriptive title header.                                                                                                        | Must follow the naming convention and clearly state the architecture decision.    |
+| **Status**                  | Chronological table tracking state transitions (`Date`, `Status`), the `ADR Type`, the `Reviewers` (or SMEs) consulted, and the final `Approver`. | Must track the chronological state transitions, reviewers, and approvers.         |
+| **Context**                 | The technical problem, constraints, and business requirements driving the decision.                                                               | Must objectively describe the problem space and constraints driving the decision. |
+| **Decision Drivers**        | The core technical and business factors forcing the decision.                                                                                     | Must list the critical technical and business factors forcing the choice.         |
+| **Decision**                | The chosen course of action with concrete, binding statements.                                                                                    | Must explicitly define the chosen course of action in binding terms.              |
+| **Consequences**            | The results (Positive, Negative, Operational) of the decision.                                                                                    | Must analyze the positive, negative, and operational impacts of the decision.     |
+| **Compliance Impact**       | Defines related standards, compliance status, and required waivers.                                                                               | Must list any standards violated and link to the required waivers.                |
+| **Alternatives Considered** | Analysis of alternate paths rejected during review.                                                                                               | Must provide a comparative analysis of rejected options.                          |
 
 ### 2.4 Lifecycle & Audit
 

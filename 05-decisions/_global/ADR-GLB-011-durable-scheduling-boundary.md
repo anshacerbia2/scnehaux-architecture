@@ -21,11 +21,11 @@ Establish a shared durable temporal scheduling boundary without centralizing bus
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
-| 2026-08-22 | accepted | foundational | Architecture Authority, Platform Engineering, Notification, Workflow, Product Engineering | Architecture Authority |
-| 2026-08-23 | accepted | foundational | Architecture Authority, Notification, Scheduling, Product Engineering | Architecture Authority |
-| 2026-08-24 | superseded | foundational | Architecture Authority, Platform Engineering, Scheduling, Notification | Architecture Authority |
+| Date       | Status     | ADR Type     | Reviewers                                                                                 | Approver               |
+| :--------- | :--------- | :----------- | :---------------------------------------------------------------------------------------- | :--------------------- |
+| 2026-08-22 | accepted   | foundational | Architecture Authority, Platform Engineering, Notification, Workflow, Product Engineering | Architecture Authority |
+| 2026-08-23 | accepted   | foundational | Architecture Authority, Notification, Scheduling, Product Engineering                     | Architecture Authority |
+| 2026-08-24 | superseded | foundational | Architecture Authority, Platform Engineering, Scheduling, Notification                    | Architecture Authority |
 
 ## 3. Context
 
@@ -63,13 +63,13 @@ Scnehaux SHALL establish **Enterprise Scheduling** as a shared Platform capabili
 
 The following authority boundaries are binding:
 
-| Concern | Authority |
-| :-- | :-- |
-| Business timing meaning, eligibility, business state, worker code, business retry, irreversible outcome | Owning Product or Platform consumer |
-| Durable schedule registration, canonical due time, occurrence identity, misfire state, trigger-dispatch state | Scheduling Platform |
-| Long-running process state, task transition, workflow timeout meaning, compensation, human-task coordination | Workflow Platform |
-| Notification intent after acceptance, template/channel realization, sender/provider routing, communication retry, delivery status | Notification Platform |
-| Keys, credentials, certificates, provider secrets | Trust / Secret Services |
+| Concern                                                                                                                           | Authority                           |
+| :-------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------- |
+| Business timing meaning, eligibility, business state, worker code, business retry, irreversible outcome                           | Owning Product or Platform consumer |
+| Durable schedule registration, canonical due time, occurrence identity, misfire state, trigger-dispatch state                     | Scheduling Platform                 |
+| Long-running process state, task transition, workflow timeout meaning, compensation, human-task coordination                      | Workflow Platform                   |
+| Notification intent after acceptance, template/channel realization, sender/provider routing, communication retry, delivery status | Notification Platform               |
+| Keys, credentials, certificates, provider secrets                                                                                 | Trust / Secret Services             |
 
 A Worker is an execution topology, not an authority. A Product worker remains part of the Product system unless a separate chartered capability owns the work the worker performs.
 
@@ -123,13 +123,14 @@ Use when business eligibility, booking state, recipient selection, content, enti
 
 #### Selection Rule
 
-| Question | Select |
-| :-- | :-- |
-| Communication final now and snapshot/version must be preserved? | Mode A |
+| Question                                                                                   | Select |
+| :----------------------------------------------------------------------------------------- | :----- |
+| Communication final now and snapshot/version must be preserved?                            | Mode A |
 | Small deferred command is sufficient and due-time Notification config should resolve then? | Mode B |
-| Business eligibility/recipient/content can change before due time? | Mode C |
+| Business eligibility/recipient/content can change before due time?                         | Mode C |
 
 Provider credentials are never carried by Product or Scheduling in any mode. Notification resolves provider/channel configuration and secret references; Trust/Secret Services retain credential custody.
+
 ### 5.4 Workflow Timers
 
 Workflow owns the semantic meaning of timeout, deadline, escalation, and process timer state. Workflow MAY use Scheduling as the generic durable wake-up mechanism. Scheduling does not inspect workflow state or decide which transition follows a due occurrence.

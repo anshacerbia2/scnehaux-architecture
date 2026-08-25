@@ -29,6 +29,7 @@ def test_load_json_schema_file_not_found(mock_logger_critical):
 def test_validate_severity_schema_unknown_rule():
     from engine.config.loader import validate_severity_schema
     from engine.config.severity import SeverityRule
+
     full_levels = {r.value: "ERROR" for r in SeverityRule}
     full_levels["unknown_rule_xyz"] = "HIGH"
     with pytest.raises(RuntimeError) as exc:
@@ -36,10 +37,9 @@ def test_validate_severity_schema_unknown_rule():
     assert "Unknown severity rules found" in str(exc.value)
 
 
-
 def test_validate_blocking_severities_missing_and_unknown():
     from engine.config.loader import validate_blocking_severities
-    
+
     # Missing required blocking severity
     with pytest.raises(RuntimeError) as exc1:
         validate_blocking_severities(["CRITICAL"])
@@ -49,4 +49,3 @@ def test_validate_blocking_severities_missing_and_unknown():
     with pytest.raises(RuntimeError) as exc2:
         validate_blocking_severities(["CRITICAL", "ERROR", "UNKNOWN_SEV"])
     assert "Unknown blocking severities" in str(exc2.value)
-

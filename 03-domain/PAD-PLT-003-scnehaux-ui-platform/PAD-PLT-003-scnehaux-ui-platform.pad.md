@@ -108,18 +108,18 @@ The UI Platform distributes stable design and interaction contracts. It does not
 
 ### 3.2 Ubiquitous Language
 
-| Term | Meaning |
-| :-- | :-- |
-| Core Token | Raw design value without Product semantics |
-| Semantic Token | Design intent shared across experiences |
-| Component Token | Component-scoped mapping to semantic values |
-| Primitive | Accessible reusable UI building block without Product business meaning |
-| Pattern | Reusable composition guidance that still avoids Product business semantics |
-| Theme | Governed semantic-token mapping |
-| Product Component | Product-owned composition built from shared primitives |
-| Compatibility Contract | Public consumer behavior guaranteed across a declared release range |
-| Deprecation | Governed retirement path for a public UI contract |
-| Workspace Shell | Workspace Experience-owned application shell and not UI Platform authority |
+| Term                   | Meaning                                                                    |
+| :--------------------- | :------------------------------------------------------------------------- |
+| Core Token             | Raw design value without Product semantics                                 |
+| Semantic Token         | Design intent shared across experiences                                    |
+| Component Token        | Component-scoped mapping to semantic values                                |
+| Primitive              | Accessible reusable UI building block without Product business meaning     |
+| Pattern                | Reusable composition guidance that still avoids Product business semantics |
+| Theme                  | Governed semantic-token mapping                                            |
+| Product Component      | Product-owned composition built from shared primitives                     |
+| Compatibility Contract | Public consumer behavior guaranteed across a declared release range        |
+| Deprecation            | Governed retirement path for a public UI contract                          |
+| Workspace Shell        | Workspace Experience-owned application shell and not UI Platform authority |
 
 ### 3.3 Domain Policies
 

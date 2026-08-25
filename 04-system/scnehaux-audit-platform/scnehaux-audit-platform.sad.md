@@ -48,15 +48,15 @@ No database, broker, graph store, vector store, model provider, framework, runti
 
 ## 2. Enterprise Traceability
 
-| Relationship | Target |
-| :-- | :-- |
-| Parent PAD | PAD-PLT-007 |
-| Capability authority | EAD-001 |
-| Data authority | EAD-003 |
-| Integration | EAD-004 |
-| Platform/runtime posture | EAD-005 |
-| Security | EAD-006 |
-| Governance & Assurance | EAD-007 |
+| Relationship             | Target      |
+| :----------------------- | :---------- |
+| Parent PAD               | PAD-PLT-007 |
+| Capability authority     | EAD-001     |
+| Data authority           | EAD-003     |
+| Integration              | EAD-004     |
+| Platform/runtime posture | EAD-005     |
+| Security                 | EAD-006     |
+| Governance & Assurance   | EAD-007     |
 
 ## 3. Solution Context
 

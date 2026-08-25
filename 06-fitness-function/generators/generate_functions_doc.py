@@ -178,7 +178,9 @@ def generate_cli_flowchart():
         return
 
     theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
-    table_str = f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+    table_str = (
+        f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+    )
 
     with open(index_md, "r", encoding="utf-8") as f:
         md_content = f.read()
@@ -223,7 +225,9 @@ def generate_lint_flowchart():
         return
 
     theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
-    table_str = f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+    table_str = (
+        f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+    )
 
     with open(index_md, "r", encoding="utf-8") as f:
         md_content = f.read()
@@ -272,11 +276,17 @@ def generate_validator_flowchart():
         return
 
     # Style the subgraphs with a cream background
-    flow_lines.append("    style SchemaPhase fill:#fffdd0,stroke:#d2b48c,stroke-width:2px,color:#333,stroke-dasharray: 5 5")
-    flow_lines.append("    style GlobalRulesPhase fill:#fffdd0,stroke:#d2b48c,stroke-width:2px,color:#333,stroke-dasharray: 5 5")
+    flow_lines.append(
+        "    style SchemaPhase fill:#fffdd0,stroke:#d2b48c,stroke-width:2px,color:#333,stroke-dasharray: 5 5"
+    )
+    flow_lines.append(
+        "    style GlobalRulesPhase fill:#fffdd0,stroke:#d2b48c,stroke-width:2px,color:#333,stroke-dasharray: 5 5"
+    )
 
     theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
-    table_str = f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+    table_str = (
+        f"```mermaid\n{theme_config}\ngraph TD\n" + "\n".join(flow_lines) + "\n```"
+    )
 
     with open(index_md, "r", encoding="utf-8") as f:
         md_content = f.read()
@@ -338,7 +348,11 @@ def generate_domain_flowcharts():
             doc_type = file_name.split("_")[0].upper()
             section = f"### {doc_type} Validator (`{file_name}`)\n"
             theme_config = "%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%"
-            section += f"```mermaid\n{theme_config}\ngraph LR\n" + "\n".join(flow_lines) + "\n```\n"
+            section += (
+                f"```mermaid\n{theme_config}\ngraph LR\n"
+                + "\n".join(flow_lines)
+                + "\n```\n"
+            )
             domain_sections.append(section)
 
     if not domain_sections:

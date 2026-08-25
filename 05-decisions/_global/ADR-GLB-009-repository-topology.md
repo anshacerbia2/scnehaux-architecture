@@ -18,9 +18,9 @@ Repository Topology: Align Repository Boundaries to Change, Release, Security, a
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| :-- | :-- | :-- | :-- | :-- |
-| 2026-08-12 | proposed | foundational | Architecture, Core Platform, Identity | Architecture Authority — pending |
+| Date       | Status   | ADR Type     | Reviewers                                                                 | Approver                         |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------------ | :------------------------------- |
+| 2026-08-12 | proposed | foundational | Architecture, Core Platform, Identity                                     | Architecture Authority — pending |
 | 2026-08-25 | proposed | foundational | Architecture, Platform Engineering, UI Platform, Notification, Scheduling | Architecture Authority — pending |
 
 The original proposal scoped this ADR to the Identity and Organization foundation and proposed one repository per deployable unit. It never reached `accepted`, therefore it carried no architectural authority. Before ratification, the proposal is rebaselined into an enterprise repository-boundary decision that accounts for both legitimate polyrepo cases and legitimate platform-scoped monorepos.

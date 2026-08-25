@@ -77,5 +77,6 @@ def test_pad_empty_fulfilled_by_and_missing_ead():
     )
     v.validate_type_specific()
     assert any("PAD 'fulfilled_by' is empty" in msg for sev, msg in v.errors)
-    assert any("references EAD 'EAD-999' which does not exist" in msg for sev, msg in v.errors)
-
+    assert any(
+        "references EAD 'EAD-999' which does not exist" in msg for sev, msg in v.errors
+    )

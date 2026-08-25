@@ -56,25 +56,25 @@ AI-enabled Products are treated as Business Products or Product features when th
 
 ### 4.1 Drivers
 
-| ID | Driver | Landscape Consequence |
-| :-- | :-- | :-- |
-| D1 | Travel, HCM, and future ERP require common foundations | Shared capabilities are explicit but do not absorb Product meaning |
-| D2 | ATI operates across multiple tenants, clients, providers, and applications | Identity, Organization, Application Trust, Entitlement, and Product authorization remain separate |
-| D3 | Long-running work exists in multiple forms | Work Item, Workflow, Job, Schedule, Worker, and Queue are modeled separately |
-| D4 | AI Products must survive model/provider and agent-runtime change | Vertical Products depend on stable Model & Inference, Agent Runtime, and Knowledge contracts rather than provider SDKs or agent frameworks |
-| D5 | Human work spans Products | Workspace Experience composes Products without becoming the authority for Tenant/Workspace context |
-| D6 | Shared systems create blast radius | Local validation, projections, asynchronous contracts, and graceful degradation are preferred where correctness permits |
+| ID  | Driver                                                                     | Landscape Consequence                                                                                                                      |
+| :-- | :------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Travel, HCM, and future ERP require common foundations                     | Shared capabilities are explicit but do not absorb Product meaning                                                                         |
+| D2  | ATI operates across multiple tenants, clients, providers, and applications | Identity, Organization, Application Trust, Entitlement, and Product authorization remain separate                                          |
+| D3  | Long-running work exists in multiple forms                                 | Work Item, Workflow, Job, Schedule, Worker, and Queue are modeled separately                                                               |
+| D4  | AI Products must survive model/provider and agent-runtime change           | Vertical Products depend on stable Model & Inference, Agent Runtime, and Knowledge contracts rather than provider SDKs or agent frameworks |
+| D5  | Human work spans Products                                                  | Workspace Experience composes Products without becoming the authority for Tenant/Workspace context                                         |
+| D6  | Shared systems create blast radius                                         | Local validation, projections, asynchronous contracts, and graceful degradation are preferred where correctness permits                    |
 
 ### 4.2 Lessons Incorporated
 
-| Lesson | Enterprise Response |
-| :-- | :-- |
+| Lesson                                                            | Enterprise Response                                                                               |
+| :---------------------------------------------------------------- | :------------------------------------------------------------------------------------------------ |
 | Workspace was used both for operating context and user experience | Organization owns canonical Workspace context; Workspace Experience owns digital work composition |
-| Worker, queue, workflow, and scheduler were treated as synonyms | Each receives a distinct architectural role |
-| AI Platform was allowed to absorb knowledge and Product semantics | Model & Inference, Agent Runtime, Knowledge & Retrieval, and Product authority are separated |
-| Data/knowledge copies were mistaken for Product truth | Derived representations preserve source authority and provenance |
-| Shared Integration became a candidate universal hop | Natural owner retains external relationship; shared Integration is optional machinery |
-| Platform taxonomies were read as deployment maps | Target capability, approved PAD, SAD, and runtime evidence are separate views |
+| Worker, queue, workflow, and scheduler were treated as synonyms   | Each receives a distinct architectural role                                                       |
+| AI Platform was allowed to absorb knowledge and Product semantics | Model & Inference, Agent Runtime, Knowledge & Retrieval, and Product authority are separated      |
+| Data/knowledge copies were mistaken for Product truth             | Derived representations preserve source authority and provenance                                  |
+| Shared Integration became a candidate universal hop               | Natural owner retains external relationship; shared Integration is optional machinery             |
+| Platform taxonomies were read as deployment maps                  | Target capability, approved PAD, SAD, and runtime evidence are separate views                     |
 
 ## 5. Architecture Model
 
@@ -150,19 +150,19 @@ The diagram expresses roles and dependency direction, not deployment topology.
 
 ### 5.2 Platform vs Product Topology
 
-| System Role | Primary Responsibility |
-| :-- | :-- |
-| Business Product System | Owns business state, business decisions, business workflow meaning, and outcomes |
-| Foundation & Control System | Owns cross-product authority or trust capability |
-| Shared Execution System | Owns reusable operational machinery without Product-specific authority |
-| Knowledge & Retrieval System | Owns governed knowledge representation, provenance, indexes, and retrieval capability |
-| Model & Inference System | Owns model/provider access, Capability Profiles, bounded inference, routing, model evaluation/release, usage, and inference telemetry |
-| Agent Runtime System | Owns generic durable Agent execution, Agent Run state, Harness/context/memory mechanics, Tool Binding/mediation state, delegation/handoff, and agent-runtime evaluation |
-| Experience System | Owns reusable interaction/composition foundations without Product business state |
-| Engineering & Runtime System | Owns reusable execution/delivery/operability substrate |
-| Governance & Assurance | Defines constraints, decision rights, evidence requirements, conformance, and exceptions |
-| External System of Record | Owns facts explicitly retained outside ATI |
-| Coexistence System | Transitional ATI/client system with explicit authority and retirement path |
+| System Role                  | Primary Responsibility                                                                                                                                                  |
+| :--------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Business Product System      | Owns business state, business decisions, business workflow meaning, and outcomes                                                                                        |
+| Foundation & Control System  | Owns cross-product authority or trust capability                                                                                                                        |
+| Shared Execution System      | Owns reusable operational machinery without Product-specific authority                                                                                                  |
+| Knowledge & Retrieval System | Owns governed knowledge representation, provenance, indexes, and retrieval capability                                                                                   |
+| Model & Inference System     | Owns model/provider access, Capability Profiles, bounded inference, routing, model evaluation/release, usage, and inference telemetry                                   |
+| Agent Runtime System         | Owns generic durable Agent execution, Agent Run state, Harness/context/memory mechanics, Tool Binding/mediation state, delegation/handoff, and agent-runtime evaluation |
+| Experience System            | Owns reusable interaction/composition foundations without Product business state                                                                                        |
+| Engineering & Runtime System | Owns reusable execution/delivery/operability substrate                                                                                                                  |
+| Governance & Assurance       | Defines constraints, decision rights, evidence requirements, conformance, and exceptions                                                                                |
+| External System of Record    | Owns facts explicitly retained outside ATI                                                                                                                              |
+| Coexistence System           | Transitional ATI/client system with explicit authority and retirement path                                                                                              |
 
 ### 5.3 Workspace Distinction
 
@@ -310,37 +310,37 @@ A shared Platform is not introduced into every journey merely for uniformity.
 
 ## 7. Alternatives Considered
 
-| Alternative | Why Rejected |
-| :-- | :-- |
-| One shared mega-platform for all execution | Conflates work, workflow, scheduling, jobs, rules, and business semantics |
+| Alternative                                                                          | Why Rejected                                                                                       |
+| :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- |
+| One shared mega-platform for all execution                                           | Conflates work, workflow, scheduling, jobs, rules, and business semantics                          |
 | One AI runtime owns model gateway, durable agents, knowledge, and vertical workflows | Conflates distinct execution models, creates a god-platform, and makes Product authority ambiguous |
-| Workspace Platform owns tenant/workspace context | Duplicates Organization authority |
-| Every target capability becomes a service | Creates premature distributed-system complexity |
-| Central Integration mediates all providers | Obscures natural ownership and enlarges blast radius |
+| Workspace Platform owns tenant/workspace context                                     | Duplicates Organization authority                                                                  |
+| Every target capability becomes a service                                            | Creates premature distributed-system complexity                                                    |
+| Central Integration mediates all providers                                           | Obscures natural ownership and enlarges blast radius                                               |
 
 ## 8. Single Points of Failure & Graceful Degradation
 
-| Dependency | Blast Radius | Required Posture |
-| :-- | :-- | :-- |
-| Identity / Organization control | New authentication/context changes | Existing locally verifiable artifacts/projections continue where safe |
-| Messaging substrate | Delayed async processing | Durable producers retain/replay accepted work |
-| Scheduling | Delayed future triggers | Accepted schedules recover using durable state and misfire semantics |
-| Workflow | Delayed long-running coordination | Process state remains durable/resumable |
-| Model provider / Model & Inference | Bounded inference degradation | Evaluated route/fallback or explicit unavailable state; non-AI Product path where required |
-| Agent Runtime | Agentic execution degradation | Durable run state and resumability; Product/Workflow truth remains outside the runtime |
-| Knowledge & Retrieval | Reduced grounded intelligence/search | Product degrades explicitly; no fabricated knowledge truth |
-| Workspace Experience | Shared navigation/composition unavailable | Product-specific direct entry remains possible where operationally required |
+| Dependency                         | Blast Radius                              | Required Posture                                                                           |
+| :--------------------------------- | :---------------------------------------- | :----------------------------------------------------------------------------------------- |
+| Identity / Organization control    | New authentication/context changes        | Existing locally verifiable artifacts/projections continue where safe                      |
+| Messaging substrate                | Delayed async processing                  | Durable producers retain/replay accepted work                                              |
+| Scheduling                         | Delayed future triggers                   | Accepted schedules recover using durable state and misfire semantics                       |
+| Workflow                           | Delayed long-running coordination         | Process state remains durable/resumable                                                    |
+| Model provider / Model & Inference | Bounded inference degradation             | Evaluated route/fallback or explicit unavailable state; non-AI Product path where required |
+| Agent Runtime                      | Agentic execution degradation             | Durable run state and resumability; Product/Workflow truth remains outside the runtime     |
+| Knowledge & Retrieval              | Reduced grounded intelligence/search      | Product degrades explicitly; no fabricated knowledge truth                                 |
+| Workspace Experience               | Shared navigation/composition unavailable | Product-specific direct entry remains possible where operationally required                |
 
 ## 9. Ownership
 
-| Responsibility | Accountable |
-| :-- | :-- |
-| Enterprise landscape and dependency model | Architecture Authority |
-| Product business outcome | Product Domain Owner |
-| Shared Platform capability | Platform Product Owner |
-| Physical system availability | System Owner |
-| Governance requirement | Named Governance Authority |
-| External relationship | Natural Product/Platform Owner |
+| Responsibility                            | Accountable                    |
+| :---------------------------------------- | :----------------------------- |
+| Enterprise landscape and dependency model | Architecture Authority         |
+| Product business outcome                  | Product Domain Owner           |
+| Shared Platform capability                | Platform Product Owner         |
+| Physical system availability              | System Owner                   |
+| Governance requirement                    | Named Governance Authority     |
+| External relationship                     | Natural Product/Platform Owner |
 
 ## 10. Dependencies
 

@@ -113,7 +113,7 @@ transaction the rule below prohibits.
 
 ### 7. Concurrency and Lifecycle
 
-Layering answers where a background worker belongs, and the answer follows from the same rule as an HTTP handler. A loop driven by a clock, a broker, or a queue is an inbound driver: it decides *when* work happens, never *what* the work is. It is therefore a driving adapter.
+Layering answers where a background worker belongs, and the answer follows from the same rule as an HTTP handler. A loop driven by a clock, a broker, or a queue is an inbound driver: it decides _when_ work happens, never _what_ the work is. It is therefore a driving adapter.
 
 ```text
 adapter/   the loop, the ticker, the broker subscription, the claim
