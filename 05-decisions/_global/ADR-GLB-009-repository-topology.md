@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-009
   title: Repository Boundaries Follow Change, Release, Security, and Ownership Cohesion
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-08-12
   created_date: 2026-08-12
   created_by: Architecture Authority
@@ -22,8 +22,9 @@ Repository Topology: Align Repository Boundaries to Change, Release, Security, a
 | :--------- | :------- | :----------- | :------------------------------------------------------------------------ | :------------------------------- |
 | 2026-08-12 | proposed | foundational | Architecture, Core Platform, Identity                                     | Architecture Authority — pending |
 | 2026-08-25 | proposed | foundational | Architecture, Platform Engineering, UI Platform, Notification, Scheduling | Architecture Authority — pending |
+| 2026-08-25 | accepted | foundational | Architecture, Platform Engineering, UI Platform, Notification, Scheduling | Architecture Authority |
 
-The original proposal scoped this ADR to the Identity and Organization foundation and proposed one repository per deployable unit. It never reached `accepted`, therefore it carried no architectural authority. Before ratification, the proposal is rebaselined into an enterprise repository-boundary decision that accounts for both legitimate polyrepo cases and legitimate platform-scoped monorepos.
+The original proposal scoped this ADR to the Identity and Organization foundation and proposed one repository per deployable unit. It never reached `accepted`, therefore it carried no architectural authority. Before ratification, the proposal was rebaselined into an enterprise repository-boundary decision that accounts for both legitimate polyrepo cases and legitimate platform-scoped monorepos.
 
 ## 3. Context
 
@@ -301,11 +302,11 @@ A future change that reverses a binding topology selected by this accepted ADR r
 
 ### Compliance Status
 
-Proposed.
+Accepted.
 
-No implementation repository should be created from this topology until the ADR is accepted.
+SAD-003 v1.0.1 is aligned with this decision: local cross-repository package linkage is a governed development path, while released and production consumers use immutable versioned packages.
 
-SAD-003 currently describes local downstream consumption primarily through a shared pnpm workspace. If this ADR is accepted, SAD-003 must be aligned so that local cross-repository development is also a governed supported path while production consumption remains versioned package-based.
+Notification and Scheduling implementation repositories may now be created according to the topology and boundary rules in §5.
 
 ### Required Waivers
 
