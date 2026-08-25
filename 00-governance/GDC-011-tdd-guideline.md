@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-011
   title: Technical Design Document (TDD) Guideline
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-06-01
+  last_reviewed: 2026-08-26
 ---
 
 # Technical Design Document (TDD) Guideline
@@ -24,17 +24,22 @@ TDDs represent the component-level (C3) blueprints, API contracts, ERDs, securit
 
 ### 2.1 Directory Taxonomy
 
-- **Requirement**: Because TDDs are Project-level documents, they must utilize **Asset Container Folders** within the `docs/02-designs/` directory.
+- **Requirement**: TDDs are owned by the System/deployable they implement. A single-System repository uses `<repo>/docs/02-designs/`; a repository containing multiple independently governed Systems uses `<system-root>/docs/02-designs/`. A repository-level shared TDD folder MUST NOT mix designs from different parent SADs.
 
 **Example Directory Structure:**
 
 ```text
-scnehaux-ui-platform/                # (Project Repository)
-└── docs/                            # (Root)
-    └── 02-designs/                  # (Asset Container Folders - Level 2)
-        └── auth-module/             # (Level 3 - Max Depth)
-            ├── TDD-UIP-AUTH-001-jwt-rotation.md
-            └── flow-diagram.png
+notification-platform/               # Multi-System repository
+├── runtime/                         # Parent SAD boundary
+│   └── docs/
+│       └── 02-designs/
+│           └── delivery-runtime/
+│               └── TDD-notif-runtime-001-delivery-runtime.md
+└── experience/                      # Separate parent SAD boundary
+    └── docs/
+        └── 02-designs/
+            └── browser-boundary/
+                └── TDD-notif-experience-001-browser-boundary.md
 ```
 
 ### 2.2 The Schema Architecture
@@ -78,7 +83,7 @@ TDDs are **single, cohesive documents** (`TDD-[REPO]-[COMPONENT].md`). **The Coh
 
 #### 2.3.3 Directory Structure
 
-Must reside in a `docs/02-designs/` directory adjacent to the source code.
+Must reside in `docs/02-designs/` adjacent to the owning System/deployable source root. Repository-root `docs/02-designs/` is valid only when the repository represents one System/deployable. In multi-System repositories, each System/deployable owns its own `<system-root>/docs/02-designs/` namespace.
 
 #### 2.3.4 Metadata Schema Properties
 
