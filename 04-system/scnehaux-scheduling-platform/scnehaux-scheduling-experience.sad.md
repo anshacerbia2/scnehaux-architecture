@@ -4,14 +4,14 @@ doc_meta:
   title: Scnehaux Scheduling Experience
   owner: Scheduling Platform Team
   version: 2.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by:
     - GDC-009
   parent_pad: PAD-PLT-011
   review_cycle_days: 90
   created_date: 2026-08-22
-  last_reviewed: 2026-08-24
+  last_reviewed: 2026-08-25
   technologies:
     - name: react
       type: frontend-framework
@@ -215,7 +215,7 @@ Identity remains authoritative for authentication and identity-session validity.
 
 ### 7.2 Authorization
 
-The Scheduling API is authoritative for authorization. The SPA passes context and intent but cannot grant itself Tenant, application, replay, or quota authority.
+The Scheduling API is authoritative for authorization. The Experience passes context and intent but cannot grant itself Tenant, application, replay, or quota authority.
 
 ### 7.3 Browser Security
 
@@ -271,7 +271,7 @@ OpenTelemetry correlates browser request, BFF span, and Scheduling API span with
 
 ### 8.5 Runbook
 
-Operational guidance covers API degradation, stale client cache, authentication/session failures, partial list-query failures, and rollback of the frontend artifact.
+Operational guidance covers API degradation, stale client cache, authentication/session failures, partial list-query failures, and rollback of the Experience artifact.
 
 ## 9. Deployment Strategy
 

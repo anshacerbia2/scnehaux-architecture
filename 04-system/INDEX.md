@@ -17,8 +17,8 @@
 | [SAD-011](scnehaux-model-inference-platform/scnehaux-model-inference-platform.sad.md) | Model & Inference Platform SAD | PAD-PLT-008 | Architecture Authority | chartered |
 | [SAD-012](scnehaux-organization/scnehaux-organization-experience.sad.md) | Scnehaux Organization Experience | PAD-PLT-002 | Core Platform Team | approved |
 | [SAD-013](scnehaux-scheduling-platform/scnehaux-scheduling-runtime.sad.md) | Scnehaux Scheduling Runtime | PAD-PLT-011 | Scheduling Platform Team | approved |
-| [SAD-014](scnehaux-scheduling-platform/scnehaux-scheduling-experience.sad.md) | Scnehaux Scheduling Experience | PAD-PLT-011 | Scheduling Platform Team | draft |
-| [SAD-015](scnehaux-notification-platform/scnehaux-notification-experience.sad.md) | Scnehaux Notification Experience | PAD-PLT-005 | Notification Platform Team | draft |
+| [SAD-014](scnehaux-scheduling-platform/scnehaux-scheduling-experience.sad.md) | Scnehaux Scheduling Experience | PAD-PLT-011 | Scheduling Platform Team | approved |
+| [SAD-015](scnehaux-notification-platform/scnehaux-notification-experience.sad.md) | Scnehaux Notification Experience | PAD-PLT-005 | Notification Platform Team | approved |
 | [SAD-016](scnehaux-workspace-experience-platform/scnehaux-workspace-experience-platform.sad.md) | Workspace Experience Platform SAD | PAD-PLT-012 | Architecture Authority | chartered |
 | [SAD-017](scnehaux-work-management-platform/scnehaux-work-management-platform.sad.md) | Work Management Platform SAD | PAD-PLT-013 | Architecture Authority | chartered |
 | [SAD-018](scnehaux-rules-decisioning-platform/scnehaux-rules-decisioning-platform.sad.md) | Rules & Decisioning Platform SAD | PAD-PLT-014 | Architecture Authority | chartered |

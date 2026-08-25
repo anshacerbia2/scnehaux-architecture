@@ -4,14 +4,14 @@ doc_meta:
   title: Scnehaux Notification Experience
   owner: Notification Platform Team
   version: 2.0.0
-  status: draft
+  status: approved
   classification: restricted
   governed_by:
     - GDC-009
   parent_pad: PAD-PLT-005
   review_cycle_days: 90
   created_date: 2026-08-22
-  last_reviewed: 2026-08-24
+  last_reviewed: 2026-08-25
   technologies:
     - name: react
       type: frontend-framework
@@ -271,7 +271,7 @@ WCAG 2.2 AA is the target baseline. Scnehaux UI Platform provides keyboard opera
 
 ### 8.5 Runbook
 
-Runbooks cover API degradation, stale client data, authentication/session failures, partial provider-health query failures, frontend rollback, and accidental exposure prevention checks.
+Runbooks cover API degradation, stale client data, authentication/session failures, partial provider-health query failures, Experience rollback, and accidental exposure prevention checks.
 
 ## 9. Deployment Strategy
 
