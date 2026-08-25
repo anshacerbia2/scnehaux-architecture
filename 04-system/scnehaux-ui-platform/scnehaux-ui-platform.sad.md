@@ -3,13 +3,13 @@ doc_meta:
   id: SAD-003
   title: Scnehaux UI Platform Software Architecture (SAD)
   owner: Principal UI/UX Architect
-  version: 1.0.0
+  version: 1.0.1
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: '2026-05-19'
+  last_reviewed: '2026-08-25'
   parent_pad: PAD-PLT-003
   technologies:
     - name: react
@@ -22,7 +22,7 @@ doc_meta:
 
 ## 1. Purpose & Scope
 
-This document outlines the software architecture for the Scnehaux UI Platform. **Capability Realized**: This system realizes the logical UI Platform capability defined in [scnehaux-ui-platform.pad.md](../../03-domain/PAD-PLT-003-scnehaux-ui-platform/PAD-PLT-003-scnehaux-ui-platform.pad.md) (PAD-PLT-002). It is the concrete physical styling compiler and component infrastructure for that capability.
+This document outlines the software architecture for the Scnehaux UI Platform. **Capability Realized**: This system realizes the logical UI Platform capability defined in [scnehaux-ui-platform.pad.md](../../03-domain/PAD-PLT-003-scnehaux-ui-platform/PAD-PLT-003-scnehaux-ui-platform.pad.md) (PAD-PLT-003). It is the concrete physical styling compiler and component infrastructure for that capability.
 
 ### Objective
 
@@ -36,7 +36,7 @@ Zero-runtime styling only (no runtime CSS-in-JS); all styles resolve to design t
 
 Design system, component infrastructure, frontend architecture.
 
-**System Context:** A set of build-time packages (`@scnx/system`, `@scnx/core-ui`) consumed by downstream portals via pnpm workspace (local) or the private NPM registry (production), with shared scoping under Module Federation. It has no runtime backend and serves only static, compiled CSS/JS assets.
+**System Context:** A set of build-time packages (`@scnx/system`, `@scnx/core-ui`) consumed by downstream portals through a governed local-development package linkage (including pnpm workspace when co-located) or the private NPM registry for released/production consumption, with shared scoping under Module Federation. It has no runtime backend and serves only static, compiled CSS/JS assets.
 
 **Requirements.** Headless accessible primitives, a 3-tier token engine, multi-theme support, and a build-time extraction pipeline.
 
@@ -59,7 +59,7 @@ The platform inherits and enforces the [Enterprise Frontend Performance and Rend
 
 ## 3. Solution Context
 
-It provides the physical visual foundation consumed by all frontend portals across the monorepo — including the [Scnehaux Identity Experience (SAD-002)](../scnehaux-iam/scnehaux-identity-experience.sad.md) and the federated ERP Portal. It is developed as isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
+It provides the physical visual foundation consumed by downstream frontend portals across repository boundaries — including the [Scnehaux Identity Experience (SAD-002)](../scnehaux-iam/scnehaux-identity-experience.sad.md) and the federated ERP Portal. It is developed as isolated packages to guarantee zero runtime visual pollution, maximum build-time optimization, and strict style encapsulation.
 
 ## 4. Architecture Model
 
@@ -282,7 +282,7 @@ See below for component-specific blast radius analysis.
 
 Standard GitLab CI pipeline. & Source Code Management
 
-The platform packages are developed within the monorepo and integrated into downstream applications via workspace linkages, then published for production.
+The UI Platform packages are developed in their governed package workspace. Downstream applications may consume them through explicit local-development linkage, including pnpm workspace when legitimately co-located, while released/production consumers use immutable versioned packages.
 
 - **Repository Topology (Monorepo)**: Structured as a monorepo utilizing **pnpm workspaces** for isolated dependency resolution and rapid local hot-reloading (Vite/Rspack).
 - **SDLC & Branching Strategy**: Enforces strict **Trunk-Based Development**. Manual merges to the `main` branch are prohibited. All features must be integrated via short-lived branches.

@@ -47,11 +47,11 @@ In addition to the global structural enforcement defined in **[GDC-001](GDC-001-
 
 <!-- AUTO-GENERATED-SCHEMA:START -->
 
-| Rule Category      | Parameter            | Enforcement / Value                                                                                                                                                                                                                  |
-| :----------------- | :------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Metadata Rules** | Metadata Rules       | <ul><li>doc_meta</li></ul>                                                                                                                                                                                                           |
-| **Section Rules**  | Required Sections    | <ul><li>Purpose</li><li>Scope</li><li>Technical Context</li><li>Component Design</li><li>Data Model</li><li>API / Interface</li><li>Algorithms / Logic</li><li>Configuration</li><li>Testing Strategy</li><li>Traceability</li></ul> |
-| **Section Rules**  | Recommended Sections | <ul><li>Performance Notes</li><li>Security Notes</li><li>Operational Notes</li></ul>                                                                                                                                                 |
+| Rule Category | Parameter | Enforcement / Value |
+| :--- | :--- | :--- |
+| **Metadata Rules** | Metadata Rules | <ul><li>doc_meta</li></ul> |
+| **Section Rules** | Required Sections | <ul><li>Purpose</li><li>Scope</li><li>Technical Context</li><li>Component Design</li><li>Data Model</li><li>API / Interface</li><li>Algorithms / Logic</li><li>Configuration</li><li>Testing Strategy</li><li>Traceability</li></ul> |
+| **Section Rules** | Recommended Sections | <ul><li>Performance Notes</li><li>Security Notes</li><li>Operational Notes</li></ul> |
 
 <!-- AUTO-GENERATED-SCHEMA:END -->
 

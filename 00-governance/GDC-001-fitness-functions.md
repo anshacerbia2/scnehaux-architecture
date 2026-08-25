@@ -83,7 +83,6 @@ The Master Fitness Function resides entirely within the `06-fitness-function/` d
 > **DO NOT EDIT THIS TREE MANUALLY.** This directory tree is automatically generated from the live physical structure of the `engine/` directory. If the codebase structure changes, regenerate this block by running: `python 06-fitness-function/generators/generate_engine_topography.py`
 
 <!-- BEGIN_ENGINE_TOPOGRAPHY -->
-
 ```text
 scnehaux-architecture/
 └── 06-fitness-function/
@@ -177,7 +176,6 @@ scnehaux-architecture/
 │                   ├── test_schema_extensions.py
 │                   └── test_structure_rules.py
 ```
-
 <!-- END_ENGINE_TOPOGRAPHY -->
 
 ### 2.2 The Ecosystem Capabilities (Functions & Scripts)
@@ -217,96 +215,91 @@ The global baseline applies universally to all architecture documents across the
 <!-- lint_disable_start: prohibited_words (reason: governance engine documentation) -->
 <!-- AUTO-GENERATED-RULES:START -->
 
-| Rule Category       | Parameter                                                  | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| :------------------ | :--------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Structure Rules** | Artifact Directories                                       | **Gdc**: `00-governance`<br>**Ead**: `01-enterprise`<br>**Std**: `02-standards`<br>**Pad**: `03-domain`<br>**Sad**: `04-system`<br>**Adr**: `05-decisions`<br>**Tdd**: `docs/designs`                                                                                                                                                                                                                                                                                                                                                             |
-| **Structure Rules** | Ignored Files                                              | **Exact Matches**: <ul><li>`readme.md`</li><li>`index.md`</li><li>`contributing.md`</li><li>`changelog.md`</li><li>`maturity.md`</li><li>`traceability.md`</li><li>`temp.md`</li><li>`scnehaux_enterprise_architecture_refinement.md`</li></ul><br>**Patterns**: <ul><li>`\.copy\.md$`</li><li>`\.template\.md$`</li><li>`-template\.md$`</li><li>`[\\/]templates[\\/]`</li><li>`[\\/]scratch[\\/]`</li></ul>                                                                                                                                     |
-| **Structure Rules** | Max Directory Depth                                        | `3`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Content Rules**   | Exempt Statuses                                            | <ul><li>`{'status': 'draft', 'depend_on': 'created_date', 'max_age_days': 30, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."}`</li><li>`{'status': 'deprecated', 'depend_on': 'last_updated', 'max_age_days': 180, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be fully retired and deleted."}`</li></ul> |
-| **Content Rules**   | Max Review Age Days                                        | **Value**: `365`<br>**Error Message**: `Document review age of {age_days} days exceeds limit of {limit} days.`                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **Content Rules**   | Min Content Length Chars                                   | **Value**: `50`<br>**Error Message**: `Section '{section_name}' content length ({length} chars) is below minimum of {min_length} chars.`                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Content Rules**   | Prohibited Words                                           | **Patterns**: <ul><li>`\bmaybe\b`</li><li>`\bprobably\b`</li><li>`\bshould consider\b`</li><li>`\bTBD\b`</li><li>`\bcoming soon\b`</li><li>`\band so on\b`</li><li>`\bseamless(?:ly)?\b`</li><li>`\bobviously\b`</li><li>`\bblazingly\b`</li><li>`\btrivially\b`</li></ul><br>**Error Message**: `Prohibited boilerplate or hesitant word detected. Use definitive, professional language.`                                                                                                                                                       |
-| **Content Rules**   | Ambiguity Rules                                            | **Patterns**: <ul><li>`\b(highly\|very\|extremely\|super\|incredibly)\s+(scalable\|fast\|secure\|reliable\|available\|performant\|robust\|efficient)\b`</li></ul><br>**Error Message**: `Vague claim detected. Must be quantified with metrics.`                                                                                                                                                                                                                                                                                                  |
-| **Severity Levels** | 0. Engine Execution Domain (System Fatality)               | **Unreadable Artifact**: `CRITICAL`<br>**Corrupt Frontmatter**: `CRITICAL`<br>**Unknown Document Type**: `CRITICAL`<br>**Missing Validator**: `CRITICAL`<br>**Missing Domain Schema**: `CRITICAL`<br>**Invalid Lint Disable**: `ERROR`                                                                                                                                                                                                                                                                                                            |
-| **Severity Levels** | 1. Topology & Identity Domain (Graph & Lineage)            | **Circular Dependency**: `CRITICAL`<br>**Cross Reference Missing**: `ERROR`<br>**Duplicate Id**: `CRITICAL`<br>**Inline Reference Missing**: `WARNING`<br>**Orphan Document**: `ERROR`<br>**Traceability Violation**: `ERROR`<br>**Broken Internal Link**: `ERROR`                                                                                                                                                                                                                                                                                |
-| **Severity Levels** | 2. Structural Compliance Domain (Shape & Completeness)     | **Missing Metadata**: `ERROR`<br>**Missing Required Subsection**: `ERROR`<br>**Missing Section**: `ERROR`<br>**Missing Section Keyword**: `ERROR`<br>**Schema Validation Failed**: `CRITICAL`<br>**Subsection Order Violation**: `WARNING`                                                                                                                                                                                                                                                                                                        |
-| **Severity Levels** | 3. Semantic & Quality Domain (Meaning & Language)          | **Ambiguity Rules**: `WARNING`<br>**Nfr Taxonomy Violation**: `ERROR`<br>**Prohibited Words**: `ERROR`<br>**Structural Integrity Violation**: `CRITICAL`<br>**Stylistic Deviation**: `WARNING`<br>**Vague Claim In Nfr**: `ERROR`                                                                                                                                                                                                                                                                                                                 |
-| **Severity Levels** | 4. Lifecycle & Environment Domain (Time, Space, & State)   | **Approved Version Not Stable**: `ERROR`<br>**Compliance Filename Match**: `ERROR`<br>**Compliance Macro Directory**: `ERROR`<br>**Draft Status Violation**: `ERROR`<br>**Exception Expired**: `ERROR`<br>**Exempt Document Skipped**: `INFO`<br>**Review Age Violation**: `WARNING`<br>**Version Bump Required**: `ERROR`                                                                                                                                                                                                                        |
-| **Severity Levels** | 5. Architecture Constraints Domain (Hard Technical Limits) | **Operational Stability Violation**: `ERROR`<br>**Prohibited Technology Violation**: `ERROR`<br>**Security Isolation Violation**: `CRITICAL`<br>**Technology Hold Violation**: `CRITICAL`<br>**Unapproved Technology**: `ERROR`                                                                                                                                                                                                                                                                                                                   |
-| **Governance**      | Blocking Severities                                        | `['CRITICAL', 'ERROR']`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Rule Category      | Parameter                | Enforcement / Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| :----------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Structure Rules** | Artifact Directories | **Gdc**: `00-governance`<br>**Ead**: `01-enterprise`<br>**Std**: `02-standards`<br>**Pad**: `03-domain`<br>**Sad**: `04-system`<br>**Adr**: `05-decisions`<br>**Tdd**: `docs/designs` |
+| **Structure Rules** | Ignored Files | **Exact Matches**: <ul><li>`readme.md`</li><li>`index.md`</li><li>`contributing.md`</li><li>`changelog.md`</li><li>`maturity.md`</li><li>`traceability.md`</li><li>`temp.md`</li><li>`scnehaux_enterprise_architecture_refinement.md`</li></ul><br>**Patterns**: <ul><li>`\.copy\.md$`</li><li>`\.template\.md$`</li><li>`-template\.md$`</li><li>`[\\/]templates[\\/]`</li><li>`[\\/]scratch[\\/]`</li></ul> |
+| **Structure Rules** | Max Directory Depth | `3` |
+| **Content Rules** | Exempt Statuses | <ul><li>`{'status': 'draft', 'depend_on': 'created_date', 'max_age_days': 30, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be reviewed, finalized, or deleted."}`</li><li>`{'status': 'deprecated', 'depend_on': 'last_updated', 'max_age_days': 180, 'error_message': "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be fully retired and deleted."}`</li></ul> |
+| **Content Rules** | Max Review Age Days | **Value**: `365`<br>**Error Message**: `Document review age of {age_days} days exceeds limit of {limit} days.` |
+| **Content Rules** | Min Content Length Chars | **Value**: `50`<br>**Error Message**: `Section '{section_name}' content length ({length} chars) is below minimum of {min_length} chars.` |
+| **Content Rules** | Prohibited Words | **Patterns**: <ul><li>`\bmaybe\b`</li><li>`\bprobably\b`</li><li>`\bshould consider\b`</li><li>`\bTBD\b`</li><li>`\bcoming soon\b`</li><li>`\band so on\b`</li><li>`\bseamless(?:ly)?\b`</li><li>`\bobviously\b`</li><li>`\bblazingly\b`</li><li>`\btrivially\b`</li></ul><br>**Error Message**: `Prohibited boilerplate or hesitant word detected. Use definitive, professional language.` |
+| **Content Rules** | Ambiguity Rules | **Patterns**: <ul><li>`\b(highly\|very\|extremely\|super\|incredibly)\s+(scalable\|fast\|secure\|reliable\|available\|performant\|robust\|efficient)\b`</li></ul><br>**Error Message**: `Vague claim detected. Must be quantified with metrics.` |
+| **Severity Levels** | 0. Engine Execution Domain (System Fatality) | **Unreadable Artifact**: `CRITICAL`<br>**Corrupt Frontmatter**: `CRITICAL`<br>**Unknown Document Type**: `CRITICAL`<br>**Missing Validator**: `CRITICAL`<br>**Missing Domain Schema**: `CRITICAL`<br>**Invalid Lint Disable**: `ERROR` |
+| **Severity Levels** | 1. Topology & Identity Domain (Graph & Lineage) | **Circular Dependency**: `CRITICAL`<br>**Cross Reference Missing**: `ERROR`<br>**Duplicate Id**: `CRITICAL`<br>**Inline Reference Missing**: `WARNING`<br>**Orphan Document**: `ERROR`<br>**Traceability Violation**: `ERROR`<br>**Broken Internal Link**: `ERROR` |
+| **Severity Levels** | 2. Structural Compliance Domain (Shape & Completeness) | **Missing Metadata**: `ERROR`<br>**Missing Required Subsection**: `ERROR`<br>**Missing Section**: `ERROR`<br>**Missing Section Keyword**: `ERROR`<br>**Schema Validation Failed**: `CRITICAL`<br>**Subsection Order Violation**: `WARNING` |
+| **Severity Levels** | 3. Semantic & Quality Domain (Meaning & Language) | **Ambiguity Rules**: `WARNING`<br>**Nfr Taxonomy Violation**: `ERROR`<br>**Prohibited Words**: `ERROR`<br>**Structural Integrity Violation**: `CRITICAL`<br>**Stylistic Deviation**: `WARNING`<br>**Vague Claim In Nfr**: `ERROR` |
+| **Severity Levels** | 4. Lifecycle & Environment Domain (Time, Space, & State) | **Approved Version Not Stable**: `ERROR`<br>**Compliance Filename Match**: `ERROR`<br>**Compliance Macro Directory**: `ERROR`<br>**Draft Status Violation**: `ERROR`<br>**Exception Expired**: `ERROR`<br>**Exempt Document Skipped**: `INFO`<br>**Review Age Violation**: `WARNING`<br>**Version Bump Required**: `ERROR` |
+| **Severity Levels** | 5. Architecture Constraints Domain (Hard Technical Limits) | **Operational Stability Violation**: `ERROR`<br>**Prohibited Technology Violation**: `ERROR`<br>**Security Isolation Violation**: `CRITICAL`<br>**Technology Hold Violation**: `CRITICAL`<br>**Unapproved Technology**: `ERROR` |
+| **Governance** | Blocking Severities | `['CRITICAL', 'ERROR']` |
 
 ### Severity Levels
 
 #### 0. Engine Execution Domain (System Fatality)
-
-| Error Code              | Severity (CI Action) |
-| :---------------------- | :------------------- |
-| `unreadable_artifact`   | **CRITICAL**         |
-| `corrupt_frontmatter`   | **CRITICAL**         |
-| `unknown_document_type` | **CRITICAL**         |
-| `missing_validator`     | **CRITICAL**         |
-| `missing_domain_schema` | **CRITICAL**         |
-| `invalid_lint_disable`  | **ERROR**            |
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `unreadable_artifact` | **CRITICAL** |
+| `corrupt_frontmatter` | **CRITICAL** |
+| `unknown_document_type` | **CRITICAL** |
+| `missing_validator` | **CRITICAL** |
+| `missing_domain_schema` | **CRITICAL** |
+| `invalid_lint_disable` | **ERROR** |
 
 #### 1. Topology & Identity Domain (Graph & Lineage)
-
-| Error Code                 | Severity (CI Action) |
-| :------------------------- | :------------------- |
-| `circular_dependency`      | **CRITICAL**         |
-| `cross_reference_missing`  | **ERROR**            |
-| `duplicate_id`             | **CRITICAL**         |
-| `inline_reference_missing` | **WARNING**          |
-| `orphan_document`          | **ERROR**            |
-| `traceability_violation`   | **ERROR**            |
-| `broken_internal_link`     | **ERROR**            |
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `circular_dependency` | **CRITICAL** |
+| `cross_reference_missing` | **ERROR** |
+| `duplicate_id` | **CRITICAL** |
+| `inline_reference_missing` | **WARNING** |
+| `orphan_document` | **ERROR** |
+| `traceability_violation` | **ERROR** |
+| `broken_internal_link` | **ERROR** |
 
 #### 2. Structural Compliance Domain (Shape & Completeness)
-
-| Error Code                    | Severity (CI Action) |
-| :---------------------------- | :------------------- |
-| `missing_metadata`            | **ERROR**            |
-| `missing_required_subsection` | **ERROR**            |
-| `missing_section`             | **ERROR**            |
-| `missing_section_keyword`     | **ERROR**            |
-| `schema_validation_failed`    | **CRITICAL**         |
-| `subsection_order_violation`  | **WARNING**          |
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `missing_metadata` | **ERROR** |
+| `missing_required_subsection` | **ERROR** |
+| `missing_section` | **ERROR** |
+| `missing_section_keyword` | **ERROR** |
+| `schema_validation_failed` | **CRITICAL** |
+| `subsection_order_violation` | **WARNING** |
 
 #### 3. Semantic & Quality Domain (Meaning & Language)
-
-| Error Code                       | Severity (CI Action) |
-| :------------------------------- | :------------------- |
-| `ambiguity_rules`                | **WARNING**          |
-| `nfr_taxonomy_violation`         | **ERROR**            |
-| `prohibited_words`               | **ERROR**            |
-| `structural_integrity_violation` | **CRITICAL**         |
-| `stylistic_deviation`            | **WARNING**          |
-| `vague_claim_in_nfr`             | **ERROR**            |
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `ambiguity_rules` | **WARNING** |
+| `nfr_taxonomy_violation` | **ERROR** |
+| `prohibited_words` | **ERROR** |
+| `structural_integrity_violation` | **CRITICAL** |
+| `stylistic_deviation` | **WARNING** |
+| `vague_claim_in_nfr` | **ERROR** |
 
 #### 4. Lifecycle & Environment Domain (Time, Space, & State)
-
-| Error Code                    | Severity (CI Action) |
-| :---------------------------- | :------------------- |
-| `approved_version_not_stable` | **ERROR**            |
-| `compliance_filename_match`   | **ERROR**            |
-| `compliance_macro_directory`  | **ERROR**            |
-| `draft_status_violation`      | **ERROR**            |
-| `exception_expired`           | **ERROR**            |
-| `exempt_document_skipped`     | **INFO**             |
-| `review_age_violation`        | **WARNING**          |
-| `version_bump_required`       | **ERROR**            |
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `approved_version_not_stable` | **ERROR** |
+| `compliance_filename_match` | **ERROR** |
+| `compliance_macro_directory` | **ERROR** |
+| `draft_status_violation` | **ERROR** |
+| `exception_expired` | **ERROR** |
+| `exempt_document_skipped` | **INFO** |
+| `review_age_violation` | **WARNING** |
+| `version_bump_required` | **ERROR** |
 
 #### 5. Architecture Constraints Domain (Hard Technical Limits)
+| Error Code | Severity (CI Action) |
+| :--- | :--- |
+| `operational_stability_violation` | **ERROR** |
+| `prohibited_technology_violation` | **ERROR** |
+| `security_isolation_violation` | **CRITICAL** |
+| `technology_hold_violation` | **CRITICAL** |
+| `unapproved_technology` | **ERROR** |
 
-| Error Code                        | Severity (CI Action) |
-| :-------------------------------- | :------------------- |
-| `operational_stability_violation` | **ERROR**            |
-| `prohibited_technology_violation` | **ERROR**            |
-| `security_isolation_violation`    | **CRITICAL**         |
-| `technology_hold_violation`       | **CRITICAL**         |
-| `unapproved_technology`           | **ERROR**            |
 
-| Rule Category              | Parameter              | Enforcement / Value                                                                                        |
-| :------------------------- | :--------------------- | :--------------------------------------------------------------------------------------------------------- |
+| Rule Category | Parameter | Enforcement / Value |
+| :--- | :--- | :--- |
 | **Common Metadata Fields** | Common Metadata Fields | <ul><li>id (string)</li><li>title (string)</li><li>status (string)</li><li>created_date (string)</li></ul> |
 
 <!-- AUTO-GENERATED-RULES:END -->
