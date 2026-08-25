@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-004
   title: Enterprise Event-Driven Architecture & Messaging Standard
   owner: Enterprise Architect
-  version: 3.0.0
+  version: 3.0.1
   status: approved
   classification: public
   governed_by:
     - EAD-004
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-24
+  last_reviewed: 2026-08-25
 ---
 
 # Enterprise Event-Driven Architecture & Messaging Standard (STD-GLB-004)
@@ -355,7 +355,9 @@ Multiple substrates in one environment are allowed only for distinct contracts w
 
 ## 4. Exceptions
 
-Deviation from source-local publication atomicity, consumer duplicate safety, or declared delivery durability requires formal architecture review and an approved exception ADR.
+Deviation from source-local publication atomicity, consumer duplicate safety, or declared delivery durability requires formal exception governance with an explicit failure model, compensating controls, a named owner, and an expiry date.
+
+Each deviation must state the observable failure accepted by the exception: a publisher without source-local atomicity may commit state that consumers never receive, a consumer without duplicate safety may apply the same effect more than once on redelivery, and an undeclared durability profile leaves outage behavior undefined.
 
 A technology substitution inside the same semantic profile does not require redefining Product authority, but it must prove equivalent delivery, security, observability, and recovery properties and comply with Technology Radar governance.
 
