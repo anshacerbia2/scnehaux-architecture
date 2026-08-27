@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-010
   title: Enterprise Durable Scheduled Work Standard
   owner: Architecture Authority
-  version: 1.2.1
+  version: 1.3.0
   status: adopted
   classification: internal
   governed_by:
     - PAD-PLT-011
   review_cycle_days: 180
   created_date: 2026-08-22
-  last_reviewed: 2026-08-24
+  last_reviewed: 2026-08-27
 ---
 
 # Enterprise Durable Scheduled Work Standard (STD-GLB-010)
@@ -91,6 +91,8 @@ Every scheduled communication contract **MUST** make its selected mode explicit 
 - A recurring wall-clock Schedule **MUST** declare an IANA time-zone identifier
 - Server-local time and locale-dependent date parsing **MUST NOT** define schedule behavior
 - Recurrence syntax and semantic interpretation **MUST** be versioned by the scheduling contract
+- The effective DST policy **MUST** be versioned with the Schedule version
+- Materialized Occurrence evidence **MUST** identify the Schedule version and time-zone-data version used to compute its UTC instant; implementations **SHOULD** follow governed current IANA time-zone data rather than indefinitely pinning obsolete civil-time rules
 - A consumer **MUST** be able to preview computed future occurrences before activating or materially changing a recurring Schedule
 
 ### 3.4 Daylight-Saving-Time Behavior
@@ -98,6 +100,7 @@ Every scheduled communication contract **MUST** make its selected mode explicit 
 - Recurring wall-clock schedules **MUST** have deterministic handling for nonexistent and repeated local times
 - The effective DST policy **MUST** be explicit in the contract or bound to a versioned platform policy
 - A recurrence-library or time-zone-data upgrade that changes computed UTC occurrences for an existing Schedule **MUST** fail compatibility regression tests before release
+- A time-zone-data upgrade **MUST** produce differential evidence for affected existing Schedule versions before rollout; any approved change in future UTC instants **MUST** remain explainable from persisted Schedule/policy version and materialized-occurrence computation evidence
 
 ### 3.5 Occurrence Identity and Duplicate Safety
 
@@ -123,13 +126,14 @@ Every scheduled communication contract **MUST** make its selected mode explicit 
 Every durable recurring Schedule **MUST** select one supported misfire behavior:
 
 - `skip` — missed occurrences are not replayed
-- `fire_once` — recovery emits one occurrence representing the missed window
+- `fire_once` — recovery emits exactly one occurrence representing the missed window and uses the latest missed logical instant as that Occurrence's `scheduled_for`
 - `catch_up_bounded` — missed occurrences are replayed only up to an explicit finite maximum
 
 Additional rules:
 
 - Unlimited catch-up **MUST NOT** be supported
-- Recovery Occurrences **MUST** retain the original logical `scheduled_for` instant
+- Recovery Occurrences **MUST** retain the applicable logical `scheduled_for` instant
+- A one-time Schedule that is overdue when recovered/resumed **MUST** have an explicit one-time misfire behavior; implementations **MUST NOT** silently invent immediate execution semantics
 - A misfire-policy mutation **MUST** be versioned as a Schedule change
 - Misfire outcomes **MUST** be observable and auditable
 
@@ -138,10 +142,12 @@ Additional rules:
 - Schedule mutation **MUST** use optimistic concurrency or an equivalent stale-write prevention mechanism
 - Pause **MUST** prevent future occurrence materialization after the pause mutation commits
 - Resume **MUST** apply the persisted misfire policy to elapsed time
+- Pause/update/cancel **MUST** linearize against Occurrence materialization: if the mutation commits first, the affected old Schedule version cannot materialize that future Occurrence; if materialization commits first, that Occurrence remains a valid immutable occurrence of the producing Schedule version and may still be dispatched
+- Update **MUST** affect only future non-materialized Occurrences; already materialized Occurrences **MUST** retain their producing Schedule/policy version and `scheduled_for`
 - Cancel **MUST** be terminal for that Schedule identity
 - Cancellation **MUST NOT** claim to retract an Occurrence whose Trigger was already durably dispatched
 - A consumer-owned terminal state **MUST** remain authoritative for whether the consumer effect may proceed after dispatch; Scheduler cancellation is not a substitute for consumer-side terminal-state/idempotency checks
-- Near-due update/cancel races **MUST** have deterministic tested semantics
+- Near-due pause/update/cancel races **MUST** have deterministic tested semantics matching the materialization linearization rule
 - Operational replay **MUST** re-dispatch the same Occurrence identity rather than fabricate a new business occurrence
 
 ### 3.9 Payload, Data, and Secret Safety
@@ -205,7 +211,10 @@ The following timing mechanisms remain outside this standard when they do not re
 - Cancellation-race tests prove a late/duplicate due Occurrence cannot resurrect a terminally cancelled Notification
 - Frozen-notification tests prove communication-semantic fields remain immutable while non-pinned operational provider configuration/credentials can rotate before delivery
 - A time-zone golden corpus verifies DST gaps, repeated local times, leap-calendar boundaries, and time-zone-data upgrades
+- Differential tests identify existing Schedule versions whose future UTC instants would change under a time-zone-data upgrade and prove the approved compatibility/evidence behavior
 - Concurrency tests prove one logical Occurrence under multiple Scheduler replicas
+- Near-due race tests prove pause/update/cancel versus Occurrence materialization obeys the declared linearization point
+- Misfire golden tests prove `fire_once` preserves the latest missed logical instant and overdue one-time schedules use explicit policy
 - Restart and fault-injection tests prove accepted Schedule state and un-dispatched Occurrences survive process loss
 - Duplicate-delivery tests prove the same logical Occurrence reuses one `occurrence_id`
 - Tenant-isolation and quota tests run under the production-equivalent runtime database role
