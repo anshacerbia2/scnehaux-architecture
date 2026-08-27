@@ -18,13 +18,22 @@ Repository Topology: Align Repository Boundaries to Change, Release, Security, a
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                                 | Approver                         |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------------ | :------------------------------- |
-| 2026-08-12 | proposed | foundational | Architecture, Core Platform, Identity                                     | Architecture Authority — pending |
-| 2026-08-25 | proposed | foundational | Architecture, Platform Engineering, UI Platform, Notification, Scheduling | Architecture Authority — pending |
-| 2026-08-25 | accepted | foundational | Architecture, Platform Engineering, UI Platform, Notification, Scheduling | Architecture Authority           |
+| Date       | Status            | ADR Type     | Reviewers                                                                 | Approver                         |
+| :--------- | :---------------- | :----------- | :------------------------------------------------------------------------ | :------------------------------- |
+| 2026-08-12 | proposed          | foundational | Architecture, Core Platform, Identity                                     | Architecture Authority — pending |
+| 2026-08-25 | proposed          | foundational | Architecture, Platform Engineering, UI Platform, Notification, Scheduling | Architecture Authority — pending |
+| 2026-08-25 | accepted          | foundational | Architecture, Platform Engineering, UI Platform, Notification, Scheduling | Architecture Authority           |
+| 2026-08-28 | accepted, amended | foundational | Architecture, Platform Engineering, Notification, Scheduling              | Architecture Authority           |
 
 The original proposal scoped this ADR to the Identity and Organization foundation and proposed one repository per deployable unit. It never reached `accepted`, therefore it carried no architectural authority. Before ratification, the proposal was rebaselined into an enterprise repository-boundary decision that accounts for both legitimate polyrepo cases and legitimate platform-scoped monorepos.
+
+**Amended 2026-08-28**, on three points where the prescribed trees in §5.2 and §5.3 did not match what was built, and the built form was the better one on two of them:
+
+- Repository names lose the `scnehaux-` prefix. No repository in the estate carries it — the organization namespace already does, and the prefix repeated inside it names nothing the path did not already say.
+- `deploy/` becomes `infrastructure/`. The directory holds cluster manifests and provisioning definitions, not deployment scripts, and both platform repositories were scaffolded with the truer name.
+- Each tree now states where designs live, which the original omitted. `docs/designs/<system>/` is the only form the governance crawler scans, because its allowed-root set is matched relative to the repository root — a per-system `runtime/docs/...` is pruned before any rule runs.
+
+`apps/` and `packages/` are kept against the built form. See the note under §5.3.
 
 ## 3. Context
 
@@ -124,14 +133,17 @@ Repository consolidation or extraction is an evolutionary architecture action, n
 The Notification Platform uses **one platform-scoped repository** containing independently deployable Runtime and Experience applications.
 
 ```text
-scnehaux-notification-platform/
+notification-platform/
 ├─ apps/
 │  ├─ runtime/          # SAD-005
 │  └─ experience/       # SAD-015
 ├─ packages/
 │  └─ contracts/        # platform-internal source contracts/generated clients where justified
-├─ deploy/
-└─ ...
+├─ infrastructure/
+└─ docs/
+   └─ designs/
+      ├─ runtime/       # TDD-notification-runtime-*
+      └─ experience/    # TDD-notification-experience-*
 ```
 
 Binding rules:
@@ -149,15 +161,22 @@ Binding rules:
 The Scheduling Platform uses **one platform-scoped repository** containing independently deployable Runtime and Experience applications.
 
 ```text
-scnehaux-scheduling-platform/
+scheduling-platform/
 ├─ apps/
 │  ├─ runtime/          # SAD-013
 │  └─ experience/       # SAD-014
 ├─ packages/
 │  └─ contracts/        # platform-internal source contracts/generated clients where justified
-├─ deploy/
-└─ ...
+├─ infrastructure/
+└─ docs/
+   └─ designs/
+      ├─ runtime/       # TDD-scheduling-runtime-*
+      └─ experience/    # TDD-scheduling-experience-*
 ```
+
+**Why `apps/` and `packages/` are kept.** Both platform repositories were scaffolded with `runtime/`, `experience/`, and `contracts/` at the root, and that form is retained here only for `infrastructure/`. At the root, nothing structurally separates an independently deployable application from shared source and from provisioning definitions — a reader has to open each directory to learn which is which, and a third deployable would make the root ambiguous rather than longer. This ADR's own binding rules require release identifiers per deployable and path-aware CI, both of which need the set of deployables to be enumerable by listing one directory. The three containers make the root state its own shape: `apps/` is what ships, `packages/` is what is shared, `infrastructure/` is how it is run.
+
+**Why designs sit at `docs/designs/<system>/`.** Per-system ownership is the requirement and a per-system `runtime/docs/` is not the way to meet it. The governance crawler's allowed-root set is matched relative to the repository root, so a designs directory nested under a system directory is pruned before any rule evaluates it — the document would be unlinted and would report as compliant. One scanned root with a subdirectory per system keeps ownership visible in the path, keeps the document identifier the authority on which system owns it, and keeps the fail-closed sterilisation the crawler exists to provide.
 
 Binding rules:
 
@@ -341,8 +360,8 @@ This remains valid for deployables whose security, ownership, vendor cadence, or
 ### Alternative B — One Platform-Scoped Repository per Platform
 
 ```text
-scnehaux-notification-platform
-scnehaux-scheduling-platform
+notification-platform
+scheduling-platform
 ```
 
 Each repository contains Runtime and Experience as independent deployables.

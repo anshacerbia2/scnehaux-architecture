@@ -250,6 +250,8 @@ This index documents the test suite utilities and fixtures.
 | **test_ambiguity_no_message** | *(No docstring provided)* |
 | **test__validate_content_quality_ambiguity_regex** | *(No docstring provided)* |
 | **test_validate_technologies_whitelist** | *(No docstring provided)* |
+| **test_compliance_placement_reads_the_key_the_schema_declares** | The wiring, which is what the test below could not see.<br><br>This asserts against the real `base.schema.json` rather than a hand-built dict. The macro-<br>directory rule sat inert for the entire life of the engine because the validator read<br>`structure_rules.standard_directory` and no schema ever declared that name: the lookup<br>returned {}, `expected_dir` was None, and the check silently passed every document. The test<br>below built the key the validator wanted, so it proved the function and never the connection<br>between the function and its configuration.<br><br>Every doc type the schema maps must be reachable through the same path the validator uses, and<br>the map must not be empty — an empty map disables the rule exactly as the typo did. |
+| **test_macro_directory_matches_segments_not_substrings** | The second defect under the first, kept as an executable statement of both.<br><br>The rule compared `f"/{expected}/"` against the path, which needs a separator before the first<br>segment. The governance repository is linted with `--target .` and gets one by accident;<br>every downstream repository is linted with `--target docs` and does not — so enabling the rule<br>refused all twenty-three correctly placed TDDs in the estate at once. |
 | **test_compliance_placement_macro_dir** | *(No docstring provided)* |
 | **test_compliance_placement_filename_match** | *(No docstring provided)* |
 
