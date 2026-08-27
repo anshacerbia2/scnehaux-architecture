@@ -20,7 +20,9 @@ def parse_metadata(filepath):
 
 
 def _path_key(path: str, base_dir: str) -> str:
-    return Path(path).resolve().relative_to(Path(base_dir).resolve()).as_posix().casefold()
+    return (
+        Path(path).resolve().relative_to(Path(base_dir).resolve()).as_posix().casefold()
+    )
 
 
 def discover_markdown_files(base_dir: str) -> list[str]:

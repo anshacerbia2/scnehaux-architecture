@@ -63,9 +63,9 @@ def test_topography_render_is_independent_of_path_order():
         ("generators", "generate_traceability_graph.py"),
     ]
 
-    assert module.generate_markdown_from_paths(paths) == module.generate_markdown_from_paths(
-        list(reversed(paths))
-    )
+    assert module.generate_markdown_from_paths(
+        paths
+    ) == module.generate_markdown_from_paths(list(reversed(paths)))
 
 
 def test_topography_uses_git_tracked_inputs_not_ambient_workspace():

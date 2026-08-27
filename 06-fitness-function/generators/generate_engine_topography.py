@@ -37,15 +37,13 @@ def tracked_paths() -> list[tuple[str, ...]]:
         if not normalized.startswith(prefix):
             continue
 
-        parts = tuple(part for part in normalized[len(prefix):].split("/") if part)
+        parts = tuple(part for part in normalized[len(prefix) :].split("/") if part)
         if not parts:
             continue
         if parts[-1] == "__init__.py":
             continue
         if any(
-            part.startswith(".")
-            or part == "__pycache__"
-            or part.endswith(".egg-info")
+            part.startswith(".") or part == "__pycache__" or part.endswith(".egg-info")
             for part in parts
         ):
             continue
@@ -77,9 +75,7 @@ def render_tree(tree: dict, prefix: str = "") -> list[str]:
         comment = COMMENTS.get(item, "")
 
         base_str = (
-            f"{prefix}{connector}{item}/"
-            if is_dir
-            else f"{prefix}{connector}{item}"
+            f"{prefix}{connector}{item}/" if is_dir else f"{prefix}{connector}{item}"
         )
 
         if comment:
