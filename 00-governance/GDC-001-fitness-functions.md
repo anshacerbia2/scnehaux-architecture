@@ -166,6 +166,8 @@ scnehaux-architecture/
 │           │       ├── test_registry.py
 │           │       ├── test_schema_extensions.py
 │           │       └── test_structure_rules.py
+│           ├── generators/      # (Dynamic docs and topography autobuilders)
+│           │   └── test_generator_determinism.py
 │           └── INDEX.md
 ```
 
