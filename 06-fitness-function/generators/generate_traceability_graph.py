@@ -1,13 +1,11 @@
-import os
 import glob
+import os
+from pathlib import Path
+
 import yaml
 
 
 def parse_metadata(filepath):
-    """
-    Safely extract the `doc_meta` YAML block from a specific markdown file.
-    Returns None if parsing fails or the block is missing.
-    """
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
@@ -21,18 +19,79 @@ def parse_metadata(filepath):
     return None
 
 
+def _path_key(path: str, base_dir: str) -> str:
+    return (
+        Path(path).resolve().relative_to(Path(base_dir).resolve()).as_posix().casefold()
+    )
+
+
+def discover_markdown_files(base_dir: str) -> list[str]:
+    files = glob.glob(os.path.join(base_dir, "**/*.md"), recursive=True)
+    return sorted(files, key=lambda path: _path_key(path, base_dir))
+
+
+def _sorted_docs(docs: dict, artifact_type: str) -> list[dict]:
+    return sorted(
+        (doc for doc in docs.values() if doc["type"] == artifact_type),
+        key=lambda doc: doc["id"],
+    )
+
+
+def _parents(value) -> list[str]:
+    if not value:
+        return []
+    if isinstance(value, list):
+        return sorted(value)
+    return [value]
+
+
+def render_graph(docs: dict) -> str:
+    out = [
+        "```mermaid\n%%{init: {'theme': 'neutral'}}%%",
+        "graph LR",
+        "    %% EAD Layer",
+    ]
+
+    for d in _sorted_docs(docs, "EAD"):
+        out.append(f"    {d['id']}[{d['id']}]:::ead")
+
+    out.append("    %% PAD Layer")
+    for d in _sorted_docs(docs, "PAD"):
+        out.append(f"    {d['id']}[{d['id']}]:::pad")
+        for parent in _parents(d.get("realizes_capability")):
+            out.append(f"    {d['id']} -.realizes.-> {parent}")
+
+    out.append("    %% SAD Layer")
+    for d in _sorted_docs(docs, "SAD"):
+        out.append(f"    {d['id']}[{d['id']}]:::sad")
+        for parent in _parents(d.get("parent_pad")):
+            out.append(f"    {d['id']} --> {parent}")
+
+    out.extend(
+        [
+            "    classDef ead fill:#059669,stroke:#047857,color:#fff",
+            "    classDef pad fill:#2563eb,stroke:#1d4ed8,color:#fff",
+            "    classDef sad fill:#7c3aed,stroke:#6d28d9,color:#fff",
+            "```",
+        ]
+    )
+    return "\n".join(out)
+
+
 def generate_graph():
-    """
-    Crawl all architecture documents to extract `parent_pad` and `realizes_capability` linkages.
-    Generates a Mermaid.js flowchart mapping the hierarchical relationships (SAD -> PAD -> EAD).
-    """
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    md_files = glob.glob(os.path.join(base_dir, "**/*.md"), recursive=True)
 
     docs = {}
-    for f in md_files:
-        if "templates" in f or "scripts" in f or "README" in f or "INDEX" in f:
+    for f in discover_markdown_files(base_dir):
+        normalized = Path(f).as_posix()
+        if (
+            "/templates/" in normalized
+            or "/scripts/" in normalized
+            or Path(f).name == "README.md"
+            or Path(f).name == "INDEX.md"
+        ):
             continue
+
         meta = parse_metadata(f)
         if meta and "id" in meta:
             doc_id = meta["id"]
@@ -44,47 +103,10 @@ def generate_graph():
                 "governed_by": meta.get("governed_by", []),
             }
 
-    out = []
-    out.append("```mermaid\n%%{init: {'theme': 'neutral'}}%%")
-    out.append("graph LR")
-    out.append("    %% EAD Layer")
-    for d in docs.values():
-        if d["type"] == "EAD":
-            out.append(f"    {d['id']}[{d['id']}]:::ead")
-
-    out.append("    %% PAD Layer")
-    for d in docs.values():
-        if d["type"] == "PAD":
-            out.append(f"    {d['id']}[{d['id']}]:::pad")
-            parent = d.get("realizes_capability")
-            if parent:
-                if isinstance(parent, list):
-                    for p in parent:
-                        out.append(f"    {d['id']} -.realizes.-> {p}")
-                else:
-                    out.append(f"    {d['id']} -.realizes.-> {parent}")
-
-    out.append("    %% SAD Layer")
-    for d in docs.values():
-        if d["type"] == "SAD":
-            out.append(f"    {d['id']}[{d['id']}]:::sad")
-            parent = d.get("parent_pad")
-            if parent:
-                if isinstance(parent, list):
-                    for p in parent:
-                        out.append(f"    {d['id']} --> {p}")
-                else:
-                    out.append(f"    {d['id']} --> {parent}")
-
-    out.append("    classDef ead fill:#059669,stroke:#047857,color:#fff")
-    out.append("    classDef pad fill:#2563eb,stroke:#1d4ed8,color:#fff")
-    out.append("    classDef sad fill:#7c3aed,stroke:#6d28d9,color:#fff")
-    out.append("```")
-
     output_path = os.path.join(base_dir, "03-domain", "TRACEABILITY.md")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("# Architecture Traceability Graph\n\n")
-        f.write("\n".join(out) + "\n")
+        f.write(render_graph(docs) + "\n")
 
     print(f"[OK] Generated Traceability Graph -> {output_path}")
 

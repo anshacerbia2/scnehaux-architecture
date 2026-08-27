@@ -298,4 +298,13 @@ This index documents the test suite utilities and fixtures.
 | **test_validate_internal_links_empty_file_part** | *(No docstring provided)* |
 | **test_validate_inline_references_self_reference** | *(No docstring provided)* |
 
+### `tests/generators/test_generator_determinism.py`
+
+| Function | Description |
+| :--- | :--- |
+| **load_module** | *(No docstring provided)* |
+| **test_traceability_render_is_independent_of_discovery_order** | *(No docstring provided)* |
+| **test_topography_render_is_independent_of_path_order** | *(No docstring provided)* |
+| **test_topography_uses_git_tracked_inputs_not_ambient_workspace** | *(No docstring provided)* |
+
 <!-- AUTO-GENERATED-FUNCTIONS:END -->

@@ -61,11 +61,11 @@ The class determines ownership and expected delivery semantics. Transport does n
 
 A contract **MUST** select the minimum profile that satisfies its required semantics.
 
-| Profile | Select when | Do not select merely because |
-| :-- | :-- | :-- |
-| **Direct Durable Delivery** | bounded point-to-point delivery, stable target, no broker replay/routing/competing-consumer requirement | communication is asynchronous |
-| **Queue-Oriented Messaging** | targeted commands/jobs/triggers, competing consumers, routing, ACK/NACK, backpressure, DLQ | the system has many services |
-| **Stream-Oriented Messaging** | retained replay, independent consumer groups, CDC, stream processing, per-key log ordering | Kafka is already known or considered enterprise-grade |
+| Profile                       | Select when                                                                                             | Do not select merely because                          |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------ | :---------------------------------------------------- |
+| **Direct Durable Delivery**   | bounded point-to-point delivery, stable target, no broker replay/routing/competing-consumer requirement | communication is asynchronous                         |
+| **Queue-Oriented Messaging**  | targeted commands/jobs/triggers, competing consumers, routing, ACK/NACK, backpressure, DLQ              | the system has many services                          |
+| **Stream-Oriented Messaging** | retained replay, independent consumer groups, CDC, stream processing, per-key log ordering              | Kafka is already known or considered enterprise-grade |
 
 The architecture **MUST NOT** use a higher-complexity profile without a concrete semantic, reliability, scale, or operational driver.
 
@@ -341,11 +341,11 @@ Unbounded queue, stream retention, retry, or direct-delivery backlog is prohibit
 
 Scnehaux adopted implementations:
 
-| Semantic profile | Adopted implementation |
-| :-- | :-- |
-| Queue-Oriented Messaging | RabbitMQ |
-| Stream-Oriented Messaging | Kafka protocol |
-| Direct Durable Delivery | governed HTTPS + source outbox/relay + target durable acceptance |
+| Semantic profile          | Adopted implementation                                           |
+| :------------------------ | :--------------------------------------------------------------- |
+| Queue-Oriented Messaging  | RabbitMQ                                                         |
+| Stream-Oriented Messaging | Kafka protocol                                                   |
+| Direct Durable Delivery   | governed HTTPS + source outbox/relay + target durable acceptance |
 
 `adopted` is profile-scoped. A deployment does not run both brokers solely because both are supported.
 
