@@ -27,13 +27,12 @@ Repository Topology: Align Repository Boundaries to Change, Release, Security, a
 
 The original proposal scoped this ADR to the Identity and Organization foundation and proposed one repository per deployable unit. It never reached `accepted`, therefore it carried no architectural authority. Before ratification, the proposal was rebaselined into an enterprise repository-boundary decision that accounts for both legitimate polyrepo cases and legitimate platform-scoped monorepos.
 
-**Amended 2026-08-28**, on three points where the prescribed trees in §5.2 and §5.3 did not match what was built, and the built form was the better one on two of them:
+**Amended 2026-08-28**, on two points:
 
 - Repository names lose the `scnehaux-` prefix. No repository in the estate carries it — the organization namespace already does, and the prefix repeated inside it names nothing the path did not already say.
-- `deploy/` becomes `infrastructure/`. The directory holds cluster manifests and provisioning definitions, not deployment scripts, and both platform repositories were scaffolded with the truer name.
-- Each tree now states where designs live, which the original omitted. `docs/designs/<system>/` is the only form the governance crawler scans, because its allowed-root set is matched relative to the repository root — a per-system `runtime/docs/...` is pruned before any rule runs.
+- Each tree now states where designs live, which the original omitted. Both deployables' designs sit in one flat `docs/designs/`, and the document identifier states which system owns each. See the note under §5.3 for the two forms that were tried and rejected.
 
-`apps/` and `packages/` are kept against the built form. See the note under §5.3.
+`apps/`, `packages/`, and `deploy/` are unchanged and are what both platform repositories now hold.
 
 ## 3. Context
 
@@ -139,11 +138,9 @@ notification-platform/
 │  └─ experience/       # SAD-015
 ├─ packages/
 │  └─ contracts/        # platform-internal source contracts/generated clients where justified
-├─ infrastructure/
+├─ deploy/
 └─ docs/
-   └─ designs/
-      ├─ runtime/       # TDD-notification-runtime-*
-      └─ experience/    # TDD-notification-experience-*
+   └─ designs/          # TDD-notif-runtime-* and TDD-notif-experience-*
 ```
 
 Binding rules:
@@ -167,16 +164,21 @@ scheduling-platform/
 │  └─ experience/       # SAD-014
 ├─ packages/
 │  └─ contracts/        # platform-internal source contracts/generated clients where justified
-├─ infrastructure/
+├─ deploy/
 └─ docs/
-   └─ designs/
-      ├─ runtime/       # TDD-scheduling-runtime-*
-      └─ experience/    # TDD-scheduling-experience-*
+   └─ designs/          # TDD-sch-runtime-* and TDD-sch-experience-*
 ```
 
-**Why `apps/` and `packages/` are kept.** Both platform repositories were scaffolded with `runtime/`, `experience/`, and `contracts/` at the root, and that form is retained here only for `infrastructure/`. At the root, nothing structurally separates an independently deployable application from shared source and from provisioning definitions — a reader has to open each directory to learn which is which, and a third deployable would make the root ambiguous rather than longer. This ADR's own binding rules require release identifiers per deployable and path-aware CI, both of which need the set of deployables to be enumerable by listing one directory. The three containers make the root state its own shape: `apps/` is what ships, `packages/` is what is shared, `infrastructure/` is how it is run.
+**Why the three containers.** Both platform repositories were first scaffolded with `runtime/`, `experience/`, and `contracts/` at the root and have since been aligned to this tree. At the root, nothing structurally separates an independently deployable application from shared source and from deployment definitions — a reader has to open each directory to learn which is which, and a third deployable would make the root ambiguous rather than longer. This ADR's own binding rules require release identifiers per deployable and path-aware CI, both of which need the set of deployables to be enumerable by listing one directory. The containers make the root state its own shape: `apps/` is what ships, `packages/` is what is shared, `deploy/` is how it is run.
 
-**Why designs sit at `docs/designs/<system>/`.** Per-system ownership is the requirement and a per-system `runtime/docs/` is not the way to meet it. The governance crawler's allowed-root set is matched relative to the repository root, so a designs directory nested under a system directory is pruned before any rule evaluates it — the document would be unlinted and would report as compliant. One scanned root with a subdirectory per system keeps ownership visible in the path, keeps the document identifier the authority on which system owns it, and keeps the fail-closed sterilisation the crawler exists to provide.
+**Why designs sit in one flat `docs/designs/`.** Per-system ownership is the requirement, and it is carried by the document identifier rather than by a directory. `TDD-sch-runtime-*` belongs to SAD-013 and `TDD-sch-experience-*` to SAD-014; the linter already validates identifiers, so the ownership is machine-checked where it lives.
+
+Two more locally appealing forms were tried and both fail:
+
+- `apps/<system>/docs/02-designs/` colocates designs with the code they describe, and the governance crawler never sees them. Its allowed-root set is matched relative to the repository root, so `apps` is pruned at the first level and the documents lint as compliant without being read — twenty designs across the two platform repositories sat in exactly that state.
+- `docs/designs/<system>/` is scanned and then fails `max_directory_depth`, which is 3.
+
+Rather than relax a governance limit to accommodate a directory, the directory goes: it was adding a level of nesting and no information the filename did not already carry. The result is also the shape every other repository in the estate uses, which is what makes a reviewer moving between them able to find designs without looking.
 
 Binding rules:
 
