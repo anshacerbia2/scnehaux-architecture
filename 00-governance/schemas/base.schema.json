@@ -15,7 +15,7 @@
         "PAD": "03-domain",
         "SAD": "04-system",
         "ADR": "05-decisions",
-        "TDD": "docs/02-designs"
+        "TDD": "docs/designs"
       },
       "ignored_files": {
         "exact_matches": [

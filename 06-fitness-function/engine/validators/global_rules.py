@@ -1,6 +1,10 @@
 import re
 import logging
 from .base import BaseValidator
+from engine.config.constants import (
+    SCHEMA_KEY_ARTIFACT_DIRS,
+    SCHEMA_KEY_STRUCTURE_RULES,
+)
 from engine.parsing.markdown_ast import (
     strip_code_fences,
 )
@@ -51,6 +55,44 @@ def run_common_validations(validator: BaseValidator) -> None:
     # @flow-validator: end
 
 
+def _within_macro_directory(file_path: str, expected_dir: str) -> bool:
+    """
+    Report whether the document's directories contain the expected macro-directory as a
+    contiguous run of path segments.
+
+    Segments rather than a substring. The original check asked whether `f"/{expected_dir}/"`
+    appeared in the path, which requires a separator before the first segment — so it held only
+    for paths that happen to begin with one. The governance repository is linted with `--target .`
+    and produces `./00-governance/GDC-000...`, which supplies that leading separator by accident.
+    Every downstream repository is linted with `--target docs` and produces
+    `docs/designs/TDD-...`, which does not — so the moment the rule was wired up it refused all
+    twenty-three correctly placed TDDs in the estate.
+
+    Comparing segments also removes the substring trap the old form carried: a document under
+    `notes-04-system-draft/` would have satisfied a `/04-system/` search only by not containing it,
+    and a directory named `docs/designs-old/` would have satisfied `docs/designs` under a looser
+    prefix test. Neither can match a segment run.
+
+    A run rather than a prefix, so `docs/designs/runtime/TDD-...` is accepted. A repository holding
+    several independently deployable systems needs to group designs per system, and the macro
+    directory is about which tree a document belongs to rather than how deep inside it the document
+    sits.
+    """
+    expected = [p for p in expected_dir.replace("\\", "/").split("/") if p and p != "."]
+    if not expected:
+        return True
+
+    # The filename itself is not a directory, so it cannot satisfy the run.
+    actual = [p for p in file_path.replace("\\", "/").split("/") if p and p != "."][:-1]
+    if len(actual) < len(expected):
+        return False
+
+    return any(
+        actual[i : i + len(expected)] == expected
+        for i in range(len(actual) - len(expected) + 1)
+    )
+
+
 def _validate_compliance_placement(v: BaseValidator) -> None:
     """
     Validate that the document is placed in the correct macro-directory
@@ -62,18 +104,24 @@ def _validate_compliance_placement(v: BaseValidator) -> None:
     doc_id = (v.doc_meta or {}).get("id", "")
 
     # 1. Macro-Directory check
-    macro_dir_map = v.global_rules.get("structure_rules", {}).get(
-        "standard_directory", {}
+    #
+    # The key is read through the shared constant rather than typed here. It was typed here, as
+    # "standard_directory", and no schema has ever defined that name — so the lookup returned an
+    # empty map, `expected_dir` was always None, and `compliance_macro_directory` never fired for
+    # any document in any repository despite carrying ERROR severity and a row in GDC-001.
+    #
+    # The unit test passed because it built `{"standard_directory": {...}}` itself: it proved the
+    # function and never the wiring. `test_compliance_placement_reads_the_key_the_schema_declares`
+    # is what closes that, and the constant is what stops the two from drifting apart again.
+    macro_dir_map = v.global_rules.get(SCHEMA_KEY_STRUCTURE_RULES, {}).get(
+        SCHEMA_KEY_ARTIFACT_DIRS, {}
     )
     expected_dir = macro_dir_map.get(doc_type)
-    if expected_dir:
-        # We check if the expected directory is part of the absolute path.
-        # This is a simple structural enforcement (e.g. /04-system/)
-        if f"/{expected_dir}/" not in file_path:
-            v.add_error(
-                "compliance_macro_directory",
-                f"Document of type '{doc_type}' must be located within the '{expected_dir}/' macro-directory.",
-            )
+    if expected_dir and not _within_macro_directory(file_path, expected_dir):
+        v.add_error(
+            "compliance_macro_directory",
+            f"Document of type '{doc_type}' must be located within the '{expected_dir}/' macro-directory.",
+        )
 
     # 2. Filename identity check
     if doc_id:
