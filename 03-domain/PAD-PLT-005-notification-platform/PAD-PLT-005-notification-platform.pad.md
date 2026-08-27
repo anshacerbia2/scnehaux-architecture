@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-005
   title: Enterprise Notification Platform
   owner: Notification Platform Team
-  version: 2.2.1
+  version: 2.3.0
   status: approved
   classification: restricted
   governed_by:
@@ -14,7 +14,7 @@ doc_meta:
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-24
+  last_reviewed: 2026-08-27
   fulfilled_by:
     - SAD-005
     - SAD-015
@@ -107,7 +107,10 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 | Deferred Notification Command    | Bounded registered command delivered by Scheduling that causes Notification creation at due time rather than at schedule-registration time                                           |
 | Provider Binding                 | Notification-owned provider configuration that references secrets held by Trust Services                                                                                             |
 | Delivery                         | One recipient/channel delivery lifecycle                                                                                                                                             |
-| Delivery Attempt                 | One provider interaction attempt within a Delivery lifecycle                                                                                                                         |
+| Delivery Attempt                 | One provider interaction attempt within a Delivery lifecycle; each attempt freezes its non-secret operational realization before external I/O                                        |
+| Provider Capability              | Declared provider/channel capability facts such as idempotency, reconciliation lookup, callback, or retraction support                                                               |
+| Unknown Provider Outcome         | An attempt whose external effect cannot yet be proven present or absent and therefore cannot be blindly retried or failed over                                                       |
+| Communication Suppression        | Current channel/legal/platform suppression fact enforced by Notification according to the declared communication class; distinct from Product business-recipient eligibility         |
 | Provider Acceptance              | Provider accepted a send request; not necessarily final channel delivery                                                                                                             |
 | Delivery Receipt                 | Provider/channel evidence of final or intermediate delivery where available                                                                                                          |
 | Delivery Status                  | Provider-independent normalized state owned by Notification                                                                                                                          |
@@ -126,6 +129,11 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 - Product business aggregates are not copied into Notification; only bounded values required to render/deliver the accepted communication are snapshotted
 - External recipients may be email addresses, phone/WhatsApp endpoints, device endpoints, or registered webhook endpoints without being enterprise Principals
 - Product/Legal authority retains business-specific consent meaning; Notification enforces communication preferences/policy facts within its declared scope
+- Frozen recipient/content semantics do not freeze current communication suppression. Before a not-yet-started provider attempt, Notification SHALL evaluate current channel/legal/platform suppression facts according to the declared communication class; Product business-recipient eligibility remains upstream authority
+- Provider/channel capability differences SHALL be explicit. Automatic retry of a non-idempotent external effect is allowed only when the same provider operation is idempotent under a stable delivery identity or when reconciliation proves the prior effect absent
+- An Unknown Provider Outcome SHALL block blind retry and provider failover for that Delivery until reconciliation proves the prior effect absent, the provider contract proves duplicate safety, or an explicitly evidenced operator/policy decision resolves the ambiguity
+- Provider route, binding, endpoint and credential reference MAY be late-bound until an attempt starts, but the selected non-secret operational realization SHALL be frozen for that Delivery Attempt and retained as auditable metadata without storing secret material
+- Governed webhook delivery SHALL use registered targets and a dedicated egress-security policy; arbitrary caller-provided URLs, unsafe redirects, private/link-local destinations, DNS-rebinding exposure, unbounded payloads/responses, and disabled TLS verification are prohibited
 - Generic future scheduling is delegated to the Scheduling Platform
 - Pure scheduled communication SHOULD use a frozen Notification registered with Scheduling when recipient/content/version semantics must be preserved from creation time
 - Frozen Notification preserves communication meaning at acceptance time, including recipient snapshot, immutable template/content version and data, selected channel, logical sender identity where required, immutable attachment/version references, and business correlation needed for the accepted communication
@@ -218,7 +226,9 @@ Notification does not own Product business records, HR/finance/travel transactio
 - Reliability class: **C1 Mission-Critical Operations**
 - Target mature service availability: **>= 99.95% monthly** for Notification acceptance and internal delivery processing
 - Target RTO: **<= 1 hour**
-- Target RPO: **<= 15 minutes**
+- Within the production HA failure domain (process, node, and declared availability-zone failures), committed accepted Notification, Delivery, idempotency, outbox, and scheduling-registration state has **RPO = 0**
+- Cross-region disaster recovery is a separate deployment profile with an initial target **RPO <= 15 minutes** unless a Tenant/regulatory profile requires stronger replication
+- API acceptance is returned only after the authoritative HA store durably commits the accepted state
 - accepted Notifications are delayed rather than silently lost during platform/provider outage
 - accepted frozen Notifications with incomplete or ambiguous Schedule binding remain recoverable through idempotent registration and reconciliation rather than becoming silently unscheduled
 
@@ -239,11 +249,12 @@ Final provider delivery time is not used as a universal platform SLO because pro
 - recipient PII is minimized, redacted in telemetry, and retained according to communication/evidence policy
 - sender domain/number/profile ownership is verified before production enablement
 - provider callbacks are authenticated
+- governed webhook delivery enforces SSRF-resistant target registration and egress controls, including address-class validation, redirect policy, DNS-rebinding defenses, TLS verification, bounded response handling, and no arbitrary per-request destination override
 - regional/silo deployment profiles remain available for contractual residency requirements
 
 ### 6.4 Audit and Interoperability
 
-Traceable lifecycle includes request acceptance, snapshot creation, template/version selection, schedule-registration intent, Schedule binding/reconciliation, provider attempt, provider acceptance, receipt, retry, permanent failure, cancellation, replay, and privileged configuration change.
+Traceable lifecycle includes request acceptance, snapshot creation, template/version selection, suppression decision, schedule-registration intent, Schedule binding/reconciliation, attempt operational-realization snapshot, provider attempt, provider acceptance, unknown-outcome reconciliation, receipt, retry, permanent failure, cancellation, replay, and privileged configuration change.
 
 Provider-specific vocabulary stays behind adapters; Products consume stable Notification contract semantics.
 
@@ -290,6 +301,10 @@ Scheduling Team owns generic durable future trigger mechanics. Trust Services ow
 - Workspace Experience, Workflow, and Work Management SHALL NOT be introduced solely to resolve Notification provider/profile configuration
 - provider models SHALL terminate at Notification adapters and never leak into Product contracts
 - provider transport acceptance SHALL NOT be represented as final delivery unless the channel/provider contract proves it
+- an unresolved Unknown Provider Outcome SHALL NOT be failed over to another provider or blindly retried as a new external effect
+- each started Delivery Attempt SHALL retain the non-secret provider/binding/routing/credential-reference version used for that attempt so late-bound routing remains forensically reproducible
+- current Notification-owned suppression policy SHALL be checked before a not-yet-started provider attempt; freezing a Notification SHALL NOT freeze later opt-out, hard-bounce, complaint, or equivalent suppression facts when the declared communication class requires them
+- governed webhook delivery SHALL NOT accept arbitrary runtime destination URLs and SHALL pass the platform webhook egress-security policy before production enablement
 - browser clients SHALL NOT receive decrypted provider credentials after registration
 
 ## 8. Assumptions & Constraints

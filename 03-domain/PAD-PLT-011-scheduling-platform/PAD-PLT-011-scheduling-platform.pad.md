@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-011
   title: Enterprise Scheduling Platform
   owner: Scheduling Platform Team
-  version: 1.3.0
+  version: 1.4.0
   status: approved
   classification: restricted
   governed_by:
@@ -14,7 +14,7 @@ doc_meta:
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-08-22
-  last_reviewed: 2026-08-24
+  last_reviewed: 2026-08-27
   fulfilled_by:
     - SAD-013
     - SAD-014
@@ -110,7 +110,10 @@ A consumer integrates through versioned schedule lifecycle commands and asynchro
 - Dispatch is at-least-once; consumers are idempotent on occurrence identity
 - Scheduler considers an Occurrence dispatched when the governed messaging boundary durably accepts it
 - Cancellation cannot retract an Occurrence already durably dispatched
+- Schedule mutation is linearized against Occurrence materialization: if pause/update/cancel commits before materialization, the old Schedule version cannot create that future Occurrence; if materialization commits first, that Occurrence remains a valid immutable occurrence of the version that produced it and may still be dispatched at least once
+- Update affects only future non-materialized Occurrences; a materialized Occurrence retains the Schedule version and temporal-policy version that produced it
 - Wall-clock recurrence requires explicit time-zone semantics
+- Recurrence semantic interpretation and DST policy are versioned Schedule properties; the time-zone database version used to materialize/preview an Occurrence is retained as computation evidence without requiring indefinite pinning to obsolete civil-time rules
 - DST and misfire behavior are explicit contract properties
 - Unlimited catch-up is prohibited
 - Product-relative timing rules remain Product logic and are materialized into Schedule registrations by the owning Product
@@ -198,7 +201,9 @@ Scheduling does not own:
 - Reliability class: **C1 Mission-Critical Operations**
 - Target service availability: **>= 99.95% monthly** for Schedule control and due-dispatch capability at mature production state
 - Target RTO: **<= 1 hour**
-- Target RPO: **<= 15 minutes**
+- Within the production HA failure domain (process, node, and declared availability-zone failures), committed Schedule, Occurrence, idempotency, and outbox state has **RPO = 0**
+- Cross-region disaster recovery is a separate deployment profile with an initial target **RPO <= 15 minutes** unless a Tenant/regulatory profile requires stronger replication
+- Schedule create is acknowledged only after the authoritative HA store durably commits the Schedule/idempotency state
 - An accepted Schedule must not be silently lost
 - Runtime outage delays work; recovery resumes from durable Schedule/Occurrence state using the persisted misfire policy
 
@@ -233,7 +238,7 @@ Higher-precision or higher-criticality classes require an explicit PAD/SAD profi
 
 The following lifecycle facts are traceable: create, update, pause, resume, cancel, occurrence materialization, misfire, dispatch, replay, target change, quota override, and privileged cross-Tenant action.
 
-Schedule/event contracts are versioned and interoperable across independently deployed consumers.
+Schedule/event contracts are versioned and interoperable across independently deployed consumers. Audit/reconciliation evidence includes the Schedule version, recurrence-semantics version, DST policy version, and time-zone-data version used to compute each materialized Occurrence.
 
 ### 6.6 Cost Target
 
@@ -277,7 +282,8 @@ Workflow Team owns workflow timer/deadline semantics. Notification Team owns not
 - Deferred Notification targets SHALL use a registered contract and bounded non-secret trigger input
 - Consumers SHALL implement occurrence-level idempotency
 - Consumers SHALL use a stable registration idempotency identity for retryable create operations and SHALL NOT manufacture a second Schedule solely because the original create response was lost
-- Durable recurrence SHALL declare time-zone and misfire semantics
+- Durable recurrence SHALL declare time-zone, recurrence-semantics version, DST policy, and misfire semantics
+- Materialized Occurrences SHALL retain the Schedule/policy version that produced them and SHALL NOT be rewritten by later Schedule mutation
 - New shared durable scheduling authority outside this PAD requires architecture review
 - Local transient timing remains local when it does not require the durable application schedule contract
 

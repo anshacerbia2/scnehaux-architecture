@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-005
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
-  version: 2.0.1
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -13,7 +13,7 @@ doc_meta:
   parent_pad: PAD-PLT-005
   review_cycle_days: 90
   created_date: 2026-07-06
-  last_reviewed: 2026-08-24
+  last_reviewed: 2026-08-27
   technologies:
     - name: golang
       type: backend-language
@@ -190,10 +190,12 @@ Scheduling remains the temporal authority and does not become Notification deliv
 11. Channel Dispatch Workers
 12. Provider Adapters
 13. Callback/Receipt Normalization
-14. Retry & Reconciliation
-15. Outbox Relay
-16. Messaging Port & Direct/RabbitMQ/Kafka Adapters
-17. Operations/Admin Query
+14. Provider Capability, Suppression & Unknown-Outcome Policy
+15. Retry & Reconciliation
+16. Webhook Egress Security
+17. Outbox Relay
+18. Messaging Port & Direct/RabbitMQ/Kafka Adapters
+19. Operations/Admin Query
 
 Channel/provider Worker pools share one deployable initially with independent concurrency/bulkheads.
 
@@ -257,7 +259,8 @@ sequenceDiagram
     D-->>N: commit
     N-->>P: accepted notification_id
     W->>D: claim bounded ready Delivery
-    W->>X: send with delivery identity/provider idempotency when available
+    W->>D: evaluate current suppression + freeze attempt realization
+    W->>X: send with stable delivery identity under provider capability policy
     X-->>W: accepted / transient / permanent / unknown
     W->>D: normalized attempt/status + outbox
 ```
@@ -302,7 +305,7 @@ Frozen communication semantics include:
 - immutable attachment versions
 - business correlation
 
-Operational provider route, current credential/secret version, endpoint, failover route, and rate-limit state are late-bound unless explicitly version-pinned.
+Operational provider route, current credential/secret version, endpoint, failover route, and rate-limit state are late-bound unless explicitly version-pinned. Once a provider attempt starts, its selected provider, binding/routing version, endpoint identity, and non-secret credential-reference version are frozen as attempt evidence so later configuration rotation cannot rewrite history.
 
 ### 4.5 Scheduling Trigger Delivery by Profile
 
@@ -350,6 +353,8 @@ Cancellation of the bound Schedule is retried asynchronously.
 If Scheduling already durably dispatched the Occurrence, Notification consumes/deduplicates it as a no-op when terminally cancelled.
 
 A due Occurrence never resurrects a cancelled Notification.
+
+If cancellation commits before a provider attempt is durably claimed/started, that attempt must not begin. If an external provider call has already begun, local cancellation prevents new attempts but does not claim that the external effect was retracted unless the provider contract explicitly supports and confirms retraction.
 
 ### 4.7 Deferred Notification Command
 
@@ -414,6 +419,30 @@ sequenceDiagram
     R->>M: publish through selected profile
 ```
 
+### 4.10 Delivery Attempt Resolution and Unknown Outcome
+
+Provider capability is explicit per channel/provider binding. At minimum the runtime models whether the external provider supports stable idempotency, outcome lookup/reconciliation, authenticated callback/receipt, and retraction.
+
+A Delivery Attempt freezes its non-secret operational realization before external I/O: provider identity, provider-binding/routing policy version, endpoint identity, credential secret-reference/version metadata, and stable delivery identity. Secret values are never persisted in attempt evidence.
+
+The normalized delivery state machine preserves these invariants:
+
+- `SUPPRESSED` is terminal for the planned external attempt and is recorded when current Notification-owned suppression policy blocks delivery
+- `PROVIDER_ACCEPTED` is not equivalent to final `DELIVERED`
+- `UNKNOWN` means the external side effect may have occurred and is not equivalent to transient failure
+- automatic retry from `UNKNOWN` is permitted only when the provider operation is provably idempotent under the same delivery identity or reconciliation proves the previous effect absent
+- provider failover while the previous provider outcome remains `UNKNOWN` is prohibited
+- a non-reconcilable `UNKNOWN` outcome is parked for bounded policy/operator resolution rather than converted to a fabricated success/failure
+- provider callbacks and reconciliation may advance `UNKNOWN` or `PROVIDER_ACCEPTED` to a proven normalized state but cannot rewrite prior attempt evidence
+
+Exact state enums, transition guards, lease/claim fields, retry budgets, and provider capability schemas belong in TDD.
+
+### 4.11 Governed Webhook Delivery Boundary
+
+Webhook is an outbound communication channel, not a general-purpose arbitrary HTTP client. Production webhook targets are registered/configured under Notification authority rather than supplied as free-form per-send destinations.
+
+The webhook adapter enforces SSRF-resistant egress controls including DNS/address validation before connect, rebinding-safe resolution/connect policy, denial of private/loopback/link-local/metadata destinations unless an explicitly governed internal-target class exists, bounded redirect policy with revalidation on every hop, TLS hostname/certificate verification, bounded request/response size, bounded timeout, and no credential material in caller-controlled URLs.
+
 ## 5. State & Data Architecture
 
 ### 5.1 Storage
@@ -425,6 +454,9 @@ Logical state families:
 - Notification
 - Recipient Snapshot
 - Delivery / Delivery Attempt
+- immutable per-attempt non-secret operational realization evidence
+- provider capability and unknown-outcome reconciliation metadata
+- communication suppression facts/decision evidence within Notification scope
 - provider callback/event deduplication
 - Template Family / Version / Channel Variant / Data Schema
 - Channel/Sender Profile
@@ -447,6 +479,9 @@ Exact DDL, queue/topic naming, adapter config, indexes, and retention partitions
 - immutable Template Version and Recipient Snapshot invariants
 - Schedule registration state prevents one generation from binding to multiple logical Schedules
 - occurrence dedup state prevents duplicate future triggers from creating duplicate Delivery effect
+- attempt operational-realization evidence is immutable after the external provider call begins
+- unknown provider outcome cannot transition to a new provider attempt without a duplicate-safety/reconciliation guard
+- current suppression decision is persisted with the attempt plan/evidence used to allow or block provider execution
 
 ### 5.3 Cache
 
@@ -527,6 +562,8 @@ Broker/direct acceptance uses attributable workload identity.
 
 TLS 1.3 in transit and enterprise-managed encryption at rest.
 
+Governed webhook delivery uses a constrained egress path and target-registration policy. DNS/address classes, redirects, TLS identity, response limits, and destination changes are revalidated by the runtime rather than trusted from caller input.
+
 Recipient endpoint PII follows classification and retention policy.
 
 ### 7.4 Secrets
@@ -561,7 +598,8 @@ Target reliability remains C1:
 
 - mature availability >=99.95%
 - RTO <=1 hour
-- RPO <=15 minutes
+- RPO = 0 for committed Notification/Delivery/idempotency/outbox/scheduling-registration state across process, node, and declared availability-zone failover in the production HA profile
+- cross-region disaster-recovery RPO <=15 minutes for the initial regional profile unless a stronger Tenant/regulatory profile is declared
 
 ### 8.2 Latency, Throughput, and Scalability
 
@@ -581,7 +619,9 @@ Common:
 - provider latency/error/rate-limit
 - provider acceptance vs final delivery
 - retry/permanent failure
-- unknown/reconciliation backlog
+- unknown/reconciliation backlog and oldest unresolved unknown age
+- provider failover blocked-by-unknown count
+- suppression decisions by communication class/reason
 - callback verification/dedup
 - pending Schedule registration/binding reconciliation
 - cancelled late-occurrence no-op count
@@ -615,6 +655,8 @@ Profile-specific:
 - provider calls use channel-specific timeout/bulkhead
 - only transient provider classes are auto-retried
 - unknown provider outcome is reconciled before harmful duplicate send
+- a provider operation with UNKNOWN outcome is never failed over to another provider until absence/duplicate-safety is proven or an explicitly evidenced resolution policy permits it
+- non-reconcilable UNKNOWN outcomes are parked; they are not silently converted to transient failure
 - consumer/message processing follows STD-GLB-004 idempotency/failure parking
 - Schedule registration/cancel calls retry with stable identities
 - ambiguous Schedule create is reconciled before a new logical Schedule can exist
@@ -688,6 +730,10 @@ Blocking gates:
 - Atlas/RLS
 - template schema/sandbox/security
 - provider adapter/callback authentication
+- provider capability matrix and unknown-outcome transition tests
+- attempt-realization immutability and credential-reference rotation tests
+- suppression race tests proving current policy is evaluated before not-yet-started provider execution
+- governed-webhook SSRF/DNS-rebinding/redirect/private-address/TLS/size-limit negative tests
 - event schema compatibility
 - Notification/Delivery idempotency
 - duplicate-send fault injection
@@ -723,6 +769,10 @@ Blocking gates:
 - queue-rabbitmq is default messaging deployment profile
 - Kafka remains a supported stream profile
 - Direct profile is permitted only through durable idempotent acceptance
+- provider capabilities are explicit and UNKNOWN outcome blocks blind retry/failover
+- late-bound provider realization becomes immutable per Delivery Attempt once external execution starts
+- current communication suppression is evaluated before not-yet-started provider execution according to communication class
+- webhook is a governed registered-target channel with SSRF-resistant egress controls
 
 ### 10.2 Rejected
 
@@ -773,6 +823,8 @@ API paths and logical message/event types are versioned.
 Template versions/data schemas are immutable.
 
 Provider adapter changes cannot alter normalized Delivery semantics without migration.
+
+Provider capability semantics and normalized UNKNOWN/reconciliation behavior are versioned contracts. A provider replacement cannot weaken duplicate-safety, attempt evidence, suppression, or webhook egress guarantees without an explicit architecture migration.
 
 Messaging adapter replacement preserves logical event/trigger identity and uses explicit migration/reconciliation instead of blind dual-publish.
 

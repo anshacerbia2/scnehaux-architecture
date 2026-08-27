@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-013
   title: Scnehaux Scheduling Runtime
   owner: Scheduling Platform Team
-  version: 2.0.1
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -12,7 +12,7 @@ doc_meta:
   parent_pad: PAD-PLT-011
   review_cycle_days: 90
   created_date: 2026-08-22
-  last_reviewed: 2026-08-24
+  last_reviewed: 2026-08-27
   technologies:
     - name: golang
       type: backend-language
@@ -298,10 +298,10 @@ Scheduler dispatch state never represents Product business completion.
 After restart/outage the Due Claimer discovers elapsed Schedule state and applies persisted policy:
 
 - `skip` advances to the first future occurrence and records skip evidence
-- `fire_once` materializes one recovery Occurrence
+- `fire_once` materializes exactly one recovery Occurrence using the latest missed logical instant as its `scheduled_for`
 - `catch_up_bounded` materializes only the permitted finite recovery set
 
-Every recovery Occurrence preserves logical `scheduled_for`.
+Every recovery Occurrence preserves a logical `scheduled_for`. One-time Schedules that become overdue while paused/unavailable use an explicit one-time misfire policy rather than implicit immediate firing.
 
 ### 4.7 Replay
 
@@ -311,6 +311,22 @@ Replay does not create a second logical business occurrence.
 
 Profile adapter changes do not change replay identity.
 
+### 4.8 Mutation Linearization and Schedule-Version Binding
+
+The authoritative transaction that materializes an Occurrence is the linearization point between a due Schedule version and later pause/update/cancel mutations.
+
+- if pause/update/cancel commits before materialization, the superseded/paused/cancelled Schedule version cannot materialize that future Occurrence
+- if Occurrence materialization commits first, the Occurrence remains valid, immutable, and dispatchable even if pause/update/cancel commits immediately afterward
+- an update changes only future non-materialized Occurrences; already materialized Occurrences retain the Schedule version, recurrence-semantics version, DST policy version, and computed `scheduled_for` that produced them
+- a cancelled Schedule is terminal for future materialization, but cancellation does not fabricate retraction of an already materialized or durably dispatched Occurrence
+- consumers still enforce occurrence idempotency and their own terminal-state/business-validity checks before irreversible effects
+
+Exact locking/optimistic-version predicates and outbox state transitions belong in TDD, but CI must prove the externally visible linearization semantics under concurrent replicas.
+
+### 4.9 Temporal Compatibility Evidence
+
+Each Schedule version carries versioned recurrence interpretation and DST policy. Materialized Occurrence evidence records the time-zone identifier and time-zone-data version used for computation. The platform default follows governed current IANA time-zone data rather than pinning obsolete civil-time rules indefinitely; upgrades that change future computed instants are detected by golden-corpus/differential tests and surfaced as compatibility evidence before rollout.
+
 ## 5. State & Data Architecture
 
 ### 5.1 Storage
@@ -319,8 +335,8 @@ One private PostgreSQL database is authoritative for Scheduling runtime state.
 
 Logical state families:
 
-- Schedule aggregate
-- Occurrence
+- Schedule aggregate including recurrence-semantics/DST policy version
+- Occurrence including producing Schedule version and time-zone-data computation evidence
 - command idempotency
 - create-command semantic fingerprint and idempotency-to-`schedule_id` mapping
 - registered-target projection
@@ -339,6 +355,8 @@ Exact DDL, indexes, table partitioning, claim queries, queue/topic names, and ad
 - UUIDv7 durable identifiers
 - Tenant-scoped state uses enterprise RLS where applicable
 - due-access paths are performance-tested at forecast and 10x forecast peak
+- the authoritative uniqueness model prevents more than one logical Occurrence for the same Schedule version and logical `scheduled_for`
+- materialized Occurrence temporal/version evidence is immutable
 
 ### 5.3 Cache
 
@@ -467,7 +485,8 @@ Target reliability remains C1:
 
 - mature service availability >=99.95% monthly
 - RTO <=1 hour
-- RPO <=15 minutes
+- RPO = 0 for committed Schedule/Occurrence/idempotency/outbox state across process, node, and declared availability-zone failover in the production HA profile
+- cross-region disaster-recovery RPO <=15 minutes for the initial regional profile unless a stronger Tenant/regulatory profile is declared
 
 ### 8.2 Latency, Throughput, and Scalability
 
@@ -540,7 +559,8 @@ Production runbooks cover:
 - queue backlog/DLQ
 - stream lag/partition skew
 - quota saturation
-- time-zone regression
+- time-zone regression or tzdb semantic delta
+- near-due mutation/materialization race
 - misfire surge
 - duplicate dispatch
 - replay
@@ -597,7 +617,11 @@ Blocking gates include:
 - package-boundary enforcement
 - Atlas migration integrity and RLS tests using runtime roles
 - recurrence property tests and DST/time-zone golden corpus
+- tzdb-version differential tests proving governed compatibility behavior for existing Schedule versions
 - concurrent-replica Occurrence uniqueness tests
+- near-due pause/update/cancel vs materialization race tests proving the declared linearization point
+- fire-once golden tests proving the latest missed logical instant is preserved as `scheduled_for`
+- overdue one-time Schedule misfire tests
 - restart/fault tests around materialization and outbox
 - profile-parity contract tests for stable `OccurrenceDue`
 - Direct lost-response/idempotent-target tests
@@ -668,7 +692,7 @@ Rejected until measured residency/latency/availability evidence justifies distri
 
 API paths and logical event/trigger types are versioned.
 
-Recurrence/time-zone semantics are compatibility-sensitive and protected by golden-corpus tests.
+Recurrence/time-zone semantics are compatibility-sensitive and protected by golden-corpus and time-zone-data differential tests. Schedule versions carry recurrence/DST semantic versions and materialized Occurrences retain the computation evidence needed to explain historical UTC instants.
 
 Internal claim strategy, recurrence library, table partitioning, and dispatch adapter may change without changing PAD or `OccurrenceDue` semantics.
 
