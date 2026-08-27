@@ -21,9 +21,12 @@ This index documents the internal functions and classes of the Generators.
 
 | Function | Description |
 | :--- | :--- |
-| **build_tree** | Recursively build a visual directory tree structure for the topography diagram.<br>Appends high-level explanatory comments to specific engine directories. |
-| **generate_markdown** | Generate the complete topography markdown text block wrapped in a code fence. |
-| **update_document** | Inject the generated engine topography into the target Governance document (GDC-001)<br>using the BEGIN_ENGINE_TOPOGRAPHY and END_ENGINE_TOPOGRAPHY marker tags. |
+| **tracked_paths** | *(No docstring provided)* |
+| **build_path_tree** | *(No docstring provided)* |
+| **render_tree** | *(No docstring provided)* |
+| **generate_markdown_from_paths** | *(No docstring provided)* |
+| **generate_markdown** | *(No docstring provided)* |
+| **update_document** | *(No docstring provided)* |
 
 ### `generators/generate_functions_doc.py`
 
@@ -72,7 +75,12 @@ This index documents the internal functions and classes of the Generators.
 
 | Function | Description |
 | :--- | :--- |
-| **parse_metadata** | Safely extract the `doc_meta` YAML block from a specific markdown file.<br>Returns None if parsing fails or the block is missing. |
-| **generate_graph** | Crawl all architecture documents to extract `parent_pad` and `realizes_capability` linkages.<br>Generates a Mermaid.js flowchart mapping the hierarchical relationships (SAD -> PAD -> EAD). |
+| **parse_metadata** | *(No docstring provided)* |
+| **_path_key** | *(No docstring provided)* |
+| **discover_markdown_files** | *(No docstring provided)* |
+| **_sorted_docs** | *(No docstring provided)* |
+| **_parents** | *(No docstring provided)* |
+| **render_graph** | *(No docstring provided)* |
+| **generate_graph** | *(No docstring provided)* |
 
 <!-- AUTO-GENERATED-FUNCTIONS:END -->

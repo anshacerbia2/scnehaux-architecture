@@ -1,9 +1,9 @@
 import os
 import re
+import subprocess
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TARGET_FILE = os.path.join(ROOT_DIR, "00-governance", "GDC-001-fitness-functions.md")
-FITNESS_DIR = os.path.join(ROOT_DIR, "06-fitness-function")
 
 COMMENTS = {
     "auditors": "# (External environment validators)",
@@ -22,37 +22,67 @@ COMMENTS = {
 }
 
 
-def build_tree(dir_path, prefix=""):
-    """
-    Recursively build a visual directory tree structure for the topography diagram.
-    Appends high-level explanatory comments to specific engine directories.
-    """
-    lines = []
-    items = sorted(os.listdir(dir_path))
-    # Filter out pycache, hidden, and init
-    items = [
-        i
-        for i in items
-        if not i.startswith("__") and not i.startswith(".") and i != "__init__.py"
-    ]
+def tracked_paths() -> list[tuple[str, ...]]:
+    result = subprocess.run(
+        ["git", "-C", ROOT_DIR, "ls-files", "--cached", "--", "06-fitness-function"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
-    for idx, item in enumerate(items):
-        path = os.path.join(dir_path, item)
+    prefix = "06-fitness-function/"
+    paths = []
+    for raw in result.stdout.splitlines():
+        normalized = raw.replace("\\", "/")
+        if not normalized.startswith(prefix):
+            continue
+
+        parts = tuple(part for part in normalized[len(prefix):].split("/") if part)
+        if not parts:
+            continue
+        if parts[-1] == "__init__.py":
+            continue
+        if any(
+            part.startswith(".")
+            or part == "__pycache__"
+            or part.endswith(".egg-info")
+            for part in parts
+        ):
+            continue
+        paths.append(parts)
+
+    return sorted(
+        set(paths),
+        key=lambda parts: tuple(part.casefold() for part in parts),
+    )
+
+
+def build_path_tree(paths: list[tuple[str, ...]]) -> dict:
+    tree = {}
+    for parts in paths:
+        node = tree
+        for part in parts:
+            node = node.setdefault(part, {})
+    return tree
+
+
+def render_tree(tree: dict, prefix: str = "") -> list[str]:
+    lines = []
+    items = sorted(tree.items(), key=lambda item: item[0].casefold())
+
+    for idx, (item, children) in enumerate(items):
         is_last = idx == len(items) - 1
         connector = "└── " if is_last else "├── "
-
+        is_dir = bool(children)
         comment = COMMENTS.get(item, "")
 
-        # Format the item text
         base_str = (
             f"{prefix}{connector}{item}/"
-            if os.path.isdir(path)
+            if is_dir
             else f"{prefix}{connector}{item}"
         )
 
         if comment:
-            # Calculate padding to align comments nicely (approx col 35)
-            # Remove unicode tree lines length from calc to approximate alignment
             clean_len = len(
                 base_str.replace("│", "")
                 .replace("├", "")
@@ -64,28 +94,25 @@ def build_tree(dir_path, prefix=""):
         else:
             lines.append(f"│   {base_str}")
 
-        if os.path.isdir(path):
+        if is_dir:
             extension = "    " if is_last else "│   "
-            lines.extend(build_tree(path, prefix + extension))
+            lines.extend(render_tree(children, prefix + extension))
 
     return lines
 
 
-def generate_markdown():
-    """
-    Generate the complete topography markdown text block wrapped in a code fence.
-    """
+def generate_markdown_from_paths(paths: list[tuple[str, ...]]) -> str:
     tree_lines = ["```text", "scnehaux-architecture/", "└── 06-fitness-function/"]
-    tree_lines.extend(build_tree(FITNESS_DIR, "    "))
+    tree_lines.extend(render_tree(build_path_tree(paths), "    "))
     tree_lines.append("```")
     return "\n".join(tree_lines)
 
 
+def generate_markdown() -> str:
+    return generate_markdown_from_paths(tracked_paths())
+
+
 def update_document():
-    """
-    Inject the generated engine topography into the target Governance document (GDC-001)
-    using the BEGIN_ENGINE_TOPOGRAPHY and END_ENGINE_TOPOGRAPHY marker tags.
-    """
     with open(TARGET_FILE, "r", encoding="utf-8") as f:
         content = f.read()
 
