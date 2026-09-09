@@ -1,0 +1,86 @@
+name: Align Notification parked resolution semantics
+
+on:
+  push:
+    branches: [fix/notification-parked-resolution]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/notification-parked-resolution
+
+      - name: Apply architecture consistency fix
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              s = p.read_text()
+              if old not in s:
+                  raise SystemExit(f'missing expected text in {path}: {old[:160]!r}')
+              p.write_text(s.replace(old, new, 1))
+
+          pad = '03-domain/PAD-PLT-005-notification-platform/PAD-PLT-005-notification-platform.pad.md'
+          replace_once(pad, '  version: 2.4.0', '  version: 2.4.1')
+          replace_once(pad, '  last_reviewed: 2026-09-09', '  last_reviewed: 2026-09-10')
+          replace_once(
+              pad,
+              '    Parked --> [*]',
+              '''    Parked --> Ready: governed resolution proves effect absent / retry safe
+              Parked --> ProviderAccepted: governed evidence proves acceptance
+              Parked --> Delivered: governed evidence proves delivery
+              Parked --> PermanentFailure: governed evidence proves terminal no-delivery'''
+          )
+          replace_once(
+              pad,
+              '- `Parked` is an explicit operational state for ambiguity that cannot be safely resolved automatically; it is not fabricated success or failure.',
+              '- `Parked` stops automatic retry/failover. It can leave that state only through an attributable governed resolution whose evidence proves a safe retry or a stronger normalized outcome; it is not fabricated success or failure.'
+          )
+
+          sad = '04-system/scnehaux-notification-platform/scnehaux-notification-platform.sad.md'
+          replace_once(sad, '  version: 2.2.0', '  version: 2.2.1')
+          replace_once(sad, '  last_reviewed: 2026-09-09', '  last_reviewed: 2026-09-10')
+          replace_once(
+              sad,
+              '''    Reconciling --> Parked
+
+              Retryable --> Claimed''',
+              '''    Reconciling --> Parked
+
+              Parked --> Retryable: governed evidence proves effect absent / retry safe
+              Parked --> ProviderAccepted: governed evidence proves acceptance
+              Parked --> Delivered: governed evidence proves delivery
+              Parked --> PermanentRejected: governed evidence proves terminal no-delivery
+
+              Retryable --> Claimed'''
+          )
+          replace_once(
+              sad,
+              '- non-reconcilable ambiguity is parked for bounded policy/operator resolution instead of fabricated success/failure;',
+              '- non-reconcilable ambiguity is parked and excluded from automatic retry/failover; only an attributable governed resolution with evidence may reopen it or advance it to a proven normalized state;'
+          )
+
+      - name: Format changed Markdown
+        run: |
+          npx --yes prettier@3.9.6 --write \
+            03-domain/PAD-PLT-005-notification-platform/PAD-PLT-005-notification-platform.pad.md \
+            04-system/scnehaux-notification-platform/scnehaux-notification-platform.sad.md
+
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            03-domain/PAD-PLT-005-notification-platform/PAD-PLT-005-notification-platform.pad.md \
+            04-system/scnehaux-notification-platform/scnehaux-notification-platform.sad.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix(notification): align governed parked outcome resolution'
+          git push origin HEAD:fix/notification-parked-resolution
