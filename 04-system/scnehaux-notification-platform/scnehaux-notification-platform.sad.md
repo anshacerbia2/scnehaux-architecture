@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-005
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
-  version: 2.2.0
+  version: 2.2.1
   status: approved
   classification: restricted
   governed_by:
@@ -13,7 +13,7 @@ doc_meta:
   parent_pad: PAD-PLT-005
   review_cycle_days: 90
   created_date: 2026-07-06
-  last_reviewed: 2026-09-09
+  last_reviewed: 2026-09-10
   technologies:
     - name: golang
       type: backend-language
@@ -467,6 +467,11 @@ stateDiagram-v2
     Reconciling --> PermanentRejected
     Reconciling --> Parked
 
+    Parked --> Retryable: governed evidence proves effect absent / retry safe
+    Parked --> ProviderAccepted: governed evidence proves acceptance
+    Parked --> Delivered: governed evidence proves delivery
+    Parked --> PermanentRejected: governed evidence proves terminal no-delivery
+
     Retryable --> Claimed
 ```
 
@@ -477,7 +482,7 @@ Runtime invariants:
 - `UNKNOWN` means the external side effect may have occurred and is not a transient-failure synonym;
 - automatic retry from `UNKNOWN` is allowed only when the provider operation is provably idempotent under the same delivery identity or reconciliation proves the previous effect absent;
 - provider failover while the previous provider outcome remains `UNKNOWN` is prohibited;
-- non-reconcilable ambiguity is parked for bounded policy/operator resolution instead of fabricated success/failure;
+- non-reconcilable ambiguity is parked and excluded from automatic retry/failover; only an attributable governed resolution with evidence may reopen it or advance it to a proven normalized state;
 - callback/reconciliation may advance normalized state but never rewrites prior attempt evidence.
 
 Exact enums, transition guards, lease/claim fields, retry budgets, and provider schemas belong in TDD.
