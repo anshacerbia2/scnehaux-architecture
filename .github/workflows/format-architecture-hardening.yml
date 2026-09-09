@@ -1,0 +1,48 @@
+name: Format architecture hardening markdown
+
+on:
+  push:
+    branches:
+      - arch/harden-identity-notification-scheduling
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: arch/harden-identity-notification-scheduling
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Format changed architecture artifacts
+        run: |
+          npx --yes prettier@3.9.6 --write \
+            03-domain/PAD-PLT-001-identity-access-platform/PAD-PLT-001-identity-access-platform.pad.md \
+            03-domain/PAD-PLT-005-notification-platform/PAD-PLT-005-notification-platform.pad.md \
+            03-domain/PAD-PLT-011-scheduling-platform/PAD-PLT-011-scheduling-platform.pad.md \
+            04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md
+
+      - name: Commit formatter output
+        run: |
+          if git diff --quiet; then
+            echo 'No formatting changes required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            03-domain/PAD-PLT-001-identity-access-platform/PAD-PLT-001-identity-access-platform.pad.md \
+            03-domain/PAD-PLT-005-notification-platform/PAD-PLT-005-notification-platform.pad.md \
+            03-domain/PAD-PLT-011-scheduling-platform/PAD-PLT-011-scheduling-platform.pad.md \
+            04-system/scnehaux-iam/scnehaux-identity-runtime.sad.md
+          git commit -m 'style: format architecture hardening docs'
+          git push origin HEAD:arch/harden-identity-notification-scheduling
