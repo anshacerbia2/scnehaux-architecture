@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-005
   title: Enterprise Notification Platform
   owner: Notification Platform Team
-  version: 2.4.0
+  version: 2.4.1
   status: approved
   classification: restricted
   governed_by:
@@ -14,7 +14,7 @@ doc_meta:
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-09
+  last_reviewed: 2026-09-10
   fulfilled_by:
     - SAD-005
     - SAD-015
@@ -178,7 +178,10 @@ stateDiagram-v2
     Delivered --> [*]
     PermanentFailure --> [*]
     Cancelled --> [*]
-    Parked --> [*]
+    Parked --> Ready: governed resolution proves effect absent / retry safe
+    Parked --> ProviderAccepted: governed evidence proves acceptance
+    Parked --> Delivered: governed evidence proves delivery
+    Parked --> PermanentFailure: governed evidence proves terminal no-delivery
 ```
 
 Lifecycle rules:
@@ -188,7 +191,7 @@ Lifecycle rules:
 - `Unknown -> Ready` requires duplicate-safe proof from stable provider idempotency or reconciliation proving the prior external effect absent.
 - Terminal cancellation prevents a new provider attempt but does not claim to retract an external side effect that already began.
 - Historical Delivery Attempt evidence remains immutable even when later callback/reconciliation advances the normalized Delivery state.
-- `Parked` is an explicit operational state for ambiguity that cannot be safely resolved automatically; it is not fabricated success or failure.
+- `Parked` stops automatic retry/failover. It can leave that state only through an attributable governed resolution whose evidence proves a safe retry or a stronger normalized outcome; it is not fabricated success or failure.
 
 ### 3.5 Callback Ordering & Monotonic Outcome Semantics
 
