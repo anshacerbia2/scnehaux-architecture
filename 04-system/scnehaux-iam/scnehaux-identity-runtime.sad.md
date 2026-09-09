@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-001
   title: Scnehaux Identity Runtime
   owner: Identity Platform Team
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-09-09
   parent_pad: PAD-PLT-001
 ---
 
@@ -33,12 +33,14 @@ This system realizes:
 - client and protected-resource registration;
 - Identity administration runtime;
 - Tenant/Membership and Application-registration projection;
+- Consumer Verification Profile metadata and context-revocation propagation;
+- workload identity and bounded delegated execution identity support;
 - canonical Scnehaux identity events;
 - migration and compatibility from the legacy Go IAM.
 
 ### Requirement
 
-The system must preserve PAD-PLT-001 authority boundaries, provide local consumer verification, prevent a duplicate Principal authority, support controlled Keycloak upgrades, and provide evidence for security, recovery, conformance, and migration.
+The system must preserve PAD-PLT-001 authority boundaries, provide local consumer verification, prevent a duplicate Principal authority, support controlled Keycloak upgrades, and provide evidence for security, recovery, conformance, migration, context-revocation enforcement, federation/account-linking safety, and key continuity.
 
 ### Constraint
 
@@ -51,12 +53,15 @@ The system must preserve PAD-PLT-001 authority boundaries, provide local consume
 - Realm-per-Tenant is prohibited by default.
 - Preview Keycloak features require a separate ADR.
 - The initial production topology is single-region, multi-availability-zone.
+- Email/phone/display-name equality alone is never sufficient automatic federation account-linking proof.
+- Human session credentials are never copied into worker/Agent storage as a delegation mechanism.
 
 ### Assumption
 
 - Managed relational database, secret/key management, load balancing, object storage, event broker, and observability capabilities are available.
 - Product systems can validate signed access artifacts locally.
 - Organization and Software Catalog can publish or expose bounded lifecycle contracts.
+- Consumers that keep long-lived connections can register or equivalently revalidate those connections against the authorizing Principal/Tenant context.
 - The existing Go IAM can operate temporarily during migration.
 
 ### Out of Scope
@@ -66,6 +71,8 @@ The system must preserve PAD-PLT-001 authority boundaries, provide local consume
 - Tenant and Membership authority.
 - Subscription and Entitlement authority.
 - Application ownership.
+- Consumer-owned WebSocket/SSE connection infrastructure.
+- Agent Runtime execution lifecycle.
 - Enterprise evidence retention.
 - Product-specific profile and business data.
 - Multi-region active-active architecture in the initial release.
@@ -119,6 +126,8 @@ graph LR
     BROKER -. evidence facts .-> AUDIT
 
     KC -. discovery and public verification metadata .-> PROD
+    CTRL -. context version / revocation facts .-> BROKER
+    BROKER -. bounded consumer projection .-> PROD
     USER --> PROD
 ```
 
@@ -137,11 +146,13 @@ External dependencies include:
 Internal system containers are:
 
 1. **Keycloak Identity Kernel** — authoritative runtime for Principal, credential, session, protocol trust, federation, and token issuance.
-2. **Identity Control Service** — Scnehaux-owned desired-state, orchestration, mapping, drift, reconciliation, event translation, and migration system.
+2. **Identity Control Service** — Scnehaux-owned desired-state, orchestration, mapping, drift, reconciliation, event translation, context-revocation propagation, and migration system.
 3. **Identity Event Adapter** — minimal Keycloak extension or supported event integration with completeness reconciliation.
 4. **Keycloak Private Database** — internal Keycloak persistence, accessed only by Keycloak.
-5. **Control Database** — Scnehaux mappings, desired state, reconciliation cursors, migration state, and transactional outbox; no duplicate Principal secrets or sessions.
+5. **Control Database** — Scnehaux mappings, desired state, reconciliation cursors, migration state, Consumer Verification Profile metadata, and transactional outbox; no duplicate Principal secrets or sessions.
 6. **Verification Distribution** — discovery and public-key material exposed through Keycloak and safely cached by consumers.
+
+Consumer connection registries are not an Identity Runtime container. They are consumer-owned enforcement mechanisms receiving bounded revocation/context facts from the identity/event contract.
 
 #### Source Realization
 
@@ -203,6 +214,7 @@ graph TB
 - Detects drift between desired state and Keycloak runtime state.
 - Reconciles events and administrative state.
 - Translates Keycloak events into canonical Scnehaux events.
+- Publishes versioned context-revocation facts for consumers according to declared verification profiles.
 - Coordinates legacy migration, cutover, and rollback.
 - Does not authenticate users, issue tokens, store credentials, or implement a parallel session engine.
 
@@ -290,6 +302,86 @@ sequenceDiagram
     S->>S: Record cursor and reconciliation status
 ```
 
+#### Context Revocation Propagation
+
+The revocation path separates durable acceptance, kernel/session containment, consumer projection advance, and long-lived-connection enforcement.
+
+```mermaid
+sequenceDiagram
+    participant ORG as Organization
+    participant CTRL as Identity Control Service
+    participant KC as Keycloak
+    participant BUS as Event Broker
+    participant PROD as Product Projection
+    participant CONN as Consumer Connection Registry
+
+    ORG-->>CTRL: Membership revoked + authoritative version
+    CTRL->>CTRL: persist cursor/version + containment intent
+    CTRL->>KC: remove projected context / contain affected sessions
+    KC-->>CTRL: enforcement result
+    CTRL->>CTRL: persist canonical revocation outbox
+    CTRL-->>BUS: context version / revocation fact
+    BUS-->>PROD: priority projection update
+    PROD->>PROD: reject tokens below current membership_version
+    BUS-->>CONN: Principal/Tenant revocation fact
+    CONN->>CONN: terminate or force revalidation
+```
+
+The Product projection and Connection Registry are consumer-owned. Identity does not become a synchronous universal request gateway.
+
+#### Federation & Account Linking
+
+```mermaid
+stateDiagram-v2
+    [*] --> ExternalAssertionReceived
+    ExternalAssertionReceived --> ExistingLink: issuer + subject already linked
+    ExistingLink --> Authenticated
+
+    ExternalAssertionReceived --> CandidateResolution: no existing link
+    CandidateResolution --> LinkingCeremony: possible Principal match
+    CandidateResolution --> NewPrincipal: no legitimate existing Principal
+
+    LinkingCeremony --> Linked: trusted proof succeeds
+    LinkingCeremony --> ManualResolution: ambiguous / conflicting
+    LinkingCeremony --> Rejected: proof fails
+
+    Linked --> Authenticated
+    NewPrincipal --> Authenticated
+    ManualResolution --> Linked: approved resolution
+    ManualResolution --> Rejected: rejected resolution
+
+    Linked --> SuspendedLink: upstream compromise / containment
+    SuspendedLink --> Linked: trusted revalidation
+    SuspendedLink --> Unlinked: governed unlink
+```
+
+Implementation rules:
+
+- external uniqueness is issuer plus subject;
+- email/phone/display-name equality may find a candidate but never auto-links an existing Principal by itself;
+- link/unlink/relink and conflict resolution are security-sensitive attributable mutations;
+- upstream compromise may suspend the external link without deleting the local Principal;
+- accepted federation attributes are issuer- and attribute-policy specific.
+
+#### Bounded Workload / Agent Delegation
+
+```mermaid
+sequenceDiagram
+    participant SRC as Principal / Workload
+    participant ID as Identity Runtime
+    participant RUN as Worker / Agent Runtime
+    participant PROD as Protected Product / Tool
+
+    SRC->>ID: request bounded delegated authority
+    ID->>ID: intersect source authority + tenant + audience + scope + purpose + TTL
+    ID-->>RUN: delegated identity/artifact + delegation provenance
+    RUN->>PROD: protected action with delegated identity
+    PROD->>PROD: local verification + Product authorization
+    PROD-->>RUN: allowed / denied
+```
+
+Identity provides bounded attributable delegation; Agent Runtime owns execution mechanics and Products own resource authorization.
+
 #### Identity Event Publication
 
 ```mermaid
@@ -359,12 +451,13 @@ Authoritative for:
 - desired configuration state owned by Scnehaux;
 - Application-to-client/resource mappings;
 - Tenant/Membership projection mappings and consumer versions;
+- Consumer Verification Profile and revocation-propagation configuration owned by Identity;
 - reconciliation cursors and drift results;
 - canonical event outbox and delivery state;
 - migration batches, identity mappings, and cutover state;
 - operational evidence references.
 
-It is not authoritative for Principal credentials, sessions, or protocol grants.
+It is not authoritative for Principal credentials, sessions, Product authorization, or Organization Membership truth.
 
 ### 5.2 Cache and Session State
 
@@ -394,15 +487,27 @@ Scnehaux identifiers are immutable references. A Keycloak-local identifier is no
 - Production keys are provisioned through an approved secret/keystore or security-custody mechanism.
 - Generated per-process production signing keys are prohibited.
 - Public verification material remains available for the maximum lifetime of issued artifacts plus cache and clock-skew margin.
+- Previous verification keys remain resolvable for every still-valid artifact they signed plus the governed cache/clock-skew margin.
 - Key rotation and recovery are rehearsed before production claims.
+- Database failover/recovery cannot silently create a new issuer identity or invalidate the declared key continuity contract.
 
 ### 5.5 Stateless Consumer Model
 
 Protected resources remain stateless with respect to the Identity Runtime for normal validation:
 
 - validate issuer, audience, type, signature, algorithm policy, time, and required claims locally;
+- apply the declared Consumer Verification Profile for mutable context freshness;
+- reject context-bearing artifacts whose projected Membership/context version is below the consumer's current authoritative projection where the profile requires it;
 - enforce Product authorization locally;
 - use bounded online status checks only for approved high-risk or opaque-token profiles.
+
+`signature_valid` and `context_current` are distinct predicates for profiles containing mutable operating context.
+
+### 5.6 Delegation State
+
+Delegated execution metadata may include stable source identity, direct acting workload, delegation chain/correlation, Tenant/Workspace, audience, purpose, scope, TTL, and bounded resource/tool constraints.
+
+It does not copy the source human credential. Delegation metadata proves attributable bounded authority; it does not become Product business permission authority.
 
 ## 6. Integration Contracts
 
@@ -419,6 +524,7 @@ Owned by the Identity Control Service for:
 - Application client/resource onboarding;
 - desired configuration inspection;
 - Tenant/Membership projection status;
+- Consumer Verification Profile and revocation-propagation status;
 - drift and reconciliation operations;
 - migration administration;
 - governed identity administration not exposed directly to ordinary operators.
@@ -448,6 +554,8 @@ identity.protocol-client.*
 identity.consent.*
 identity.federation.*
 identity.workload.*
+identity.delegation.*
+identity.context.*
 identity.recovery.*
 identity.privileged-admin.*
 identity.security.*
@@ -461,6 +569,7 @@ identity.migration.*
 - Control-plane reconciliation uses bounded retries and dead-letter/manual-repair state.
 - Authentication does not synchronously call Software Catalog or Organization.
 - Event publication failure retains the canonical outbox fact.
+- Revocation propagation retries preserve the same authoritative context version and cannot manufacture a newer version.
 
 ## 7. Security & Trust Boundary
 
@@ -474,6 +583,7 @@ Keycloak owns authentication ceremonies and authenticator verification. The Cont
 - Identity Control Service authorizes Scnehaux control/provisioning operations.
 - Organization authorizes Membership context.
 - Product domains authorize business actions.
+- Delegated execution is bounded by the source authority and target policy intersection; it never creates Product permission.
 - Admin Console access is restricted and not the ordinary enterprise administration interface.
 
 **The bootstrap ceremony is the one entry point, and it is not an exception to the above.** The Identity Control API requires a caller holding a `principal_id` and is the only path that issues one, so a fresh Realm cannot reach its first Principal. `ADR-IAM-001 §5.11` gives that entry point to a single-use command on the Identity Control Service itself: it can succeed at most once per Control Database, refuses a populated registry, records the human who ran it in a row the runtime role cannot modify, and creates the Principal through the ordinary provisioning path. It holds no credential — the kernel is told to demand one on first authentication.
@@ -492,6 +602,7 @@ This is distinct from restricted Admin Console access. That path operates on the
 - Keycloak user/admin events are enabled according to retention and privacy policy.
 - Canonical security events are published through the Control Service outbox.
 - privileged changes identify actor, client, Realm, Tenant context where applicable, assurance, reason, and result.
+- federation link/unlink/relink/conflict resolution and delegated authority issuance are attributable events.
 - enterprise Audit & Evidence remains the long-term evidence authority.
 
 ### 7.5 Tenant Isolation
@@ -500,7 +611,7 @@ This is distinct from restricted Admin Console access. That path operates on the
 - requested Tenant context is validated against projected Membership state.
 - Realm administrator is not equivalent to Product or Tenant administrator.
 - cross-Tenant provider administration requires elevated assurance, narrow scope, and evidence.
-- cross-tenant negative tests cover tokens, admin APIs, projections, cache, events, exports, and migration.
+- cross-tenant negative tests cover tokens, admin APIs, projections, cache, events, exports, migration, and delegated execution.
 
 ### 7.6 Supply Chain
 
@@ -511,22 +622,15 @@ This is distinct from restricted Admin Console access. That path operates on the
 
 ### 7.7 Revocation Classes and Enforcement
 
-`PAD-PLT-001` invariant 9 names six revocation classes, and `STD-IAM-001 §3.4` requires each to
-declare its enforcing mechanisms and a measurable maximum enforcement delay. This section is that
-declaration. Without it the platform can accept a revocation and report success while no artifact
-states when the access actually stops, which is the failure mode the invariant exists to prevent.
+`PAD-PLT-001` invariant 9 names six revocation classes, and `STD-IAM-001 §3.4` requires each to declare its enforcing mechanisms and a measurable maximum enforcement delay. This section is that declaration. Without it the platform can accept a revocation and report success while no artifact states when the access actually stops, which is the failure mode the invariant exists to prevent.
 
-**The delay is derived, never chosen.** `STD-IAM-001 §3.4` fixes the formula and
-`STD-IAM-002 §3.3` supplies both terms:
+**The delay is derived, never chosen.** `STD-IAM-001 §3.4` fixes the formula and `STD-IAM-002 §3.3` supplies both terms:
 
 ```text
-maximum_enforcement_delay  =  propagation_budget  +  remaining_access_token_lifetime
+maximum_enforcement_delay = propagation_budget + remaining_access_token_lifetime
 ```
 
-The propagation budget is 60 seconds as the planning figure, against an operational target below
-10 seconds. The lifetime term is the class of the audience the revoked subject holds tokens for,
-and where a subject reaches several audiences the delay is the **worst** class, not the typical
-one. A stated delay that assumed the common case would be wrong exactly when it mattered.
+The propagation budget is 60 seconds as the planning figure, against an operational target below 10 seconds. The lifetime term is the class of the audience the revoked subject holds tokens for, and where a subject reaches several audiences the delay is the **worst** class, not the typical one.
 
 | Class                 | Enforcing mechanisms, in order                                                                                                 | Lifetime term                    | Maximum delay                                                                    |
 | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------- | :------------------------------- | :------------------------------------------------------------------------------- |
@@ -537,45 +641,61 @@ one. A stated delay that assumed the common case would be wrong exactly when it 
 | Workload              | workload credential disable → grant and session removal                                                                        | `L3`, 9 minutes                  | 10 minutes                                                                       |
 | Contextual Membership | Organization priority event → Identity Control removes projected context → kernel session removal → consumer projection update | `L1`, 9 minutes                  | 10 minutes                                                                       |
 
-**Ordering inside the Principal and Membership classes is load-bearing.** The projected context
-is removed before the kernel sessions. Reversed, a refresh landing between the two steps mints a
-fresh token asserting the context that was just revoked, and the new token outlives the
-revocation by a full lifetime class. This is the property the withdrawn `session_epoch` mechanism
-was originally introduced to guarantee; `ADR-IAM-001` records why the mechanism was dropped and
-the property kept.
+**Ordering inside the Principal and Membership classes is load-bearing.** The projected context is removed before the kernel sessions. Reversed, a refresh landing between the two steps can mint a fresh token asserting the context that was just revoked and the new token outlives the revocation by a full lifetime class.
 
-**Contextual Membership can enforce earlier than the formula.** `STD-IAM-002 §3.5` rule 8 makes a
-consumer reject a token whose `membership_version` is below the version its local projection
-holds. A consumer that has already applied the priority event therefore rejects the outstanding
-token immediately rather than at expiry. The 10-minute figure is the ceiling for a consumer that
-has not yet applied it, not the expected case.
+**Contextual Membership can enforce earlier than the formula.** `STD-IAM-002 §3.5` rule 8 makes a consumer reject a token whose `membership_version` is below the version its local projection holds. A consumer that has already applied the priority event therefore rejects the outstanding token immediately rather than at expiry. The 10-minute figure is the ceiling for a consumer that has not yet applied it, not the expected case.
 
-**Acknowledgement is not enforcement.** Per `STD-IAM-001 §3.4`, accepting a revocation means the
-change is durable and queued. The platform MUST NOT report it as enforced until the mechanisms
-above have applied, and the security dashboard measures acceptance-to-enforcement separately from
-acceptance.
+**Acknowledgement is not enforcement.** Per `STD-IAM-001 §3.4`, accepting a revocation means the change is durable and queued. The platform MUST NOT report it as enforced until the mechanisms above have applied, and the security dashboard measures acceptance-to-enforcement separately from acceptance.
 
-**Long-lived connections are outside the token term.** A connection authenticated once and held
-open receives no further request to reject, so `STD-IAM-002 §3.4` requires each to be registered
-against the Principal and Tenant context that authorized it and closed by a priority revocation.
-An unregistered connection is closed rather than retained, because a connection that cannot be
-matched to a context cannot be revoked at all.
+**Long-lived connections are outside the token term.** A connection authenticated once and held open receives no further request to reject, so `STD-IAM-002 §3.4` requires each to be registered against the Principal and Tenant context that authorized it or use an equivalent bounded revalidation mechanism. A connection that cannot be matched to revocable context cannot claim the bounded revocation guarantee.
 
 #### 7.7.1 What Is Not Yet Enforced
 
-Three mechanisms above are declared and not yet realized, and the resulting delay is **unbounded**
-rather than merely longer. Recorded here because a table of intentions that reads like a table of
-controls is worse than no table:
+Three mechanisms above are declared and not yet realized, and the resulting delay is **unbounded** rather than merely longer:
 
-| Mechanism                         | Blocked on                                                 | Consequence today                                                                  |
-| :-------------------------------- | :--------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| Consumer projection update        | the event broker and `SAD-004`                             | a Membership revocation reaches no consumer; only token expiry limits it           |
-| Long-lived connection termination | a connection registry in the consuming system              | a held connection survives every revocation class                                  |
-| Projected context removal         | the Keycloak projection path in `TDD-identity-control-002` | Principal and Membership revocation currently rely on kernel session removal alone |
+| Mechanism                         | Blocked on                                                       | Consequence today                                                                  |
+| :-------------------------------- | :--------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
+| Consumer projection update        | the event broker and `SAD-004`                                   | a Membership revocation reaches no consumer; only token expiry limits it           |
+| Long-lived connection termination | a connection registry or equivalent revalidation in the consumer | a held connection survives the declared bounded revocation path                    |
+| Projected context removal         | the Keycloak projection path in `TDD-identity-control-002`       | Principal and Membership revocation currently rely on kernel session removal alone |
 
-Until each lands, the Identity Runtime MUST NOT report a maximum enforcement delay for the
-Contextual Membership class, and the production gate MUST include measured
-acceptance-to-enforcement evidence for every class in the table above.
+Until each lands, the Identity Runtime MUST NOT report a maximum enforcement delay for the Contextual Membership class, and the production gate MUST include measured acceptance-to-enforcement evidence for every class in the table above.
+
+#### 7.7.2 Revocation Enforcement View
+
+```mermaid
+flowchart LR
+    A[Authoritative revocation] --> B[Durably accepted]
+    B --> C[Kernel/session containment]
+    B --> D[Context projection removal]
+    B --> E[Consumer context-version propagation]
+    E --> F[HTTP/API stale-context rejection]
+    E --> G[Long-lived connection termination/revalidation]
+    C --> H[Measured enforcement evidence]
+    D --> H
+    F --> H
+    G --> H
+```
+
+A bounded revocation claim requires evidence across every enforcing path relevant to the declared Consumer Verification Profile.
+
+### 7.8 Federation Linking Security
+
+- External identity uniqueness is `issuer + subject`.
+- Existing local Principals are never automatically linked solely from email/phone/display-name equality.
+- Linking ceremonies require a trusted proof appropriate to the population and risk; ambiguous collisions enter manual/security resolution.
+- Link suspension due to upstream compromise does not silently delete the local Principal.
+- Attribute mapping explicitly identifies which issuer attributes are trusted and which remain descriptive only.
+- Account-link changes are included in security investigation evidence.
+
+### 7.9 Delegated Execution Security
+
+- Direct actor identity and delegation source are distinguishable.
+- Delegation can preserve or reduce source authority, never expand it.
+- Delegated artifacts are audience-, Tenant/context-, purpose-, scope-, and time-bound.
+- Protected Products independently authorize the action.
+- Human session credentials are not stored by Agent Runtime/Workers as a shortcut for delegation.
+- Unknown or broken delegation provenance fails closed for protected actions requiring attribution.
 
 ## 8. NFR
 
@@ -598,7 +718,9 @@ Capacity tests distinguish:
 - token refresh;
 - authorization flow;
 - federation;
+- delegated workload/Agent issuance;
 - admin/provisioning;
+- containment/revocation propagation;
 - event publication;
 - migration.
 
@@ -609,7 +731,7 @@ Password/authenticator load receives attack-aware capacity and rate-limiting tes
 - Keycloak replicas scale horizontally inside the supported cluster model.
 - Control Service workers scale independently from authentication traffic.
 - Admin/reconciliation workloads cannot exhaust login capacity.
-- one client, Realm, external IdP, or Tenant projection cannot consume unbounded shared resources.
+- one client, Realm, external IdP, Tenant projection, or delegation source cannot consume unbounded shared resources.
 
 ### 8.4 Observability and Telemetry
 
@@ -619,12 +741,15 @@ Required telemetry:
 - token/refresh latency and failure;
 - active sessions and cache health;
 - database connection, latency, and capacity;
-- external IdP health;
+- external IdP health and account-link conflict/suspension;
 - client and projection drift;
+- context-revocation propagation lag and acceptance-to-enforcement by class;
+- long-lived connection termination/revalidation evidence where supplied by consumers;
 - event backlog and reconciliation age;
 - key and certificate expiry;
 - migration progress;
-- consumer verification failures by issuer/audience/profile.
+- consumer verification failures by issuer/audience/profile;
+- delegated identity issuance/denial by safe reason class.
 
 Secrets, tokens, password fields, and unrestricted PII are excluded.
 
@@ -635,11 +760,14 @@ Runbooks cover:
 - database outage;
 - replica/cache failure;
 - signing-key incident;
-- external IdP outage;
+- external IdP outage or compromise;
+- account-link conflict/containment;
 - event backlog;
 - projection drift;
+- context-revocation enforcement lag;
 - client credential compromise;
 - Principal/session containment;
+- delegated-identity compromise;
 - failed upgrade and rollback;
 - migration rollback;
 - cross-Tenant incident.
@@ -649,7 +777,8 @@ Runbooks cover:
 - external federation is isolated by provider;
 - control/reconciliation retries are bounded;
 - ordinary authentication does not wait for Audit, Notification, Catalog, or Tenancy;
-- unsafe issuance fails closed when required local trust state is unavailable.
+- unsafe issuance fails closed when required local trust state is unavailable;
+- ambiguity in account linking or delegated authority never degrades to an automatic broad allow.
 
 ### 8.7 Failover and Recovery
 
@@ -661,6 +790,43 @@ Initial target:
 - event outbox replay;
 - stable signing-key continuity;
 - documented recovery sequence.
+
+```mermaid
+graph TB
+    subgraph AZA[Availability Zone A]
+        KCA[Keycloak replica]
+        CTA[Identity Control replica]
+    end
+
+    subgraph AZB[Availability Zone B]
+        KCB[Keycloak replica]
+        CTB[Identity Control replica]
+    end
+
+    KCDB[(Managed PostgreSQL HA - Keycloak)]
+    CDB[(Managed PostgreSQL HA - Control)]
+    KMS[Managed key / secret custody]
+    JWKS[Verification metadata / key distribution]
+    PROD[Protected Products]
+
+    KCA --> KCDB
+    KCB --> KCDB
+    CTA --> CDB
+    CTB --> CDB
+    KMS --> KCA
+    KMS --> KCB
+    KCA --> JWKS
+    KCB --> JWKS
+    JWKS --> PROD
+```
+
+Key/recovery invariants:
+
+- database failover does not create a new issuer identity;
+- signing-key continuity survives process, node, and declared AZ failure;
+- previous verification keys remain available for the lifetime of all still-valid artifacts they signed plus cache/clock-skew margin;
+- recovery documentation explicitly distinguishes existing-token verification, new login, refresh, containment, and administration availability;
+- a C0 runtime claim is not made until restore, failover, key rotation, and key-recovery exercises provide measured evidence.
 
 Multi-region active-active remains a future architecture decision.
 
@@ -676,6 +842,7 @@ Multi-region active-active remains a future architecture decision.
 | External IdP                | One federation provider/journey                             | Isolate provider; local and other providers continue                |
 | Signing key                 | Issuance or verification trust                              | activate incident key procedure; preserve valid verification window |
 | Membership projection stale | Context-specific access                                     | apply consumer freshness policy and high-risk fail-closed behavior  |
+| Consumer revocation lag     | Context/connection-specific access                          | alert against profile ceiling; expire/revalidate/contain            |
 
 ## 9. Deployment Strategy
 
@@ -711,18 +878,22 @@ The pipeline must:
 2. scan source, dependencies, container images, and secrets;
 3. validate Keycloak configuration desired state;
 4. run protocol and integration conformance tests;
-5. run migration and rollback tests;
-6. run cross-Tenant and privilege regression tests;
-7. pin and sign deployment artifacts;
-8. promote the same artifacts through environments;
-9. rehearse database migration and backup restore for upgrades;
-10. block unsupported extension or preview-feature activation.
+5. run federation-linking negative tests proving mutable attribute equality cannot auto-link an existing Principal;
+6. run delegation narrowing/attribution tests;
+7. run Membership/context revocation propagation and stale-token rejection tests;
+8. run long-lived connection revocation contract tests against representative consumers before claiming the bounded profile;
+9. run migration and rollback tests;
+10. run cross-Tenant and privilege regression tests;
+11. pin and sign deployment artifacts;
+12. promote the same artifacts through environments;
+13. rehearse database migration, backup restore, signing-key rotation, and verification-key continuity for upgrades;
+14. block unsupported extension or preview-feature activation.
 
 ### 9.4 Upgrade Strategy
 
 - version selection is managed by the technology lifecycle and pinned by artifact digest;
 - upgrades are rehearsed against production-like data shape and extensions;
-- compatibility tests cover realm configuration, Admin API use, themes, event adapter, clients, sessions, token profiles, and rollback;
+- compatibility tests cover realm configuration, Admin API use, themes, event adapter, clients, sessions, token/verification profiles, federation links, delegation semantics, and rollback;
 - unmanaged console drift is detected before upgrade;
 - rollback boundaries are explicit because database migrations may constrain downgrade;
 - security releases may use an accelerated path with the same minimum safety evidence.
@@ -737,6 +908,7 @@ The pipeline must:
 - ADR for Membership projection representation — required after fit-gap PoC.
 - ADR for legacy Principal ID migration — required before cutover.
 - ADR for any restricted Keycloak SPI — required before implementation.
+- Consumer Verification Profiles, context-revocation propagation, federation-linking safety, and bounded delegation SHALL remain stable architecture contracts independent of the kernel implementation.
 
 ### Rejected
 
@@ -746,31 +918,36 @@ The pipeline must:
 - direct Keycloak database integration;
 - permanent Keycloak core fork;
 - universal synchronous introspection on every Product request;
+- automatic existing-account linking solely from email/phone/display-name equality;
+- human session credential reuse by Workers/Agents as delegation;
 - preview multi-cluster/stateless mode for the initial production baseline.
 
 ## 11. Compatibility Strategy
 
-- consumers integrate through standards and Scnehaux token profiles, not Keycloak internal APIs;
+- consumers integrate through standards and Scnehaux token/Consumer Verification Profiles, not Keycloak internal APIs;
 - Scnehaux identifiers remain stable across migration;
 - canonical events hide Keycloak event representation;
+- account-linking semantics preserve issuer-plus-subject identity across provider upgrades;
+- delegated execution preserves source/direct-actor attribution across runtime implementations;
 - Admin integrations use the Control Service where enterprise governance is required;
 - extensions are minimized to reduce upgrade coupling;
-- token profile changes use versioned compatibility windows.
+- token/profile changes use versioned compatibility windows.
 
 ## 12. Migration Strategy
 
 1. contain and patch critical legacy Go IAM risks;
-2. inventory Principals, credentials, clients, sessions, Tenant assumptions, and consumers;
-3. establish Keycloak target Realm, identifiers, clients, and key strategy;
+2. inventory Principals, credentials, clients, sessions, Tenant assumptions, federation links, and consumers;
+3. establish Keycloak target Realm, identifiers, clients, key strategy, and Consumer Verification Profiles;
 4. create repeatable migration tooling and reconciliation reports;
 5. migrate non-secret identity metadata and clients in dry runs;
 6. choose credential migration strategy: verified import where compatible, first-login migration, or forced reset according to security evidence;
-7. dual-run selected consumers with explicit issuer/audience separation;
-8. migrate Applications in bounded waves;
-9. monitor authentication, session, support, and authorization errors;
-10. execute cutover with rollback gate;
-11. freeze and retire legacy protocol endpoints after residual consumer count reaches zero;
-12. supersede incompatible legacy ADRs and archive runtime infrastructure.
+7. migrate federation links using issuer-plus-subject identity and collision review rather than mutable-attribute auto-link;
+8. dual-run selected consumers with explicit issuer/audience separation and measured context-revocation behavior;
+9. migrate Applications in bounded waves;
+10. monitor authentication, session, support, authorization, projection, and revocation errors;
+11. execute cutover with rollback gate;
+12. freeze and retire legacy protocol endpoints after residual consumer count reaches zero;
+13. supersede incompatible legacy ADRs and archive runtime infrastructure.
 
 ## 13. Alternatives
 

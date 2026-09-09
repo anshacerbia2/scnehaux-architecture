@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-005
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -13,7 +13,7 @@ doc_meta:
   parent_pad: PAD-PLT-005
   review_cycle_days: 90
   created_date: 2026-07-06
-  last_reviewed: 2026-08-27
+  last_reviewed: 2026-09-09
   technologies:
     - name: golang
       type: backend-language
@@ -48,14 +48,16 @@ The deployable provides:
 - Template Family, Version, Channel Variant, and data-schema management
 - Channel/Sender Profile and Provider Binding management
 - Application Notification Profile management
+- Provider Capability declaration and validation
 - Email, WhatsApp/messaging, SMS, Push, and governed Webhook adapter model
 - Scheduling registration intent, idempotent Schedule creation, binding reconciliation, asynchronous cancellation
 - delivery planning and channel/provider Worker pools
-- provider callback/receipt ingestion
-- retry/permanent/unknown outcome classification
+- provider callback/receipt ingestion with ordering/dedup protection
+- retry/permanent/unknown/parked outcome classification
 - delivery-status publication through selected messaging profile
 - Scheduling trigger consumption through selected messaging profile
 - provider reconciliation
+- communication suppression evaluation
 - operational/admin query surfaces
 
 Email and WhatsApp remain initial priority channels.
@@ -67,15 +69,18 @@ The runtime remains correct under:
 - duplicate Notification commands
 - process restart
 - provider timeout with unknown outcome
-- duplicate provider callback
+- duplicate, delayed, and out-of-order provider callbacks
+- contradictory provider receipts
 - provider outage
 - future-trigger duplicates
 - Scheduling create timeout/process loss/binding ambiguity
 - template/provider configuration rotation before frozen delivery
+- suppression changes after Notification acceptance but before provider execution
 - cancellation races
 - selected messaging-substrate outage
 - Direct-profile ambiguous acceptance
 - noisy-neighbor Tenant/provider load
+- one provider/channel pool saturation while unrelated channels remain healthy
 
 ### 1.4 Constraint
 
@@ -105,6 +110,7 @@ The runtime remains correct under:
 - Identity/Organization/Application Trust provide caller and ownership context
 - secret management resolves provider credentials only to Notification runtime
 - providers expose channel-appropriate transport/callback capability
+- Provider Capability declarations reflect evidence from the actual provider contract rather than desired behavior
 - Direct-profile acceptance persists/deduplicates before successful response
 
 ### 1.6 Out of Scope
@@ -171,7 +177,7 @@ RabbitMQ/Kafka are transport dependencies only when their deployment profile is 
 
 Communication providers are external transport/delivery authorities.
 
-Provider authentication, request format, acceptance, receipt, error, rate-limit, callback, and reconciliation semantics terminate in provider adapters.
+Provider authentication, request format, acceptance, receipt, error, rate-limit, callback, ordering, idempotency, and reconciliation semantics terminate in provider adapters.
 
 Scheduling remains the temporal authority and does not become Notification delivery authority.
 
@@ -184,20 +190,21 @@ Scheduling remains the temporal authority and does not become Notification deliv
 5. Channel/Sender Profile
 6. Application Notification Profile
 7. Provider Binding & Secret Reference
-8. Scheduling Registration, Binding & Reconciliation
-9. Scheduling Trigger Acceptance / Consumer
-10. Delivery Planning
-11. Channel Dispatch Workers
-12. Provider Adapters
-13. Callback/Receipt Normalization
-14. Provider Capability, Suppression & Unknown-Outcome Policy
-15. Retry & Reconciliation
-16. Webhook Egress Security
-17. Outbox Relay
-18. Messaging Port & Direct/RabbitMQ/Kafka Adapters
-19. Operations/Admin Query
+8. Provider Capability Registry
+9. Scheduling Registration, Binding & Reconciliation
+10. Scheduling Trigger Acceptance / Consumer
+11. Delivery Planning
+12. Communication Suppression Evaluation
+13. Channel Dispatch Workers
+14. Provider Adapters
+15. Callback/Receipt Authentication, Dedup & Normalization
+16. Retry & Unknown-Outcome Reconciliation
+17. Webhook Egress Security
+18. Outbox Relay
+19. Messaging Port & Direct/RabbitMQ/Kafka Adapters
+20. Operations/Admin Query
 
-Channel/provider Worker pools share one deployable initially with independent concurrency/bulkheads.
+Channel/provider Worker pools share one deployable initially with independent concurrency, queues/claim budgets, circuit breakers, and bulkheads.
 
 ## 4. Architecture Model
 
@@ -394,13 +401,13 @@ sequenceDiagram
     U->>N: register/update provider credential
     N->>T: write/rotate secret
     T-->>N: secret_ref
-    N->>D: persist profile + binding + secret_ref
+    N->>D: persist profile + binding + capability + secret_ref
     D-->>N: commit
 ```
 
 Normal delivery uses Notification-local validated profile state.
 
-### 4.9 Provider Callback
+### 4.9 Provider Callback Resolution
 
 ```mermaid
 sequenceDiagram
@@ -411,37 +418,95 @@ sequenceDiagram
     participant M as Selected Messaging Boundary
 
     X->>N: signed provider callback
-    N->>N: authenticate + validate + dedupe + normalize
-    N->>D: Delivery mutation + outbox
+    N->>N: authenticate + validate + dedupe
+    N->>N: resolve attempt + ordering/version metadata
+    N->>N: determine legal normalized transition
+    N->>D: callback evidence + Delivery mutation/reconciliation flag + outbox
     D-->>N: commit
     N-->>X: acknowledgement
     R->>D: claim committed lifecycle event
     R->>M: publish through selected profile
 ```
 
-### 4.10 Delivery Attempt Resolution and Unknown Outcome
+The callback-resolution contract is:
 
-Provider capability is explicit per channel/provider binding. At minimum the runtime models whether the external provider supports stable idempotency, outcome lookup/reconciliation, authenticated callback/receipt, and retraction.
+1. authenticate the callback;
+2. deduplicate provider event identity;
+3. resolve the provider attempt/Delivery;
+4. record provider event time/version/sequence when available and local receive time independently;
+5. preserve normalized callback evidence;
+6. apply only a legal lifecycle transition;
+7. prevent a stale callback from blindly regressing normalized Delivery state;
+8. route contradictory or ambiguous callback histories to reconciliation rather than last-write-wins;
+9. emit lifecycle publication only after the local transaction commits.
 
-A Delivery Attempt freezes its non-secret operational realization before external I/O: provider identity, provider-binding/routing policy version, endpoint identity, credential secret-reference/version metadata, and stable delivery identity. Secret values are never persisted in attempt evidence.
+A stronger authoritative final receipt may advance a weaker intermediate state while all prior provider facts remain preserved.
 
-The normalized delivery state machine preserves these invariants:
+### 4.10 Delivery Attempt State Machine
 
-- `SUPPRESSED` is terminal for the planned external attempt and is recorded when current Notification-owned suppression policy blocks delivery
-- `PROVIDER_ACCEPTED` is not equivalent to final `DELIVERED`
-- `UNKNOWN` means the external side effect may have occurred and is not equivalent to transient failure
-- automatic retry from `UNKNOWN` is permitted only when the provider operation is provably idempotent under the same delivery identity or reconciliation proves the previous effect absent
-- provider failover while the previous provider outcome remains `UNKNOWN` is prohibited
-- a non-reconcilable `UNKNOWN` outcome is parked for bounded policy/operator resolution rather than converted to a fabricated success/failure
-- provider callbacks and reconciliation may advance `UNKNOWN` or `PROVIDER_ACCEPTED` to a proven normalized state but cannot rewrite prior attempt evidence
+```mermaid
+stateDiagram-v2
+    [*] --> Planned
+    Planned --> Suppressed
+    Planned --> Claimed
+    Claimed --> ExternalIOStarted
+    Claimed --> Cancelled: cancellation wins before external I/O
 
-Exact state enums, transition guards, lease/claim fields, retry budgets, and provider capability schemas belong in TDD.
+    ExternalIOStarted --> ProviderAccepted
+    ExternalIOStarted --> PermanentRejected
+    ExternalIOStarted --> Unknown
+
+    ProviderAccepted --> Delivered
+    ProviderAccepted --> FailedReceipt
+    ProviderAccepted --> Unknown: later ambiguity
+
+    Unknown --> Reconciling
+    Reconciling --> Delivered
+    Reconciling --> ProviderAccepted
+    Reconciling --> Retryable: prior effect proven absent / duplicate-safe
+    Reconciling --> PermanentRejected
+    Reconciling --> Parked
+
+    Retryable --> Claimed
+```
+
+Runtime invariants:
+
+- `SUPPRESSED` is terminal for the planned external attempt and records the suppression basis used;
+- `PROVIDER_ACCEPTED` is not equivalent to final `DELIVERED`;
+- `UNKNOWN` means the external side effect may have occurred and is not a transient-failure synonym;
+- automatic retry from `UNKNOWN` is allowed only when the provider operation is provably idempotent under the same delivery identity or reconciliation proves the previous effect absent;
+- provider failover while the previous provider outcome remains `UNKNOWN` is prohibited;
+- non-reconcilable ambiguity is parked for bounded policy/operator resolution instead of fabricated success/failure;
+- callback/reconciliation may advance normalized state but never rewrites prior attempt evidence.
+
+Exact enums, transition guards, lease/claim fields, retry budgets, and provider schemas belong in TDD.
 
 ### 4.11 Governed Webhook Delivery Boundary
 
 Webhook is an outbound communication channel, not a general-purpose arbitrary HTTP client. Production webhook targets are registered/configured under Notification authority rather than supplied as free-form per-send destinations.
 
 The webhook adapter enforces SSRF-resistant egress controls including DNS/address validation before connect, rebinding-safe resolution/connect policy, denial of private/loopback/link-local/metadata destinations unless an explicitly governed internal-target class exists, bounded redirect policy with revalidation on every hop, TLS hostname/certificate verification, bounded request/response size, bounded timeout, and no credential material in caller-controlled URLs.
+
+### 4.12 Provider / Channel Bulkhead Topology
+
+```mermaid
+graph LR
+    ING[Notification Ingress] --> DB[(PostgreSQL)]
+    DB --> PLAN[Delivery Planner]
+    PLAN --> E[Email Pool]
+    PLAN --> W[WhatsApp Pool]
+    PLAN --> S[SMS Pool]
+    PLAN --> P[Push Pool]
+    PLAN --> H[Webhook Pool]
+    E --> EP[Email Provider]
+    W --> WP[Messaging Provider]
+    S --> SP[SMS Provider]
+    P --> PP[Push Provider]
+    H --> HP[Registered Webhook Targets]
+```
+
+Each channel/provider/Tenant class has bounded claim and external-call concurrency. Provider-specific circuit breakers, rate-limit admission, and retry backlog cannot consume unbounded resources from unrelated pools. A provider outage reduces the affected route/channel capacity without turning the whole Notification runtime into one shared blocking worker pool.
 
 ## 5. State & Data Architecture
 
@@ -455,9 +520,10 @@ Logical state families:
 - Recipient Snapshot
 - Delivery / Delivery Attempt
 - immutable per-attempt non-secret operational realization evidence
-- provider capability and unknown-outcome reconciliation metadata
+- Provider Capability declarations
+- provider callback event identity, ordering/version evidence, and deduplication
+- unknown-outcome reconciliation/parking metadata
 - communication suppression facts/decision evidence within Notification scope
-- provider callback/event deduplication
 - Template Family / Version / Channel Variant / Data Schema
 - Channel/Sender Profile
 - Application Notification Profile
@@ -480,14 +546,16 @@ Exact DDL, queue/topic naming, adapter config, indexes, and retention partitions
 - Schedule registration state prevents one generation from binding to multiple logical Schedules
 - occurrence dedup state prevents duplicate future triggers from creating duplicate Delivery effect
 - attempt operational-realization evidence is immutable after the external provider call begins
+- Provider Capability version used for an attempt is reconstructable
+- callback dedup/ordering evidence prevents blind last-write-wins normalization
 - unknown provider outcome cannot transition to a new provider attempt without a duplicate-safety/reconciliation guard
 - current suppression decision is persisted with the attempt plan/evidence used to allow or block provider execution
 
 ### 5.3 Cache
 
-Immutable Template Versions and versioned routing metadata may be cached with explicit freshness.
+Immutable Template Versions and versioned routing/Provider Capability metadata may be cached with explicit freshness.
 
-Cache is not authoritative for Delivery, idempotency, cancellation, occurrence dedup, or provider callback dedup.
+Cache is not authoritative for Delivery, idempotency, cancellation, occurrence dedup, provider callback dedup/ordering, or suppression decision state.
 
 ### 5.4 Stateless Compute
 
@@ -505,8 +573,9 @@ Versioned APIs support:
 - scheduled registration/binding/reconciliation query
 - template/schema administration and preview/test send
 - Channel/Sender Profile and Provider Binding administration
+- Provider Capability administration/validation
 - Application Notification Profile administration
-- Delivery query/reconciliation
+- Delivery query/reconciliation/parked ambiguity resolution
 - provider callback
 - Direct-profile Scheduling trigger durable acceptance when selected
 
@@ -525,7 +594,7 @@ com.scnehaux.notification.failed.v1
 com.scnehaux.notification.cancelled.v1
 ```
 
-Event schema is transport-neutral.
+Event schema is transport-neutral. If a future public event is added for parked/reconciliation state, it requires a versioned consumer contract rather than leaking internal worker enums.
 
 ### 6.3 Consumed Contracts
 
@@ -553,7 +622,7 @@ Broker/direct acceptance uses attributable workload identity.
 
 - templates/profiles/Notifications/Delivery administration are application/Tenant scoped
 - normal delivery uses Notification-local validated bindings
-- provider configuration, test send, replay/reconciliation, cross-Tenant operations are privileged
+- provider configuration, capability mutation, test send, replay/reconciliation, parked ambiguity resolution, and cross-Tenant operations are privileged
 - recipient endpoint never proves Tenant/application authority
 - Product recipient/content input is accepted only under authorized Notification contract
 - Direct Scheduling trigger endpoint accepts only registered Scheduling workload/contract context
@@ -572,11 +641,11 @@ Provider passwords, SMTP credentials, OAuth secrets, API keys, certificates, and
 
 Notification stores secret references plus non-secret routing config.
 
-Secrets never appear in event/queue/stream payloads, browser responses after registration, or telemetry.
+Secrets never appear in event/queue/stream payloads, browser responses after registration, attempt evidence, or telemetry.
 
 ### 7.5 Audit
 
-Template publication, provider/channel configuration, sender change, test send, cancellation, replay/reconciliation, callback verification failure, messaging-profile migration, and cross-Tenant operations produce evidence.
+Template publication, provider/channel configuration, Provider Capability change, sender change, suppression decision, test send, cancellation, replay/reconciliation, parked ambiguity resolution, callback verification/ordering conflict, messaging-profile migration, and cross-Tenant operations produce evidence.
 
 ## 8. NFR
 
@@ -598,7 +667,7 @@ Target reliability remains C1:
 
 - mature availability >=99.95%
 - RTO <=1 hour
-- RPO = 0 for committed Notification/Delivery/idempotency/outbox/scheduling-registration state across process, node, and declared availability-zone failover in the production HA profile
+- RPO = 0 for committed Notification/Delivery/idempotency/outbox/callback-dedup/scheduling-registration state across process, node, and declared availability-zone failover in the production HA profile
 - cross-region disaster-recovery RPO <=15 minutes for the initial regional profile unless a stronger Tenant/regulatory profile is declared
 
 ### 8.2 Latency, Throughput, and Scalability
@@ -606,6 +675,7 @@ Target reliability remains C1:
 - immediate accepted-to-ready internal SLO: 99.9% <=30 seconds excluding provider latency
 - capacity certification: 10x forecast peak acceptance without internal SLO breach
 - channel/provider/Tenant concurrency independently bounded
+- callback/reconciliation/reporting workloads cannot starve ready Delivery/provider-attempt work
 - large fan-out uses bounded asynchronous expansion
 - provider rate-limit pressure feeds admission/backpressure
 - messaging profiles are capacity-tested independently
@@ -615,19 +685,20 @@ Target reliability remains C1:
 Common:
 
 - acceptance/ready latency
-- ready Delivery backlog age
+- ready Delivery backlog age by channel/provider/Tenant
 - provider latency/error/rate-limit
 - provider acceptance vs final delivery
 - retry/permanent failure
-- unknown/reconciliation backlog and oldest unresolved unknown age
+- unknown/reconciliation/parked backlog and oldest unresolved age
 - provider failover blocked-by-unknown count
 - suppression decisions by communication class/reason
-- callback verification/dedup
+- callback verification/dedup/stale/conflict count
 - pending Schedule registration/binding reconciliation
 - cancelled late-occurrence no-op count
 - Notification outbox oldest age
 - messaging publication latency/error
 - Tenant/application/channel/provider quota pressure
+- per-bulkhead active/queued/denied work
 - cost units
 
 Profile-specific:
@@ -652,11 +723,12 @@ Profile-specific:
 
 ### 8.4 Retry, Timeout, Circuit Breaker, and Failover
 
-- provider calls use channel-specific timeout/bulkhead
+- provider calls use channel/provider-specific timeout and bulkhead
 - only transient provider classes are auto-retried
 - unknown provider outcome is reconciled before harmful duplicate send
 - a provider operation with UNKNOWN outcome is never failed over to another provider until absence/duplicate-safety is proven or an explicitly evidenced resolution policy permits it
 - non-reconcilable UNKNOWN outcomes are parked; they are not silently converted to transient failure
+- stale/out-of-order callbacks never use blind last-write-wins normalized state mutation
 - consumer/message processing follows STD-GLB-004 idempotency/failure parking
 - Schedule registration/cancel calls retry with stable identities
 - ambiguous Schedule create is reconciled before a new logical Schedule can exist
@@ -672,8 +744,10 @@ Runbooks cover:
 - credential rotation
 - rate-limit exhaustion
 - stuck Delivery backlog
-- duplicate callback
-- unknown delivery outcome
+- bulkhead saturation/noisy neighbor
+- duplicate/stale/out-of-order callback
+- contradictory callback history
+- unknown/parked delivery outcome
 - Scheduling outage
 - Schedule binding reconciliation
 - cancellation race/late occurrence
@@ -705,6 +779,7 @@ Common:
 - managed/HA PostgreSQL
 - managed secret service
 - OpenTelemetry
+- independently bounded provider/channel Worker pools inside the deployable
 
 Queue profile:
 
@@ -730,7 +805,10 @@ Blocking gates:
 - Atlas/RLS
 - template schema/sandbox/security
 - provider adapter/callback authentication
-- provider capability matrix and unknown-outcome transition tests
+- Provider Capability matrix validation and downgrade tests
+- Delivery Attempt state-transition/property tests
+- callback duplicate/out-of-order/stale/contradiction tests
+- unknown-outcome transition and failover-block tests
 - attempt-realization immutability and credential-reference rotation tests
 - suppression race tests proving current policy is evaluated before not-yet-started provider execution
 - governed-webhook SSRF/DNS-rebinding/redirect/private-address/TLS/size-limit negative tests
@@ -746,9 +824,10 @@ Blocking gates:
 - Kafka producer/consumer/replay
 - profile parity for `occurrence.due` and Notification lifecycle events
 - dual-primary-profile rejection
+- provider/channel/Tenant bulkhead and saturation-isolation tests
 - retry/error classification
 - secret/dependency scanning
-- performance/backpressure/bulkhead
+- performance/backpressure
 - architecture governance
 
 ## 10. Architecture Decisions
@@ -769,9 +848,11 @@ Blocking gates:
 - queue-rabbitmq is default messaging deployment profile
 - Kafka remains a supported stream profile
 - Direct profile is permitted only through durable idempotent acceptance
-- provider capabilities are explicit and UNKNOWN outcome blocks blind retry/failover
+- Provider Capabilities are explicit and UNKNOWN outcome blocks blind retry/failover
+- callback arrival order is not trusted as event order without provider ordering evidence
 - late-bound provider realization becomes immutable per Delivery Attempt once external execution starts
 - current communication suppression is evaluated before not-yet-started provider execution according to communication class
+- channel/provider/Tenant execution is bulkheaded to contain provider/noisy-neighbor failure
 - webhook is a governed registered-target channel with SSRF-resistant egress controls
 
 ### 10.2 Rejected
@@ -808,10 +889,14 @@ Rejected because queue/direct profiles can satisfy Notification messaging withou
 
 Rejected because partial success creates duplicate/reconciliation ambiguity.
 
+#### 10.2.9 Last-Write-Wins Provider Callback State
+
+Rejected because callback arrival order is not reliable provider event order and can regress or fabricate Delivery state.
+
 ## 11. Assumptions
 
 - Email and WhatsApp are first production channels
-- providers differ in whether final delivery can be proven
+- providers differ in whether final delivery, ordering, reconciliation, and duplicate safety can be proven
 - default Scnehaux deployment uses RabbitMQ for async messaging contracts
 - Kafka is deployed when stream-profile learning/workload semantics justify it
 - consumer migration removes legacy shared-Mongo Notification/template authority
@@ -824,7 +909,7 @@ Template versions/data schemas are immutable.
 
 Provider adapter changes cannot alter normalized Delivery semantics without migration.
 
-Provider capability semantics and normalized UNKNOWN/reconciliation behavior are versioned contracts. A provider replacement cannot weaken duplicate-safety, attempt evidence, suppression, or webhook egress guarantees without an explicit architecture migration.
+Provider Capability semantics, callback precedence, and normalized UNKNOWN/reconciliation behavior are versioned contracts. A provider replacement cannot weaken duplicate-safety, attempt evidence, suppression, callback integrity, or webhook egress guarantees without an explicit architecture migration.
 
 Messaging adapter replacement preserves logical event/trigger identity and uses explicit migration/reconciliation instead of blind dual-publish.
 
@@ -832,7 +917,7 @@ Messaging adapter replacement preserves logical event/trigger identity and uses 
 
 ### 13.1 Mailcast Client Solution
 
-Move outbound WhatsApp/email delivery, Template lifecycle, provider/channel config, and Delivery tracking into Notification.
+Move outbound WhatsApp/email delivery, Template lifecycle, provider/channel config, Provider Capability, and Delivery tracking into Notification.
 
 Keep Gmail inbound polling, travel parsing, booking/passenger logic, and business eligibility in Mailcast.
 
@@ -840,7 +925,7 @@ Legacy Notification/template Mongo collections become migration sources, not sha
 
 ### 13.2 ATI PH
 
-Move generic Email delivery, template/provider machinery, retry, and Delivery tracking into Notification.
+Move generic Email delivery, template/provider machinery, retry, callback normalization, and Delivery tracking into Notification.
 
 ATI PH retains holiday rules, subscription/recipient eligibility, approvals, and Product business state.
 
