@@ -653,11 +653,11 @@ The propagation budget is 60 seconds as the planning figure, against an operatio
 
 Three mechanisms above are declared and not yet realized, and the resulting delay is **unbounded** rather than merely longer:
 
-| Mechanism                         | Blocked on                                                 | Consequence today                                                                  |
-| :-------------------------------- | :--------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| Consumer projection update        | the event broker and `SAD-004`                             | a Membership revocation reaches no consumer; only token expiry limits it           |
-| Long-lived connection termination | a connection registry or equivalent revalidation in the consumer | a held connection survives the declared bounded revocation path               |
-| Projected context removal         | the Keycloak projection path in `TDD-identity-control-002` | Principal and Membership revocation currently rely on kernel session removal alone |
+| Mechanism                         | Blocked on                                                       | Consequence today                                                                  |
+| :-------------------------------- | :--------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
+| Consumer projection update        | the event broker and `SAD-004`                                   | a Membership revocation reaches no consumer; only token expiry limits it           |
+| Long-lived connection termination | a connection registry or equivalent revalidation in the consumer | a held connection survives the declared bounded revocation path                    |
+| Projected context removal         | the Keycloak projection path in `TDD-identity-control-002`       | Principal and Membership revocation currently rely on kernel session removal alone |
 
 Until each lands, the Identity Runtime MUST NOT report a maximum enforcement delay for the Contextual Membership class, and the production gate MUST include measured acceptance-to-enforcement evidence for every class in the table above.
 
@@ -842,7 +842,7 @@ Multi-region active-active remains a future architecture decision.
 | External IdP                | One federation provider/journey                             | Isolate provider; local and other providers continue                |
 | Signing key                 | Issuance or verification trust                              | activate incident key procedure; preserve valid verification window |
 | Membership projection stale | Context-specific access                                     | apply consumer freshness policy and high-risk fail-closed behavior  |
-| Consumer revocation lag     | Context/connection-specific access                          | alert against profile ceiling; expire/revalidate/contain             |
+| Consumer revocation lag     | Context/connection-specific access                          | alert against profile ceiling; expire/revalidate/contain            |
 
 ## 9. Deployment Strategy
 

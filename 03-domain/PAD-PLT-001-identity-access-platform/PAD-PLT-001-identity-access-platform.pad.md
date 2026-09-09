@@ -168,30 +168,30 @@ These contexts may be realized by one or more physical systems without changing 
 
 ### 3.2 Ubiquitous Language
 
-| Term                       | Meaning                                                                                                                |
-| :------------------------- | :--------------------------------------------------------------------------------------------------------------------- |
-| Principal                  | Stable human, service, workload, or governed-agent security subject.                                                   |
-| Identity Realm             | Authentication and identity-correlation boundary.                                                                      |
-| Identifier                 | Value used to locate or authenticate a Principal; not the Principal itself.                                            |
-| External Identity          | Identity asserted by an external issuer and identified by issuer plus external subject.                                |
-| Identity Link              | Governed association between an external identity and a local Principal.                                               |
-| Authenticator              | Bound proof mechanism used to authenticate a Principal.                                                                |
-| Authentication Assurance   | Strength, method, recency, and context of authentication.                                                              |
-| Session                    | Bounded authenticated interaction state.                                                                               |
-| Refresh Grant              | Rotating authorization state used to continue a session.                                                               |
-| Client                     | Protocol registration allowing an Application to request authorization.                                                |
-| Protected Resource         | API or resource accepting access artifacts for a declared audience.                                                    |
-| Scope                      | Delegated protocol permission meaningful to a protected resource.                                                      |
-| Consent                    | Principal-approved delegated grant where consent applies.                                                              |
-| Federation                 | Trust relationship accepting an external authentication assertion.                                                     |
-| Workload Identity          | Non-human Principal representing a service, job, connector, or governed execution.                                    |
-| Delegated Execution        | Bounded execution acting from attributable source authority under narrower audience, purpose, scope, Tenant, and TTL. |
-| Consumer Verification Profile | Contract describing local validation, context freshness, revocation ceiling, and online-check requirements.       |
-| Tenant Context             | Trusted operating context derived from authoritative Membership state.                                                 |
-| Membership                 | Principal-to-Tenant/Workspace relationship owned outside IAM.                                                          |
-| Entitlement                | Commercial capability grant owned outside IAM.                                                                         |
-| Business Authorization     | Product decision about an action on a business resource.                                                               |
-| Containment                | Action limiting or terminating current and future security authority.                                                  |
+| Term                          | Meaning                                                                                                               |
+| :---------------------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| Principal                     | Stable human, service, workload, or governed-agent security subject.                                                  |
+| Identity Realm                | Authentication and identity-correlation boundary.                                                                     |
+| Identifier                    | Value used to locate or authenticate a Principal; not the Principal itself.                                           |
+| External Identity             | Identity asserted by an external issuer and identified by issuer plus external subject.                               |
+| Identity Link                 | Governed association between an external identity and a local Principal.                                              |
+| Authenticator                 | Bound proof mechanism used to authenticate a Principal.                                                               |
+| Authentication Assurance      | Strength, method, recency, and context of authentication.                                                             |
+| Session                       | Bounded authenticated interaction state.                                                                              |
+| Refresh Grant                 | Rotating authorization state used to continue a session.                                                              |
+| Client                        | Protocol registration allowing an Application to request authorization.                                               |
+| Protected Resource            | API or resource accepting access artifacts for a declared audience.                                                   |
+| Scope                         | Delegated protocol permission meaningful to a protected resource.                                                     |
+| Consent                       | Principal-approved delegated grant where consent applies.                                                             |
+| Federation                    | Trust relationship accepting an external authentication assertion.                                                    |
+| Workload Identity             | Non-human Principal representing a service, job, connector, or governed execution.                                    |
+| Delegated Execution           | Bounded execution acting from attributable source authority under narrower audience, purpose, scope, Tenant, and TTL. |
+| Consumer Verification Profile | Contract describing local validation, context freshness, revocation ceiling, and online-check requirements.           |
+| Tenant Context                | Trusted operating context derived from authoritative Membership state.                                                |
+| Membership                    | Principal-to-Tenant/Workspace relationship owned outside IAM.                                                         |
+| Entitlement                   | Commercial capability grant owned outside IAM.                                                                        |
+| Business Authorization        | Product decision about an action on a business resource.                                                              |
+| Containment                   | Action limiting or terminating current and future security authority.                                                 |
 
 ### 3.3 Domain Invariants
 
@@ -397,7 +397,7 @@ Privileged identity administration requires stronger assurance, narrow scope, at
 | Principal PII                      | verified email, phone, identifiers                                | Restricted                              |
 | Identity linkage                   | external issuer/subject and linkage state                         | Restricted                              |
 | Authenticator and session metadata | method, device, session, revocation state                         | Restricted                              |
-| Delegation metadata                | source actor, target audience, scopes, purpose, TTL                | Restricted                              |
+| Delegation metadata                | source actor, target audience, scopes, purpose, TTL               | Restricted                              |
 | Protocol registration              | redirect URI, audience, grant policy                              | Internal; secrets Restricted            |
 | Consent and grant                  | client, resource, scope, purpose                                  | Restricted                              |
 | Public verification material       | issuer metadata, public keys                                      | Public by design                        |

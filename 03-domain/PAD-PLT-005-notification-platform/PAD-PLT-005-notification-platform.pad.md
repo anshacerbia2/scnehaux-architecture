@@ -108,7 +108,7 @@ Consumers do not synchronously wait for provider delivery. A control/API command
 | Provider Binding                 | Notification-owned provider configuration that references secrets held by Trust Services                                                                                             |
 | Delivery                         | One recipient/channel delivery lifecycle                                                                                                                                             |
 | Delivery Attempt                 | One provider interaction attempt within a Delivery lifecycle; each attempt freezes its non-secret operational realization before external I/O                                        |
-| Provider Capability              | Declared provider/channel capability facts such as idempotency, reconciliation lookup, callback, final receipt, ordering, retraction, or failover support                             |
+| Provider Capability              | Declared provider/channel capability facts such as idempotency, reconciliation lookup, callback, final receipt, ordering, retraction, or failover support                            |
 | Unknown Provider Outcome         | An attempt whose external effect cannot yet be proven present or absent and therefore cannot be blindly retried or failed over                                                       |
 | Communication Suppression        | Current channel/legal/platform suppression fact enforced by Notification according to the declared communication class; distinct from Product business-recipient eligibility         |
 | Provider Acceptance              | Provider accepted a send request; not necessarily final channel delivery                                                                                                             |
@@ -239,15 +239,15 @@ Rules:
 
 Every active provider/channel binding declares the capabilities that determine safe retry, reconciliation, callback, and failover behavior.
 
-| Capability | Meaning |
-| :--------- | :------ |
-| Stable provider idempotency | Repeating the same provider operation under the same delivery identity is duplicate-safe |
-| Outcome lookup | Provider can reconcile a prior ambiguous attempt by stable identity |
-| Authenticated callback | Callback/receipt authenticity can be verified |
-| Final receipt | Provider can prove a terminal channel state distinct from transport acceptance |
-| Retraction | Provider supports and can confirm external retraction after acceptance |
-| Ordering/sequence | Provider supplies event ordering/version semantics that can be trusted |
-| Failover safety | Explicit conditions under which another provider may be attempted without duplicate harmful effect |
+| Capability                  | Meaning                                                                                            |
+| :-------------------------- | :------------------------------------------------------------------------------------------------- |
+| Stable provider idempotency | Repeating the same provider operation under the same delivery identity is duplicate-safe           |
+| Outcome lookup              | Provider can reconcile a prior ambiguous attempt by stable identity                                |
+| Authenticated callback      | Callback/receipt authenticity can be verified                                                      |
+| Final receipt               | Provider can prove a terminal channel state distinct from transport acceptance                     |
+| Retraction                  | Provider supports and can confirm external retraction after acceptance                             |
+| Ordering/sequence           | Provider supplies event ordering/version semantics that can be trusted                             |
+| Failover safety             | Explicit conditions under which another provider may be attempted without duplicate harmful effect |
 
 A provider adapter SHALL NOT invent a capability the provider cannot prove. Routing policy can use this contract, but cannot weaken the duplicate-safety rules of the Delivery lifecycle.
 
