@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-011
   title: Enterprise Scheduling Platform
   owner: Scheduling Platform Team
-  version: 1.4.0
+  version: 1.5.0
   status: approved
   classification: restricted
   governed_by:
@@ -14,7 +14,7 @@ doc_meta:
     - EAD-005
   review_cycle_days: 180
   created_date: 2026-08-22
-  last_reviewed: 2026-08-27
+  last_reviewed: 2026-09-09
   fulfilled_by:
     - SAD-013
     - SAD-014
@@ -80,25 +80,29 @@ A consumer integrates through versioned schedule lifecycle commands and asynchro
 - Occurrence Materialization
 - Trigger Dispatch
 - Misfire Management
-- Target Registration
+- Target Registration & Compatibility
+- Scheduling Service Class
 - Tenant/Application Quota
 - Schedule Operations & Reconciliation
 
 ### 3.2 Ubiquitous Language
 
-| Term                | Meaning                                                                                      |
-| :------------------ | :------------------------------------------------------------------------------------------- |
-| Schedule            | Durable runtime temporal registration owned by the Scheduling Platform                       |
-| Schedule Intent     | Consumer-owned reason and requested temporal policy from which a Schedule is created         |
-| Occurrence          | One stable logical due instance of a Schedule                                                |
-| Scheduled For       | Canonical UTC instant at which an Occurrence is due                                          |
-| Trigger             | Contract emitted because an Occurrence is due                                                |
-| Target              | Registered Product or Platform contract authorized to consume a Trigger                      |
-| Dispatch            | Durable hand-off of an Occurrence to the governed messaging boundary; not business execution |
-| Misfire             | A due occurrence that could not be dispatched inside its expected normal window              |
-| Misfire Policy      | Explicit recovery behavior for elapsed occurrences                                           |
-| Replay              | Operator-controlled re-dispatch of the same logical Occurrence identity                      |
-| Business Completion | Consumer-owned result after Trigger processing; outside Scheduler authority                  |
+| Term                    | Meaning                                                                                                                        |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| Schedule                | Durable runtime temporal registration owned by the Scheduling Platform                                                         |
+| Schedule Intent         | Consumer-owned reason and requested temporal policy from which a Schedule is created                                           |
+| Occurrence              | One stable logical due instance of a Schedule                                                                                  |
+| Scheduled For           | Canonical UTC instant at which an Occurrence is due                                                                            |
+| Trigger                 | Contract emitted because an Occurrence is due                                                                                  |
+| Target                  | Registered Product or Platform contract authorized to consume a Trigger                                                        |
+| Target Contract         | Versioned registered consumer acceptance contract; never an arbitrary caller-provided URL                                     |
+| Target Contract Version | Immutable compatibility version selected by a Schedule or resolved under an explicit compatible-version policy                |
+| Scheduling Service Class | Bounded criticality/fairness class used for admission and saturation behavior; not an arbitrary caller-controlled priority    |
+| Dispatch                | Durable hand-off of an Occurrence to the governed messaging boundary; not business execution                                   |
+| Misfire                 | A due occurrence that could not be dispatched inside its expected normal window                                                |
+| Misfire Policy          | Explicit recovery behavior for elapsed occurrences                                                                             |
+| Replay                  | Operator-controlled re-dispatch of the same logical Occurrence identity                                                        |
+| Business Completion     | Consumer-owned result after Trigger processing; outside Scheduler authority                                                    |
 
 ### 3.3 Domain Policies
 
@@ -118,8 +122,90 @@ A consumer integrates through versioned schedule lifecycle commands and asynchro
 - Unlimited catch-up is prohibited
 - Product-relative timing rules remain Product logic and are materialized into Schedule registrations by the owning Product
 - Scheduler never treats Product worker success/failure as authoritative Scheduler lifecycle state
+- A Schedule binds to a registered Target Contract, never to an arbitrary caller-provided URL, shell command, function, or container
+- Recurring Schedules have deterministic behavior when a Target Contract Version is deprecated or retired
+- Automatic Target Contract migration is permitted only by an explicit compatible-version contract; otherwise rebind is an owning-consumer action
+- Scheduling Service Classes are bounded and authorized by registered application/Target policy; arbitrary caller priority escalation is prohibited
+- Under saturation, due-dispatch correctness is protected before administrative/list/preview workloads; class-level fairness may reserve capacity but SHALL NOT permit indefinite starvation of lower classes
 - A registered Deferred Notification target is allowed only with bounded trigger data that does not make Scheduling authoritative for communication content, recipient datasets, provider configuration, or credentials
 - When business eligibility/recipient/content requires current Product truth at due time, the target remains the owning Product/Platform Worker rather than Notification
+
+### 3.4 Schedule Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active
+    Active --> Paused
+    Paused --> Active
+    Active --> Cancelled
+    Paused --> Cancelled
+    Active --> Completed: one-time completion / recurring terminal policy
+    Paused --> Completed: governed terminal operation
+    Cancelled --> [*]
+    Completed --> [*]
+```
+
+Lifecycle rules:
+
+- cancellation is terminal for future materialization;
+- pause prevents future materialization while preserving the Schedule unless a defined misfire policy applies after resume;
+- update creates a new Schedule version for future non-materialized Occurrences rather than rewriting prior Occurrence history;
+- one-time Schedules become `Completed` according to their materialized/terminal policy, not consumer business completion.
+
+### 3.5 Occurrence Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Materialized
+    Materialized --> PendingDispatch
+    PendingDispatch --> DurablyDispatched
+    PendingDispatch --> DispatchDelayed
+    DispatchDelayed --> PendingDispatch: retry
+    DurablyDispatched --> Replayed: operator replay, same occurrence_id
+    Replayed --> DurablyDispatched
+```
+
+Consumer business completion is deliberately absent from the Scheduling Occurrence lifecycle. Replay reuses the same `occurrence_id`; a second logical Occurrence is not created merely because transport or consumer handling is retried.
+
+### 3.6 Target Contract Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Candidate
+    Candidate --> Active
+    Active --> Deprecated
+    Deprecated --> Retired
+    Deprecated --> Active: rollback / reactivation
+    Retired --> [*]
+```
+
+Target lifecycle rules:
+
+- New Schedules cannot bind to a `Retired` Target Contract Version.
+- Existing bindings to `Deprecated` versions follow the declared support window and compatibility policy.
+- Existing active Schedules bound to a Target Contract Version being retired must be migrated, cancelled, or explicitly grandfathered before retirement completes.
+- Retirement cannot silently redirect an existing Schedule to a semantically different handler.
+- A Target Contract Version identifies the acceptance contract, not the deployment instance behind it; physical replicas may change without rebinding the Schedule.
+
+### 3.7 Time-Zone Data Evolution
+
+The platform follows governed civil-time data while preserving deterministic historical evidence and protecting future behavior from silent semantic shifts.
+
+```mermaid
+flowchart TD
+    A[Current tzdata version] --> B[Candidate tzdata upgrade]
+    B --> C[Differential evaluation of future occurrences]
+    C --> D{Computed future instants changed?}
+    D -- no --> E[Promote upgrade]
+    D -- yes --> F[Apply Schedule compatibility policy]
+    F --> G[Recompute future non-materialized occurrences]
+    F --> H[Preserve declared prior semantics where policy requires]
+    G --> I[Record compatibility evidence]
+    H --> I
+    I --> E
+```
+
+Materialized Occurrences are immutable and never rewritten by a tzdata upgrade. A Schedule whose future wall-clock interpretation changes is handled according to its declared recurrence/DST compatibility policy and produces traceable compatibility evidence.
 
 ## 4. Integration Contracts
 
@@ -138,7 +224,8 @@ The Scheduling Platform provides logical capabilities for:
 - Misfire Policy Management
 - Bounded Catch-Up
 - Replay of an existing Occurrence
-- Target Registration and Discovery
+- Target Contract registration, version discovery, deprecation, and retirement reconciliation
+- Scheduling Service Class admission
 - Tenant/Application Quota Enforcement
 - Operations, Reconciliation, and Audit Evidence
 
@@ -151,6 +238,7 @@ The Scheduling Platform consumes:
 - Identity and Application/Service Trust for authenticated actor/workload and application ownership
 - Organization for Tenant/operating-context authority through bounded locally usable context
 - Event & Messaging for durable asynchronous dispatch
+- registered Target ownership/compatibility metadata from the relevant enterprise application/service trust or catalog capability
 - Audit & Evidence for security-sensitive and privileged operation evidence
 - Observability for platform SLI/SLO measurement
 
@@ -160,7 +248,7 @@ The platform does not consume Product operational databases or Product business 
 
 ### 5.1 Trust Boundary
 
-Scheduling is authoritative for Schedule runtime lifecycle, Occurrence state, and dispatch state only.
+Scheduling is authoritative for Schedule runtime lifecycle, Occurrence state, Target Contract binding used by a Schedule, service-class admission state, and dispatch state only.
 
 A Product may persist its own business scheduling policy and a `schedule_id` reference. This is not dual authority: the Product owns semantic policy and current business eligibility; Scheduling owns the reusable temporal realization.
 
@@ -171,15 +259,17 @@ A Product may persist its own business scheduling policy and a `schedule_id` ref
 - Normal due processing relies on locally available trusted control context and does not create per-occurrence synchronous calls to Identity or Organization
 - A caller may manage only its own application/Tenant schedules unless explicit privileged authority exists
 - A registered Target is bound to application/service ownership and cannot be replaced by an arbitrary caller-supplied endpoint
+- Scheduling Service Class is derived from authorized application/Target profile and cannot be elevated by an arbitrary request field
 
 ### 5.3 Data Classification
 
 Scheduling manages:
 
 - Schedule metadata and lifecycle
-- temporal definition, time zone, DST, and misfire policy
+- temporal definition, time zone, DST, recurrence compatibility, and misfire policy
 - application/Tenant ownership references
-- registered target reference
+- registered Target Contract ID/version and compatibility policy
+- bounded Scheduling Service Class
 - bounded trigger metadata
 - occurrence and dispatch metadata
 - quota and reconciliation metadata
@@ -201,7 +291,7 @@ Scheduling does not own:
 - Reliability class: **C1 Mission-Critical Operations**
 - Target service availability: **>= 99.95% monthly** for Schedule control and due-dispatch capability at mature production state
 - Target RTO: **<= 1 hour**
-- Within the production HA failure domain (process, node, and declared availability-zone failures), committed Schedule, Occurrence, idempotency, and outbox state has **RPO = 0**
+- Within the production HA failure domain (process, node, and declared availability-zone failures), committed Schedule, Occurrence, idempotency, Target binding, and outbox state has **RPO = 0**
 - Cross-region disaster recovery is a separate deployment profile with an initial target **RPO <= 15 minutes** unless a Tenant/regulatory profile requires stronger replication
 - Schedule create is acknowledged only after the authoritative HA store durably commits the Schedule/idempotency state
 - An accepted Schedule must not be silently lost
@@ -217,13 +307,15 @@ For the default enterprise schedule class:
 
 Higher-precision or higher-criticality classes require an explicit PAD/SAD profile rather than silently tightening the default contract.
 
-### 6.3 Scalability and Concurrency
+### 6.3 Scalability, Fairness, and Concurrency
 
 - Compute scales horizontally without one scheduler process per Tenant
 - Pooled multi-tenant operation is the default capability; bridge/silo/regional profiles remain available under EAD-005
-- Per-Tenant and per-application quotas protect dispatcher capacity
-- Administrative/list traffic sheds before due-dispatch work under saturation
+- Per-Tenant, per-application, per-Target, and per-service-class quotas protect dispatcher capacity
+- Administrative/list/preview traffic sheds before due-dispatch work under saturation
 - A single Tenant or application cannot consume unbounded claim or dispatch concurrency
+- Bounded service classes may use reserved capacity/weighted fairness downstream, but starvation and uncontrolled priority escalation are prohibited
+- Reconciliation, preview, and target-migration scans cannot starve the authoritative due-materialization/dispatch path
 
 ### 6.4 Security, Compliance, Data Privacy, and Residency
 
@@ -231,14 +323,14 @@ Higher-precision or higher-criticality classes require an explicit PAD/SAD profi
 - Trigger payloads contain no credentials
 - deferred Notification triggers contain only bounded identifiers/immutable trigger input under Scheduling data classification; arbitrary communication bodies and unbounded recipient/contact datasets remain outside Scheduling
 - Sensitive Product data is minimized and re-read by the consumer when freshness is required
-- Privileged cross-Tenant actions, replay, target change, and quota override are fully evidenced
+- Privileged cross-Tenant actions, replay, target change, target retirement override, service-class override, and quota override are fully evidenced
 - Regional placement can be selected when residency or contractual commitments require it
 
 ### 6.5 Audit and Interoperability
 
-The following lifecycle facts are traceable: create, update, pause, resume, cancel, occurrence materialization, misfire, dispatch, replay, target change, quota override, and privileged cross-Tenant action.
+The following lifecycle facts are traceable: create, update, pause, resume, cancel, occurrence materialization, misfire, dispatch, replay, target binding/change/deprecation/retirement reconciliation, service-class change, tzdata compatibility decision, quota override, and privileged cross-Tenant action.
 
-Schedule/event contracts are versioned and interoperable across independently deployed consumers. Audit/reconciliation evidence includes the Schedule version, recurrence-semantics version, DST policy version, and time-zone-data version used to compute each materialized Occurrence.
+Schedule/event contracts are versioned and interoperable across independently deployed consumers. Audit/reconciliation evidence includes the Schedule version, Target Contract Version, recurrence-semantics version, DST policy version, and time-zone-data version used to compute each materialized Occurrence.
 
 ### 6.6 Cost Target
 
@@ -252,6 +344,8 @@ The Scheduling Platform Team owns:
 
 - Schedule and Occurrence contracts
 - temporal correctness and compatibility
+- Target Contract binding/lifecycle semantics inside Scheduling
+- Scheduling Service Class admission semantics
 - dispatch reliability
 - Tenant/application scheduling isolation and quota
 - scheduling SLO and capacity
@@ -262,6 +356,7 @@ Consumer teams own:
 - business schedule meaning
 - business calendars and eligibility
 - target worker/handler implementation
+- target contract implementation and migration acceptance
 - business-state revalidation
 - business retry/compensation and final outcome
 
@@ -283,7 +378,12 @@ Workflow Team owns workflow timer/deadline semantics. Notification Team owns not
 - Consumers SHALL implement occurrence-level idempotency
 - Consumers SHALL use a stable registration idempotency identity for retryable create operations and SHALL NOT manufacture a second Schedule solely because the original create response was lost
 - Durable recurrence SHALL declare time-zone, recurrence-semantics version, DST policy, and misfire semantics
-- Materialized Occurrences SHALL retain the Schedule/policy version that produced them and SHALL NOT be rewritten by later Schedule mutation
+- Materialized Occurrences SHALL retain the Schedule/policy/tzdata version evidence that produced them and SHALL NOT be rewritten by later Schedule mutation or tzdata upgrade
+- Schedules SHALL bind to registered Target Contracts; arbitrary caller-provided URLs, shell commands, function bodies, or container images SHALL NOT become Targets
+- Target retirement SHALL NOT silently redirect an existing Schedule to a semantically different handler
+- automatic Target Contract migration SHALL require an explicit compatibility policy; otherwise the owning consumer SHALL rebind or cancel
+- Scheduling Service Class SHALL be bounded and authorized from registered application/Target policy rather than trusted from caller priority input
+- saturation policy SHALL protect due-dispatch correctness and SHALL NOT permit indefinite starvation of lower service classes
 - New shared durable scheduling authority outside this PAD requires architecture review
 - Local transient timing remains local when it does not require the durable application schedule contract
 
@@ -292,6 +392,7 @@ Workflow Team owns workflow timer/deadline semantics. Notification Team owns not
 - More than ten independent application consumers remain expected
 - Mailcast and ATI PH provide immediate migration evidence
 - The enterprise Identity, Organization, Application/Service Trust, Event & Messaging, Audit, and Observability capabilities are available according to adoption sequencing
+- Target ownership/compatibility can be resolved from a governed registered contract rather than arbitrary runtime routing data
 - The platform contract remains free of paid-product dependency
 
 ## 9. Architectural Decisions
@@ -299,12 +400,15 @@ Workflow Team owns workflow timer/deadline semantics. Notification Team owns not
 - **ADR-GLB-011** establishes the enterprise Scheduler/Worker/Workflow/Notification authority boundary
 - **ADR-SCH-002** selects PostgreSQL temporal authority and profile-based durable dispatch while keeping the PAD technology-independent
 - **STD-GLB-010** defines the enterprise durable scheduled-work contract for all consumers
+- Target Contract versioning, bounded service classes, and tzdata compatibility are logical Scheduling semantics independent of the selected dispatch technology
 
 ## 10. Evolution
 
 The logical Scheduling contract remains stable while physical timing machinery may evolve from the initial relational implementation to time-partitioned, regional, or specialized timing infrastructure if measured cardinality, precision, residency, or fault-containment requirements exceed the initial profile.
 
 Durable dispatch may move between Direct, Queue, and Stream delivery profiles without changing Schedule/Occurrence authority or logical trigger identity. Concrete broker/API selection remains below the PAD.
+
+Target implementations may be independently redeployed or compatibly versioned. Incompatible Target migration remains explicit and never changes historical Occurrence identity.
 
 Consumer APIs/events and authority boundaries remain the migration seam.
 
