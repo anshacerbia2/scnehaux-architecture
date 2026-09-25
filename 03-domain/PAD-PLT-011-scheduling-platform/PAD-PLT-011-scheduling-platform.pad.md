@@ -397,7 +397,7 @@ Workflow Team owns workflow timer/deadline semantics. Notification Team owns not
 
 ## 9. Architectural Decisions
 
-- **ADR-GLB-011** establishes the enterprise Scheduler/Worker/Workflow/Notification authority boundary
+- **ADR-GLB-017** establishes the enterprise Scheduler/Worker/Workflow/Notification authority boundary
 - **ADR-SCH-002** selects PostgreSQL temporal authority and profile-based durable dispatch while keeping the PAD technology-independent
 - **STD-GLB-010** defines the enterprise durable scheduled-work contract for all consumers
 - Target Contract versioning, bounded service classes, and tzdata compatibility are logical Scheduling semantics independent of the selected dispatch technology

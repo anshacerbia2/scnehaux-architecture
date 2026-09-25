@@ -505,7 +505,7 @@ Governance defines constraints and evidence; Products and Platforms execute thei
 - EAD-005 — platform and runtime architecture
 - EAD-006 — security architecture
 - EAD-007 — governance and assurance architecture
-- ADR-GLB-011 — durable scheduling boundary
+- ADR-GLB-017 — durable scheduling boundary
 - ADR-GLB-012 — AI, Knowledge, and Product authority separation
 - ADR-GLB-015 — Model & Inference and Agent Runtime authority separation
 - PAD-PLT-008 — Model & Inference Platform

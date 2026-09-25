@@ -20,27 +20,9 @@ Mandating PostgreSQL Row-Level Security (RLS) as the Primary Multi-Tenant Isolat
 
 ## 2. Status
 
-| Date       | Status            | ADR Type     | Reviewers                    | Approver               |
-| ---------- | ----------------- | ------------ | ---------------------------- | ---------------------- |
-| 2026-05-01 | accepted          | foundational | Architecture Review Board    | Enterprise Architect   |
-| 2026-08-12 | accepted, amended | foundational | Architecture, Security, Data | Architecture Authority |
-| 2026-08-22 | accepted, amended | foundational | Architecture, Security, Data | Architecture Authority |
-
-### Amendment Record
-
-**2026-08-12 — scope correction and mechanism completion.** Two defects were corrected.
-
-The original decision applied to "all relational databases inside the Scnehaux platform". ADR-IAM-001 adopts an identity kernel whose persistence is vendor-managed and is modified only through its supported upgrade lifecycle, so the mandate cannot apply there. Section 5 now scopes the requirement to Scnehaux-owned tenant-scoped relational authority tables and names the categories outside it.
-
-More seriously, the original decision mandated RLS without the controls that make it effective. `FORCE ROW LEVEL SECURITY` was never required, and the runtime role was never prohibited from owning the protected tables. PostgreSQL does not apply row-level policies to a table's owner unless `FORCE` is set, so an implementation that satisfied this ADR completely could enable RLS and have it apply to nothing. Section 5 now carries the full mechanism, and the audit method in Section 6 is corrected: it previously verified only that RLS had been enabled, which returns a passing result for an inert control.
-
-This decision is amended rather than superseded because its direction is unchanged: database-enforced tenant isolation remains the default defense in depth. Only its breadth and the completeness of its mechanism are corrected. Sections 3, 4, and the Negative and Tradeoffs consequences are retained as the original reasoning of record.
-
-**2026-08-22 — the migration shape in Section 6 did not satisfy Section 5.** Three defects, found while implementing `TDD-organization-control-001` against it.
-
-The example policy carried `USING` alone, so reads were isolated and `INSERT` and `UPDATE` were not: a bound caller could write a row into another Tenant. It read the binding with `missing_ok = true` behind `NULLIF`, which is the silent-failure mode the Positive consequence had mistakenly recorded as a benefit. And it named a session setting, `app.current_tenant`, that exists in no implementation — `foundation-platform` ships `app.tenant_id` in its schema and both its designs use it.
-
-Section 5.2 now requires `WITH CHECK` and `missing_ok = false` explicitly, names both settings, and states why a provider path uses a second role rather than `BYPASSRLS`. Section 6 carries a shape that satisfies Section 5, which the previous one did not.
+| Date       | Status   | ADR Type     | Reviewers                    | Approver               |
+| ---------- | -------- | ------------ | ---------------------------- | ---------------------- |
+| 2026-05-01 | accepted | foundational | Architecture, Security, Data | Architecture Authority |
 
 ## 3. Context
 

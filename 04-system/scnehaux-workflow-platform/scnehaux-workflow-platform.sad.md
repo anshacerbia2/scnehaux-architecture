@@ -9,7 +9,7 @@ doc_meta:
   governed_by:
     - EAD-001
     - EAD-003
-    - ADR-GLB-011
+    - ADR-GLB-017
   parent_pad: PAD-PLT-004
   review_cycle_days: 180
   created_date: 2026-07-06
@@ -63,7 +63,7 @@ The enterprise Event & Messaging, Scheduling, Notification, Identity, Organizati
 | :---------------- | :----------------------------------- |
 | Realizes          | PAD-PLT-004                          |
 | Governed by       | EAD-001 and EAD-003                  |
-| Boundary decision | ADR-GLB-011                          |
+| Boundary decision | ADR-GLB-017                          |
 | Consumes          | PAD-PLT-011 durable temporal wake-up |
 | Consumes          | PAD-PLT-005 communication delivery   |
 
@@ -191,7 +191,7 @@ A future draft must define blocking build, contract, migration, resilience, secu
 
 ### 10.1 Accepted
 
-Inherited PAD-PLT-004 boundaries and ADR-GLB-011 Scheduler/Workflow authority separation.
+Inherited PAD-PLT-004 boundaries and ADR-GLB-017 Scheduler/Workflow authority separation.
 
 ### 10.2 Rejected
 

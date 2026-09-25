@@ -2,7 +2,7 @@
 doc_meta:
   id: ADR-GLB-017
   title: ADR-GLB-017 Preserve Enterprise Durable Scheduling Boundary with Profiled Dispatch
-  adr_type: replacement
+  adr_type: foundational
   status: accepted
   created: 2026-08-24
   created_date: 2026-08-24
@@ -21,17 +21,15 @@ Preserve the shared durable Scheduling authority boundary while replacing univer
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                                                                                             | Approver               |
-| :--------- | :------- | :---------- | :---------------------------------------------------------------------------------------------------- | :--------------------- |
-| 2026-08-24 | accepted | replacement | Architecture Authority, Platform Engineering, Scheduling, Notification, Workflow, Product Engineering | Architecture Authority |
-
-This ADR supersedes **ADR-GLB-011** in full. Its Scheduling, Product, Workflow, Notification, and Worker authority boundaries are retained. Only the transport assumption is rebaselined through ADR-GLB-016.
+| Date       | Status   | ADR Type     | Reviewers                                                                                             | Approver               |
+| :--------- | :------- | :----------- | :---------------------------------------------------------------------------------------------------- | :--------------------- |
+| 2026-08-24 | accepted | foundational | Architecture Authority, Platform Engineering, Scheduling, Notification, Workflow, Product Engineering | Architecture Authority |
 
 ## 3. Context
 
 Scnehaux requires one shared definition of durable future-time registration, occurrence identity, time-zone/DST behavior, misfire, cancellation, replay, fairness, and trigger dispatch for more than ten expected consumers.
 
-The original Scheduling boundary correctly separated temporal authority from Product Worker execution, but embedded the then-current Kafka decision into the global boundary. Subsequent analysis established that:
+The boundary has to separate temporal authority from Product Worker execution without embedding any one transport in it, because:
 
 - Scheduling semantics do not require one broker product
 - `OccurrenceDue` is a durable trigger whose transport may be direct, queue-oriented, or stream-oriented
@@ -120,6 +118,16 @@ Product -> Scheduling -> Product/Platform Worker -> revalidate -> Notification
 ```
 
 Use when business eligibility, booking/subscription state, recipient, or content can change before due time.
+
+#### Selection Rule
+
+| Question                                                                                   | Select |
+| :----------------------------------------------------------------------------------------- | :----- |
+| Communication final now and snapshot/version must be preserved?                            | Mode A |
+| Small deferred command is sufficient and due-time Notification config should resolve then? | Mode B |
+| Business eligibility/recipient/content can change before due time?                         | Mode C |
+
+Provider credentials are never carried by Product or Scheduling in any mode. Notification resolves provider/channel configuration and secret references; Trust/Secret Services retain credential custody.
 
 ### 5.5 Workflow Timers
 
@@ -211,7 +219,7 @@ This capability remains distinct from Background Job execution, Workflow, Notifi
 
 ### Compliance Status
 
-Compliant. Scheduling authority remains unchanged while the delivery substrate becomes profile-based.
+Compliant.
 
 ### Required Waivers
 
@@ -242,3 +250,23 @@ Rejected because it collapses Product authority, dependencies, release lifecycle
 ### Alternative F — Keep Scheduling Inside Every Product
 
 Rejected because duplicate recurrence, DST, misfire, replay, quota, and recovery semantics are already repeated across multiple applications.
+
+### Alternative G — Put All Scheduling Inside Workflow Platform
+
+Rejected because many durable schedules are not workflows. A report trigger, reconciliation wake-up, one-time Product command, or frozen notification delivery should not require a workflow instance. Workflow retains process-timer semantics and may delegate wake-up mechanics.
+
+### Alternative H — Put All Scheduling Inside Notification Platform
+
+Rejected because Scheduling is also required for non-communication work, and Notification must not become the authority for Product business timing.
+
+### Alternative I — Standardize on Asynq or BullMQ as the Platform
+
+Rejected because both combine task-queue and worker execution with scheduling and add a Redis-based substrate beside the PostgreSQL durability the estate already owns. Their operator interfaces are not part of the Scnehaux experience contract either.
+
+### Alternative J — Use In-Memory Cron as the Durable Authority
+
+Rejected because in-memory cron libraries are valid recurrence calculators and local process timers, but provide no durable multi-replica ownership, Tenant isolation, occurrence history, or recovery semantics.
+
+### Alternative K — Use Infrastructure CronJobs as the Application Contract
+
+Rejected because deployment-scheduler objects are infrastructure topology, not a multi-tenant application scheduling contract. They remain valid for infrastructure-local jobs whose business durability and Product-facing lifecycle do not require the shared capability.

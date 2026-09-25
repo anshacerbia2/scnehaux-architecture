@@ -28,13 +28,13 @@ An Architecture Decision Record (ADR) is how we capture the _why_ behind these p
 
 Every ADR must declare its `adr_type` to clarify the intent of the decision. The allowed types are:
 
-| ADR Type                | Purpose                                                                               |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| **Foundational**        | Makes a core architectural decision for the first time when no prior decision exists. |
-| **Implementation**      | Selects an implementation or option that is mandated/permitted by an STD.             |
-| **Exception**           | Approves a deviation (waiver) against an active STD.                                  |
-| **Conflict Resolution** | Resolves conflicting constraints between an STD, ADR, or business requirement.        |
-| **Replacement**         | Replaces a pre-existing architectural decision.                                       |
+| ADR Type                | Purpose                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Foundational**        | Makes a core architectural decision for the first time when no prior decision exists.                        |
+| **Implementation**      | Selects an implementation or option that is mandated/permitted by an STD.                                    |
+| **Exception**           | Approves a deviation (waiver) against an active STD.                                                         |
+| **Conflict Resolution** | Resolves conflicting constraints between an STD, ADR, or business requirement.                               |
+| **Replacement**         | Replaces a pre-existing architectural decision. Used only after the first production deployment; see §2.4.2. |
 
 ### 2.2 The Schema Architecture
 
@@ -114,13 +114,13 @@ scnehaux-architecture/
 
 ##### Allowed Lifecycle Statuses
 
-| Status       | Meaning / Lifecycle Stage            |
-| ------------ | ------------------------------------ |
-| `proposed`   | Under review or initial draft state. |
-| `accepted`   | Formalized and active.               |
-| `rejected`   | The proposed decision was rejected.  |
-| `superseded` | Replaced by a newer ADR.             |
-| `deprecated` | Phased out and no longer applicable. |
+| Status       | Meaning / Lifecycle Stage                                                             |
+| ------------ | ------------------------------------------------------------------------------------- |
+| `proposed`   | Under review or initial draft state.                                                  |
+| `accepted`   | Formalized and active.                                                                |
+| `rejected`   | The proposed decision was rejected.                                                   |
+| `superseded` | Replaced by a newer ADR. Used only after the first production deployment; see §2.4.2. |
+| `deprecated` | Phased out and no longer applicable.                                                  |
 
 ##### Allowed Classifications
 
@@ -128,7 +128,7 @@ _N/A for Architecture Decision Records (ADRs). ADRs are inherently technical dec
 
 ##### Semantic Versioning Classification
 
-_N/A for Architecture Decision Records (ADRs). ADRs are immutable historical records. If an ADR changes, it must be superseded by a new ADR rather than versioned._
+_N/A for Architecture Decision Records (ADRs). ADRs carry no version number; §2.4.2 defines how an ADR changes._
 
 #### 2.3.5 Artifact Section
 
@@ -161,22 +161,32 @@ Every architectural decision must progress through a managed, auditable lifecycl
 - **Proposed**: The decision is drafted and undergoing active peer review. It carries no authority.
 - **Accepted**: The decision has been reviewed, approved by the designated authority, and is active.
 - **Rejected**: The decision has been evaluated and declined. The record remains as historical context.
-- **Superseded**: The decision has been replaced by a newer ADR. The newer ADR must explicitly reference the superseded record by ID.
+- **Superseded**: The decision has been replaced by a newer ADR, which references the superseded record by ID. It is reachable only after the first production deployment (§2.4.2); before it, a changed decision is edited in place.
 - **Deprecated**: The decision is no longer recommended or valid, but has not been directly replaced.
 
-#### 2.4.2 The Immutability Principle
+#### 2.4.2 Changing an Accepted ADR
 
-An ADR is a strict historical record. Once an ADR reaches the **Accepted** or **Rejected** state, its core substantive content (Context, Decision Drivers, Decision, Consequences) **MUST NEVER BE MODIFIED**.
+How an accepted ADR changes depends on one fact: whether any system it governs has reached production.
 
-- If a decision needs to be reversed or fundamentally changed, you must create a **new ADR** (using the `replacement` type) and update the old ADR's status to `Superseded`.
+**Before the first production deployment, an accepted ADR is a living decision.** When the decision changes, the ADR is edited in place so that it states the current decision cleanly:
+
+- no Amendment, Errata, or Revision section;
+- no superseding ADR;
+- the Status table keeps a single row.
+
+Git history is the record of what changed and why (GDC-000 §2.6). The reason is cost, not convenience. While nothing is in production, no running system and no evidence record depends on an earlier wording. A chain of amendments and superseded records makes every reader, human or agent, reconstruct which statement is current, and that is exactly the confusion an ADR exists to prevent.
+
+**From the first production deployment onward, the Immutability Principle applies.** Once an ADR governing a production system reaches the **Accepted** or **Rejected** state, its substantive content (Context, Decision Drivers, Decision, Consequences) **MUST NOT be modified**. From then on, deployed systems and retained evidence were built against that text, and changing it silently would rewrite what they relied on.
+
+- If a decision needs to be reversed or fundamentally changed, create a **new ADR** of type `replacement`, and move the old ADR to `superseded`. Each references the other by ID.
 - **Administrative Exemption (Decoupled Execution)**: Strategic decisions (ADRs) are decoupled from tactical execution (STDs). An ADR may be approved before its corresponding Standard document is finalized. Appending hyperlinks to newly drafted Standards (STDs) or cross-referencing newer ADRs in the "Related Standards" section is classified as a metadata update and is explicitly permitted.
-- Other permissible edits to an existing Accepted ADR include: updating the Status table to reflect a lifecycle transition, or fixing minor typographical errors that do not alter the technical context.
+- Other permissible edits are updating the Status table for a lifecycle transition and fixing typographical errors that do not alter the technical content.
 
 > [!IMPORTANT]
 >
 > **Semantic Versioning DOES NOT apply to ADRs.**
 >
-> Unlike living documents (EAD, PAD, SAD, TDD), ADRs do not use `Major.Minor.Patch` versioning. ADRs are immutable, point-in-time decision records. Once an ADR is accepted, its architectural content must never be modified. If the architectural decision changes in the future, a **NEW** ADR must be authored which explicitly supersedes the old one.
+> Unlike living documents (EAD, PAD, SAD, TDD), ADRs carry no `Major.Minor.Patch` version. Before production, an ADR is edited in place and Git records the change. After production, a changed decision is a **new** ADR that supersedes the old one.
 
 #### 2.4.3 Resolving Expired Waivers (Exception ADRs)
 

@@ -246,7 +246,7 @@ Dual authoritative writes are prohibited.
 - ADR-IAM-001 — Adopt Keycloak Identity Kernel.
 - ADR-GLB-001 — Modular Monolith.
 - ADR-GLB-002 — PostgreSQL RLS.
-- ADR-GLB-003 — Transactional Outbox.
+- ADR-GLB-016 — Transactional Outbox and durable delivery profiles.
 - ADR-GLB-006 — Event Versioning.
 - ADR-GLB-007 — DDD Boundaries.
 

@@ -2,7 +2,7 @@
 doc_meta:
   id: ADR-GLB-016
   title: ADR-GLB-016 Separate Transactional Publication from Durable Messaging Substrate Selection
-  adr_type: replacement
+  adr_type: foundational
   status: accepted
   created: 2026-08-24
   created_date: 2026-08-24
@@ -20,15 +20,15 @@ Separate source-transaction publication correctness from durable delivery-substr
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                                                                                   | Approver               |
-| :--------- | :------- | :---------- | :------------------------------------------------------------------------------------------ | :--------------------- |
-| 2026-08-24 | accepted | replacement | Architecture Authority, Platform Engineering, Product Engineering, Scheduling, Notification | Architecture Authority |
-
-This ADR supersedes **ADR-GLB-003** in full. The source-local Transactional Outbox invariant is retained. The former universal Kafka product mandate is replaced by profile-based delivery selection.
+| Date       | Status   | ADR Type     | Reviewers                                                                                   | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------------------------------ | :--------------------- |
+| 2026-08-24 | accepted | foundational | Architecture Authority, Platform Engineering, Product Engineering, Scheduling, Notification | Architecture Authority |
 
 ## 3. Context
 
-ADR-GLB-003 correctly established the Transactional Outbox pattern, but later revisions coupled that consistency pattern to one enterprise broker product. The two decisions solve different failure windows:
+Changes to critical business entities — logins, credential changes, tenant provisioning, membership revocation, payroll transactions — trigger secondary operations across the enterprise: notifications, audit, directory synchronization, projection updates. Executing them synchronously inside the request degrades latency and introduces partial failure, and publishing to an external system inside the database transaction blocks that transaction on the external system's availability.
+
+The Transactional Outbox solves the source side of that problem. Selecting a delivery substrate solves a different one, and coupling the two to one broker product would make a transport choice look like a consistency rule. The two decisions solve different failure windows:
 
 ```text
 Source transaction
@@ -106,6 +106,18 @@ Business Worker
 ```
 
 Transport acceptance is not business completion.
+
+#### Relay mechanics: polling first, CDC when volume justifies it
+
+**Stage 1, the default, is polling with `SELECT ... FOR UPDATE SKIP LOCKED`.** Concurrent relay workers claim disjoint batches without blocking each other. The outbox table is partitioned, so processed blocks are truncated in bulk rather than deleted row by row, which keeps vacuum churn off a hot table. Empty polls back off, so an idle relay does not wake the database on a fixed interval.
+
+**Stage 2 is Change Data Capture over WAL logical replication.** It is adopted only when write volume makes polling overhead or table bloat the dominant cost. CDC carries operational risks that polling does not:
+
+- an abandoned replication slot retains WAL until the primary's disk fills;
+- LSN acknowledgement adds state to manage;
+- the `REPLICATION` privilege complicates local development.
+
+Both stages read the same source-local outbox. Moving from one to the other changes the relay, not the publication contract.
 
 ### 5.3 Durable Delivery Profiles
 
@@ -272,7 +284,7 @@ Applicability is conditional on the profile selected by STD-GLB-004. `adopted` d
 
 ### Compliance Status
 
-Compliant. This ADR replaces the broker-coupled ADR-GLB-003 while retaining its source-local Transactional Outbox safety invariant.
+Compliant.
 
 ### Required Waivers
 
@@ -300,6 +312,14 @@ Rejected because it doubles broker security, storage, monitoring, patching, capa
 
 Rejected because a remote outbox authority recreates the dual-write/distributed-transaction problem the Transactional Outbox pattern exists to remove.
 
-### Alternative F — Direct Database-to-Broker Publish Without Outbox
+### Alternative F — CDC as the Default Relay
+
+Rejected as a default and kept as Stage 2. CDC's replication-slot, LSN, and privilege costs are real from the first deployment, while its advantage over polling appears only at write volumes the estate does not yet have.
+
+### Alternative G — Polling Without `SKIP LOCKED`
+
+Rejected because concurrent relay workers would block on each other's row locks, which turns horizontal scaling of the relay into contention.
+
+### Alternative H — Direct Database-to-Broker Publish Without Outbox
 
 Rejected for correctness-critical state publication because process/network failure between the local commit and broker publish can silently lose the message.

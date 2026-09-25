@@ -431,7 +431,7 @@ Scheduling Team owns generic durable future trigger mechanics. Trust Services ow
 
 ## 9. Architectural Decisions
 
-- ADR-GLB-011 removes generic temporal scheduling authority from Notification
+- ADR-GLB-017 removes generic temporal scheduling authority from Notification
 - global event/outbox/resilience/database standards govern asynchronous delivery mechanics
 - provider/channel implementation decisions belong in SAD/TDD or future domain decisions when they create a durable trade-off
 - normalized Delivery lifecycle, callback precedence, and suppression evaluation remain stable contracts even as provider implementations change
@@ -449,7 +449,7 @@ Provider Capability contracts allow richer reconciliation/final-delivery behavio
 - EAD-004 Enterprise Integration Architecture
 - EAD-005 Enterprise Platform Architecture
 - EAD-006 Enterprise Security Architecture
-- ADR-GLB-011 Enterprise Durable Scheduling Boundary
+- ADR-GLB-017 Enterprise Durable Scheduling Boundary with Profiled Dispatch
 - STD-GLB-004 Event-Driven Architecture & Messaging
 - STD-GLB-010 Durable Scheduled Work
 - ADR-GLB-014 Background Worker Network Boundary

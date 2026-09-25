@@ -144,7 +144,7 @@ The standard does not require one shared runtime.
 - aligns EAD-001, EAD-002, EAD-004, EAD-005
 - requires new designs to qualify queue/job/worker/workflow semantics
 - no exception to current Scheduling decision is created
-- ADR-GLB-011 remains authoritative for Scheduling boundaries
+- ADR-GLB-017 remains authoritative for Scheduling boundaries
 
 ## 8. Alternatives Considered
 

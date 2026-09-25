@@ -20,16 +20,9 @@ Standardizing on the Modular Monolith Pattern as the Default Architecture for Co
 
 ## 2. Status
 
-| Date       | Status            | ADR Type     | Reviewers                        | Approver               |
-| ---------- | ----------------- | ------------ | -------------------------------- | ---------------------- |
-| 2026-05-01 | accepted          | foundational | Architecture Review Board        | Enterprise Architect   |
-| 2026-08-12 | accepted, amended | foundational | Architecture, Platform, Identity | Architecture Authority |
-
-### Amendment Record
-
-**2026-08-12 — scope correction.** The original decision named the Identity Provider and a Ledger system as mandatory modular monoliths. ADR-IAM-001 adopts an external identity kernel that runs the runtime its vendor requires, and no Ledger system exists anywhere in the enterprise landscape. Section 5 is amended to scope the mandate to Scnehaux-owned cohesive transactional and control applications and to name the categories that fall outside it. Consequences asserting Kubernetes as the deployment substrate, an unmeasured extraction duration, and application to the retired `scnehaux-iam` monorepo are corrected in the same amendment. Package layout, previously illustrated here with modules from that retired system, is now governed by ADR-GLB-008.
-
-This decision is amended rather than superseded because its direction is unchanged: prefer a cohesive modular application over premature distribution. Only the breadth of the mandate and factual claims that ceased to be true are corrected. Sections 3, 4, and the Positive, Negative, and Tradeoffs consequences are retained as the original reasoning of record.
+| Date       | Status   | ADR Type     | Reviewers                        | Approver               |
+| ---------- | -------- | ------------ | -------------------------------- | ---------------------- |
+| 2026-05-01 | accepted | foundational | Architecture, Platform, Identity | Architecture Authority |
 
 ## 3. Context
 

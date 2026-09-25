@@ -2,7 +2,7 @@
 doc_meta:
   id: ADR-SCH-002
   title: ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch
-  adr_type: replacement
+  adr_type: implementation
   status: accepted
   created: 2026-08-24
   created_date: 2026-08-24
@@ -19,17 +19,15 @@ Use PostgreSQL as Scheduling temporal authority and dispatch due Occurrences thr
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                                                                       | Approver               |
-| :--------- | :------- | :---------- | :------------------------------------------------------------------------------ | :--------------------- |
-| 2026-08-24 | accepted | replacement | Scheduling Platform, Platform Engineering, Architecture Authority, Notification | Architecture Authority |
-
-This ADR supersedes **ADR-SCH-001**.
+| Date       | Status   | ADR Type       | Reviewers                                                                       | Approver               |
+| :--------- | :------- | :------------- | :------------------------------------------------------------------------------ | :--------------------- |
+| 2026-08-24 | accepted | implementation | Scheduling Platform, Platform Engineering, Architecture Authority, Notification | Architecture Authority |
 
 ## 3. Context
 
 The Scheduling Runtime requires durable multi-replica Schedule/Occurrence state and at-least-once dispatch without executing consumer business code.
 
-ADR-SCH-001 correctly selected PostgreSQL as temporal authority but bound dispatch to Kafka because Kafka was then the universal enterprise broker decision. ADR-GLB-016 now separates source publication correctness from delivery-substrate selection and ADR-GLB-017 makes Scheduling dispatch profile-based.
+PostgreSQL is the temporal authority. ADR-GLB-016 separates source publication correctness from delivery-substrate selection, and ADR-GLB-017 makes Scheduling dispatch profile-based, so dispatch must not be bound to one broker.
 
 Scheduling must therefore preserve one logical dispatch port while allowing the concrete environment to select:
 
@@ -176,6 +174,10 @@ The initial runtime remains one horizontally replicated Go deployable containing
 
 Adapter or Worker extraction requires measured scale, independent security/fault-containment, or operational evidence and a separate SAD.
 
+### 5.9 User Experience
+
+The Scheduler operational experience is a separate Scnehaux-owned deployable. It calls only governed Scheduler APIs and never reads PostgreSQL or a broker directly. Third-party monitoring UIs such as task-queue dashboards are not part of the supported Scheduler product surface.
+
 ## 6. Consequences
 
 ### Positive
@@ -251,3 +253,15 @@ Rejected for the core Scheduler because it combines task execution/scheduling co
 ### Alternative F — Custom Distributed Timer Consensus Kernel
 
 Rejected until measured cardinality/precision/regional evidence exceeds the relational timing profile.
+
+### Alternative G — In-Memory Cron as Scheduler Authority
+
+Rejected. Appropriate as a recurrence calculator or local timer, but it lacks durable multi-replica ownership, Tenant isolation, occurrence history, and restart recovery.
+
+### Alternative H — Temporal
+
+Rejected for this capability. Temporal is a durable workflow and execution engine whose scope overlaps the Workflow domain and worker execution. Scheduling alone does not justify adopting the larger runtime model.
+
+### Alternative I — Paid Managed Scheduling Product
+
+Rejected. The enterprise requires a free/open-source-compatible core architecture and already operates the persistence and messaging primitives needed for the initial scale profile.

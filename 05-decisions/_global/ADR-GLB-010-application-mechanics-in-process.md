@@ -38,7 +38,7 @@ The choice is frequently framed as old versus modern. That framing does not surv
 
 Three facts about the Scnehaux estate constrain the answer:
 
-1. **Transactional atomicity cannot cross a process boundary.** The transactional outbox pattern mandated by ADR-GLB-003 requires the event record to commit in the same database transaction as the state change it describes. An application that writes state to its own database and then calls a sidecar to publish has performed a dual write, which is the exact failure the pattern removes. A sidecar cannot enlist in the application's database transaction.
+1. **Transactional atomicity cannot cross a process boundary.** The transactional outbox pattern mandated by ADR-GLB-016 requires the event record to commit in the same database transaction as the state change it describes. An application that writes state to its own database and then calls a sidecar to publish has performed a dual write, which is the exact failure the pattern removes. A sidecar cannot enlist in the application's database transaction.
 
 2. **Sidecar outbox support requires surrendering the data model.** Runtimes that do offer a transactional outbox achieve it by owning both the state write and the publication through their own state abstraction, which is key-value oriented. The Scnehaux control-plane authority stores depend on relational semantics that abstraction does not express: forced row-level security with a non-owner runtime role, composite foreign keys enforcing cross-entity invariants, partial unique indexes, optimistic concurrency columns, and per-module schema ownership with independent migrations.
 
@@ -151,7 +151,7 @@ A shared package created under either condition MUST satisfy all of the followin
 
 ### Related Standards and Artifacts
 
-- ADR-GLB-003 — Transactional Outbox, whose atomicity requirement this decision protects.
+- ADR-GLB-016 — Transactional Outbox, whose atomicity requirement this decision protects.
 - ADR-GLB-006 — Event Versioning, which governs the contract artifacts in §5.1.
 - ADR-GLB-008 — Go Project Structure and Layer Enforcement, whose machine-enforced import analysis is the mechanism that verifies the placement rules in §5.5.
 - EAD-002 — relationship semantics and the prohibition on universal mediation hops.
