@@ -135,6 +135,26 @@ The target **MUST**:
 
 The target **MUST NOT** rely on an irreversible side effect completing inside the HTTP request as the only proof of acceptance.
 
+**Failure handling.** The relay distinguishes a target that refused from a target it could not reach:
+
+- A permanent refusal (`400`, `409`, `422`) parks the message as a dead letter at once. Retrying a message the target has judged invalid cannot succeed.
+- An unreachable or failing target (any other status, or a timeout) is retried with bounded backoff. After the retries are spent, an ordinary message is parked. A **security-priority** message is released back for later delivery and is never parked for unavailability, because abandoning a revocation during an outage would discard a change that would have landed minutes later. While it waits, enforcement is bounded by the consumer's declared staleness policy, not by delivery.
+
+**Delivery evidence.** The relay records, per message and per named consumer, what a successful delivery proved:
+
+| Evidence             | Meaning                                                                                    |
+| :------------------- | :----------------------------------------------------------------------------------------- |
+| `consumer_applied`   | The target asserted, in its response, that it durably applied the message before answering |
+| `transport_accepted` | The message was accepted, and nothing more is known                                        |
+
+`consumer_applied` **MUST** be derivable only from the target's own assertion. The relay cannot produce it for itself, and a relay whose code can claim it on the target's behalf has no evidence at all. An intermediary that cannot carry the target's assertion, such as a broker between relay and consumer, yields `transport_accepted` only.
+
+Delivery evidence **MUST NOT** be writable by the request path, or modifiable by any role once written.
+
+**Closing a dead letter.** A parked security message may be closed as delivered only on `consumer_applied` evidence from the consumer the enforcement depends on. Operator assertion, `transport_accepted`, and scalar progress marks such as highest-applied positions are not evidence that a particular message was applied. The closing system records the attempt and the outcome separately, so a refused closure remains attributable and an accepted one exists only if the closure does.
+
+The first implementation of these rules is `foundation-platform`'s dispatcher with `foundation-reference`'s HTTP publisher, closed by `organization-control`'s resolver (`TDD-organization-control-005`).
+
 A pure background Worker remains non-public under ADR-GLB-014. Direct delivery targets the owning application's governed acceptance boundary, not an arbitrary Worker URL.
 
 ### 5.5 Queue-Oriented Messaging
