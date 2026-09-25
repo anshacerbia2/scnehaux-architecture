@@ -561,19 +561,19 @@ Provider administration requires:
 
 Threats and controls include:
 
-| Threat                              | Control                                                                           |
-| :---------------------------------- | :-------------------------------------------------------------------------------- |
-| Tenant-context spoofing             | derive authoritative scope from token and current Membership, not request headers |
-| IDOR across Tenant                  | scope-aware repository, RLS defense, negative tests                               |
-| stale revoked access                | priority event, version, bounded freshness, reconciliation                        |
-| privilege escalation                | narrow tenancy roles, step-up, approval, deny by default                          |
-| duplicate/racing lifecycle commands | idempotency and optimistic concurrency                                            |
-| event loss                          | transactional outbox and delivery reconciliation                                  |
+| Threat                              | Control                                                                                                                                |
+| :---------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| Tenant-context spoofing             | derive authoritative scope from token and current Membership, not request headers                                                      |
+| IDOR across Tenant                  | scope-aware repository, RLS defense, negative tests                                                                                    |
+| stale revoked access                | priority event, version, bounded freshness, reconciliation                                                                             |
+| privilege escalation                | narrow tenancy roles, step-up, approval, deny by default                                                                               |
+| duplicate/racing lifecycle commands | idempotency and optimistic concurrency                                                                                                 |
+| event loss                          | transactional outbox and delivery reconciliation                                                                                       |
 | forged delivery evidence            | `consumer_applied` producible only from the consumer's marker; evidence tables unwritable by the request path, immutable to every role |
-| wrongful dead-letter resolution     | column-restricted resolution role; server-derived consumer; attempt and outcome both audited |
-| direct Keycloak drift               | Identity Control Service reconciliation; Tenancy remains source                   |
-| destructive offboarding             | staged obligations and explicit finalization                                      |
-| invitation takeover                 | Identity-owned verification and expiry; invitation is not proof                   |
+| wrongful dead-letter resolution     | column-restricted resolution role; server-derived consumer; attempt and outcome both audited                                           |
+| direct Keycloak drift               | Identity Control Service reconciliation; Tenancy remains source                                                                        |
+| destructive offboarding             | staged obligations and explicit finalization                                                                                           |
+| invitation takeover                 | Identity-owned verification and expiry; invitation is not proof                                                                        |
 
 ## 9. NFR
 
@@ -581,21 +581,21 @@ Threats and controls include:
 
 #### 9.1.1 Failure Matrix
 
-| Failure                                | Behavior                                                                                                                   | Blast Radius                                                                     |
-| :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
-| One application replica fails          | load balancer removes replica; remaining replicas continue                                                                 | In-flight requests on one replica                                                |
-| PostgreSQL primary fails               | managed failover; mutations pause briefly; no local fallback authority                                                     | All new Tenancy mutations; existing consumer projections continue                |
-| Event broker unavailable               | mutations commit with outbox; publication backlog grows and alerts                                                         | New projection propagation across consumers; authoritative API remains available |
-| Identity Control Service unavailable   | events remain on broker; Keycloak projection becomes stale according to policy                                             | New/changed IAM context only; Tenancy authority remains correct                  |
-| Keycloak unavailable                   | administrative login/new identity journeys pause; authenticated service operations with valid token may continue by policy | New admin sessions and identity onboarding                                       |
-| Provisioning unavailable               | new Tenant activation/profile change pauses; current active Tenants continue                                               | Affected provisioning operations                                                 |
-| One consumer projection diverges       | consumer marked stale; targeted rebuild/reconciliation                                                                     | One consumer/system, unless security policy forces broader containment           |
-| Bad bulk import                        | transaction/item constraints reject invalid items; resumable report                                                        | Submitted batch/items only                                                       |
-| Cross-tenant policy defect             | emergency provider-admin disable and affected Tenant containment                                                           | Potential multi-Tenant; treated Sev-1                                            |
-| Database restore to older point        | security-version reconciliation and containment before normal operation                                                    | Full Tenancy control plane until reconciled                                      |
-| Offboarding dependency never completes | Tenant remains offboarding/frozen; no final deletion                                                                       | One Tenant                                                                       |
-| Projection consumer refuses a security event permanently | event dead-lettered; security debt reported; projection-backed checks refuse until an operator replays it and resolves it on `consumer_applied` evidence | Every projection-backed check, estate-wide, until resolved |
-| Superseded security event dead-lettered | newer version already applied, so the replay is discarded and produces no `consumer_applied` evidence; the dead letter cannot be resolved under `REPLAYED` alone | Estate-wide and permanent until `SUPERSEDED` resolution exists; blocks the production gate |
+| Failure                                                  | Behavior                                                                                                                                                         | Blast Radius                                                                               |
+| :------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| One application replica fails                            | load balancer removes replica; remaining replicas continue                                                                                                       | In-flight requests on one replica                                                          |
+| PostgreSQL primary fails                                 | managed failover; mutations pause briefly; no local fallback authority                                                                                           | All new Tenancy mutations; existing consumer projections continue                          |
+| Event broker unavailable                                 | mutations commit with outbox; publication backlog grows and alerts                                                                                               | New projection propagation across consumers; authoritative API remains available           |
+| Identity Control Service unavailable                     | events remain on broker; Keycloak projection becomes stale according to policy                                                                                   | New/changed IAM context only; Tenancy authority remains correct                            |
+| Keycloak unavailable                                     | administrative login/new identity journeys pause; authenticated service operations with valid token may continue by policy                                       | New admin sessions and identity onboarding                                                 |
+| Provisioning unavailable                                 | new Tenant activation/profile change pauses; current active Tenants continue                                                                                     | Affected provisioning operations                                                           |
+| One consumer projection diverges                         | consumer marked stale; targeted rebuild/reconciliation                                                                                                           | One consumer/system, unless security policy forces broader containment                     |
+| Bad bulk import                                          | transaction/item constraints reject invalid items; resumable report                                                                                              | Submitted batch/items only                                                                 |
+| Cross-tenant policy defect                               | emergency provider-admin disable and affected Tenant containment                                                                                                 | Potential multi-Tenant; treated Sev-1                                                      |
+| Database restore to older point                          | security-version reconciliation and containment before normal operation                                                                                          | Full Tenancy control plane until reconciled                                                |
+| Offboarding dependency never completes                   | Tenant remains offboarding/frozen; no final deletion                                                                                                             | One Tenant                                                                                 |
+| Projection consumer refuses a security event permanently | event dead-lettered; security debt reported; projection-backed checks refuse until an operator replays it and resolves it on `consumer_applied` evidence         | Every projection-backed check, estate-wide, until resolved                                 |
+| Superseded security event dead-lettered                  | newer version already applied, so the replay is discarded and produces no `consumer_applied` evidence; the dead letter cannot be resolved under `REPLAYED` alone | Estate-wide and permanent until `SUPERSEDED` resolution exists; blocks the production gate |
 
 #### 9.1.2 Degradation
 

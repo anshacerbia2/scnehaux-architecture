@@ -142,10 +142,10 @@ The target **MUST NOT** rely on an irreversible side effect completing inside th
 
 **Delivery evidence.** The relay records, per message and per named consumer, what a successful delivery proved:
 
-| Evidence | Meaning |
-| :-- | :-- |
-| `consumer_applied` | The target asserted, in its response, that it durably applied the message before answering |
-| `transport_accepted` | The message was accepted, and nothing more is known |
+| Evidence             | Meaning                                                                                    |
+| :------------------- | :----------------------------------------------------------------------------------------- |
+| `consumer_applied`   | The target asserted, in its response, that it durably applied the message before answering |
+| `transport_accepted` | The message was accepted, and nothing more is known                                        |
 
 `consumer_applied` **MUST** be derivable only from the target's own assertion. The relay cannot produce it for itself, and a relay whose code can claim it on the target's behalf has no evidence at all. An intermediary that cannot carry the target's assertion, such as a broker between relay and consumer, yields `transport_accepted` only.
 
