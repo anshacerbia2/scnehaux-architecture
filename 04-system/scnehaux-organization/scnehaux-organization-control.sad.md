@@ -485,6 +485,13 @@ tenancy.reconciliation.*
 
 All events use the enterprise event envelope and versioning standard. At-least-once delivery is assumed; consumers must be idempotent.
 
+Membership security events currently reach the projection consumer through the Direct Durable Delivery profile of ADR-GLB-016. Two rules govern that path:
+
+- **A security event is abandoned only on the consumer's permanent refusal.** Security events travel in the priority lane. When the consumer refuses one permanently (`400`, `409`, `422`), the dispatcher moves it to `platform.dead_letter`. An unreachable consumer never dead-letters one: after its retries the event is released back for delivery. While any authority-bearing dead letter is unresolved, the publication frontier reports security debt and every projection-backed check refuses. The system fails closed rather than serving authority the consumer cannot vouch for.
+- **A dead letter closes only on the consumer's own evidence.** It is resolved only as `REPLAYED`, and only when a delivery receipt shows the active projection consumer applied that exact event. That receipt carries `consumer_applied` evidence, which the consumer alone can produce. Operator assertion and scalar progress marks are not evidence. `TDD-organization-control-005` specifies the resolver.
+
+Security debt is reported estate-wide rather than per consumer, so the enforcement scope is one producer and one projection consumer. A second active projection consumer is refused.
+
 ### 7.7 Projection Bootstrap
 
 Consumers obtain:
@@ -562,6 +569,8 @@ Threats and controls include:
 | privilege escalation                | narrow tenancy roles, step-up, approval, deny by default                          |
 | duplicate/racing lifecycle commands | idempotency and optimistic concurrency                                            |
 | event loss                          | transactional outbox and delivery reconciliation                                  |
+| forged delivery evidence            | `consumer_applied` producible only from the consumer's marker; evidence tables unwritable by the request path, immutable to every role |
+| wrongful dead-letter resolution     | column-restricted resolution role; server-derived consumer; attempt and outcome both audited |
 | direct Keycloak drift               | Identity Control Service reconciliation; Tenancy remains source                   |
 | destructive offboarding             | staged obligations and explicit finalization                                      |
 | invitation takeover                 | Identity-owned verification and expiry; invitation is not proof                   |
@@ -585,6 +594,8 @@ Threats and controls include:
 | Cross-tenant policy defect             | emergency provider-admin disable and affected Tenant containment                                                           | Potential multi-Tenant; treated Sev-1                                            |
 | Database restore to older point        | security-version reconciliation and containment before normal operation                                                    | Full Tenancy control plane until reconciled                                      |
 | Offboarding dependency never completes | Tenant remains offboarding/frozen; no final deletion                                                                       | One Tenant                                                                       |
+| Projection consumer refuses a security event permanently | event dead-lettered; security debt reported; projection-backed checks refuse until an operator replays it and resolves it on `consumer_applied` evidence | Every projection-backed check, estate-wide, until resolved |
+| Superseded security event dead-lettered | newer version already applied, so the replay is discarded and produces no `consumer_applied` evidence; the dead letter cannot be resolved under `REPLAYED` alone | Estate-wide and permanent until `SUPERSEDED` resolution exists; blocks the production gate |
 
 #### 9.1.2 Degradation
 
@@ -650,6 +661,7 @@ Required runbooks:
 
 - Membership/Tenant emergency containment;
 - broker outage and outbox replay;
+- dead-letter resolution: fix the refusal cause, replay affected versions lowest first, confirm `consumer_applied` receipts, resolve;
 - projection rebuild and consumer reconciliation;
 - Keycloak projection drift repair;
 - provider-admin privilege incident;
