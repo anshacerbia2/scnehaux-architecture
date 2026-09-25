@@ -947,7 +947,7 @@ The pipeline must:
 10. monitor authentication, session, support, authorization, projection, and revocation errors;
 11. execute cutover with rollback gate;
 12. freeze and retire legacy protocol endpoints after residual consumer count reaches zero;
-13. supersede incompatible legacy ADRs and archive runtime infrastructure.
+13. archive the legacy runtime infrastructure.
 
 ## 13. Alternatives
 
