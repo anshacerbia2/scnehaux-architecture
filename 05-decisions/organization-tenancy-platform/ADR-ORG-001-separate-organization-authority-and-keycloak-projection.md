@@ -2,7 +2,7 @@
 doc_meta:
   id: ADR-ORG-001
   title: Separate Organization Authority from Identity and Use Keycloak as a Projection Target
-  adr_type: replacement
+  adr_type: foundational
   status: accepted
   created: 2026-08-06
   created_date: 2026-08-06
@@ -19,18 +19,13 @@ Separate Organization authority from Identity and use Keycloak only as a bounded
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                                                | Approver                         |
-| :--------- | :------- | :---------- | :------------------------------------------------------- | :------------------------------- |
-| 2026-08-06 | proposed | replacement | Architecture, Identity, Core Platform, Security, Product | Architecture Authority — pending |
-| 2026-08-11 | accepted | replacement | Architecture, Identity, Core Platform, Security, Product | Architecture Authority           |
-
-On acceptance, the former Enterprise Workspace Platform boundary was retired. Its PAD and its SAD were removed from the active set, and PAD-PLT-002 now carries the Organization Platform.
-
-Upon acceptance, this ADR supersedes the authority model of the former Enterprise Workspace Platform and any IAM implementation decision that treats Tenant, Workspace, Membership, or Product permission as identity-owned state.
+| Date       | Status   | ADR Type     | Reviewers                                                | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------------------------- | :--------------------- |
+| 2026-08-11 | accepted | foundational | Architecture, Identity, Core Platform, Security, Product | Architecture Authority |
 
 ## 3. Context
 
-Scnehaux requires one stable Principal to operate across internal ATI, managed-service, customer, partner, and future SaaS contexts. The previous architecture overloaded several distinct concepts:
+Scnehaux requires one stable Principal to operate across internal ATI, managed-service, customer, partner, and future SaaS contexts. Without an explicit model, several distinct concepts overload one another:
 
 - Tenant was treated as an independent customer identity boundary;
 - Organization was used for both enterprise party and internal hierarchy;
@@ -231,7 +226,6 @@ Dual authoritative writes are prohibited.
 - Consumer teams own their local projection health and enforcement.
 - Security owns cross-tenant administration and incident requirements.
 - Architecture Authority governs ontology and breaking contract changes.
-- The old PAD-PLT-002 Workspace Platform and SAD-004 v1 require transition to superseded/deprecated lifecycle after approval and migration.
 
 ## 7. Compliance Impact
 

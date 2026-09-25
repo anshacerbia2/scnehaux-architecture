@@ -437,8 +437,6 @@ It is not accountable for identity authentication, Subscription/Entitlement, Cli
 - **SAD-004 — Scnehaux Organization Control**
 - **SAD-012 — Scnehaux Organization Experience**
 
-The former Enterprise Workspace Platform is superseded by this boundary after approval and migration.
-
 ### 7.3 Governance Rules
 
 1. No other domain may create a second authoritative Tenant, Workspace, or Membership lifecycle.

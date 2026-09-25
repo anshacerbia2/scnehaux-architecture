@@ -2,7 +2,7 @@
 doc_meta:
   id: ADR-IAM-001
   title: Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel
-  adr_type: replacement
+  adr_type: foundational
   status: accepted
   created: 2026-08-06
   created_date: 2026-08-06
@@ -19,14 +19,9 @@ Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                                  | Approver                         |
-| :--------- | :------- | :---------- | :----------------------------------------- | :------------------------------- |
-| 2026-08-06 | proposed | replacement | Identity, Security, Platform, Architecture | Architecture Authority — pending |
-| 2026-08-11 | accepted | replacement | Identity, Security, Platform, Architecture | Architecture Authority           |
-
-Three earlier identity decisions covering epoch-based sessions, token signing with an ephemeral development signer, and in-process credential hashing were withdrawn on acceptance. None had reached staging, so they were removed rather than retained as superseded records. This decision replaces them in full.
-
-Upon acceptance, this ADR replaces the custom-engine implementation direction wherever earlier artifacts prescribed Scnehaux-owned session, token-signing, password-engine, or OAuth/OIDC runtime internals, including SAD-001 v1.
+| Date       | Status   | ADR Type     | Reviewers                                  | Approver               |
+| :--------- | :------- | :----------- | :----------------------------------------- | :--------------------- |
+| 2026-08-11 | accepted | foundational | Identity, Security, Platform, Architecture | Architecture Authority |
 
 ## 3. Context
 
@@ -271,7 +266,6 @@ The ceremony holds no credential. It creates the kernel user with a mandatory cr
 - A Scnehaux Control Service and Identity Experience system remain required.
 - Technology radar and vulnerability-management processes must include Keycloak and its extensions.
 - Every upgrade requires compatibility, conformance, migration, and rollback evidence.
-- The three earlier identity decisions were withdrawn on acceptance, so no lifecycle transition remains outstanding.
 
 ## 7. Compliance Impact
 
