@@ -163,7 +163,12 @@ The target **MUST NOT** rely on an irreversible side effect completing inside th
 
 Delivery evidence **MUST NOT** be writable by the request path, or modifiable by any role once written.
 
-**Closing a dead letter.** A parked security message may be closed as delivered only on `consumer_applied` evidence from the consumer the enforcement depends on. Operator assertion, `transport_accepted`, and scalar progress marks such as highest-applied positions are not evidence that a particular message was applied. The closing system records the attempt and the outcome separately, so a refused closure remains attributable and an accepted one exists only if the closure does.
+**Closing a dead letter.** A parked security message may be closed only on `consumer_applied` evidence from the consumer the enforcement depends on, in one of two ways:
+
+- **As delivered**, when the evidence is for that message.
+- **As superseded**, when the evidence is for a later message about the same aggregate that carries the aggregate's complete state at a higher version. The consumer applies only higher versions, so the parked message can no longer take effect. The producer's own record of which version each message carries decides "later". Stream or delivery positions never decide it, because a replay reassigns them and an older message replayed late would otherwise supersede a newer one.
+
+Operator assertion, `transport_accepted`, and scalar progress marks such as highest-applied positions are not evidence that a particular message was applied. The closing system records the attempt and the outcome separately, so a refused closure remains attributable and an accepted one exists only if the closure does.
 
 The first implementation of these rules is `foundation-platform`'s dispatcher with `foundation-reference`'s HTTP publisher, closed by `organization-control`'s resolver (`TDD-organization-control-005`).
 
