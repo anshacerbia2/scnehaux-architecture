@@ -170,6 +170,10 @@ Delivery evidence **MUST NOT** be writable by the request path, or modifiable by
 
 Operator assertion, `transport_accepted`, and scalar progress marks such as highest-applied positions are not evidence that a particular message was applied. The closing system records the attempt and the outcome separately, so a refused closure remains attributable and an accepted one exists only if the closure does.
 
+**A waiver is not a closure.** A parked message that no corrective path can close, for example one refused by a consumer that has since been decommissioned, may be waived: an operational exception with an author, a reason and an expiry. A waiver MUST be recorded apart from the closure and MUST NOT clear the debt the message represents. It may silence the stale-message alert until it expires, and allow retention to dispose of the payload. A waiver on a message the currently enforcing consumer refused MUST be refused, because that debt has a corrective path and silencing it would hide a live outage.
+
+Debt SHOULD be attributed to the consumer that refused the message, so one consumer's parked message does not refuse another consumer's traffic. A message whose consumer is not recorded counts for every consumer.
+
 The first implementation of these rules is `foundation-platform`'s dispatcher with `foundation-reference`'s HTTP publisher, closed by `organization-control`'s resolver (`TDD-organization-control-005`).
 
 A pure background Worker remains non-public under ADR-GLB-014. Direct delivery targets the owning application's governed acceptance boundary, not an arbitrary Worker URL.
