@@ -55,7 +55,7 @@ Shared selectors use a documented `scnx-` class/data contract or locally scoped 
 
 Selectors contain no ID selectors, no type-qualified classes such as `button.card`, at most specificity `0,4,0`, at most three compound selectors, and at most two levels of nesting.
 
-Public multi-brand themes use `[data-scnx-theme="<theme-id>"]`. A separate `:root` compatibility stylesheet may serve a single-brand document and is excluded from multi-brand and federated support. Theme portals mount inside the originating theme container. Shadow DOM is outside the v1 UI Platform contract.
+Public multi-brand themes use `[data-scnx-theme="<theme-id>"][data-scnx-resolved-mode="<mode>"]`. A separate `:root` compatibility stylesheet may serve a single-brand document and is excluded from multi-brand and federated support. Theme portals mount inside the originating theme container. Shadow DOM is outside the v1 UI Platform contract.
 
 `@layer` controls precedence and never substitutes for selector scope.
 

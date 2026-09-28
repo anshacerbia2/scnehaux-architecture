@@ -83,6 +83,27 @@ designs live in the UI repository with `parent_sad: SAD-003`.
 The physical implementation may evolve, but it must preserve PAD-owned logical
 contracts and the public compatibility surface declared by a release.
 
+### 2.1 Document topology and authority
+
+The UI Platform uses one normative design hierarchy and one deliberately small
+project-repository execution set:
+
+| Location                    | Artifact                                                                  | Authority boundary                                                                            |
+| :-------------------------- | :------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------- |
+| `scnehaux-architecture`     | GDC, EAD, PAD, SAD, ADR, STD, and Technology Radar                        | Enterprise, capability, system, decision, and standard authority according to lifecycle state |
+| `ui-platform/docs/designs/` | Exactly the five TDDs attached to `SAD-003`                               | Component design and implementation contract                                                  |
+| `ui-platform/PLAN.md`       | Ordered work, accountable role, decision authority, and binary acceptance | Execution control only; cannot approve architecture or release                                |
+| `ui-platform/ROADMAP.md`    | Phase state, target date, dependency, and exit gate                       | Delivery milestone control only                                                               |
+| `ui-platform/docs/reviews/` | One non-normative record per review round or reviewed object              | Audit trail and finding disposition only                                                      |
+| `ui-platform/README.md`     | Links to the preceding authorities and developer entry points             | Navigation only                                                                               |
+
+The project repository must not introduce a second architecture source of truth,
+decision register, working-consensus document, ratification manifest, local
+schema fork, or narrative migration authority. Package-adjacent Markdown is
+implementation commentary and cannot override the central architecture, TDDs,
+PLAN, or ROADMAP. Review records are split per round or object; combining
+independent reviews into one mutable narrative is prohibited.
+
 ## 3. Solution Context
 
 ### 3.1 System Context
@@ -382,7 +403,7 @@ publication is reconciled by version and digest before retry.
 
 ## 10. Architecture Decisions
 
-The accepted target has two packages, three logical token tiers, explicit
+The proposed target has two packages, three logical token tiers, explicit
 exports, composition-root CSS loading, scoped theme roots, native/custom simple
 primitives, selected hidden implementation hooks for complex widgets, and
 scenario-qualified evidence. Federation remains conditional and does not change

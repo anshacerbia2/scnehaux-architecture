@@ -41,7 +41,7 @@ Tier-3 aliases are justified by independent component semantics, not by an arbit
 
 ### 3.4 Themes and outputs
 
-Every supported theme MUST define or inherit all public semantic variables it uses below `[data-scnx-theme]`. Token aliases MUST resolve in the emitted artifact and supported browser scenarios, including alpha colors, shadows, and fonts. A theme MAY be partial only when its inheritance and scope are explicit. Color conformance uses actual foreground/background pairs and WCAG 2.2 SC 1.4.3/1.4.11 targets.
+Every supported theme MUST define or inherit all public semantic variables it uses below `[data-scnx-theme][data-scnx-resolved-mode]`. Token aliases MUST resolve in the emitted artifact and supported browser scenarios, including alpha colors, shadows, and fonts. A theme MAY be partial only when its inheritance and scope are explicit. Color conformance uses actual foreground/background pairs and WCAG 2.2 SC 1.4.3/1.4.11 targets.
 
 ### 3.5 Cross-platform contract
 

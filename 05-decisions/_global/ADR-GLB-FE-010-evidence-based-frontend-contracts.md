@@ -53,7 +53,7 @@ The coherent frontend contract is:
 1. Governed shared visual decisions use semantic tokens. Reviewed structural literals remain valid where a token would misrepresent intent.
 2. Performance requirements identify the scenario, environment, tool, representation, baseline, and threshold; user-facing pages meet the Core Web Vitals "good" thresholds at the 75th percentile.
 3. The canonical cascade order is `reset, tokens, base, components, recipes, utilities, overrides`.
-4. Public multi-brand themes use scoped `[data-scnx-theme]` roots; portals stay inside their originating scope.
+4. Public multi-brand themes use scoped `[data-scnx-theme][data-scnx-resolved-mode]` roots; portals stay inside their originating scope.
 5. Shared UI styling produces static CSS (ADR-GLB-FE-013).
 6. Module Federation follows the runtime contract in ADR-GLB-FE-012, compiled with the toolchain in ADR-GLB-FE-011.
 7. WCAG 2.2 SC 1.4.3 governs text contrast and SC 1.4.11 governs non-text contrast; focus indicators are outlines.
@@ -119,7 +119,7 @@ Status values: **Retained** (same obligation), **Restored** (dropped in the firs
 | No layout thrashing in CSS-driven measurement                                                                 | Moved     | STD-GLB-FE-002                                                                                                        |
 | Ad-hoc custom properties prohibited                                                                           | Restored  | §3.2                                                                                                                  |
 | Token ownership by the Token Review Board                                                                     | Changed   | Token Lead role in the UI Platform SOT                                                                                |
-| Theme switching on `<html>`                                                                                   | Changed   | Scoped `[data-scnx-theme]` roots (§3.3)                                                                               |
+| Theme switching on `<html>`                                                                                   | Changed   | Scoped `[data-scnx-theme][data-scnx-resolved-mode]` roots (§3.3)                                                      |
 | Semantic z-index tokens; integer z-index prohibited                                                           | Restored  | §3.2                                                                                                                  |
 | Prefer transform and opacity; tokenized easing                                                                | Changed   | Dimension animation allowed with interruption, timeout, and trace evidence (§3.8)                                     |
 | Third-party widgets isolated with Shadow DOM or `all: initial`                                                | Changed   | Isolated adapter with documented inputs (§4)                                                                          |

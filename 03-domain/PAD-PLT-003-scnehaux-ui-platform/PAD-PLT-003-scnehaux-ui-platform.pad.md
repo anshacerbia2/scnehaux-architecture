@@ -16,6 +16,12 @@ doc_meta:
 
 # Enterprise UI Platform
 
+> **Revision 1.4.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, the previously ratified PAD revision remains binding until the
+> authorized human authority approves the exact commit containing this revision.
+> The existing `approved` lifecycle value does not pre-approve these edits, and
+> `last_reviewed` is updated only in the ratification commit or manifest.
+
 ## 1. Purpose & Scope
 
 The UI Platform supplies reusable visual semantics, accessible interaction
