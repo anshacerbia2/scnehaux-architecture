@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-003
   title: Architecture Review Process
   owner: Architecture Authority
-  version: 1.0.0
+  version: 2.0.0
   status: approved
   classification: internal
   governed_by: [GDC-000]
   review_cycle_days: 90
   created_date: 2026-01-01
-  last_reviewed: 2026-07-06
+  last_reviewed: 2026-09-28
 ---
 
 # Architecture Review Process
@@ -166,16 +166,11 @@ Di dalam ekosistem Scnehaux, status `reviewed` TIDAK SAMA dengan `updated`. Sebu
 3. **`last_reviewed` (Wajib HANYA untuk dokumen Aktif/Final)**: Tanggal dokumen terakhir diaudit/disetujui.
    - _Tujuan_: Untuk mendeteksi dan mencegah _Architecture Rot_ (desain yang basi). Dokumen `active` harus di-review secara berkala (misal tiap 6-12 bulan).
 
-### 4.2 Paradigma CI/CD untuk "Draft"
+### 4.2 CI/CD for Draft and Proposed Documents
 
-Konsep _Docs as Code_ menuntut kolaborasi sedini mungkin. Jika _draft_ dilarang masuk ke `main`, _engineer_ akan menahan dokumen tersebut di _local branch_ mereka, mengurangi transparansi dan kolaborasi antar tim. Oleh karena itu, dokumen `draft` **BOLEH dan SANGAT DISARANKAN** di-merge ke `main`.
+`draft` enables early collaboration. The linter skips full content validation, emits an INFO result, and enforces the 30-day limit from the immutable `created_date`.
 
-Konsep CI/CD Rule-nya adalah:
-
-1. **Pengecualian Linter (INFO)**: Saat sebuah PR berisi dokumen berstatus `draft`, CI Linter akan men-_skip_ aturan-aturan ketat (seperti jumlah kata minimal, larangan kata-kata ambigu, kelengkapan arsitektur). CI akan mengembalikan warna hijau (PASS) dengan pesan `INFO: Document validation skipped due to exempt status: 'draft'`.
-2. **Anti-Evasion Mechanism (ERROR / CRITICAL)**: _Draft_ boleh diam di `main`, **TETAPI** tidak boleh berjamur! Kita mematok parameter `max_draft_age_days = 30`.
-   - Linter akan mengecek: `Hari Ini - created_date`.
-   - Jika `> 30 Hari`, CI akan meledak (`ERROR`/`CRITICAL`) memblokir _pipeline_. Ini secara sistematis memaksa _Approver/Author_ untuk mem-_finalize_ dokumen (ubah status dari `draft` ke `active`) atau menghapus dokumennya jika inisiatif tersebut batal.
+`proposed` means the author considers the artifact ready for formal review. The linter runs complete metadata, structure, content, traceability, and technology checks. Proposed status carries no production authority and receives no draft-age exemption. Reviewers therefore evaluate the exact shape that will become active without marking the document approved before human authorization.
 
 ---
 

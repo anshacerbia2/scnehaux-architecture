@@ -9,11 +9,9 @@ doc_meta:
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
-  governed_by:
-    - GDC-000
-    - GDC-010
+  governed_by: [ADR-UIP-PLT-001]
   references:
-    - DOC-P002
+    - PAD-PLT-003
 ---
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
@@ -28,7 +26,7 @@ This standard defines the architecture, compilation pipeline, consumption contra
 
 It defines how visual properties are structured and compiled. Consistency across products depends on tested package output, supported themes, and consumer adoption.
 
-**Authoritative Source**: This document is the single source of truth for all token standards. The Product Architecture Document (PAD-PLT-002) references this document for governance details and must not replicate these rules.
+**Authoritative Source**: This document is the normative token standard under PAD-PLT-003. ADR-UIP-TKN-003 owns the canonical taxonomy rationale.
 
 ## 2. Design Principles
 
@@ -48,8 +46,10 @@ The design token architecture is governed by four core principles to ensure cros
 The platform enforces a strict **3-Tier Token Architecture**:
 
 1. **Tier 1 (Core Primitives)**: Raw scales and values, including color, spacing, typography, and motion. Components and applications do not consume them directly. Sass is the current authoring implementation, not a permanent architectural requirement.
-2. **Tier 2 (Global Semantic Contract)**: Semantic tokens (`--ds-{scheme}-{role}-{emphasis}-{state}`) are the default shared consumption layer. Declared role/state compatibility limits the matrix.
-3. **Tier 3 (Component Tokens)**: Component-bound aliases are justified and reviewed by purpose, without a fixed numeric quota.
+2. **Tier 2 (Global Semantic Contract)**: Color uses `color.{scheme}.{role}.{emphasis}.{state}`. Dimension, typography, and motion use `{domain}.{property}.{intent}`. Declared role/state compatibility limits the color matrix.
+3. **Tier 3 (Component Tokens)**: Component aliases use `{component}.{element?}.{property}.{state?}` and require independent semantic intent.
+
+CSS output prefixes `--ds-` and converts logical path separators to hyphens. For example, `color.primary.solid.default.default` emits `--ds-color-primary-solid-default-default`.
 
 #### The State Compatibility Invariant
 
@@ -82,8 +82,8 @@ The current implementation generates color values using Sass maps and a compile-
 
 The platform supports multi-theme and multi-brand white-label capabilities under a strict cascading model:
 
-1. **Baseline Theme**: The default theme supplies required semantic variables. Current `:root` output is a migration item because it may affect unrelated remotes; the target contract scopes variables to a declared root.
-2. **Cascading Overrides**: Brand themes (e.g., `achromatic`) may override a documented subset within that root. Selector scoping versus Shadow DOM remains an open decision until a two-brand consumer test is evaluated.
+1. **Baseline Theme**: Every public theme supplies required variables below `[data-scnx-theme="<theme-id>"]`. A separate `:root` compatibility output MAY serve a single-brand document.
+2. **Cascading Overrides**: Brand themes (for example `achromatic`) may override a documented subset within that scoped root. Shadow DOM is outside v1.
 3. **Partial Contract Invariant**: An override may define fewer keys than the baseline. It must document inheritance and any additional public keys. Compile-time map checks do not alone prove CSS selector isolation or valid computed values.
 
 #### Build-Time Contract Validation
@@ -172,17 +172,17 @@ To prevent unbounded aliases, the platform reviews their semantics and reuse:
 
 #### Alias Naming Convention
 
-All Tier-3 component aliases must follow the convention:
+All Tier-3 logical aliases follow:
 
 ```
---ds-[component]-[role]-[state]
+{component}.{element?}.{property}.{state?}
 ```
 
 Examples:
 
-- `--ds-btn-surface-hover`
-- `--ds-badge-border-selected`
-- `--ds-input-text-disabled`
+- `button.surface.hover` → `--ds-button-surface-hover`
+- `checkbox.indicator.color.checked` → `--ds-checkbox-indicator-color-checked`
+- `input.root.border.focus` → `--ds-input-root-border-focus`
 
 ---
 

@@ -1,7 +1,7 @@
 # tech-radar.yaml — Enterprise Technology Radar
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
-# Last updated: 2026-08-24
+# Last updated: 2026-09-28
 
 technology_radar:
   adopt:
@@ -70,6 +70,12 @@ technology_radar:
       owner: Platform Engineering
       rationale_std: STD-GLB-003
 
+    - name: module-federation
+      category: frontend-architecture
+      date_adopted: "2026-09-28"
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-004
+
   trial:
     - name: rust
       category: systems-language
@@ -90,7 +96,42 @@ technology_radar:
       date_entered: "2026-02-01"
       owner: UI Platform Team
       rationale_adr: ADR-UIP-TKN-002
-      trial_end_date: "2026-08-01"
+      trial_end_date: "2026-10-28"
+
+    - name: sass
+      category: css-preprocessor
+      date_entered: "2026-09-28"
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-006
+      trial_end_date: "2026-10-28"
+
+    - name: panda-css
+      category: css-generator
+      date_entered: "2026-09-28"
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-006
+      trial_end_date: "2026-10-28"
+
+    - name: tsup
+      category: javascript-build-tool
+      date_entered: "2026-09-28"
+      owner: UI Platform Team
+      rationale_adr: ADR-UIP-PLT-001
+      trial_end_date: "2026-10-28"
+
+    - name: vitest
+      category: test-runner
+      date_entered: "2026-09-28"
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-007
+      trial_end_date: "2026-10-28"
+
+    - name: playwright
+      category: browser-test-runner
+      date_entered: "2026-09-28"
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-007
+      trial_end_date: "2026-10-28"
 
   assess:
     - name: wasm
@@ -103,9 +144,19 @@ technology_radar:
       date_entered: "2026-06-01"
       owner: UI Platform Team
 
-    - name: module-federation
-      category: frontend-architecture
-      date_entered: "2026-01-15"
+    - name: react-aria
+      category: accessibility-library
+      date_entered: "2026-09-28"
+      owner: UI Platform Team
+
+    - name: vite
+      category: frontend-build-tool
+      date_entered: "2026-09-28"
+      owner: UI Platform Team
+
+    - name: dtcg-design-tokens
+      category: interchange-standard
+      date_entered: "2026-09-28"
       owner: UI Platform Team
 
   hold:

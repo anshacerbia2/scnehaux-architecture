@@ -6,6 +6,7 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: public
+  governed_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -27,7 +28,7 @@ Shared visual decisions use semantic names so a theme can change a value without
 
 ### 3.1 Consumption boundary
 
-Shared components and product styling MUST use Tier-2 semantic tokens for governed color, typography, spacing, radius, shadow, and motion decisions. Tier-1 values are implementation inputs, not a public shortcut. Context-specific numerical values, intrinsic sizing, and values without a meaningful shared semantic role MAY be used when documented and reviewed; an absolute ban on every raw dimension would prevent ordinary responsive layout.
+Shared components and product styling MUST use Tier-2 semantic tokens for governed color, typography, spacing rhythm, radius, shadow, z-index, and motion decisions. Tier-1 values are implementation inputs. Context-specific structural values, intrinsic sizing, percentages, responsive calculations, and values without a reusable semantic role MAY be used when their purpose is documented; they MUST NOT duplicate or bypass an existing token.
 
 ### 3.2 Semantic use
 
@@ -39,7 +40,7 @@ Tier-3 aliases are justified by independent component semantics, not by an arbit
 
 ### 3.4 Themes and outputs
 
-Every supported theme MUST define or inherit all public semantic variables it uses. Token aliases MUST resolve in the emitted artifact and supported browser scenarios, including alpha colors, shadows, and fonts. A theme MAY be partial only when its inheritance and scope are explicit. Color conformance is measured on actual foreground/background pairs and states.
+Every supported theme MUST define or inherit all public semantic variables it uses below `[data-scnx-theme]`. Token aliases MUST resolve in the emitted artifact and supported browser scenarios, including alpha colors, shadows, and fonts. A theme MAY be partial only when its inheritance and scope are explicit. Color conformance uses actual foreground/background pairs and WCAG 2.2 SC 1.4.3/1.4.11 targets.
 
 ### 3.5 Cross-platform contract
 

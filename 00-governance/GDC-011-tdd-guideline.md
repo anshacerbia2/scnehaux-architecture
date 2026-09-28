@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-011
   title: Technical Design Document (TDD) Guideline
   owner: Architecture Authority
-  version: 1.1.0
+  version: 2.0.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-26
+  last_reviewed: 2026-09-28
 ---
 
 # Technical Design Document (TDD) Guideline
@@ -24,22 +24,16 @@ TDDs represent the component-level (C3) blueprints, API contracts, ERDs, securit
 
 ### 2.1 Directory Taxonomy
 
-- **Requirement**: TDDs are owned by the System/deployable they implement. A single-System repository uses `<repo>/docs/02-designs/`; a repository containing multiple independently governed Systems uses `<system-root>/docs/02-designs/`. A repository-level shared TDD folder MUST NOT mix designs from different parent SADs.
+- **Requirement**: Project-repository TDDs reside under repository-root `docs/designs/`, which matches GDC-000, ADR-GLB-009, and the executable schema. `parent_sad` and the document ID carry System ownership. A multi-System repository may use one flat folder or one child folder per System while remaining within the configured depth.
 
 **Example Directory Structure:**
 
 ```text
-notification-platform/               # Multi-System repository
-├── runtime/                         # Parent SAD boundary
-│   └── docs/
-│       └── 02-designs/
-│           └── delivery-runtime/
-│               └── TDD-notif-runtime-001-delivery-runtime.md
-└── experience/                      # Separate parent SAD boundary
-    └── docs/
-        └── 02-designs/
-            └── browser-boundary/
-                └── TDD-notif-experience-001-browser-boundary.md
+notification-platform/
+└── docs/
+    └── designs/
+        ├── TDD-notif-runtime-001-delivery-runtime.md
+        └── TDD-notif-experience-001-browser-boundary.md
 ```
 
 ### 2.2 The Schema Architecture
@@ -83,7 +77,7 @@ TDDs are **single, cohesive documents** (`TDD-[REPO]-[COMPONENT].md`). **The Coh
 
 #### 2.3.3 Directory Structure
 
-Must reside in `docs/02-designs/` adjacent to the owning System/deployable source root. Repository-root `docs/02-designs/` is valid only when the repository represents one System/deployable. In multi-System repositories, each System/deployable owns its own `<system-root>/docs/02-designs/` namespace.
+Must reside under repository-root `docs/designs/`. The filename and `parent_sad` identify the owning System. This rule intentionally matches `base.schema.json` and ADR-GLB-009 so the central crawler validates every design.
 
 #### 2.3.4 Metadata Schema Properties
 
@@ -161,7 +155,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 TDDs are ephemeral. Their lifecycle must follow the **Ephemeral TDD Matrix**:
 
-- **Class A (Strategic Transition)**: Designs governing core architectural shifts, major security FSMs, or schema migrations. Once fully implemented in production, their metadata `status` is transitioned to `deprecated` and the physical file is moved to `docs/02-designs/historical/` to serve as a permanent forensic audit trail.
+- **Class A (Strategic Transition)**: Designs governing core architectural shifts, major security FSMs, or schema migrations. Once fully implemented in production, their metadata `status` is transitioned to `deprecated` and the physical file is moved to `docs/designs/historical/` to serve as a permanent forensic audit trail.
 - **Class B (Component & Feature Detail)**: Standard feature implementation layouts. The final API contract is moved to the Source Code (e.g., OpenAPI/Swagger) and the physical TDD file is deleted once verified in production. They must **never** be folded into the SAD to prevent C3 detail pollution in C2 documents.
 - **Class C (Exploratory & Spike)**: Prototype or exploratory designs. Deleted immediately after the Pull Request merges.
 

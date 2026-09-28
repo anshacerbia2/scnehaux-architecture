@@ -3,103 +3,91 @@ doc_meta:
   id: STD-GLB-FE-009
   title: Enterprise Accessibility & Internationalization Standard
   owner: Principal Frontend Architect
-  version: 1.0.0
-  status: approved
+  version: 2.0.0
+  status: proposed
   classification: restricted
+  governed_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-31
+  last_reviewed: 2026-09-28
 ---
 
 # Enterprise Accessibility & Internationalization Standard (STD-GLB-FE-009)
 
----
+> **Review candidate:** ADR-GLB-FE-010 must be accepted before this major revision becomes active.
 
 ## 1. Objective & Scope
 
-This standard defines the mandatory requirements for Universal Access across the Scnehaux enterprise frontend ecosystem. It combines two closely related architectural domains:
+This standard defines accessibility, internationalization, localization, directionality, and evidence requirements for user-facing web products and shared UI components.
 
-1. **Accessibility (a11y)**: Ensuring applications are fully usable by individuals with disabilities, including those relying on screen readers, keyboard-only navigation, and specialized display modes.
-2. **Internationalization (i18n) & Localization (l10n)**: Ensuring applications can adapt dynamically to varying languages, regional formats, and reading directions without requiring codebase forks.
-
-The scope of this standard applies to:
-
-- **Design Tokens**: Governing color contrast math (e.g., OKLCH lightness thresholds) and spacing minimums for touch targets.
-- **Primitive Components**: Serving as the absolute baseline for ARIA semantics, focus trapping, and keyboard event matrices.
-- **Application Layouts**: Defining logical document structure, semantic landmarks, and rendering order.
-- **Content Strings**: Governing the externalization and pluralization of user-facing text.
-
----
+Complete WCAG 2.2 conformance is evaluated on a full page or product flow. Shared components publish evidence for the criteria and states they own through a Component Accessibility Conformance Report.
 
 ## 2. Design Principles
 
-- **Inclusive by Default**: Accessibility is not a feature or a post-launch enhancement; it is a foundational human right and a legal compliance requirement. Features that cannot be navigated via keyboard or screen reader are considered broken.
-- **Semantic First**: The browser's native HTML elements are inherently accessible. ARIA attributes must only be used as a last resort to patch gaps in native HTML semantics or to describe complex interactive widgets.
-- **Cultural Agnosticism**: Application logic must remain decoupled from specific languages, currencies, or timezones. Code must rely on standard `Intl` APIs and externalized translation dictionaries.
-
----
+1. Native HTML semantics are the first implementation choice.
+2. Widget behavior follows the applicable WAI-ARIA Authoring Practices pattern where native HTML is insufficient.
+3. Accessibility evidence includes keyboard, focus, name/role/value, visual presentation, and assistive technology.
+4. Content, formatting, and layout support declared locales and writing directions.
+5. Automated audits supplement manual evaluation.
 
 ## 3. Normative Rules
 
-### 3.1 WCAG Compliance Tier
+### 3.1 Conformance target and ownership
 
-- All user-facing web interfaces must achieve strict compliance with the **WCAG 2.2 AA** standard.
-- Compliance with WCAG 2.2 AAA is aspirational for public portals but not strictly enforced across internal dashboards unless dictated by specific government contracts.
+User-facing product pages target WCAG 2.2 Level AA. Product teams evaluate complete content and workflows. Shared component owners test applicable criteria across supported states and document consumer responsibilities.
 
-### 3.2 Semantic HTML & ARIA Governance
+A Component ACR is evidence for a component. VPAT-based reporting is reserved for an evaluated product or procurement scope.
 
-- **Native Elements**: Developers must prioritize native HTML elements (e.g., `<button>`, `<dialog>`, `<nav>`) over building custom ARIA-role div constructs (e.g., `<div role="button">`).
-- **No ARIA Abuse**: The first rule of ARIA is: _No ARIA is preferable to bad ARIA_. Incorrectly applied ARIA attributes that conflict with native semantics are strictly prohibited.
-- **Live Regions**: Dynamic UI updates that do not trigger focus shifts (e.g., toast notifications, form submission success messages) must utilize `aria-live` regions to announce changes to assistive technologies.
+### 3.2 Semantics, keyboard, and focus
 
-### 3.3 Keyboard Navigation & Focus Engineering
+Interactive elements use native elements where their semantics and behavior fit. Custom composite widgets document their applicable APG pattern, focus model, required and optional keys, typeahead, disabled behavior, and controlled/uncontrolled state.
 
-- **Focus Indicators**: All interactive elements must implement clear focus indicators using `:focus-visible`. Disabling focus outlines (`outline: none`) without providing a visible, compliant alternative is a critical violation.
-- **Focus Trapping**: Modals, dialogs, and intrusive overlays must trap keyboard focus within the overlay until closed.
-- **Focus Restoration**: Upon closing an overlay or modal, the browser focus must automatically return to the exact element that triggered the overlay.
+Every operable element is reachable and usable with the keyboard. Focus indicators satisfy WCAG 2.2 SC 2.4.7 and SC 2.4.11 where applicable. Dialogs and other modal overlays contain focus according to their pattern and restore focus to a valid target on close.
 
-### 3.4 Screen Reader Support
+Icon-only controls expose an accessible name. Dynamic announcements use an appropriate live region. Decorative images use empty alternative text.
 
-- **Hidden Labels**: Icon-only buttons or visual-only indicators must provide visually hidden text (`.sr-only`) or descriptive `aria-label` attributes for screen reader consumption.
-- **Decorative Images**: Images that do not convey essential information must utilize empty alt attributes (`alt=""`) to remove them from the accessibility tree.
+### 3.3 Contrast and color
 
-### 3.5 Assistive Display Modes
+- Normal text meets WCAG 2.2 SC 1.4.3 at 4.5:1.
+- Large-scale text meets SC 1.4.3 at 3:1.
+- User interface components and meaningful graphical objects meet SC 1.4.11 at 3:1 against adjacent colors.
+- Focus indicators meet their applicable WCAG 2.2 contrast and area requirements.
+- Color is not the sole means of conveying information.
 
-- **Reduced Motion (`prefers-reduced-motion`)**: All layout-shifting animations and continuous loops must be disabled or replaced with crossfades when the user's OS requests reduced motion.
-- **Forced Colors Mode**: Applications must remain visually usable and structurally intact under forced-colors mode (`@media (forced-colors: active)`), ensuring borders and SVGs do not disappear in high-contrast environments.
-- **Contrast Ratios**: Text and interactive elements must maintain a minimum contrast ratio of 4.5:1 against their backgrounds.
+Tests use actual foreground/background pairs after alpha composition in each supported theme and state. OKLCH or APCA measurements may provide additional design evidence and do not replace the published WCAG 2.2 release target.
 
-### 3.6 Translation Key Abstraction (i18n)
+### 3.4 Reflow, target size, and display preferences
 
-- **No Hardcoded Strings**: Hardcoding user-facing text strings directly inside component logic or templates is strictly prohibited. All strings must be extracted to dictionary files and accessed via a localization hook/function (e.g., `t('auth.login.submit')`).
+Content covered by WCAG 2.2 SC 1.4.10 reflows at 320 CSS px without two-dimensional scrolling, subject to the criterion's exceptions. Pointer targets satisfy SC 2.5.8 at 24 by 24 CSS px or one of its defined exceptions.
 
-### 3.7 Pluralization & Locale-Aware Formatting
+Supported UI remains usable under text zoom, browser zoom, forced-colors mode, and `prefers-reduced-motion`. Reduced-motion behavior removes or substitutes non-essential motion while preserving state communication.
 
-- **ICU MessageFormat**: Complex string interpolation involving plurals, gender, or grammatical cases must utilize the ICU MessageFormat standard. Manual string concatenation or ternary operators for plurals are prohibited.
-- **Formatting APIs**: Applications must rely exclusively on the native `Intl` browser APIs (`Intl.DateTimeFormat`, `Intl.NumberFormat`, `Intl.RelativeTimeFormat`) for formatting dates, times, and currencies. Custom formatting logic is prohibited.
+### 3.5 Assistive technology evidence
 
-### 3.8 RTL & Bidirectional Layout
+Stable composite widgets receive manual checks with NVDA and VoiceOver for the supported browser matrix. The record includes component version, browser, operating system, assistive-technology version, scenario, expected announcement, actual result, and known limitation.
 
-- **Logical CSS Properties**: CSS stylesheets must use logical properties (e.g., `margin-inline-start`, `padding-block-end`) rather than physical directional properties (`margin-left`, `padding-bottom`) to ensure automatic layout mirroring for Right-to-Left (RTL) languages like Arabic and Hebrew.
+Automated tools such as axe detect a subset of failures and cannot close manual behavior gates.
 
----
+### 3.6 Internationalization and localization
+
+User-facing strings come from locale resources. Pluralization and grammatical variants use ICU MessageFormat or an equivalent approved message system. Dates, numbers, relative time, lists, and currencies use `Intl` APIs with an explicit locale and time-zone policy.
+
+Components use logical CSS properties and support declared left-to-right and right-to-left layouts. Public APIs accept localized labels and do not assemble sentences from fragments that translators cannot reorder.
+
+### 3.7 Language and content boundaries
+
+Pages declare their primary language and mark language changes where required. Validation, status, and error messages are programmatically associated with the relevant control. Truncation provides an accessible path to the complete meaningful value.
 
 ## 4. Exceptions
 
-Exceptions are granted exclusively when strict compliance with a normative rule introduces disproportionate technical, accessibility, or business risk.
-
-### Exception to "Semantic HTML Foundations" (Rule 3.1)
-
-- **Condition for Deviation**: You are integrating a highly complex imperative widget (e.g., custom data grids or canvas-based editors) that lacks a native HTML equivalent.
-- **Mandatory Alternative**: Native ARIA role overrides are permitted, provided the implementation perfectly mirrors the exact keyboard interaction and focus matrix defined in the WAI-ARIA Authoring Practices Guide (APG).
-
-### Exception to "Dynamic DOM Traversal Limits" (Rule 3.3)
-
-- **Condition for Deviation**: A high-density data application (e.g., trading terminals) requires rendering 10,000+ nodes where strict ARIA DOM mapping causes severe screen-reader traversal hangs.
-- **Mandatory Alternative**: You may bypass strict ARIA mapping on the primary visual interface _only if_ a fallback, visually hidden Accessible Data Table view is provided in parallel exclusively for assistive technologies.
+Canvas, virtualized, or specialized widgets without a native equivalent may use a custom accessibility representation. The implementation must provide the required name, role, value, keyboard model, focus behavior, and an equivalent accessible view when the visual surface cannot expose the content.
 
 ## 5. Enforcement Mechanism
 
-- **Automated A11y Audits**: CI/CD pipelines must execute automated accessibility assertion tools (e.g., `axe-core`) against component libraries and critical application routes. PRs introducing new WCAG violations will be blocked.
-- **Translation Coverage**: Build tools must fail the compilation step if unresolved translation keys or missing locale dictionaries are detected.
-- **Waiver Protocol**: Deviations from this standard must be documented in a local project ADR. The Architecture Review Board (ARB) must respond with a review decision within **5 business days** of the ADR submission.
+- Source and interaction tests validate semantics, ARIA state, keyboard behavior, focus, and cleanup.
+- Browser tests cover reflow, target size, themes, reduced motion, forced colors, direction, and declared contrast pairs.
+- Automated accessibility scans run on components and critical product routes.
+- Manual NVDA and VoiceOver evidence is required for stable composite widgets.
+- Product release review evaluates full-page WCAG 2.2 conformance and known limitations.
+
+A missing required scenario blocks stable promotion for the affected component or product flow.

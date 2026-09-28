@@ -12,7 +12,7 @@ class SADValidator(BaseValidator):
         - Validates the mandatory `parent_pad` field, ensuring the system maps to a recognized platform.
         - Checks that the referenced PAD exists in the repository.
         - Checks that the referenced PAD declares this SAD in its `fulfilled_by` array.
-        - Prevents an active SAD (`draft` or `approved`) beneath a non-approved PAD.
+        - Prevents an active SAD (`draft`, `proposed`, or `approved`) beneath a non-approved PAD.
         """
         if not self.doc_meta:
             return
@@ -58,10 +58,13 @@ class SADValidator(BaseValidator):
             sad_status = str(self.doc_meta.get("status", "")).lower()
             pad_status = str(pad_meta.get("status", "")).lower()
 
-            if sad_status in {"draft", "approved"} and pad_status != "approved":
+            if (
+                sad_status in {"draft", "proposed", "approved"}
+                and pad_status != "approved"
+            ):
                 self.add_error(
                     "traceability_violation",
                     f"SAD '{self_id}' has status '{sad_status}' but parent PAD '{pad_id}' has status '{pad_status or 'unknown'}'. "
-                    "A SAD may enter 'draft' or 'approved' only when its parent PAD is 'approved'. "
+                    "A SAD may enter 'draft', 'proposed', or 'approved' only when its parent PAD is 'approved'. "
                     "Keep the SAD 'chartered' until the PAD is promoted.",
                 )

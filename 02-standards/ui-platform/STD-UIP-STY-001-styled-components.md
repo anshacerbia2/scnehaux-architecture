@@ -6,6 +6,7 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
+  governed_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -41,7 +42,7 @@ The styling and compilation engine adheres to four core principles to ensure ren
 All styling engines deployed within the UI platform (such as static CSS-in-JS engines or Sass/SCSS compilers) must compile styles statically during the application build phase.
 
 - **Prohibition of Runtime CSS-in-JS**: Using styling libraries that perform runtime style injection or dynamic evaluation in the React render path (such as legacy runtime CSS-in-JS libraries) is prohibited on performance-sensitive paths.
-- **Output contract**: SCSS component rules and Panda recipes MAY coexist while they have named ownership, a single token contract, deterministic cascade order, and a measured cost. `@scnx/system` exports aggregate component CSS plus explicit theme CSS. The composition root imports each once; component JavaScript and remotes MUST NOT auto-inject duplicates. Consolidation into one engine is a later measured decision.
+- **Output contract**: SCSS component rules and the existing Panda recipe surface coexist during P0. One versioned token source generates both contracts. Panda adds no new recipe ownership until the P0 exit review. `@scnx/system` exports one aggregate component stylesheet plus explicit theme stylesheets. The composition root imports each once; component JavaScript and remotes MUST NOT inject duplicates. Per-component CSS subpaths are outside v1.
 - **Producer boundary**: Panda generates assets in the producer workspace. `@scnx/core-ui` MUST remain style-engine agnostic; after verifying it has no Panda callsites, its source MUST NOT be a Panda scan input. Packed consumers MUST NOT run Panda to render shipped components.
 
 ---
@@ -50,13 +51,13 @@ All styling engines deployed within the UI platform (such as static CSS-in-JS en
 
 To prevent visual layout conflicts when multiple micro-frontends share the same browser DOM environment:
 
-- **Global Selector Prohibition**: A shared reset or theme must be scoped to `.scnx-root` or another documented root. `@layer` controls precedence but does not scope a selector. Unscoped element selectors and unconditional `:root` theme overrides cannot be treated as isolated in a federated DOM.
+- **Global Selector Prohibition**: Public multi-brand themes and resets use `[data-scnx-theme="<theme-id>"]`. A separate `:root` compatibility stylesheet MAY serve a single-brand document and is excluded from multi-brand/federated support. `@layer` controls precedence and does not scope a selector. Shadow DOM is outside v1.
 - **Prefix Isolation**: CSS class names must be prefixed uniquely based on the domain boundary:
   - Core design system: `scnx-` prefix.
   - Subdomain remotes: domain-specific prefixes (e.g. `scnx-hris-`, `scnx-fin-`).
 - **CSS Modules Naming**: CSS modules must resolve to hash-appended unique classes during compilation.
-- **Cascade contract**: The relative order of reset, tokens, component rules, recipes, and consumer overrides must be documented and tested. Component SCSS outside declared layers is measured for override conflicts.
-- **Theme coexistence**: Packed-package tests render two roots with distinct themes and check computed styles for leakage. A global callback or document-wide theme mutation cannot establish multi-brand isolation. Modal, tooltip, and other portal fixtures retain the originating theme through an explicit portal container/root.
+- **Cascade contract**: The exact order is `reset, tokens, base, components, recipes, utilities, overrides`. Sass components belong to `components`; Panda recipes belong to `recipes`; UI Platform rules outside a declared layer fail the release gate.
+- **Theme coexistence**: Packed-package tests render two roots with distinct themes and check computed styles for leakage. Modal, tooltip, and other portal fixtures mount inside the originating theme container.
 
 ---
 

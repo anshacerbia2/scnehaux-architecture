@@ -1,121 +1,100 @@
 ---
 doc_meta:
   id: STD-GLB-FE-007
-  title: Enterprise Micro Frontend Federation Standard
+  title: Enterprise Micro-Frontend Federation Standard
   owner: Principal Frontend Architect
-  version: 1.0.0
-  status: approved
+  version: 2.0.0
+  status: proposed
   classification: restricted
+  governed_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-21
+  last_reviewed: 2026-09-28
 ---
 
-# Enterprise Micro Frontend Federation Standard (STD-GLB-FE-007)
+# Enterprise Micro-Frontend Federation Standard (STD-GLB-FE-007)
 
----
+> **Review candidate:** ADR-GLB-FE-010 must be accepted before this major revision becomes active.
 
 ## 1. Objective & Scope
 
-This standard defines the integration boundaries, deployment contracts, remote dependency configurations, and cross-application communication rules for all federated portal applications (micro-frontends) built within the Scnehaux enterprise.
+This standard defines adoption criteria, host/remote ownership, shared-module identity, routing, CSS, communication, version compatibility, failure containment, and evidence for Module Federation systems.
 
-It guarantees that micro-frontends integrate without runtime collision, dependency mismatch, or layout degradation, utilizing **Module Federation** technologies for dynamic composition.
-
-### 1.1 Architecture Default: Monolithic SPA vs. Conditional Module Federation
-
-To avoid premature architectural complexity, shared dependency drift, and runtime latency overhead, the default architectural choice for all frontend applications is a **Monolithic Single Page Application (SPA)**.
-
-The adoption of a federated micro-frontend architecture utilizing **Module Federation** is conditional and only authorized when the following organizational and operational metrics are met:
-
-| Architectural Metric       | Monolithic SPA (Default)                                                             | Module Federation (Conditional Approval)                                            |
-| -------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| **Organizational Scale**   | $\le 3$ independent engineering teams.                                               | $> 3$ independent engineering teams.                                                |
-| **Deployment Autonomy**    | Deployment coordination overhead is minimal; teams can release on a shared pipeline. | Zero-coordinated deployments are required; teams must deploy updates independently. |
-| **Release Cadence**        | All components share a common release cycle and sprint schedule.                     | Teams operate on distinct release schedules and independent hotfix cycles.          |
-| **Blast Radius Isolation** | A failure in one section of the SPA is acceptable to trigger a full system rollback. | Operational failures must be strictly isolated to individual sub-features.          |
-
-Module Federation must **NOT** be adopted as a tooling standard for small teams or standardized systems where a monolithic codebase provides faster feedback loops and lower operational maintenance overhead.
-
----
+A standalone application remains the default while one team or coordinated release boundary can deliver it safely. Module Federation is justified when independently owned product areas require separate release and failure boundaries and the integration cost is accepted by the platform owner.
 
 ## 2. Design Principles
 
-All micro-frontend architectures must strictly adhere to the Supreme Frontend Governance principles:
-
-- **Separation of Concerns (HARD BOUNDARY)**: Remotes must be fully decoupled. Sharing business logic or state directly across federation boundaries is prohibited.
-- **Determinism Over Cleverness**: Build and deployment contracts must be explicit. Implicit dependency resolution across remotes leads to runtime chaos.
-- **Zero Waste System**: Federation must not result in duplicated runtime dependencies or inflated bundle sizes. The network cost must be strictly budgeted.
+1. The host owns composition, primary routing, shared-module policy, and cross-remote failure containment.
+2. Remotes own their feature UI and versioned public contracts.
+3. Shared identity is explicit and verified from built artifacts.
+4. Business authority and internal source do not cross remote boundaries.
+5. Runtime and payload budgets use named consumer scenarios.
 
 ## 3. Normative Rules
 
-### Micro Frontend Integration Contracts
+### 3.1 Adoption gate
 
-#### Host-Remote Boundary
+A system design records:
 
-- **Dynamic Imports**: Host applications must load remote micro-frontend entrypoints dynamically to prevent bundle blocking during initialization.
-- **Fail-Safe Loading**: Any runtime failure to download a remote entrypoint must be caught at the route boundary using isolated React Error Boundaries, allowing the host application shell to remain interactive.
-- **Routing Integration**: Remotes must export their sub-routing tables as declarative route configuration arrays rather than exposing self-managed routers, ensuring the host router owns the primary location state.
+- independently accountable teams and release cadences;
+- the coordination cost that federation removes;
+- required runtime composition;
+- host and remote deployment/rollback ownership;
+- failure and security boundaries;
+- the measured latency, payload, and operational cost of federation.
 
----
+Team count may inform the decision and is not a sufficient rule by itself.
 
-### Shared Dependency Governance
+### 3.2 Host and remote contract
 
-#### Strict Version Alignments
+The host dynamically loads remotes and contains load/render failures at route or feature boundaries. A missing remote leaves the shell and unrelated routes operable.
 
-- To prevent loading multiple instances of core runtime libraries in the browser context:
-  - **Singleton Dependencies**: `react`, `react-dom`, and `@tanstack/react-query` must be declared as singleton dependencies inside the Module Federation configuration.
-  - **Version Mismatches**: Remote containers must not run on a major React version different from the host shell container.
+The host owns primary location state. A remote exports routes or mount contracts through a versioned interface and does not install an independent top-level router over the host.
 
-#### Dynamic Container Isolation
+Every remote exposes build/version metadata. The host validates compatibility before activation and presents a controlled fallback for an incompatible remote.
 
-- Remotes must not alter or pollute global prototypes (`Object`, `Array`, `Window`) or overwrite shared global window context properties.
+### 3.3 Shared-module identity
 
----
+- `react` and `react-dom` are strict singleton shared modules.
+- Every supported package request carrying context or shared state is an explicit singleton key generated from the public export inventory.
+- `requiredVersion` equals the relevant manifest range.
+- Remotes remain lazy. Only the host may choose eager loading for an entry required before remote execution.
+- A shared package preserves one module identity across host and remotes.
+- The host handles unsatisfied required versions as a controlled integration failure.
 
-### Cross-Application Communication & Data Sharing
+Libraries with no required cross-remote identity remain ordinary remote dependencies unless measured duplication justifies sharing.
 
-#### Typed Event Routing
+### 3.4 CSS and DOM isolation
 
-- Cross-micro-frontend communication must be restricted to the centralized, type-safe event bus mechanism. Direct function references or global state access across boundary contexts is prohibited.
-- **Payload Schema Contracts**: All events routed through the EventBus must use strongly typed payloads defined in shared package contracts.
-- **Network IO Boundary**: Any data fetching or remote state synchronization triggered via cross-app communication must strictly adhere to **[STD-GLB-FE-010 (Data Access & Network)](STD-GLB-FE-010-data-access.md)**. Remotes must not implement rogue HTTP clients.
+The composition root imports shared UI component CSS and the selected theme CSS once. Remotes do not inject duplicate shared CSS. Remote-owned application styles use scoped selectors, documented cascade layers, and domain-specific prefixes or CSS Modules.
 
-#### Micro-Frontend Authentication Handoff
+Portals preserve their originating theme container. Remotes do not mutate global prototypes or undocumented `window` properties.
 
-- **Cookie-Based Token Sharing**: The host application and remote containers must access JWT access and refresh tokens via secure, `HttpOnly`, `SameSite=Lax` cookies bound to the enterprise parent domain.
-- **BroadcastChannel Handoff**: For sub-domains operating on separate origins, token updates or logout actions must propagate across active client tabs and remotes using a typed browser `BroadcastChannel` (e.g. `scnehaux_auth_sync`).
+### 3.5 Cross-application communication
 
-#### Contract Versioning & SemVer Check Invariants
+Cross-remote communication uses versioned typed contracts: host-owned context where identity is required, documented custom events, or a published contract package. A remote does not import another remote's internal source or access another domain's state store directly.
 
-- **Remote Version Export**: Every remote micro-frontend entrypoint must expose its build-anchored Semantic Versioning (SemVer) metadata (e.g., in a `remoteEntry.json` manifest).
-- **SemVer Compliance Verification**: The host shell must verify that the loaded remote's major version matches the designated dependency range in the host deployment config. If a major mismatch is detected, the host must block loading the remote and fall back to the last known stable cached build.
+Network calls follow STD-GLB-FE-010. Authentication credentials remain under the approved browser/BFF security model. A remote receives identity/session state through approved contracts and never reads `HttpOnly` cookie contents from JavaScript.
 
-#### Remote Bundle Budgets
+### 3.6 Failure and observability
 
-- **Bundle Budgets**: To prevent micro-frontends from degrading host page load speeds or violating [STD-GLB-FE-002 (Performance & Rendering)](./STD-GLB-FE-002-performance.md#451-core-web-vitals) metrics:
-  - _Remote Entrypoint Size_: The primary remote entrypoint bundle (`remoteEntry.js`) must not exceed `20KB` gzipped.
-  - _Initial Loaded Assets_: The initial shared bundle chunk of a remote must not exceed `150KB` gzipped.
-  - _Lazy Chunks_: Individual lazy-loaded asset chunks must not exceed `100KB` gzipped.
-- **Enforcement**: Build pipelines must verify these limits using automated bundle size analyzer tools.
+Remote loading, compatibility rejection, render failure, and timeout events emit approved telemetry with host, remote, version, route, and correlation identifiers. Error boundaries provide retry or navigation recovery. Cached fallback behavior is used only when integrity, compatibility, and staleness policies are defined.
 
----
+### 3.7 Performance budgets
+
+Each remote budget identifies the route/interaction, remote set, cold/warm cache, network/device profile, bundler/plugin, raw/minified/compressed representation, tool, baseline, and threshold.
+
+The evidence separates remote entry metadata, shared chunks, initial route assets, and lazy assets. No universal 20 KB, 100 KB, or 150 KB limit applies without a defined scenario and approved baseline.
 
 ## 4. Exceptions
 
-Exceptions are granted exclusively when strict compliance with a normative rule introduces disproportionate technical, accessibility, or business risk.
-
-### Exception to "Module Federation (No Iframes)" (Rule 3.1)
-
-- **Condition for Deviation**: You are migrating a legacy non-React monolith (e.g. AngularJS) or an older React 16 remote that cannot be upgraded to match the host shell's runtime environment.
-- **Mandatory Alternative**: Module Federation is strictly prohibited for the non-compliant remote. The remote must be fully isolated using a strict `<iframe>` boundary, and all cross-app communication must be bridged manually via a typed `postMessage` proxy to prevent global prototype pollution.
-
-### Exception to "Strict Bundle Size Limits" (Rule 3.3)
-
-- **Condition for Deviation**: A highly specialized internal-only remote micro-frontend (e.g., a massive data-processing grid) requires complex charting or vendor libraries that fundamentally exceed the 150KB limit.
-- **Mandatory Alternative**: The bundle size limits may be exceeded _only_ if the remote is guaranteed to not block the primary interactive shell's initialization (lazy-loaded), and objective profiler benchmarks prove that the host shell's INP and LCP remain unharmed.
+A legacy application that cannot share the host runtime may use a separately isolated document boundary with typed `postMessage` contracts, strict origin checks, sandbox policy, focus/navigation design, and an owned migration or retirement condition.
 
 ## 5. Enforcement Mechanism
 
-- **Configuration Audits**: CI/CD pipelines must audit bundler configuration files to ensure singleton dependency configurations are correctly established.
-- **Runtime Dependency Monitoring**: Browser logging must flag any occurrences of duplicate library initialization (e.g. multiple React instances loaded), feeding directly into the telemetry systems defined in **[STD-GLB-FE-004 (Observability & Telemetry)](STD-GLB-FE-004-observability.md)**.
-- **Waiver Protocol**: Custom federation configurations or remote dependency adjustments require a documented project ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.
+- Configuration analysis compares explicit singleton keys and `requiredVersion` values with manifests and the export inventory.
+- A host plus two packed remotes verifies one React/context identity, both load orders, lazy behavior, controlled version mismatch, remote unavailability, and rollback.
+- Browser tests assert one shared UI stylesheet set, scoped remote styles, and portal theme propagation.
+- Contract tests validate route, event, and version schemas.
+- Scenario reports enforce payload and runtime budgets.
+- Required integration fixtures that do not run block production adoption.

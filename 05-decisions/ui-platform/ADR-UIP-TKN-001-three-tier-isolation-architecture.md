@@ -3,15 +3,16 @@ doc_meta:
   id: ADR-UIP-TKN-001
   title: ADR-UIP-TKN-001 Three-Tier Design Token Isolation Architecture
   adr_type: foundational
-  status: accepted
+  status: proposed
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
+  governed_by: [PAD-PLT-003]
 ---
 
 # ADR-UIP-TKN-001: Adoption of a Three-Tier Design Token Architecture (Core, Semantic, Component) to Isolate Raw Visual Values from Semantic Intent.
 
-> **Pre-production review draft:** the three tiers remain the logical architecture. The current code has two physical packages; this ADR does not require a third package before release.
+> **Pre-production correction candidate:** the three tiers remain the logical architecture. This wording carries no authority until the UI Platform Lead records actual approval.
 
 ---
 
@@ -21,9 +22,9 @@ Adoption of a Three-Tier Design Token Architecture (Core, Semantic, Component) t
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status   | ADR Type     | Reviewers                                 | Approver                   |
+| ---------- | -------- | ------------ | ----------------------------------------- | -------------------------- |
+| 2026-09-28 | proposed | foundational | Consolidated principal review in progress | UI Platform Lead — pending |
 
 ## 3. Context
 
@@ -37,8 +38,8 @@ As the Scnehaux ecosystem scales across multiple standalone portals and federate
 
 This boundary separates the naming of a design value from the naming of its intended use. Correct theme output and consumer usage still require tests.
 
-- **Enterprise Theming:** A brand can remap `primary.solid.default` at Tier 2 when consumers use the semantic contract and the new theme passes visual and accessibility checks.
-- **Predictable Maintenance:** Developers consume contextual intent (`danger.surface.subtle`), making the reason for a color choice reviewable across themes.
+- **Enterprise Theming:** A brand can remap `color.primary.solid.default.default` at Tier 2 when consumers use the semantic contract and the new theme passes visual and accessibility checks.
+- **Predictable Maintenance:** Developers consume contextual intent (`color.danger.surface.subtle.default`), making the reason for a color choice reviewable across themes.
 
 ## 5. Decision
 
@@ -46,17 +47,17 @@ The UI Platform uses a **Three-Tier Design Token Isolation Architecture** for go
 
 ### Tier 1: Core Primitives (The Raw Values)
 
-- **Definition:** Pure, platform-agnostic mathematical scales without any UI context (e.g., `blue.9`, `spacing.4`, `radius.lg`).
+- **Definition:** Pure, platform-agnostic mathematical scales without UI context (for example `color.blue.light.9` and `dimension.spacing.4`).
 - **Rule:** Shared components consume semantic roles rather than referencing Tier-1 scales directly.
 
 ### Tier 2: Semantic Tokens (The Global Intent)
 
-- **Definition:** The single source of truth mapping Tier 1 Core Primitives to structural UI intent (e.g., `primary.solid.default`, `surface.sunken.default`).
+- **Definition:** The shared mapping from Tier 1 primitives to structural UI intent (for example `color.primary.solid.default.default` and `dimension.spacing.compact`).
 - **Rule:** This is the default consumption layer for governed shared styling. Theme overrides preserve semantic meaning; justified Tier-3 aliases may vary independently.
 
 ### Tier 3: Component Aliases (Unique Overrides)
 
-- **Definition:** Highly specific tokens scoped to a single component (e.g., `checkbox.border.checked`).
+- **Definition:** Specific aliases scoped to one component (for example `checkbox.indicator.color.checked`).
 - **Rule:** Introduced for independently governed component semantics, with rationale, fallback, theme coverage, and migration impact. No arbitrary numeric cap applies.
 
 ---

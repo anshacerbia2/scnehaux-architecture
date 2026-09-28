@@ -1,72 +1,75 @@
 ---
 doc_meta:
   id: ADR-GLB-FE-006
-  title: ADR-GLB-FE-006 Zero-Runtime CSS and Utility-First Compilation
+  title: Static CSS Output and Token-Bound Styling
   adr_type: foundational
-  status: accepted
+  status: proposed
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Principal Frontend Architect
+  governed_by: [EAD-005]
 ---
 
-# ADR-GLB-FE-006: Adopting Zero-Runtime CSS and Utility-First Compilation for UI Performance
+# ADR-GLB-FE-006: Static CSS Output and Token-Bound Styling
 
----
+> **Pre-production correction candidate:** ADR-GLB-FE-010 proposes authorization for this in-place revision. This wording carries no authority until the ARB records actual approval in the single status row.
 
 ## 1. Title
 
-ADR-GLB-FE-006: Adopting Zero-Runtime CSS and Utility-First Compilation for UI Performance
+Produce static CSS for shared UI and govern styling tools by output ownership.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                     |
-| ---------- | -------- | ------------ | ------------------------- | ---------------------------- |
-| 2026-05-01 | accepted | foundational | Architecture Review Board | Principal Frontend Architect |
+| Date       | Status   | ADR Type     | Reviewers                                 | Approver                            |
+| ---------- | -------- | ------------ | ----------------------------------------- | ----------------------------------- |
+| 2026-09-28 | proposed | foundational | Consolidated principal review in progress | Architecture Review Board — pending |
 
 ## 3. Context
 
-Historically, teams have relied heavily on Runtime CSS-in-JS libraries (e.g., Styled Components, Emotion). These libraries execute intensive style compilation and class injection on the client-side during the render cycle, causing severe layout thrashing and blocking compatibility with modern React Server Components (RSC).
+Runtime CSS evaluation and render-path injection add client work, complicate strict CSP, and create uncertain order across server rendering and federated applications. Static CSS can be produced by Sass, PostCSS, CSS Modules, Panda CSS, Vanilla Extract, or other build tools.
+
+The previous decision mandated Panda CSS or Vanilla Extract and rejected Sass. The UI Platform baseline already uses Sass for component skins and Panda for recipes. Tool identity alone does not prove token discipline, selector isolation, payload efficiency, or RSC compatibility.
 
 ## 4. Decision Drivers
 
-Moving CSS compilation from the client's browser to the CI/CD build pipeline eliminates style-related layout thrashing and unblocks 60FPS rendering performance. Zero-runtime CSS is fundamentally compatible with React Server Components and Next.js App Router streaming architectures.
+- Static and deterministic consumer assets.
+- Strict CSP compatibility.
+- One token contract across producer tools.
+- Explicit selector, layer, and asset ownership.
+- Measured migration and payload cost.
 
 ## 5. Decision
 
-We will standardize on a **Zero-Runtime Styling Strategy** for the core enterprise UI Platform, mandating libraries like Panda CSS or Vanilla Extract. We conditionally authorize **Constrained Utility-First Frameworks** (e.g., TailwindCSS) for end-consumer SPAs to facilitate rapid layout composition, provided the configuration is mapped to central Design System tokens.
+Shared UI Platform styling is distributed as **static CSS assets**. Runtime string evaluation and render-path style injection are prohibited.
+
+During the pre-release remediation milestone:
+
+1. Sass owns current skinned component rules.
+2. Panda owns only its existing declared recipe surface; new Panda recipe ownership is frozen.
+3. Sass-facing and Panda-facing token names are generated from one versioned source.
+4. Sass component rules use the `components` layer and Panda recipes use the `recipes` layer.
+5. Panda runs only in the producer. Packed consumers never scan source or run Panda.
+6. `@scnx/core-ui` remains styling-engine agnostic and is removed from Panda scan inputs after callsite verification.
+7. The exit review compares CSS size per import, `staticCss` output, duplicate declarations, undefined variables, override behavior, build time, and migration cost.
+
+The exit review may retain the bounded dual-engine model or select consolidation through a follow-up implementation decision. Stable public contracts remain CSS assets, token names, selectors/data attributes, and package exports.
+
+Applications may use other approved static styling approaches within STD-GLB-FE-005.
 
 ## 6. Consequences
 
-- **Positive**: Rendering supremacy, native RSC compatibility, and strict type-safety blocking invalid token usage at compile time.
-- **Negative**: Dynamic styles must be knowable at build-time. Complex string interpolation in class names will fail the static AST analyzer.
-
-### Negative / Risks
-
-- **Migration Cost**: Rewriting thousands of legacy `styled.div` components into zero-runtime macros requires significant engineering effort.
-- **Build Times**: AST parsing of every file to generate static CSS can increase build pipeline duration.
-
-### Operational
-
-- Utility classes with arbitrary/magic values (e.g., `w-[13px]`) are prohibited and must be blocked by Linter rules.
-- Legacy charting libraries that cannot consume CSS variables must be strictly isolated via Shadow DOM.
+- **Positive:** consumers receive deterministic static assets without producer tooling.
+- **Positive:** migration decisions use measured output and ownership data.
+- **Negative:** dual-engine governance adds temporary build and review work.
+- **Operational:** layer order, generated names, and CSS exports become release contracts.
 
 ## 7. Compliance Impact
 
-### Related Standards
-
-- STD-GLB-FE-007 (Styling)
-- [ADR-UIP-TKN-002 (OKLCH)](../ui-platform/ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md)
-
-### Compliance Status
-
-Compliant.
-
-### Required Waivers
-
-None.
+Related standards: STD-GLB-FE-005, STD-UIP-STY-001, STD-UIP-TKN-001, and STD-UIP-ENG-001. ADR-GLB-FE-010 authorizes the pre-production correction. No waiver is requested.
 
 ## 8. Alternatives Considered
 
-- **Runtime CSS-in-JS (Styled Components / Emotion)**: Rejected. The performance penalty of parsing ASTs in the browser during render is too high for enterprise dashboards.
-- **Global BEM (Sass/SCSS)**: Rejected. Lacks the type-safety and colocation benefits required by modern React development, inevitably leading to dead code.
-- **CSS Modules**: Rejected as the primary global mechanism because it lacks the strict token constraint enforcement provided by typed compiler macros.
+- Mandate Panda CSS or Vanilla Extract: rejected because a vendor mandate does not establish output quality and would force an unmeasured rewrite.
+- Reject Sass globally: rejected because static Sass output can satisfy the same public contract.
+- Runtime CSS-in-JS for shared UI: rejected because it violates the static-output and CSP contract.
+- Immediate consolidation before evidence: rejected because it would choose migration cost without consumer measurements.
