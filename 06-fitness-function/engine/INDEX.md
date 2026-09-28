@@ -33,7 +33,7 @@ This index documents the internal functions and classes of the Fitness Function 
 | **build_upward_graph** | Build an adjacency map of upward references restricted to known, non-self ids.<br><br>This function parses specific metadata fields (`UPWARD_EDGE_FIELDS`) across all<br>registered documents to map their upward topological dependencies. Self-references<br>are explicitly filtered out to avoid false-positive cycles.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;dict: A mapping from document ID to a set of its upstream parent IDs. |
 | **audit_traceability_graph** | Return a list of (category, message) tuples for global traceability defects.<br><br>Currently detects circular dependencies (length >= 2) in the upward-reference<br>graph and emits them as 'traceability_violation' (a blocking ERROR). |
 | **audit_duplicate_ids** | Evaluate duplicate document IDs across the repository to enforce the SSOT (Single Source of Truth) invariant.<br><br>This auditor iterates over the duplicate map generated during the pre-scan phase. For every duplicated<br>ID, it generates an error tuple pointing to the conflicting file paths.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples. |
-| **audit_hierarchy_tiers** | Enforce C4 Tier Mapping (GDC-000 Section 2.3.1).<br>TDD -> SAD -> PAD -> EAD.<br>ADR & STD -> EAD or PAD. |
+| **audit_hierarchy_tiers** | Enforce C4 Tier Mapping (GDC-000 Section 2.3.1).<br>TDD -> SAD -> PAD -> EAD.<br>ADR -> EAD or PAD.<br>STD -> EAD, PAD, or an authorizing ADR for a major revision. |
 | **audit_orphans** | Enforce architectural connectivity by ensuring no orphaned artifacts exist below the EAD tier.<br><br>This check validates that nodes with an in-degree of 0 (no incoming upward edges) are exclusively<br>top-level constructs (EADs or GDCs). Any lower-tier document (TDD, SAD, PAD) missing its requisite<br>parent reference (e.g. `parent_pad`, `governed_by`) is flagged as a traceability violation.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples for orphaned nodes. |
 
 ### `engine/auditors/waiver_auditor.py`
@@ -131,7 +131,7 @@ This index documents the internal functions and classes of the Fitness Function 
 
 | Function | Description |
 | :--- | :--- |
-| **SADValidator.validate_type_specific** | Execute rules specific to System Architecture Documents (SAD).<br><br>Enforces upward traceability, bidirectional consistency, and activation state:<br>- Validates the mandatory `parent_pad` field, ensuring the system maps to a recognized platform.<br>- Checks that the referenced PAD exists in the repository.<br>- Checks that the referenced PAD declares this SAD in its `fulfilled_by` array.<br>- Prevents an active SAD (`draft` or `approved`) beneath a non-approved PAD. |
+| **SADValidator.validate_type_specific** | Execute rules specific to System Architecture Documents (SAD).<br><br>Enforces upward traceability, bidirectional consistency, and activation state:<br>- Validates the mandatory `parent_pad` field, ensuring the system maps to a recognized platform.<br>- Checks that the referenced PAD exists in the repository.<br>- Checks that the referenced PAD declares this SAD in its `fulfilled_by` array.<br>- Prevents an active SAD (`draft`, `proposed`, or `approved`) beneath a non-approved PAD. |
 
 ### `engine/validators/domains/std_validator.py`
 

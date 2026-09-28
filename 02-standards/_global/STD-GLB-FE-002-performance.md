@@ -6,6 +6,7 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
+  governed_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28

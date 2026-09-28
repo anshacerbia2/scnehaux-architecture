@@ -141,6 +141,32 @@ def test_lint_file_draft_missing_created_date(tmp_path):
     assert any(sev == "ERROR" for sev, _ in errs)
 
 
+def test_lint_file_proposed_sad_receives_full_validation(tmp_path):
+    """A proposed SAD must not receive the draft structural-validation exemption."""
+    fm = (
+        "doc_meta:\n"
+        "  id: SAD-TEST-001\n"
+        "  status: proposed\n"
+        "  created_date: 2026-01-01\n"
+    )
+    fpath = _write_md(tmp_path, "SAD-TEST-001.sad.md", fm)
+
+    rules = _global_rules()
+    errs, _, has_blocking, _ = lint_file(
+        fpath,
+        rules,
+        rules.get("severity_levels", {}),
+        tuple(rules.get("blocking_severities", ["CRITICAL", "ERROR"])),
+        set(),
+        {},
+        "text",
+    )
+
+    assert has_blocking is True
+    assert not any("skipped due to exempt status" in msg for _, msg in errs)
+    assert any("'Purpose & Scope' is a required property" in msg for _, msg in errs)
+
+
 # ---------- lint_file Error Path Tests ----------
 
 

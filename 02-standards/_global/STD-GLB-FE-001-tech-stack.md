@@ -6,6 +6,7 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
+  governed_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -73,7 +74,7 @@ To prevent abstraction leakage, eliminate rendering bottlenecks, and enforce str
 
 - **Responsibility**: UI markup template assembly, component composition, style containment, and static transition declarations.
 - **Architectural Rules**:
-  - Components must derive styling from platform-wide design tokens. Declaring hardcoded values is prohibited.
+  - Governed shared visual decisions must resolve through platform semantic tokens. Context-specific structural literals, intrinsic sizing, percentages, and values without a reusable semantic role are permitted when their purpose is documented; they must not bypass an existing token.
   - Declaring global CSS selectors inside individual component styles is prohibited. Style boundaries must utilize CSS Modules or unique class name prefixes.
   - Interactive elements must provide the keyboard and accessible semantics appropriate to their widget pattern. Complete-page WCAG 2.2 AA conformance remains the consumer application's evaluation scope.
 

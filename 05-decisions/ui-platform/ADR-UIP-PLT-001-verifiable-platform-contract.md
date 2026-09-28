@@ -14,46 +14,64 @@ doc_meta:
 
 ## 1. Title
 
-Authorize the proposed major UI Platform standard revisions for package, token, component, and release evidence.
+Authorize the UI Platform package, interaction, theme, styling, and release contract.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type            | Reviewers                                                                                | Approver                        |
-| ---------- | -------- | ------------------- | ---------------------------------------------------------------------------------------- | ------------------------------- |
-| 2026-09-28 | proposed | conflict_resolution | Principal review round 1: approve with required changes; remaining consolidation pending | Architecture authority, pending |
+| Date       | Status   | ADR Type            | Reviewers                                                                          | Approver                   |
+| ---------- | -------- | ------------------- | ---------------------------------------------------------------------------------- | -------------------------- |
+| 2026-09-28 | proposed | conflict_resolution | Principal review: approve with required changes; consolidated verification pending | UI Platform Lead — pending |
 
 ## 3. Context
 
-The baseline has two physical packages and three logical token tiers. Static review and emitted CSS reveal defects: some shadow and color values are invalid, font names drift, component CSS delivery is uncertain, the design-system test is a placeholder, ThemeProvider uses unsafe evaluation and a singleton global callback, and RSC boundaries rely on a fragile regex. In the standalone workspace, the core-ui suite runs ten tests, but the design-system declaration build exhausted the default Node heap. Existing standards claim guarantees not supported by package-consumer evidence. The platform has never governed a production system.
+The baseline contains two physical packages and three logical token tiers. Review found malformed shadow values, a shadow-key mismatch, font drift, incomplete CSS delivery, placeholder tests, unsafe theme evaluation, a singleton global callback, fragile RSC boundary inference, federation identity gaps, primitive defects, and incomplete widget behavior.
+
+The repository uses pnpm and declares `workspace:*`. A release harness must use `pnpm pack` so packed manifests contain publishable dependency versions. The platform has never governed a production system.
 
 ## 4. Decision Drivers
 
-- Release what a consumer can actually install and use.
-- Preserve the dependency boundary from `@scnx/system` to `@scnx/core-ui`.
-- Make accessibility, theming, security, and style delivery testable.
-- Avoid binding the platform to premature vendor or engine decisions.
+- Publish artifacts that work from an external consumer.
+- Preserve the dependency direction from `@scnx/system` to `@scnx/core-ui`.
+- Make accessibility, theming, CSP, RSC, federation, CSS, and token output falsifiable.
+- Keep public APIs stable while implementation tools evolve.
+- Assign every open decision an owner, authority, evidence gate, and deadline.
 
 ## 5. Decision
 
-**Proposed, not yet authoritative:** Authorize the major revisions of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001. Keep three token tiers as a logical model and two packages as the present physical model. Use source tests for interaction and state logic. Use isolated `npm pack` consumers for exports, types, CSS, fonts, SSR/RSC, CSP, and shell/remote integration. Report component evidence in a Component Accessibility Conformance Report without claiming page-level certification. Declare theme scope, styling ownership, performance scenarios, and release exceptions explicitly.
+**Proposed pending UI Platform Lead approval.** This ADR authorizes version 2.0.0 of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001. Each standard must name this ADR in `governed_by` before approval.
 
-The working CSS delivery contract exports aggregate component CSS and explicit theme CSS. A standalone shell or federated host composition root imports each required stylesheet once. Component JavaScript has no CSS side-effect import, and remotes do not inject another copy. Portaled UI receives an explicit themed container or equivalent propagation contract. Panda runs only in the producer build; a packed consumer never scans source or runs Panda to render shipped components. After verifying that `@scnx/core-ui` has no Panda callsites, its source is removed from Panda scan inputs.
+The v1 decisions are:
 
-React Aria adoption, multiple brands in one DOM, long-term Sass/Panda ownership, and polymorphism retain empirical gates; this ADR does not resolve them by implication. The working candidates are selected React Aria hooks behind complex-widget APIs, scoped subtree themes, both style engines during P0, and `asChild` where polymorphism is justified. Approval authorizes the standards revision, while each candidate still requires recorded evidence, provenance review, and migration impact.
+1. **Interaction foundation:** Button, Disclosure/Accordion, Navigation, Sidebar, and layout primitives use native/custom behavior. Combobox, Select, Menu, Dialog, Popover, Listbox, and Tabs use selected React Aria hooks behind `@scnx/core-ui`. Vendor types and props stay private.
+2. **Theme isolation:** public themes use `[data-scnx-theme="<theme-id>"]` roots; resets are scoped; portals mount inside the originating root. A separate `:root` compatibility stylesheet may support a single-brand document. Shadow DOM is outside v1.
+3. **Styling ownership:** one versioned token source generates Sass-facing and Panda-facing contracts. Panda is frozen to its existing recipe surface during P0. Sass components and Panda recipes use named cascade layers. The P0 exit review decides consolidation from measurements.
+4. **Polymorphism:** interactive parts use `asChild` only at approved composition points. Typography/layout may use a closed `as` tag union. No component exposes both. Other components keep fixed elements.
+5. **Token package:** tokens remain in `@scnx/system` and publish stable `@scnx/system/tokens/*` subpaths. Independent non-component consumers or release cadence trigger extraction review.
+6. **CSS delivery:** v1 publishes one aggregate component stylesheet and explicit theme stylesheets. A host or standalone composition root imports them once. Component JavaScript and remotes do not import CSS side effects. Per-component CSS subpaths are outside v1.
+7. **Federation sharing:** the host owns explicit singleton keys for React, React DOM, and every supported context-bearing UI request. `requiredVersion` comes from package manifests. Remotes remain lazy; only the host may choose eager loading.
+
+P0 means the **pre-release blocking remediation milestone** in the UI Platform execution plan. Evidence can keep a component or capability outside stable exports; it does not silently change these decisions.
+
+Source tests prove interaction and state logic. Producer tests prove generated assets. Isolated `pnpm pack` consumers prove exports, types, CSS, fonts, token subpaths, SSR/RSC, and CSP. A host with two packed remotes proves shared identity, version behavior, theme portals, load-order independence, and exactly one intended stylesheet set.
 
 ## 6. Consequences
 
-- Positive: a reproducible release gate for the shipped artifact and clearer package ownership.
-- Negative: isolated consumers and scenario matrices add maintenance cost.
-- Operational: the extracted baseline cannot be promoted until P0 failures and conformance gaps are resolved.
-- Operational: arbitrary size limits and a larger Node heap are not conformance evidence; budgets require a named scenario and heap overrides remain diagnostic only.
+- **Positive:** consumers receive an explicit, testable v1 contract.
+- **Positive:** stable token subpaths preserve a future extraction path.
+- **Negative:** fixtures, manual assistive-technology checks, and dual-engine measurements add release work.
+- **Operational:** every unresolved public variable, invalid substituted property, missing export, duplicate stylesheet, or required fixture failure blocks stable promotion.
+- **Operational:** a larger Node heap is diagnostic evidence and never a release fix or budget.
 
 ## 7. Compliance Impact
 
-Related standards: [token](../../02-standards/ui-platform/STD-UIP-TKN-001-design-tokens.md), [consumption](../../02-standards/ui-platform/STD-UIP-TKN-002-consumption-governance.md), [primitive](../../02-standards/ui-platform/STD-UIP-PRM-001-primitive-components.md), [styled](../../02-standards/ui-platform/STD-UIP-STY-001-styled-components.md), [delivery](../../02-standards/ui-platform/STD-UIP-ENG-001-build-and-delivery.md). No waiver is requested. Current status is pending architecture approval.
+Authorized UI standards: STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001.
+
+Related global authority: ADR-GLB-FE-010 and its revised frontend standards. Related accepted token decisions are corrected in place before production where required. No waiver is requested.
 
 ## 8. Alternatives Considered
 
-- Treat a passing type check or source build as release proof: misses broken CSS values and export resolution.
-- Create a third token package immediately: adds version coordination before consumer value is demonstrated.
-- Choose one styling engine immediately: the baseline has measurable drift, but no complete cost comparison yet.
+- Three packages for v1: rejected until an independent token-only consumer or release cadence exists.
+- CSS side-effect imports in component JavaScript: rejected because the composition root owns deterministic loading.
+- Per-component CSS subpaths in v1: rejected because the current release needs one verifiable delivery contract.
+- Shadow DOM in v1: rejected because portal, font, and cross-root ARIA behavior add unresolved integration constraints.
+- Public vendor-shaped component APIs: rejected because they turn an internal implementation choice into a migration constraint.

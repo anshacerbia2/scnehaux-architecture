@@ -1,124 +1,158 @@
 ---
 doc_meta:
   id: SAD-003
-  title: Scnehaux UI Platform Software Architecture (SAD)
+  title: Scnehaux UI Platform Software Architecture
   owner: Principal UI/UX Architect
   version: 2.0.0
-  status: draft
+  status: proposed
   classification: public
-  governed_by: [GDC-000]
+  governed_by: [GDC-000, ADR-UIP-PLT-001]
   review_cycle_days: 180
-  created_date: 2026-09-28
-  initial_created_date: 2026-01-01
-  last_reviewed: '2026-09-28'
+  created_date: 2026-01-01
+  last_reviewed: 2026-09-28
   parent_pad: PAD-PLT-003
   technologies:
     - name: react
       type: framework
+    - name: module-federation
+      type: frontend-architecture
+    - name: sass
+      type: css-preprocessor
+    - name: panda-css
+      type: css-generator
+    - name: tsup
+      type: build-tool
+    - name: vitest
+      type: test-runner
 ---
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
-> **Pre-production review draft.** Revision 2.0 was opened on 2026-09-28; the original SAD dates to 2026-01-01. Principal review accepted the evidence corrections and composition-root CSS contract, while consolidated ratification remains pending. It has no new production conformance claim; normative changes require the proposed authorizing ADRs and architecture review.
+> **Pre-production review candidate.** The `proposed` status runs full structural validation and carries no production authority. Approval requires the authorizing ADRs and named reviewers.
 
 ## 1. Purpose & Scope
 
-This system realizes the [Enterprise UI Platform capability](../../03-domain/PAD-PLT-003-scnehaux-ui-platform/PAD-PLT-003-scnehaux-ui-platform.pad.md). It distributes versioned design tokens, headless interaction primitives, styled components, and static CSS to web consumers. It does not own product business behavior, an application shell, or a runtime backend.
+### Objective
 
-The objective is a predictable consumer contract across standalone applications, SSR/RSC consumers, and federated host/remote compositions. Accessibility, theme isolation, package resolution, and performance are verified per declared scenario. The copied implementation is an extracted baseline, not an approved global release.
+Provide versioned design tokens, accessible headless primitives, styled components, themes, and static assets that external React consumers can install and verify from published packages.
+
+### Constraint
+
+The platform owns no product business workflow, application shell, user authorization policy, or runtime backend. It supports only declared React, SSR/RSC, browser, and Module Federation scenarios. Package source aliases and consumer-side Panda compilation are outside the release contract.
+
+### Capability
+
+The system realizes [PAD-PLT-003](../../03-domain/PAD-PLT-003-scnehaux-ui-platform/PAD-PLT-003-scnehaux-ui-platform.pad.md) through two publishable packages, three logical token tiers, scoped theme assets, interaction contracts, and release evidence.
 
 ## 2. Enterprise Traceability
 
-The parent capability is PAD-PLT-003. Applicable standards include [token architecture](../../02-standards/ui-platform/STD-UIP-TKN-001-design-tokens.md), [primitives](../../02-standards/ui-platform/STD-UIP-PRM-001-primitive-components.md), [styled components](../../02-standards/ui-platform/STD-UIP-STY-001-styled-components.md), [build and delivery](../../02-standards/ui-platform/STD-UIP-ENG-001-build-and-delivery.md), and [frontend performance](../../02-standards/_global/STD-GLB-FE-002-performance.md).
+The parent capability is PAD-PLT-003. Global authority includes ADR-GLB-FE-010 and the frontend standards it authorizes. UI authority includes ADR-UIP-PLT-001, ADR-UIP-TKN-001 through ADR-UIP-TKN-003, and the five UI Platform standards. Component designs live in the UI Platform repository under `docs/designs/` and attach to this SAD through `parent_sad: SAD-003`.
 
 ## 3. Solution Context
 
-Consumers install published package artifacts, including their explicitly exported styles. The UI Platform itself is not in their request path. Module Federation consumers additionally require a verified shared-module policy for React and every public package subpath that carries shared context or state.
+External applications install immutable tarballs or registry artifacts. The UI Platform is absent from their request path.
 
-The model has **three logical token tiers**: core values, semantic intent, and component aliases. The baseline has **two physical packages**, not three. A third package is an option only if consumer evidence justifies the additional release and dependency boundary.
+Standalone and SSR/RSC consumers import supported JS, type, CSS, font, and token entries. Federated consumers add a host-owned share policy for React and every context-bearing UI request. Product applications retain complete-page WCAG conformance and business behavior.
 
 ## 4. Architecture Model
 
 ```mermaid
 graph LR
-  Core["@scnx/core-ui<br/>headless behavior and primitives"]
-  System["@scnx/system<br/>tokens, themes, styled components, CSS"]
-  Source["Token source<br/>Tier 1 → Tier 2 → Tier 3"]
-  Consumer["Standalone / SSR / RSC / federated consumer"]
-  Source --> System
+  Tokens["Token source<br/>Tier 1 → Tier 2 → Tier 3"]
+  Core["@scnx/core-ui<br/>headless behavior"]
+  System["@scnx/system<br/>tokens, themes, styled UI, assets"]
+  Host["Standalone / SSR / RSC / federated composition root"]
+  Tokens --> System
   Core --> System
-  System --> Consumer
-  Core --> Consumer
+  Core --> Host
+  System --> Host
 ```
 
 ### 4.1 Package boundaries
 
-- `@scnx/core-ui` owns style-agnostic React primitives, compound behavior, state, and accessible interaction contracts. It must not import `@scnx/system`.
-- `@scnx/system` owns token source and generated contracts, themes, styled components, and their static styles. It may depend on `@scnx/core-ui`.
-- Published JS, types, CSS, fonts, and subpath exports form the consumer contract. An internal source import is not proof that a published asset is reachable.
-- React and context-bearing package subpaths must have a single tested identity in a federated shell and remote. Sharing only a package root does not automatically share every subpath.
+- `@scnx/core-ui` owns style-agnostic primitives, widget behavior, state, contexts, and stable interaction APIs.
+- `@scnx/system` owns the canonical token source, generated Sass/Panda contracts, themes, styled wrappers, aggregate component CSS, fonts, and `@scnx/system/tokens/*` exports.
+- `@scnx/system` may depend on `@scnx/core-ui`. The reverse dependency is prohibited.
+- Published exports and asset paths are compatibility contracts.
 
-### 4.2 Token and style flow
+### 4.2 Token and CSS flow
 
-Tier 1 core values map to Tier 2 semantic intent. Tier 3 aliases are introduced where a component needs independent semantic control. The baseline compiles Sass and Panda output; one documented token contract and explicit style ownership are required across both. Both engines remain during P0 and are measured before a later consolidation decision. Panda is a producer build tool and does not scan `@scnx/core-ui` after the absence of Panda callsites is verified.
+Tier 1 contains raw scales. Tier 2 expresses shared semantic intent. Tier 3 aliases component-specific intent. The canonical logical names are defined by ADR-UIP-TKN-003 and generated into CSS names.
 
-CSS custom properties and emitted stylesheet assets are checked in the packed consumer. `@scnx/system` exports aggregate component CSS and explicit theme CSS. A host or standalone composition root imports each required stylesheet once; component JavaScript and federated remotes do not inject duplicates. Theme selectors and resets are scoped to the consumer root. Cascade layers control precedence; they do not provide selector scope. Multiple brands and portaled UI require explicit tested scope and propagation contracts.
+The v1 style pipeline uses Sass component rules and a frozen set of Panda recipes from one generated token contract. The canonical cascade order is `reset, tokens, base, components, recipes, utilities, overrides`. A composition root imports one aggregate component stylesheet and one selected theme stylesheet. Component JavaScript and remotes do not inject CSS.
 
-### 4.3 Component and interaction flow
+### 4.3 Interaction and theme flow
 
-Native elements provide their native keyboard behavior. Each exposed composite widget needs a behavior matrix based on its relevant APG pattern, covering focus order, keyboard actions, state, disabled behavior, and screen-reader naming. Selected React Aria hooks are a candidate for high-risk composite widgets behind the `@scnx/core-ui` API; simple primitives retain native/custom behavior. OFSM is an implementation technique for complex transitions; its presence does not prove interaction quality. `asChild` is the preferred polymorphism candidate, but it remains subject to semantics, refs, typing, handler order, single-child failure, consumer cost, and `Slot.tsx` provenance evidence.
+Native/custom behavior serves Button, Disclosure/Accordion, Navigation, Sidebar, and layout primitives. Selected React Aria hooks implement Combobox, Select, Menu, Dialog, Popover, Listbox, and Tabs behind the public API.
 
-### 4.4 C3 realization
-
-Component-level mappings, generated variables, build scripts, and fixtures belong in versioned implementation specifications and the UI Platform package repository. This SAD defines boundaries and evidence obligations; it does not imply that all current source code conforms.
-
-The C3 drafts in `ui-platform/docs/02-designs/` are TDD-ui-platform-packaging-001 (build/package), TDD-ui-platform-primitives-002 (behavior), TDD-ui-platform-tokens-003 (token output), TDD-ui-platform-styled-004 (styled CSS), and TDD-ui-platform-theme-005 (provider/transitions). They replace the extracted platform's reliance on the read-only microfrontend TDD-SCNX-UI-JS-001…005. They are drafts until reviewed against this SAD and the authorizing ADRs.
+Theme variables and resets live under `[data-scnx-theme]`. A separate `:root` compatibility asset may serve a single-brand document. Multiple-brand and federated support require scoped roots. Portaled UI mounts inside the originating theme container. Shadow DOM is outside v1.
 
 ## 5. State & Data Architecture
 
-The token dictionary is build input, and compiled CSS is a published artifact. Theme state may be local to a provider or inherited from a scoped subtree root. Document-wide mode is optional and does not establish multi-brand isolation. Provider implementation must work with multiple roots, explicit portal containers, SSR/hydration, and strict CSP without `unsafe-eval`. A single global callback is not a valid multi-provider subscription model.
+The versioned token dictionary is build input. Generated CSS, JavaScript, declarations, Sass assets, fonts, and manifests are immutable release artifacts.
 
-Runtime component state belongs in the primitive instance or its explicit context boundary. Federation tests must demonstrate context identity across shell and remote when those components interact.
+Runtime component state belongs to a component instance or explicit provider. Theme state belongs to a named root or explicit host-owned store. Providers use subscriber sets with cleanup and avoid singleton mutable callbacks on `window`. The federation contract preserves context identity across host and remote.
 
 ## 6. Integration Contracts
 
-- Package exports must resolve from an installed tarball without source aliases. Documented JS, type, CSS, font, and subpath imports are tested.
-- The P0 delivery target exports aggregate component CSS and explicit theme CSS. The host or standalone composition root imports each required stylesheet once. Component JS and remotes do not inject duplicate UI Platform CSS. Optional per-component CSS exports require packed-consumer evidence.
-- SSR and RSC boundaries must be explicit. Build heuristics that guess `"use client"` from a short hook list are insufficient; a packed Next App Router consumer is the release evidence.
-- Module Federation verification covers React singleton identity, package/context identity, version compatibility, remote loading, and duplicate CSS behavior.
-- Versioned package artifacts and migration notes define compatibility. No current publication or CDN topology is assumed merely from a plan.
+- Package tarballs are produced with `pnpm pack`. Packed manifests contain publishable dependency versions and no `workspace:` ranges.
+- Every documented JS, type, CSS, Sass, font, and token subpath resolves without workspace aliases.
+- Server-safe and client entries are explicit. A hook-name or filename regex is insufficient.
+- Strict CSP works without `unsafe-eval`.
+- The federation host owns explicit singleton share keys, manifest-derived required versions, and remote loading policy.
+- Both remote load orders produce one React identity, one context identity, one aggregate component stylesheet hash, and one selected theme asset.
+- Public token references resolve to valid computed property values inside every supported theme scope.
 
-## 7. Security & Accessibility Boundary
+## 7. Security & Trust Boundary
 
-The build and consumer must pass a strict CSP scenario without `unsafe-eval`; any inline style or script requirement must be documented and tested under the actual policy. Package integrity and provenance are part of the release process.
+The producer build, package registry, host application, and browser consumer are separate trust boundaries. Release provenance records source commit, checksum, package contents, dependencies, and licenses.
 
-Accessibility evidence is reported for each component and state in a **Component Accessibility Conformance Report (Component ACR)** based on applicable WCAG 2.2 and APG criteria. It is not labeled a VPAT and does not certify the consuming page. Reflow, target size, focus visibility, contrast, motion, and keyboard scenarios are measured where applicable. A dependency does not transfer conformance responsibility.
+No package evaluates generated strings as code. Inline bootstrap behavior requires a host-controlled nonce/hash or an external asset. Components do not own product authorization. Rich content requires a separately reviewed API. Token and configuration inputs contain no secrets.
 
-## 8. Nonfunctional Requirements
+## 8. NFR
 
-Performance budgets are specified by consumer scenario, environment, metric, baseline, and threshold. Record CSS size by import path, JavaScript cost, build time, theme switch behavior, and layout work on representative interactions. Size evidence identifies raw/minified/compressed representation, tool, and incremental consumer cost. No universal zero-reflow, 60 FPS, zero-CLS, sub-50 ms, `<2 KB`, or fixed 12 KB guarantee is made without measured scope.
+### Blast Radius
 
-Failure handling includes missing CSS, unresolved variables, font load failure, duplicate package instances, and a provider mounted beside another provider. These are release tests, not presumed graceful fallbacks.
+A defective package version can affect every adopting product. Immutable versions, prerelease channels, packed-consumer gates, migration notes, and rollback to the prior version contain that blast radius. A theme leak can cross remotes sharing a DOM; scoped selectors and two-root tests contain it. A duplicated context can split component state; federation identity tests contain it.
 
-## 9. Delivery and Release Evidence
+### Performance and compatibility
 
-The standalone repository uses a pnpm workspace with `packages/core-ui` and `packages/design-system`. CI and publication workflow remain implementation work. Before release, gates must include:
+Budgets name the import scenario, tool, environment, representation, baseline, and threshold. Release evidence records raw, minified, gzip, Brotli, and parsed costs where applicable. Interaction traces cover dynamic-height motion and theme changes. Universal zero-reflow, fixed-FPS, zero-CLS, and arbitrary byte claims have no authority.
 
-1. **Source checks:** type check, build, state-machine/interaction tests, static analysis, and component accessibility behavior.
-2. **Packed-package checks:** install tarballs in an isolated consumer without aliases; resolve exports and types; parse and compute CSS custom properties for every supported theme; verify fonts and styled rendering.
-3. **Integration checks:** SSR/RSC, strict CSP, multiple provider roots, portal theme propagation, shell/remote package identity, one intended stylesheet set, deterministic CSS order, and relevant visual and accessibility scenarios.
-4. **Governance:** review the conformance report, deviations, compatibility impact, and measured budgets before promotion.
+### Accessibility and reliability
 
-The first phase establishes a running test harness and diagnoses the extracted baseline; passing TypeScript alone does not qualify a release.
+Component Accessibility Conformance Reports cover applicable WCAG 2.2 and APG behavior. Release contrast targets include SC 1.4.3 and SC 1.4.11. Required widget behavior covers keyboard, focus, accessible name, disabled state, controlled/uncontrolled state, reduced motion, and cleanup.
+
+Failures include unresolved CSS variables, invalid substituted properties, missing fonts, missing exports, duplicate package identity, incompatible federation versions, missing transition completion events, and provider coexistence errors. Each required scenario has a pass/fail test or keeps the affected capability outside stable exports.
+
+## 9. Deployment Strategy
+
+The system deploys as versioned packages and static assets. It has no server runtime. Consumers choose an approved version and import the assets at their composition root. Prerelease channels precede stable promotion. Rollback selects the previous immutable package version.
+
+### CI/CD
+
+CI runs source tests, producer generation/build tests, `pnpm pack` consumers, export/type checks, browser computed-style checks, SSR/RSC, strict CSP, two-theme roots, portal propagation, and a host with two remotes. The release record links every gate, package checksum, measured budget, Component ACR, known limitation, and approver. Any required gate that does not run is a failure.
 
 ## 10. Architecture Decisions
 
-The [three-tier ADR](../../05-decisions/ui-platform/ADR-UIP-TKN-001-three-tier-isolation-architecture.md) governs token meaning. Proposed authorizing ADRs for changed global and UI standards are pending review. Six governed choices are tracked: React Aria scope, multi-brand isolation, Sass/Panda ownership, public polymorphism, token package topology, and CSS delivery. The CSS composition-root model has working consensus; the remaining candidate choices retain empirical gates. A decision record must include alternatives, measured evidence, migration impact, and review authority.
+ADR-UIP-PLT-001 owns seven v1 decisions: interaction foundation, theme isolation, styling ownership, polymorphism, token package boundary, CSS delivery, and federation sharing. ADR-GLB-FE-010 resolves the related global conflicts. ADR-UIP-TKN-001 through ADR-UIP-TKN-003 own token tiering, OKLCH authoring, alpha behavior, and canonical names.
 
-## 11. Assumptions & Constraints
+### Rejected
 
-Target consumers include standalone React applications, supported SSR/RSC environments, and federated applications. Support is declared per tested version and scenario; no framework or bundler compatibility is inferred from package metadata alone. The source microfrontend workspace remains untouched during the split.
+- A third token package in v1 without an independent consumer or release cadence.
+- CSS side-effect imports from component JavaScript.
+- Per-component CSS subpaths in v1.
+- Shadow DOM as the v1 multi-brand boundary.
+- Vendor types in public component APIs.
+- Regex inference for RSC client boundaries.
+- Release approval from type checking or source builds alone.
+
+## 11. Assumptions
+
+Target consumers can load static CSS assets and satisfy declared React peer ranges. Federated applications provide a composition host. Supported assistive technology, browsers, bundlers, and framework versions are listed per release.
+
+No governed system has reached production, so accepted ADR corrections follow the pre-production in-place rule.
 
 ## 12. Compatibility Strategy
 
-Public behavior, token names, package exports, style import paths, and theme selectors are versioned contracts. Breaking changes use a major release and migration guide. Before first production deployment, accepted ADR wording may be edited in place under GDC-010; major STD rule changes still require an authorizing ADR under GDC-007. The current edits are review drafts until that governance path is completed.
+Public behavior, token names, token subpaths, package exports, CSS assets, theme selectors, data attributes, and supported peer ranges are versioned contracts. Breaking changes require a major package release, migration guide, and consumer rehearsal. Deprecations state replacement, owner, and removal window.

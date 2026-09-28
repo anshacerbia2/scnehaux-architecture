@@ -174,6 +174,8 @@ How an accepted ADR changes depends on one fact: whether any system it governs h
 - no superseding ADR;
 - the Status table keeps a single row.
 
+While the changed decision is under review, its metadata and the single Status-table row use `proposed`; the row names the actual target authority as pending. Ratification updates that same row to `accepted` with the real review date, reviewers, and approver. Git history retains the previously accepted wording and approval record.
+
 Git history is the record of what changed and why (GDC-000 §2.6). The reason is cost, not convenience. While nothing is in production, no running system and no evidence record depends on an earlier wording. A chain of amendments and superseded records makes every reader, human or agent, reconstruct which statement is current, and that is exactly the confusion an ADR exists to prevent.
 
 **From the first production deployment onward, the Immutability Principle applies.** Once an ADR governing a production system reaches the **Accepted** or **Rejected** state, its substantive content (Context, Decision Drivers, Decision, Consequences) **MUST NOT be modified**. From then on, deployed systems and retained evidence were built against that text, and changing it silently would rewrite what they relied on.

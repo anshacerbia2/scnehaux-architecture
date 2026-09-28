@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-009
   title: System Architecture Document (SAD) Guideline
   owner: Architecture Authority
-  version: 1.1.0
+  version: 2.0.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-23
+  last_reviewed: 2026-09-28
 ---
 
 # System Architecture Document (SAD) Guideline
@@ -143,7 +143,7 @@ doc_meta:
   title: [Application Title] # Descriptive title of the application
   owner: [System Team/Role] # Authoritative system owner
   version: 1.0.0 # Semantic versioning format
-  status: chartered # chartered | draft | approved | deprecated
+  status: chartered # chartered | draft | proposed | approved | deprecated
   classification: internal # public | internal | restricted
   parent_pad: PAD-PLT-XXX # Referencing the Parent Domain Capability PAD ID
   review_cycle_days: 180 # Review cycle period
@@ -168,6 +168,7 @@ doc_meta:
 | ------------ | --------------------------------------------------------------------------------------------------- |
 | `chartered`  | A physical realization is recognized for traceability, but no system is in active design/build yet. |
 | `draft`      | The physical system architecture is under active design/review; draft-age pressure applies.         |
+| `proposed`   | The design is complete enough for formal review; full structural and semantic validation applies.   |
 | `approved`   | The software architecture is formalized and acts as the official design blueprint.                  |
 | `deprecated` | The system is being phased out or has been replaced.                                                |
 
@@ -211,13 +212,15 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 SAD lifecycle is subordinate to the parent PAD commitment state.
 
 - a `chartered` SAD is permitted under a `chartered`, `draft`, or `approved` PAD as a non-build placeholder
-- a SAD SHALL NOT enter `draft` while its parent PAD is not `approved`
+- a SAD SHALL NOT enter `draft` or `proposed` while its parent PAD is not `approved`
 - a SAD SHALL NOT enter `approved` while its parent PAD is not `approved`
 - promotion of the parent PAD does not automatically approve the SAD; physical design still follows the SAD review lifecycle
 
 The SAD validator enforces this cross-layer activation rule.
 
 ### 2.4 Lifecycle & Audit
+
+`draft` supports early collaboration and remains subject to the 30-day exemption limit. `proposed` is the formal review state: it preserves the immutable original `created_date` and runs the same document-content validation used by `approved`. Approval changes lifecycle authority after the machine and human gates pass.
 
 All SAD artifacts must undergo a periodic review every `review_cycle_days` (default 180 days) to ensure structural integrity and relevance against the enterprise capability map.
 

@@ -38,6 +38,7 @@ This index documents the test suite utilities and fixtures.
 | **test_audit_hierarchy_tiers** | *(No docstring provided)* |
 | **test_audit_orphans** | *(No docstring provided)* |
 | **test_audit_hierarchy_tiers_accepts_multiple_sad_parents** | *(No docstring provided)* |
+| **test_audit_hierarchy_tiers_accepts_std_authorizing_adr** | *(No docstring provided)* |
 | **test_audit_traceability_graph_cycle_detected** | *(No docstring provided)* |
 | **test_audit_traceability_graph_self_reference** | *(No docstring provided)* |
 | **test_audit_traceability_graph_acyclic_clean** | *(No docstring provided)* |
@@ -111,6 +112,7 @@ This index documents the test suite utilities and fixtures.
 | **test_lint_file_draft_skip** | A draft within max_draft_age_days must skip structural checks and yield INFO. |
 | **test_lint_file_draft_expired** | A draft older than max_draft_age_days must produce a blocking ERROR. |
 | **test_lint_file_draft_missing_created_date** | A draft without created_date must produce a blocking ERROR. |
+| **test_lint_file_proposed_sad_receives_full_validation** | A proposed SAD must not receive the draft structural-validation exemption. |
 | **test_lint_file_unknown_doc_type** | File with an unrecognized ID prefix must produce a blocking ERROR. |
 | **test_lint_file_missing_frontmatter** | File without YAML frontmatter must produce a blocking ERROR. |
 | **test_lint_file_read_error** | Non-existent file must produce a blocking ERROR (not crash). |
@@ -202,6 +204,8 @@ This index documents the test suite utilities and fixtures.
 | **test_chartered_sad_allowed_under_chartered_pad** | *(No docstring provided)* |
 | **test_draft_sad_rejected_under_chartered_pad** | *(No docstring provided)* |
 | **test_draft_sad_allowed_under_approved_pad** | *(No docstring provided)* |
+| **test_proposed_sad_rejected_under_chartered_pad** | *(No docstring provided)* |
+| **test_proposed_sad_allowed_under_approved_pad** | *(No docstring provided)* |
 
 ### `tests/engine/validators/domains/test_std_validator.py`
 

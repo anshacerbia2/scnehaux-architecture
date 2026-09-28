@@ -132,3 +132,47 @@ def test_draft_sad_allowed_under_approved_pad():
     )
     v.validate_type_specific()
     assert len(v.errors) == 0
+
+
+def test_proposed_sad_rejected_under_chartered_pad():
+    v = make_validator(
+        cls=SADValidator,
+        doc_meta={
+            "id": "SAD-001",
+            "status": "proposed",
+            "parent_pad": "PAD-001",
+        },
+        rules=_rules(),
+        all_doc_ids={"PAD-001"},
+        all_doc_metadata={
+            "PAD-001": {
+                "status": "chartered",
+                "fulfilled_by": ["SAD-001"],
+            }
+        },
+        filename="SAD-001.md",
+    )
+    v.validate_type_specific()
+    assert any("only when its parent PAD is 'approved'" in msg for _, msg in v.errors)
+
+
+def test_proposed_sad_allowed_under_approved_pad():
+    v = make_validator(
+        cls=SADValidator,
+        doc_meta={
+            "id": "SAD-001",
+            "status": "proposed",
+            "parent_pad": "PAD-001",
+        },
+        rules=_rules(),
+        all_doc_ids={"PAD-001"},
+        all_doc_metadata={
+            "PAD-001": {
+                "status": "approved",
+                "fulfilled_by": ["SAD-001"],
+            }
+        },
+        filename="SAD-001.md",
+    )
+    v.validate_type_specific()
+    assert len(v.errors) == 0

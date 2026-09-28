@@ -6,7 +6,7 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: public
-  governed_by: [GDC-000]
+  governed_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -40,13 +40,13 @@ This standard governs the build and distribution of `@scnx/core-ui` and `@scnx/s
 
 ### 3.2 Packed-package quality gate
 
-Build both packages, create tarballs, and install them in consumers with no workspace or source alias. Against those installed artifacts, verify:
+Build both packages, create tarballs with the pinned `pnpm pack` command, and install them in consumers with no workspace or source alias. Packed manifests MUST contain publishable versions instead of `workspace:` ranges. Against those installed artifacts, verify:
 
-1. Every documented JS, type, CSS, theme, and asset export resolves in the declared module formats.
+1. Every documented JS, type, CSS, theme, Sass, font, and `@scnx/system/tokens/*` export resolves in the declared module formats.
 2. Components render with their expected styles after the composition root imports aggregate component CSS and the selected theme CSS once. Component JavaScript and remotes do not inject another copy. The consumer does not compile library Sass or run Panda.
-3. Every required `--ds-*` reference resolves in its intended theme scope. Validate grammar at the consuming CSS property after substitution; parsing a custom-property declaration alone is insufficient.
+3. Every required `--ds-*` reference resolves in its intended theme scope. Validate grammar at the consuming CSS property after substitution. Any unresolved reference, invalid substituted property, or shadow-key mismatch fails the build.
 4. SSR and React Server Component consumers import server-safe entries and receive explicit `"use client"` boundaries for client entries. Source-file-name or hook-name regexes are not a release contract.
-5. A host and two remotes share the intended React and UI module identities, retain context identity, and load one intended stylesheet set with deterministic cascade order and no cross-remote leakage. Portaled UI retains the originating theme scope.
+5. `fixtures/federation/host` with `remote-a` and `remote-b` installs packed artifacts. The host owns explicit singleton keys for React, React DOM, and every context-bearing UI request; `requiredVersion` comes from manifests; remotes remain lazy. Both load orders retain one React/context identity, exactly one aggregate component stylesheet content hash, exactly one selected theme asset, deterministic layers, and scoped portals.
 6. A strict Content Security Policy works without `unsafe-eval`; any inline script or style has a documented host-controlled nonce/hash strategy or is externalized.
 
 ### 3.3 Payload and runtime evidence
@@ -58,7 +58,7 @@ Build both packages, create tarballs, and install them in consumers with no work
 
 ### 3.4 Distribution and release report
 
-- Published ESM/CJS formats, React peer ranges, subpaths, CSS assets, and fonts must match the package manifest and pass packed-package resolution tests.
+- Published ESM/CJS formats, React peer ranges, subpaths, CSS assets, token exports, and fonts must match the package manifest and pass packed-package resolution tests.
 - A stable release publishes a conformance report linking source-test results, packed-package tests, Component Accessibility Conformance Reports and known limits, contrast pairs, visual diffs, payload measurements, API changes, and supported consumer scenarios. Component reports are not labeled VPATs and do not certify a complete page.
 - A failed or missing required gate prevents promotion to the stable channel. Experimental components may be excluded from stable exports with their scope documented.
 

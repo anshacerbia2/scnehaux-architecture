@@ -125,7 +125,8 @@ def audit_hierarchy_tiers(
     """
     Enforce C4 Tier Mapping (GDC-000 Section 2.3.1).
     TDD -> SAD -> PAD -> EAD.
-    ADR & STD -> EAD or PAD.
+    ADR -> EAD or PAD.
+    STD -> EAD, PAD, or an authorizing ADR for a major revision.
     """
     findings = []
     sev = severity_levels[SeverityRule.STRUCTURAL_INTEGRITY_VIOLATION]
@@ -178,8 +179,8 @@ def audit_hierarchy_tiers(
                     )
                 )
 
-        # Check ADR / STD
-        elif doc_id.startswith("ADR-") or doc_id.startswith("STD-"):
+        # Check ADR
+        elif doc_id.startswith("ADR-"):
             parents = _as_list(meta.get("governed_by")) + _as_list(
                 meta.get("parent_pad")
             )
@@ -190,7 +191,28 @@ def audit_hierarchy_tiers(
                     findings.append(
                         (
                             sev,
-                            f"Hierarchy violation: {doc_id[:3]} '{doc_id}' cannot attach to '{p}'. Must be EAD or PAD.",
+                            f"Hierarchy violation: ADR '{doc_id}' cannot attach to '{p}'. Must be EAD or PAD.",
+                            filepath,
+                        )
+                    )
+
+        # Check STD. GDC-007 section 2.4.2 requires a major revision to
+        # point at its authorizing ADR, so ADR is a valid governance edge.
+        elif doc_id.startswith("STD-"):
+            parents = _as_list(meta.get("governed_by")) + _as_list(
+                meta.get("parent_pad")
+            )
+            for p in parents:
+                if not (
+                    p.startswith("EAD-")
+                    or p.startswith("PAD-")
+                    or p.startswith("GDC-")
+                    or p.startswith("ADR-")
+                ):
+                    findings.append(
+                        (
+                            sev,
+                            f"Hierarchy violation: STD '{doc_id}' cannot attach to '{p}'. Must be EAD, PAD, or an authorizing ADR.",
                             filepath,
                         )
                     )

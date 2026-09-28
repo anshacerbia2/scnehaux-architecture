@@ -5,9 +5,9 @@ doc_meta:
   adr_type: foundational
   owner: Principal UI/UX Architect
   version: 1.0.0
-  status: accepted
+  status: proposed
   classification: public
-  governed_by: [GDC-000]
+  governed_by: [PAD-PLT-003]
   review_cycle_days: 180
   last_reviewed: 2026-06-26
   created: 2026-01-01
@@ -17,7 +17,7 @@ doc_meta:
 
 # Deferred Minification Strategy for UI Libraries (ADR-UIP-BLD-001)
 
-> **Pre-production review draft:** retaining readable library output is a delivery choice to verify in packed consumers. It is not a tree-shaking or final-byte guarantee.
+> **Pre-production correction candidate:** retaining readable library output is a delivery choice to verify in packed consumers. This wording carries no authority until the UI Platform Lead records actual approval.
 
 ---
 
@@ -27,9 +27,9 @@ Deferred Minification Strategy for UI Libraries to Enhance Debugging
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                  |
-| ---------- | -------- | ------------ | ------------------------- | ------------------------- |
-| 2026-06-20 | accepted | foundational | Architecture Review Board | Principal UI/UX Architect |
+| Date       | Status   | ADR Type     | Reviewers                                 | Approver                   |
+| ---------- | -------- | ------------ | ----------------------------------------- | -------------------------- |
+| 2026-09-28 | proposed | foundational | Consolidated principal review in progress | UI Platform Lead — pending |
 
 ## 3. Context
 

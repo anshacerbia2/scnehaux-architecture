@@ -6,6 +6,7 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
+  governed_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -44,13 +45,16 @@ Primitives are organized into Layout Primitives (styling and geometry skeletal s
 
 #### Interactive Primitives
 
-- Interactive components such as `Dialog`, `Popover`, `Select`, and `Combobox` MUST expose a documented behavior matrix for keyboard, focus, pointer, touch, disabled state, controlled/uncontrolled state, and assistive technology.
-- Simple primitives SHOULD retain native/custom behavior. Selected hooks from a maintained accessibility foundation MAY implement high-risk composite widgets behind the `@scnx/core-ui` public contract. Selection requires component-level evidence covering bundle cost, accessibility, internationalization, security, maintenance, license/provenance, and migration risk. Vendor types and APIs MUST NOT leak into the public contract.
+- Every composite widget MUST expose a documented behavior matrix for keyboard, focus, pointer, touch, disabled state, controlled/uncontrolled state, and assistive technology.
+- Button, Disclosure/Accordion, Navigation, Sidebar, and layout primitives use native/custom behavior.
+- Combobox, Select, Menu, Dialog, Popover, Listbox, and Tabs use selected React Aria hooks behind the `@scnx/core-ui` contract. Vendor types and APIs MUST NOT leak into public types or props. Stable promotion requires APG behavior, manual NVDA and VoiceOver checks, bundle evidence, internationalization, security, maintenance, and license/provenance review.
 - Using a third-party foundation does not transfer responsibility for the integration's accessibility or the consuming page's WCAG conformance to that dependency.
 
-#### Visual Segregation
+#### Public polymorphism
 
-- **Styling Agnosticism**: Primitive logic must remain 100% styling-agnostic. No design tokens, class names, or CSS properties should be hardcoded inside the primitive core. Styling configurations are delegated entirely to the design system wrapper.
+- Interactive parts expose `asChild` only where composition is required. Typography and layout primitives MAY expose a closed `as` tag union. A component MUST NOT expose both. Remaining components keep a fixed semantic element.
+- `asChild` promotion requires tested ref typing, handler order, semantic output, disabled behavior, router Link composition, single-child failure, and Slot provenance/license.
+- Primitive logic remains styling-agnostic. Stable `data-*` state hooks MAY form part of its public behavior contract; visual tokens, classes, and CSS remain owned by the styled layer.
 
 ---
 
@@ -78,7 +82,7 @@ The primitive component must declare an explicit, stable interface to the DOM. T
 
 #### Polymorphism & Rendering Strategy
 
-Use the native element when it represents the action accurately. A component that offers polymorphism MUST document which tags and composition forms are supported and preserve ref, event, and accessible-name behavior. `asChild` is the preferred candidate where polymorphism is justified; new APIs SHOULD NOT expand dynamic `as`. Promotion still requires measured behavior and a provenance decision, and no form is declared universally faster without evidence.
+Use the native element when it represents the action accurately. Interactive parts MAY expose `asChild` only at approved composition points. Typography and layout primitives MAY expose a closed `as` tag union. A component MUST NOT expose both. Each supported form preserves ref, event, accessible-name, disabled, and native semantic behavior.
 
 #### Styled Separation (Zero Recipes Rule)
 
