@@ -45,7 +45,7 @@ Primitives are organized into Layout Primitives (styling and geometry skeletal s
 #### Interactive Primitives
 
 - Interactive components such as `Dialog`, `Popover`, `Select`, and `Combobox` MUST expose a documented behavior matrix for keyboard, focus, pointer, touch, disabled state, controlled/uncontrolled state, and assistive technology.
-- A maintained third-party accessibility foundation MAY be used behind the `@scnx/core-ui` public contract. Selection requires an ADR covering bundle cost, accessibility evidence, internationalization, security, maintenance, and migration risk. The extent of React Aria adoption remains an open decision.
+- Simple primitives SHOULD retain native/custom behavior. Selected hooks from a maintained accessibility foundation MAY implement high-risk composite widgets behind the `@scnx/core-ui` public contract. Selection requires component-level evidence covering bundle cost, accessibility, internationalization, security, maintenance, license/provenance, and migration risk. Vendor types and APIs MUST NOT leak into the public contract.
 - Using a third-party foundation does not transfer responsibility for the integration's accessibility or the consuming page's WCAG conformance to that dependency.
 
 #### Visual Segregation
@@ -78,7 +78,7 @@ The primitive component must declare an explicit, stable interface to the DOM. T
 
 #### Polymorphism & Rendering Strategy
 
-Use the native element when it represents the action accurately. A component that offers polymorphism MUST document which tags and composition forms are supported and preserve ref, event, and accessible-name behavior. `as`, `asChild`, and a fixed native element are implementation options until a single public polymorphism strategy is chosen by ADR; no one form is declared universally faster without measurement.
+Use the native element when it represents the action accurately. A component that offers polymorphism MUST document which tags and composition forms are supported and preserve ref, event, and accessible-name behavior. `asChild` is the preferred candidate where polymorphism is justified; new APIs SHOULD NOT expand dynamic `as`. Promotion still requires measured behavior and a provenance decision, and no form is declared universally faster without evidence.
 
 #### Styled Separation (Zero Recipes Rule)
 
@@ -90,8 +90,8 @@ Use the native element when it represents the action accurately. A component tha
 ### Polymorphism & Slot API
 
 - A polymorphic implementation MUST preserve the native meaning of the rendered element. Links require a destination; actions use button semantics. An anchor with `role="button"` must implement the missing Space behavior or be replaced with a native button.
-- Ref composition, merged handlers, ARIA attributes, and TypeScript props MUST be tested for every supported polymorphic form.
-- Slot cloning and dynamic tag selection are evaluated on correctness and measured consumer cost. Similarity to another library is not proof of provenance; any derived code requires a license review.
+- Ref composition, merged-handler order, ARIA attributes, TypeScript props, semantic tags, and invalid multi-child behavior MUST be tested for every supported polymorphic form.
+- Slot cloning and dynamic tag selection are evaluated on correctness and measured consumer cost. `Slot.tsx` MUST pass provenance and license review before an `asChild` API becomes stable. Similarity to another library is not proof of provenance; any derived code requires appropriate attribution.
 
 ---
 
@@ -109,7 +109,7 @@ To guarantee component boundary isolation and maintain clean API design:
 - **Focus Management**: Overlay structures (Dialogs, Drawers, Modals) must trap focus internally during activation and restore focus to the trigger element upon closure.
 - **Keyboard Navigation**: Components must implement the keyboard navigation specifications declared in the WAI-ARIA Authoring Practices Guide (APG).
 - **Per-pattern matrix**: Required keys are defined per widget, not by counting `onKeyDown` occurrences or imposing one key list on all widgets.
-- **Evidence**: Source tests cover behavior; packed-package consumers and manual assistive-technology checks cover integration. WCAG 2.2 AA conformance is evaluated for complete pages, not claimed for an isolated primitive.
+- **Evidence**: Source tests cover behavior; packed-package consumers and manual assistive-technology checks cover integration. Results are recorded in a Component Accessibility Conformance Report using applicable WCAG 2.2 and APG criteria. The report is not a VPAT or complete-page certification.
 
 ---
 

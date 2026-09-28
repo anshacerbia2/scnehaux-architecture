@@ -18,9 +18,9 @@ Authorize the proposed major revisions of STD-GLB-FE-001 and STD-GLB-FE-002.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type            | Reviewers                           | Approver                        |
-| ---------- | -------- | ------------------- | ----------------------------------- | ------------------------------- |
-| 2026-09-28 | proposed | conflict_resolution | Three principal architects, pending | Architecture authority, pending |
+| Date       | Status   | ADR Type            | Reviewers                                                                                | Approver                        |
+| ---------- | -------- | ------------------- | ---------------------------------------------------------------------------------------- | ------------------------------- |
+| 2026-09-28 | proposed | conflict_resolution | Principal review round 1: approve with required changes; remaining consolidation pending | Architecture authority, pending |
 
 ## 3. Context
 
