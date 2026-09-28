@@ -7,7 +7,7 @@ doc_meta:
   created: 2026-09-28
   created_date: 2026-09-28
   created_by: UI Platform Architecture
-  governed_by: [SAD-003]
+  governed_by: [PAD-PLT-003]
 ---
 
 # ADR-UIP-PLT-001: Verifiable UI Platform Package and Release Contract
@@ -18,8 +18,8 @@ Authorize the proposed major UI Platform standard revisions for package, token, 
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| --- | --- | --- | --- | --- |
+| Date       | Status   | ADR Type            | Reviewers                           | Approver                        |
+| ---------- | -------- | ------------------- | ----------------------------------- | ------------------------------- |
 | 2026-09-28 | proposed | conflict_resolution | Three principal architects, pending | Architecture authority, pending |
 
 ## 3. Context

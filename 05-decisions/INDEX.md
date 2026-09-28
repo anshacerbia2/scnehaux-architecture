@@ -28,11 +28,13 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-GLB-FE-007](_global/ADR-GLB-FE-007-nextgen-testing-toolchain.md) | ADR-GLB-FE-007 Next-Generation Frontend Testing Toolchain | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-FE-008](_global/ADR-GLB-FE-008-graphql-protocol.md) | ADR-GLB-FE-008 Standardization on GraphQL as Primary Data Protocol | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-FE-009](_global/ADR-GLB-FE-009-realtime-communication.md) | ADR-GLB-FE-009 Real-Time Communication and Push Strategy | foundational | accepted | 2026-01-01 | N/A |
+| [ADR-GLB-FE-010](_global/ADR-GLB-FE-010-evidence-based-frontend-contracts.md) | Evidence-Based Frontend Standards and UI Foundation Choice | conflict_resolution | proposed | 2026-09-28 | N/A |
 | [ADR-IAM-001](identity-access-platform/ADR-IAM-001-adopt-keycloak-identity-kernel.md) | Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel | foundational | accepted | 2026-08-06 | N/A |
 | [ADR-IAM-002](identity-access-platform/ADR-IAM-002-token-signing.md) | ADR-IAM-002 Token Signing Algorithm and Key Lifecycle Management | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-ORG-001](organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) | Separate Organization Authority from Identity and Use Keycloak as a Projection Target | foundational | accepted | 2026-08-06 | N/A |
 | [ADR-SCH-002](scheduling-platform/ADR-SCH-002-postgresql-profiled-durable-dispatch.md) | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch | implementation | accepted | 2026-08-24 | N/A |
 | [ADR-UIP-BLD-001](ui-platform/ADR-UIP-BLD-001-deferred-minification.md) | Deferred Minification | foundational | accepted | 2026-01-01 | N/A |
+| [ADR-UIP-PLT-001](ui-platform/ADR-UIP-PLT-001-verifiable-platform-contract.md) | Verifiable UI Platform Package and Release Contract | conflict_resolution | proposed | 2026-09-28 | N/A |
 | [ADR-UIP-TKN-001](ui-platform/ADR-UIP-TKN-001-three-tier-isolation-architecture.md) | ADR-UIP-TKN-001 Three-Tier Design Token Isolation Architecture | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-TKN-002](ui-platform/ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md) | ADR-UIP-TKN-002 OKLCH Gamut and Dual-Engine Alpha Blending Architecture | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-TKN-003](ui-platform/ADR-UIP-TKN-003-token-taxonomy-and-naming-convention.md) | ADR-UIP-TKN-003 Token Taxonomy & Naming Convention | foundational | accepted | 2026-01-01 | N/A |

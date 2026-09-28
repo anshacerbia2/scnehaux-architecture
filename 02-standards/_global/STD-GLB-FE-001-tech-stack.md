@@ -13,7 +13,7 @@ doc_meta:
 
 # Enterprise Frontend Technology Stack & Layered Architecture Standard (STD-GLB-FE-001)
 
-> **Review draft:** the former unconditional Radix requirement conflicts with STD-UIP-PRM-001 and is proposed for replacement by an evidence-based foundation decision.
+> **Review draft:** the former unconditional library requirement conflicts with STD-UIP-PRM-001 and is proposed for replacement by an evidence-based foundation decision.
 
 ---
 
@@ -42,7 +42,7 @@ To prevent technology fragmentation and ensure consistent platform optimization,
 - **Server State Management (TanStack Query)**: Server-originated data fetching, query caching, and mutations must be managed via TanStack Query.
 - **Client-Global State Management (Zustand)**: Global client state (e.g., UI layout states) must be managed using selector-bound Zustand stores.
 - **Visual Presentation**: Applications may use CSS Modules or Tailwind for local composition. Shared UI Platform packages may emit compiled Sass and Panda CSS while their public selectors, token contract, and cascade behavior pass the packed-package isolation tests. Tool selection is not a substitute for selector scoping.
-- **Accessible Interactive Foundations**: Shared widgets (e.g. `Dialog`, `Dropdown`, `Popover`, `Select`, `Combobox`) must meet a tested keyboard, focus, ARIA, internationalization, and consumer-package contract. A maintained headless foundation such as React Aria or Radix MAY be used behind the UI Platform API after an approved decision records the trade-offs. No dependency alone guarantees WCAG conformance of a component integration or a complete page. Layout primitives should remain dependency-light, with size assessed from consumer builds.
+- **Accessible Interactive Foundations**: Shared widgets (e.g. `Dialog`, `Dropdown`, `Popover`, `Select`, `Combobox`) must meet a tested keyboard, focus, ARIA, internationalization, and consumer-package contract. A maintained headless foundation MAY be used behind the UI Platform API after an approved decision records the trade-offs. No dependency alone guarantees WCAG conformance of a component integration or a complete page. Layout primitives should remain dependency-light, with size assessed from consumer builds.
 
 ---
 

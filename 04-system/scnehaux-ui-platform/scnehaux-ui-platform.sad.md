@@ -8,7 +8,8 @@ doc_meta:
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
-  created_date: 2026-01-01
+  created_date: 2026-09-28
+  initial_created_date: 2026-01-01
   last_reviewed: '2026-09-28'
   parent_pad: PAD-PLT-003
   technologies:
@@ -18,7 +19,7 @@ doc_meta:
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
-> **Pre-production review draft.** This proposed revision records the three-principal working consensus. It has no new production conformance claim; normative changes require the proposed authorizing ADRs and architecture review.
+> **Pre-production review draft.** Revision 2.0 was opened on 2026-09-28; the original SAD dates to 2026-01-01. This proposed revision records the three-principal working consensus. It has no new production conformance claim; normative changes require the proposed authorizing ADRs and architecture review.
 
 ## 1. Purpose & Scope
 

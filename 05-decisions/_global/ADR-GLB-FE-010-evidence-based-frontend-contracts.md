@@ -1,6 +1,6 @@
 ---
 doc_meta:
-  id: ADR-GLB-FE-003
+  id: ADR-GLB-FE-010
   title: Evidence-Based Frontend Standards and UI Foundation Choice
   adr_type: conflict_resolution
   status: proposed
@@ -10,7 +10,7 @@ doc_meta:
   governed_by: [GDC-000]
 ---
 
-# ADR-GLB-FE-003: Evidence-Based Frontend Standards and UI Foundation Choice
+# ADR-GLB-FE-010: Evidence-Based Frontend Standards and UI Foundation Choice
 
 ## 1. Title
 
@@ -18,8 +18,8 @@ Authorize the proposed major revisions of STD-GLB-FE-001 and STD-GLB-FE-002.
 
 ## 2. Status
 
-| Date | Status | ADR Type | Reviewers | Approver |
-| --- | --- | --- | --- | --- |
+| Date       | Status   | ADR Type            | Reviewers                           | Approver                        |
+| ---------- | -------- | ------------------- | ----------------------------------- | ------------------------------- |
 | 2026-09-28 | proposed | conflict_resolution | Three principal architects, pending | Architecture authority, pending |
 
 ## 3. Context
