@@ -3,13 +3,13 @@ doc_meta:
   id: EAD-005
   title: Enterprise Platform Architecture
   owner: Architecture Authority
-  version: 2.2.0
+  version: 2.3.0
   status: approved
   classification: internal
   governed_by: [GDC-006]
   review_cycle_days: 180
   created_date: 2026-08-06
-  last_reviewed: 2026-08-23
+  last_reviewed: 2026-09-28
 ---
 
 # Enterprise Platform Architecture
@@ -189,6 +189,7 @@ A Platform owns meaningful semantics within its own bounded capability. Consumin
    - Audit/Evidence
 
 2. **Friction / Reuse Driven**
+   - UI Platform
    - Work Management
    - Workflow
    - Rules
@@ -497,6 +498,7 @@ A shared Platform that persistently increases total-system complexity more than 
 
 ## 11. Traceability
 
+- PAD-PLT-003 UI Platform: reusable visual and interaction contracts; its package count and repository topology are C2/C3 decisions
 - PAD-PLT-012 Workspace Experience
 - PAD-PLT-013 Work Management
 - PAD-PLT-014 Rules & Decisioning

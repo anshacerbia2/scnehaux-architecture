@@ -3,12 +3,12 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 1.0.0
-  status: approved
+  version: 2.0.0
+  status: proposed
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-25
+  last_reviewed: 2026-09-28
   governed_by:
     - GDC-000
     - GDC-010
@@ -18,13 +18,15 @@ doc_meta:
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
 
+> **Review draft:** Sass maps are the current implementation. A DTCG 2025.10 source that generates CSS, Sass, and Panda contracts is a migration target, not an implemented guarantee.
+
 ---
 
 ## 1. Objective & Scope
 
 This standard defines the architecture, compilation pipeline, consumption contracts, and operational governance doctrines for design tokens within the Scnehaux enterprise UI platform (`@scnx/system`).
 
-It guarantees that visual properties — colors, dimensions, typography, and motion — are structured, compiled, and delivered consistently across all products, enabling design changes without manual style refactoring and preventing semantic drift as the platform scales to multi-brand environments with hundreds of components and federated micro-frontends.
+It defines how visual properties are structured and compiled. Consistency across products depends on tested package output, supported themes, and consumer adoption.
 
 **Authoritative Source**: This document is the single source of truth for all token standards. The Product Architecture Document (PAD-PLT-002) references this document for governance details and must not replicate these rules.
 
@@ -33,9 +35,9 @@ It guarantees that visual properties — colors, dimensions, typography, and mot
 The design token architecture is governed by four core principles to ensure cross-platform consistency, visual harmony, and operational scaling:
 
 1. **Semantic Isolation**: UI components consume abstract semantic tokens (Tier 2) rather than raw value primitives (Tier 1), shielding component layouts from changes in core visual definitions.
-2. **Perceptual Color Uniformity**: Color specifications utilize the photometric OKLCH color space to guarantee consistent contrast ratios and predictable color mixing across light and dark interfaces.
-3. **Platform Agnosticity**: Token structures are defined as technology-agnostic keys and values, decoupled from execution environments (such as CSS, Swift, or Android XML) to enable unified enterprise-wide delivery.
-4. **Symmetrical Theme Alignment**: Light and dark themes utilize identical semantic token paths, enabling runtime theme switching through stylesheet replacement without modifying application logic.
+2. **Measured Color Behavior**: OKLCH is an authoring color space; contrast depends on the actual foreground/background pair, alpha, theme, and display conversion.
+3. **Interoperability Target**: DTCG 2025.10 JSON is the proposed canonical interchange format. Native-platform outputs require their own implementation and validation before they are claimed.
+4. **Symmetrical Theme Paths**: Supported themes supply the same required semantic keys, while brand overrides remain scoped to a declared root.
 
 ## 3. Normative Rules
 
@@ -45,9 +47,9 @@ The design token architecture is governed by four core principles to ensure cros
 
 The platform enforces a strict **3-Tier Token Architecture**:
 
-1. **Tier 1 (Core Primitives)**: Raw OKLCH coordinates. **Prohibited** from being consumed directly by components or application layers. Must only be accessed via the build-time SASS compiler (`get-color()`).
-2. **Tier 2 (Global Semantic Contract)**: Symmetrical, orthogonal semantic tokens (`--ds-{scheme}-{role}-{emphasis}-{state}`). This is the **mandatory** consumption layer for all downstream components.
-3. **Tier 3 (Component Tokens)**: Component-bound aliases. Strongly restricted by the Component Alias Budget.
+1. **Tier 1 (Core Primitives)**: Raw scales and values, including color, spacing, typography, and motion. Components and applications do not consume them directly. Sass is the current authoring implementation, not a permanent architectural requirement.
+2. **Tier 2 (Global Semantic Contract)**: Semantic tokens (`--ds-{scheme}-{role}-{emphasis}-{state}`) are the default shared consumption layer. Declared role/state compatibility limits the matrix.
+3. **Tier 3 (Component Tokens)**: Component-bound aliases are justified and reviewed by purpose, without a fixed numeric quota.
 
 #### The State Compatibility Invariant
 
@@ -61,7 +63,7 @@ The Semantic Matrix is governed by a strict, non-symmetric State Compatibility T
 | Icon    |  ✅   |   ❌    |    ❌    |  ❌   |    ✅    |
 | Shadow  |  ✅   |   ✅    |    ❌    |  ❌   |    ❌    |
 
-_Any attempt to generate or consume an illegal state (e.g., `text.selected` or `surface.focus`) must fail the CI build with a CRITICAL error._
+The Sass validator rejects unsupported generated role/state combinations. Consumer lint and package-output checks are target CI gates, not yet proven active.
 
 ---
 
@@ -69,20 +71,20 @@ _Any attempt to generate or consume an illegal state (e.g., `text.selected` or `
 
 #### Centralized OKLCH Recipe Engine
 
-Token values must be generated via a **compile-time OKLCH Recipe Engine** (SASS mixin: `generate-scheme-matrix`) residing in `_default-token.scss`. The engine applies mathematically consistent lightness, chroma, and hue transforms across all 32 semantic anchors to guarantee contrast ratios and visual harmony without manual hand-tuning per-token.
+The current implementation generates color values using Sass maps and a compile-time recipe engine. Mathematical transforms alone do not establish contrast or visual harmony. A future canonical token source must generate the Sass and Panda contracts from the same versioned data.
 
 - **Primitive Isolation**: The recipe engine is the only entity authorized to access Tier-1 OKLCH coordinates.
 - **Output Format**: Compiled tokens are emitted as CSS Custom Properties prefixed with `--ds-` (e.g., `--ds-color-primary-solid-default-default`).
-- **Build-Time Delivery**: Generated variables must be injected via the global `@scnx/system` stylesheet bundle prior to DOM parsing.
-- **Dual-Axis Calibration**: The compilation pipeline enforces a dual-axis scaling scheme. The **Lightness Axis** maps theme curves in perceptually uniform OKLCH space, and the **Transparency/Alpha Axis** resolves translucent overlays via browser-level `color-mix()` in OKLCH space. The compile-time solver validates the precise overlay ratio ($X\%$) to prevent CSS code bloat and avoid generating static transparent tokens.
+- **Build-Time Delivery**: Variables are distributed through documented CSS exports. Consumers import the required theme and component CSS before expecting platform styling.
+- **Color and alpha calibration**: Validate generated colors and translucent overlays on their actual background. The implementation may use OKLCH or `color-mix()` where supported, but no solver or byte saving is presumed without an output test.
 
 #### Cascading Multi-Theme & Partial Contracts Invariant
 
 The platform supports multi-theme and multi-brand white-label capabilities under a strict cascading model:
 
-1. **Global Baseline Theme (Visual Root of Trust)**: The default theme registers and injects all core CSS variables onto the `:root` selector.
-2. **Cascading Overrides**: Brand or contextual themes (e.g., `achromatic`) only override the specific visual characteristics they require (colors, shadows, radii). All other variables cascade from the baseline.
-3. **Partial Contract Invariant**: Override themes are validated against a brand-specific contract map that is a **partial subset of the core `$system` contract**. It may contain fewer keys, but it must **not introduce any undocumented keys** absent from the core `$system` contract, ensuring zero visual leakage and strict compile-time safety.
+1. **Baseline Theme**: The default theme supplies required semantic variables. Current `:root` output is a migration item because it may affect unrelated remotes; the target contract scopes variables to a declared root.
+2. **Cascading Overrides**: Brand themes (e.g., `achromatic`) may override a documented subset within that root. Selector scoping versus Shadow DOM remains an open decision until a two-brand consumer test is evaluated.
+3. **Partial Contract Invariant**: An override may define fewer keys than the baseline. It must document inheritance and any additional public keys. Compile-time map checks do not alone prove CSS selector isolation or valid computed values.
 
 #### Build-Time Contract Validation
 
@@ -98,10 +100,10 @@ The `_contract-token.scss` validator enforces role-specific state legality at co
 
 #### Token Consumption Laws (Zero-Bypass Rule)
 
-To maintain the visual root of trust, the platform enforces an absolute zero-bypass styling rule across all consumer layers:
+Shared styling follows the semantic consumption boundary. Source enforcement is a target gate until connected to CI:
 
-- **Semantic Supremacy**: Component styles must rely 100% on Tier-2 semantic CSS custom properties (e.g., `var(--ds-color-primary-solid-default-default)` or the `get-color()` SASS accessor).
-- **Primitive Isolation**: Declaring raw OKLCH, HSL, HEX, or RGB color literals in any component, portal, or layout file is strictly prohibited.
+- **Semantic Supremacy**: Component visual intent resolves through Tier-2 variables or justified Tier-3 aliases. Compiler values, consumer overrides, and structural literals have explicit contracts rather than an untestable blanket percentage.
+- **Primitive Isolation**: Governed shared component colors use semantic tokens. Product-specific data visualization or other justified local colors require review and measured contrast, not an invented shared token.
 - **Utility Styling Compliance**: Utility-class configurations must resolve styling through token-bound utility maps, not arbitrary values.
 
 #### Semantic Usage Doctrine (Preventing Semantic Drift)
@@ -156,7 +158,7 @@ Timing durations and mathematical easing curves must map to high-level communica
 | `motion.attention`  | Soft pulsating scale animations to highlight critical visual actions without disturbing layout flows |
 | `motion.disclosure` | Smooth height expand/collapse transitions for accordions, menus, and detail triggers                 |
 
-**Performance Constraint**: All motion tokens must resolve exclusively to `transform` and `opacity` CSS properties. Animating layout properties (`width`, `height`, `margin`) is prohibited under the Zero Layout Thrashing rule (see PAD-PLT-002, Section 5).
+**Performance Constraint**: Dynamic-height motion may involve layout. Reduced-motion behavior and interaction traces determine whether a transition is acceptable. Claims about forced layout and frame rate require named scenarios and measurements.
 
 ---
 
@@ -164,11 +166,9 @@ Timing durations and mathematical easing curves must map to high-level communica
 
 #### Component Alias Budget
 
-To prevent custom styling bloat where federated teams spawn endless Tier-3 aliases for minor adjustments, the platform enforces strict alias budgeting:
+To prevent unbounded aliases, the platform reviews their semantics and reuse:
 
-- **Alias Budget**: A single component is allowed a maximum of **5 custom Tier-3 aliases** (e.g., `--ds-btn-custom-border`).
-- **Divergence Proof**: SPAs must present a visual, measurable design rationale justifying why Tier-2 semantic tokens cannot satisfy the styling contract before any Tier-3 alias is introduced.
-- **ADR & Review Mandate**: Introducing any new Tier-3 alias requires an Architectural Decision Record (ADR) approved by the Visual Platform Board, preventing styling sprawl.
+- **Alias review**: Record the component purpose, Tier-2 fallback, theme/state coverage, and migration impact. A numerical cap and an ADR for each alias are not required.
 
 #### Alias Naming Convention
 
@@ -188,15 +188,15 @@ Examples:
 
 ## 4. Exceptions
 
-None. All design token architecture rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
+Deviations identify the affected consumer contract, rationale, owner, and migration path under enterprise governance.
 
 ## 5. Enforcement Mechanism
 
 ### 5.7.1 Static AST Verification (Zero-Bypass Enforcement)
 
-Build-time scanners and ESLint/Stylelint AST plugins must actively parse component source code:
+Target source checks parse component styling and report bypasses:
 
-- **Blocking Rule**: Any raw style declaration that bypasses the Tier-2 semantic layer (e.g., `background: oklch(...)`, `color: #fff`, `border-color: hsl(...)`) must fail the CI build with a `CRITICAL` error and block PR merging.
+- **Blocking Rule**: Governed shared styles with unjustified raw color literals fail the source gate when the rule is implemented.
 - **Z-Index Enforcement**: Elements requiring z-index properties must reference system z-index tokens (e.g., `var(--ds-z-index-modal)`). Hardcoded z-index integers are prohibited.
 
 ### 5.7.2 Build Contract Validation
@@ -205,11 +205,9 @@ The SASS compile pipeline (`pnpm --filter "@scnx/system" build`) is the primary 
 
 - `@error` directives in `_contract-token.scss` block compilation if any token attempt violates the State Compatibility Table.
 - Any build failure from this gate is treated as a `CRITICAL` schema violation requiring an immediate fix before the PR can merge.
+- Packed stylesheets are checked for missing required variables, valid resolved values in consuming properties (including shadows and font families), and declared foreground/background contrast pairs in each supported theme and state.
+- Until generation and checks are connected to CI, documentation must not claim that palette generation is contrast-guaranteed or fail-closed.
 
 ### 5.7.3 Waiver Protocol
 
-Deviations from any rule in this standard (new Tier-3 aliases, partial schema exceptions, alternative motion properties) require:
-
-1. A documented project ADR approved by the Architecture Review Board (ARB).
-2. The ARB must respond within **5 business days** of ADR submission.
-3. Approved waivers have a maximum validity of **365 days** before mandatory re-evaluation.
+Formal exceptions follow GDC-010 and the applicable standard-governance process. Routine justified Tier-3 aliases are reviewed as token-contract changes, not treated as automatic waivers.

@@ -3,56 +3,67 @@ doc_meta:
   id: STD-UIP-ENG-001
   title: UI Platform Build & Delivery Standards
   owner: Principal UI/UX Architect
-  version: 1.0.0
-  status: approved
+  version: 2.0.0
+  status: proposed
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-06-26
+  last_reviewed: 2026-09-28
 ---
 
 # UI Platform Build & Delivery Standards (STD-UIP-ENG-001)
 
+> **Review draft:** this revision records the agreed release contract. Existing metadata is not evidence that these new rules have passed principal review or CI implementation.
+
 ## 1. Objective & Scope
 
-This standard governs the quality, payload, and delivery constraints for all packages within the Scnehaux UI Platform ecosystem (e.g., `@scnx/core-ui`, `@scnx/system`). It defines the absolute boundaries for performance, regression testing, and distribution formats to ensure zero architectural degradation when integrated into downstream consumer portals.
+This standard governs the build and distribution of `@scnx/core-ui` and `@scnx/system`. A source test proves source behavior; a consumer test against a packed release proves the public package contract. Neither substitutes for the other.
 
 ## 2. Design Principles
 
-- **Reproducibility**: All builds must be perfectly reproducible across developer machines and CI servers.
-- **Fail-Fast**: The pipeline must fail as early as possible on style, lint, or type errors before running expensive test suites.
-- **Immutable Artifacts**: Built UI bundles are immutable. We deploy the same binary/bundle through all environments.
+- **Contract honesty:** documentation states only behavior demonstrated by a repeatable test or a clearly labeled design decision.
+- **Reproducibility:** the release candidate is the immutable package artifact tested before publication.
+- **Measured performance:** budgets name the import scenario, theme, browser, device class, measurement method, and regression threshold. Raw unminified library bytes are reported separately from consumer payload.
+- **Fail closed:** a required test that does not run is a failed gate, not an omitted gate.
 
 ## 3. Normative Rules
 
-### 3.1 Payload Budget & Performance
+### 3.1 Source quality gate
 
-To guarantee instant execution within federated frontends, UI platform packages must adhere to strict payload limits:
+- Run type checking, linting, and executable unit/interaction tests for state machines and public primitive behavior.
+- Test the keyboard, focus, ARIA, reduced-motion, and cleanup contracts applicable to each stable widget. Automated accessibility checks supplement, but do not replace, manual assistive-technology evaluation.
+- Run visual regression for supported component states across the declared theme and browser matrix. A changed snapshot requires review; a missing runner blocks the release.
+- Contrast checks fail the build for declared foreground/background pairs in every supported theme and state. Unspecified arbitrary consumer combinations are outside this guarantee.
 
-- **Max CSS/JS Gzip Size:** The core design token matrix and primitive layer combined MUST NOT exceed **12KB** compressed (gzip).
-- **Latency (Theme Switch):** Context propagation for global theme swaps (Light/Dark/Tenant) MUST execute in under **50ms**.
-- **Reflow Ban:** Component entrance/exit transitions MUST utilize Zero-Reflow mechanics (Orthogonal Finite State Machines using double-rAF), achieving `0` layout reflows per transition.
+### 3.2 Packed-package quality gate
 
-### 3.2 Testing & Quality Gates
+Build both packages, create tarballs, and install them in consumers with no workspace or source alias. Against those installed artifacts, verify:
 
-The UI Platform acts as the visual root of trust. Its testing strategy is non-negotiable:
+1. Every documented JS, type, CSS, theme, and asset export resolves in the declared module formats.
+2. Components render with their expected styles after following the documented import contract. The consumer does not compile library Sass or run Panda unless explicitly declared as a supported source-integration mode.
+3. Every required `--ds-*` reference resolves in its intended theme scope. Validate grammar at the consuming CSS property after substitution; parsing a custom-property declaration alone is insufficient.
+4. SSR and React Server Component consumers import server-safe entries and receive explicit `"use client"` boundaries for client entries. Source-file-name or hook-name regexes are not a release contract.
+5. A host and two remotes share the intended React and UI module identities, retain context identity, and load styles without duplicate or cross-remote leakage.
+6. A strict Content Security Policy works without `unsafe-eval`; any inline script or style has a documented host-controlled nonce/hash strategy or is externalized.
 
-- **Visual Regression Testing:** Component changes in `@scnx/system` MUST pass a Visual Regression suite (e.g., Chromatic or Storybook visual tests) before merge.
-- **Unit Testing:** Behavior components in `@scnx/core-ui` MUST be covered by Vitest (or equivalent) testing with render-count isolation assertions.
-- **Accessibility (A11y):** All interactive primitives MUST pass automated `jest-axe` (or equivalent) WCAG 2.2 AA validations in CI.
+### 3.3 Payload and runtime evidence
 
-### 3.3 Distribution Format
+- Publish gzip/Brotli and parsed-size measurements for defined consumer import scenarios, including a single component, a layout, and a representative page. Compare them with an approved baseline and record material regressions.
+- Capture interaction traces for dynamic-height transitions. A layout read is permitted when required for behavior, but claims about forced layout count, frame rate, and theme-switch latency require named scenarios and trace evidence.
+- Do not claim `0` reflows, fixed 60 FPS, a universal 12 KB budget, or sub-50 ms theme switching without the corresponding supported-scenario evidence.
+- Library minification remains deferred to the consumer build as decided in ADR-UIP-BLD-001; measure final consumer output, not only raw `dist` files.
 
-To support modern Module Federation consumers while maintaining legacy fallback compatibility:
+### 3.4 Distribution and release report
 
-- **Dual Formats:** All packages MUST compile and publish in both **ESM** and **CJS** formats.
-- **React Directives:** The `"use client"` directive MUST be explicitly restored post-bundle (via esbuild plugins) to guarantee compatibility with React Server Components (RSC) and Next.js App Routers.
+- Published ESM/CJS formats, React peer ranges, subpaths, CSS assets, and fonts must match the package manifest and pass packed-package resolution tests.
+- A stable release publishes a conformance report linking source-test results, packed-package tests, accessibility coverage and known limits, contrast pairs, visual diffs, payload measurements, API changes, and supported consumer scenarios.
+- A failed or missing required gate prevents promotion to the stable channel. Experimental components may be excluded from stable exports with their scope documented.
 
 ## 4. Exceptions
 
-There are currently no authorized exceptions to the UI Platform Build & Delivery Standards. All components must strictly comply with these constraints.
+Exceptions name the affected contract, consumer impact, expiry, and reviewer. They cannot convert an untested claim into a guarantee.
 
 ## 5. Enforcement Mechanism
 
-These standards are enforced directly by CI/CD pipelines (Quality Gates). Any PR that breaches the 12KB budget or fails Visual Regression will be **Hard Blocked** from merging.
+The CI pipeline executes the source gate and packed-package gate, stores their evidence, and blocks stable publication on failures. The initial P0 implementation of these gates is tracked in the UI Platform roadmap; this draft does not claim that the current repository already satisfies them.

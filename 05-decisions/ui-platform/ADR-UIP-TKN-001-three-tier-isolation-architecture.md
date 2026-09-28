@@ -11,6 +11,8 @@ doc_meta:
 
 # ADR-UIP-TKN-001: Adoption of a Three-Tier Design Token Architecture (Core, Semantic, Component) to Isolate Raw Visual Values from Semantic Intent.
 
+> **Pre-production review draft:** the three tiers remain the logical architecture. The current code has two physical packages; this ADR does not require a third package before release.
+
 ---
 
 ## 1. Title
@@ -33,37 +35,37 @@ As the Scnehaux ecosystem scales across multiple standalone portals and federate
 
 ## 4. Decision Drivers
 
-By enforcing this architectural boundary, we completely decouple the _Design Value_ from the _Design Intent_.
+This boundary separates the naming of a design value from the naming of its intended use. Correct theme output and consumer usage still require tests.
 
-- **Enterprise Theming:** When a new white-label tenant requires a Purple theme, the platform simply maps `primary.solid.default` to `purple.9` instead of `blue.9` at the Tier 2 level. Zero application code needs to change.
-- **Predictable Maintenance:** Developers consume contextual intent (`danger.surface.subtle`), ensuring that alerts will always look like alerts regardless of the underlying color palette or dark/light mode context.
+- **Enterprise Theming:** A brand can remap `primary.solid.default` at Tier 2 when consumers use the semantic contract and the new theme passes visual and accessibility checks.
+- **Predictable Maintenance:** Developers consume contextual intent (`danger.surface.subtle`), making the reason for a color choice reviewable across themes.
 
 ## 5. Decision
 
-We mandate a strict **Three-Tier Design Token Isolation Architecture** across all Scnehaux frontend systems. Raw visual values must never be consumed directly by application components.
+The UI Platform uses a **Three-Tier Design Token Isolation Architecture** for governed shared visual decisions. Product-specific values without a meaningful shared role follow STD-UIP-TKN-002's documented exception path.
 
 ### Tier 1: Core Primitives (The Raw Values)
 
 - **Definition:** Pure, platform-agnostic mathematical scales without any UI context (e.g., `blue.9`, `spacing.4`, `radius.lg`).
-- **Rule:** **Forbidden** from direct use in any UI component or application code.
+- **Rule:** Shared components consume semantic roles rather than referencing Tier-1 scales directly.
 
 ### Tier 2: Semantic Tokens (The Global Intent)
 
 - **Definition:** The single source of truth mapping Tier 1 Core Primitives to structural UI intent (e.g., `primary.solid.default`, `surface.sunken.default`).
-- **Rule:** This is the **standard consumption layer** for 95% of all styling. All themes and white-labeling overrides must target this layer.
+- **Rule:** This is the default consumption layer for governed shared styling. Theme overrides preserve semantic meaning; justified Tier-3 aliases may vary independently.
 
 ### Tier 3: Component Aliases (Unique Overrides)
 
 - **Definition:** Highly specific tokens scoped to a single component (e.g., `checkbox.border.checked`).
-- **Rule:** Strictly budgeted and restricted. Only permitted for truly unique semantic behaviors that require independent visual divergence from global Tier 2 semantics.
+- **Rule:** Introduced for independently governed component semantics, with rationale, fallback, theme coverage, and migration impact. No arbitrary numeric cap applies.
 
 ---
 
 ## 6. Consequences
 
-- **Positive:** Infinite horizontal scaling of UI themes without touching component source code. Guaranteed Dark Mode symmetry.
+- **Positive:** Theme and component changes can be isolated through stable semantic contracts when the compiled outputs and supported contexts are verified. Dark-mode symmetry is a contract to test, not an automatic consequence of the tier model.
 - **Negative:** Increased initial cognitive load for engineers who must learn the Semantic Taxonomy instead of using raw colors.
-- **Enforcement:** The governance linter and CI pipelines will reject pull requests containing hardcoded CSS colors or direct references to Tier 1 Core Tokens inside application components.
+- **Enforcement target:** Code-level checks reject prohibited raw color literals and direct Tier-1 references in component source. The packed-package gate verifies that emitted CSS variables resolve and that declared semantic color pairs satisfy the release contrast target. These checks must be implemented before they are claimed as active.
 
 ### Negative / Risks
 
@@ -85,7 +87,7 @@ We mandate a strict **Three-Tier Design Token Isolation Architecture** across al
 
 ### Compliance Status
 
-Compliant.
+Architecture accepted; implementation conformance pending executable source and packed-package evidence.
 
 ### Required Waivers
 
@@ -101,6 +103,6 @@ None.
 
 ### Alternative B: Direct CSS Custom Properties in Components
 
-- **Pros**: Native browser support, zero build-time dependency.
-- **Cons**: Lacks semantic validation, no compile-time contract enforcement, high risk of inconsistent visual tokens leaking into components.
-- **Why Rejected**: Bypasses the centralized design system governance and token contract validation pipeline.
+- **Pros**: Native browser support and direct stylesheet consumption.
+- **Cons**: Raw-value custom properties used directly by components omit the shared semantic boundary.
+- **Why Rejected**: The design needs governed semantic names; CSS custom properties remain the selected output format for those names.

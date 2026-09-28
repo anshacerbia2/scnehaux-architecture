@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-003
   title: Enterprise UI Platform
   owner: UI Platform Team
-  version: 1.2.0
+  version: 1.3.0
   status: approved
   classification: restricted
   governed_by:
@@ -29,6 +29,8 @@ The UI Platform provides the reusable visual-system, accessibility, and interact
 It owns design-system semantics and consumer-facing UI contracts. Workspace Experience owns cross-Product shell and composition. Products own Product journeys, business state, and Product-specific interaction meaning.
 
 The Platform is build-time by default so Product availability is not coupled to a central UI runtime.
+
+This capability is an architectural target. The extracted UI package baseline has not entered production or passed its proposed release gates. Three token tiers are logical contracts; the present physical implementation has two packages.
 
 ### 1.1 Outcome Contract
 
@@ -123,7 +125,7 @@ The UI Platform distributes stable design and interaction contracts. It does not
 
 ### 3.3 Domain Policies
 
-- Accessibility is a property of shared primitives rather than an optional Product add-on
+- Accessibility behavior is a required shared-primitive contract, verified in component scenarios and then in each consuming page
 - Product business semantics are composed outside the UI Platform
 - Public packages, tokens, primitives, and behavior contracts are versioned
 - Consumers may not rely on undocumented internal DOM, styling, state, or package structure
@@ -225,7 +227,7 @@ It does not own Product PII, workforce data, financial records, travel records, 
 
 ### 6.1 Accessibility and Compatibility
 
-- **100%** of Stable shared primitives must pass the Platform accessibility release gate against WCAG 2.2 AA requirements applicable to the primitive
+- Every Stable shared primitive must pass its applicable accessibility behavior and visual-state release checks; page-level WCAG 2.2 AA conformance remains the consumer's responsibility
 - Compatible minor releases must preserve documented public behavior
 - Breaking public contracts require a major-version migration
 - Deprecated Stable contracts require migration guidance before retirement
@@ -242,6 +244,7 @@ It does not own Product PII, workforce data, financial records, travel records, 
 - Every Stable package or primitive family has an explicit consumer performance budget owned by downstream engineering standards
 - Release gates prevent undocumented material regression against the declared budget
 - Product teams can measure incremental package impact before adoption
+- Package release evidence includes an isolated consumer of the packed artifact, as well as source-level interaction tests
 - Shared abstractions must not require a central runtime call solely to render a primitive
 
 ### 6.4 Usability, Adoption, Audit, and Interoperability

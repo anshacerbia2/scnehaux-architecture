@@ -17,6 +17,8 @@ doc_meta:
 
 # Deferred Minification Strategy for UI Libraries (ADR-UIP-BLD-001)
 
+> **Pre-production review draft:** retaining readable library output is a delivery choice to verify in packed consumers. It is not a tree-shaking or final-byte guarantee.
+
 ---
 
 ## 1. Title
@@ -33,35 +35,32 @@ Deferred Minification Strategy for UI Libraries to Enhance Debugging
 
 The Scnehaux UI Platform distributes two core shared packages: `@scnx/core-ui` (React primitives) and `@scnx/system` (tokens/styling logic). Originally, the Technical Design Document (STD-GLB-FE-008) specified that the build compiler (`tsup`) should run `minify: true` to compress output JS/CSS assets prior to publishing to the NPM registry.
 
-However, minifying source code at the library distribution level introduces significant debugging friction for consuming applications and can conflict with application-level bundler optimizations.
+Minifying library output may reduce debugging readability. Final consumer output depends on the application bundler and the published module graph.
 
 ## 4. Decision Drivers
 
 - Superior Developer Experience (DX) for deep stack-trace debugging.
-- Efficient Dead Code Elimination downstream.
-- Avoidance of double-minification bugs.
+- Measured consumer bundle cost and source-map quality.
 
 ## 5. Decision
 
-We will **deliberately disable minification** (`minify: false`) for all UI library package builds. The responsibility for final code minification, obfuscation, and source-mapping is formally deferred to the downstream Host/Consumer application's bundler (e.g., Vite, Next.js, Rspack).
+The library build keeps JS readable (`minify: false`). The packed-package and application-consumer gates measure tree shaking, final compressed bytes, and usable source maps. Consumer bundlers remain responsible for their final output policy; they may or may not minify every library path.
 
 ## 6. Consequences
 
 ### Positive (Pros)
 
 - **Superior Developer Experience (DX):** Consuming engineers can step through unminified library source code inside `node_modules` during deep stack-trace debugging.
-- **Efficient Tree-Shaking:** Modern application bundlers perform Dead Code Elimination (Tree-Shaking) much more efficiently on clean, unminified ESM code.
-- **Elimination of Double-Minification:** Prevents edge-case variable mangling bugs caused when a library is minified, and then the consuming application minifies it again during production build.
+- **Auditability:** Readable package output can simplify investigation, while source maps and export structure remain necessary for diagnosis.
 
 ### Negative (Cons)
 
-- **Increased NPM Package Size:** The raw bytes transferred during `npm install` (and stored on disk) will be slightly larger. This is acceptable as it does not affect the end-user production payload.
-- **False Positive Size Checks:** Developers inspecting the raw library bundle might mistakenly assume the code is unoptimized. Size limits (e.g., the 12KB budget defined in STD-UIP-ENG-001) must be measured post-bundling/gzip via tools like `size-limit`, rather than by checking raw file sizes.
+- **Package and runtime cost:** Tarballs may be larger, and some consumer builds may retain more bytes. Measure representative application bundles rather than assume the difference is immaterial.
 
 ## 7. Compliance Impact
 
-No regulatory compliance impact. Code is still ultimately minified and obfuscated during the final application production build.
+No waiver is requested. Packed exports and representative consumers must be tested under STD-UIP-ENG-001; final minification is not claimed as automatic.
 
 ## 8. Alternatives Considered
 
-- **Minifying Library Code (Status Quo):** Rejected because the minor savings during `npm install` do not justify the massive loss in debuggability and the risk of tree-shaking failures downstream.
+- **Minifying library code:** May reduce tarball bytes but can hinder direct inspection. Reconsider if measured consumer output, source maps, or distribution requirements favor it.
