@@ -2,6 +2,10 @@
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
 # Last updated: 2026-09-28
+#
+# Ring changes are ARB decisions (GDC-004 section 3.2). Entries marked
+# "pending ARB" were proposed with the UI Platform ratification package on
+# 2026-09-28 and take effect only when the ARB records the transition.
 
 technology_radar:
   adopt:
@@ -70,11 +74,23 @@ technology_radar:
       owner: Platform Engineering
       rationale_std: STD-GLB-003
 
-    - name: module-federation
-      category: frontend-architecture
-      date_adopted: "2026-09-28"
+    - name: rsbuild
+      category: frontend-build-tool
+      date_adopted: "2026-04-07"
       owner: UI Platform Team
-      rationale_adr: ADR-GLB-FE-004
+      rationale_adr: ADR-GLB-FE-002
+
+    - name: vitest
+      category: test-runner
+      date_adopted: "2026-05-01"
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-007
+
+    - name: playwright
+      category: browser-test-runner
+      date_adopted: "2026-05-01"
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-007
 
   trial:
     - name: rust
@@ -96,41 +112,37 @@ technology_radar:
       date_entered: "2026-02-01"
       owner: UI Platform Team
       rationale_adr: ADR-UIP-TKN-002
-      trial_end_date: "2026-10-28"
+      # Trial expired on 2026-08-01; the ARB transition decision is pending ARB.
+      trial_end_date: "2026-08-01"
 
+    # pending ARB: sass, panda-css, and tsup trial entries.
     - name: sass
       category: css-preprocessor
       date_entered: "2026-09-28"
       owner: UI Platform Team
-      rationale_adr: ADR-GLB-FE-006
+      rationale_adr: ADR-GLB-FE-013
       trial_end_date: "2026-10-28"
 
     - name: panda-css
       category: css-generator
       date_entered: "2026-09-28"
       owner: UI Platform Team
-      rationale_adr: ADR-GLB-FE-006
+      rationale_adr: ADR-GLB-FE-013
       trial_end_date: "2026-10-28"
 
     - name: tsup
       category: javascript-build-tool
       date_entered: "2026-09-28"
       owner: UI Platform Team
-      rationale_adr: ADR-UIP-PLT-001
+      rationale_adr: ADR-UIP-BLD-001
       trial_end_date: "2026-10-28"
 
-    - name: vitest
-      category: test-runner
-      date_entered: "2026-09-28"
+    - name: vite
+      category: frontend-build-tool
+      date_entered: "2026-04-07"
       owner: UI Platform Team
-      rationale_adr: ADR-GLB-FE-007
-      trial_end_date: "2026-10-28"
-
-    - name: playwright
-      category: browser-test-runner
-      date_entered: "2026-09-28"
-      owner: UI Platform Team
-      rationale_adr: ADR-GLB-FE-007
+      rationale_adr: ADR-GLB-FE-002
+      # Recommended, not mandated, by ADR-GLB-FE-002; trial review is pending ARB.
       trial_end_date: "2026-10-28"
 
   assess:
@@ -144,13 +156,15 @@ technology_radar:
       date_entered: "2026-06-01"
       owner: UI Platform Team
 
+    - name: module-federation
+      category: frontend-architecture
+      date_entered: "2026-01-15"
+      owner: UI Platform Team
+      # Promotion to adopt is proposed with ADR-GLB-FE-012; pending ARB.
+
+    # pending ARB: react-aria and dtcg-design-tokens assess entries.
     - name: react-aria
       category: accessibility-library
-      date_entered: "2026-09-28"
-      owner: UI Platform Team
-
-    - name: vite
-      category: frontend-build-tool
       date_entered: "2026-09-28"
       owner: UI Platform Team
 

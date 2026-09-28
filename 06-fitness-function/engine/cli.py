@@ -24,6 +24,10 @@ from engine.auditors.graph_auditor import (
     audit_traceability_graph,
 )
 from engine.auditors.waiver_auditor import audit_waiver_expirations
+from engine.auditors.authorization_auditor import (
+    audit_replacement_lineage,
+    audit_standard_authorization,
+)
 from engine.config.constants import (
     GOVERNANCE_ROOT,
     BASE_SCHEMA_PATH,
@@ -37,6 +41,7 @@ from engine.config.constants import (
     SCHEMA_KEY_CONTENT_RULES,
     SCHEMA_KEY_EXEMPT_STATUSES,
     SCHEMA_KEY_EXACT_MATCHES,
+    SCHEMA_KEY_LEGACY_MAJOR_REVISIONS,
 )
 from engine.config.loader import (
     load_json_schema_file,
@@ -652,6 +657,21 @@ def main() -> None:
     repo_findings.extend(audit_hierarchy_tiers(local_doc_metadata, severity_levels))
     repo_findings.extend(audit_orphans(local_doc_metadata, severity_levels))
     repo_findings.extend(audit_version_bump(local_doc_metadata, severity_levels))
+    repo_findings.extend(
+        audit_standard_authorization(
+            local_doc_metadata,
+            severity_levels,
+            legacy_entries=global_rules.get(SCHEMA_KEY_CONTENT_RULES, {}).get(
+                SCHEMA_KEY_LEGACY_MAJOR_REVISIONS, []
+            ),
+            registry=all_doc_metadata,
+        )
+    )
+    repo_findings.extend(
+        audit_replacement_lineage(
+            local_doc_metadata, severity_levels, registry=all_doc_metadata
+        )
+    )
 
     for fpath, sev, msg in audit_waiver_expirations(
         local_doc_metadata, severity_levels

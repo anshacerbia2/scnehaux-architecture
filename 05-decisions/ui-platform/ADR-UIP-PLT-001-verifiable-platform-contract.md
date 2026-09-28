@@ -8,6 +8,7 @@ doc_meta:
   created_date: 2026-09-28
   created_by: UI Platform Architecture
   governed_by: [PAD-PLT-003]
+  authorizes: [STD-UIP-ENG-001, STD-UIP-PRM-001, STD-UIP-STY-001, STD-UIP-TKN-001, STD-UIP-TKN-002]
 ---
 
 # ADR-UIP-PLT-001: Verifiable UI Platform Package and Release Contract
@@ -38,17 +39,17 @@ The repository uses pnpm and declares `workspace:*`. A release harness must use 
 
 ## 5. Decision
 
-**Proposed pending UI Platform Lead approval.** This ADR authorizes version 2.0.0 of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001. Each standard must name this ADR in `governed_by` before approval.
+**Proposed pending UI Platform Lead approval.** This ADR authorizes version 2.0.0 of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001. Each standard names this ADR in `authorized_by` and keeps its `governed_by` attachment to PAD-PLT-003; this ADR names each standard in `authorizes`.
 
 The v1 decisions are:
 
-1. **Interaction foundation:** Button, Disclosure/Accordion, Navigation, Sidebar, and layout primitives use native/custom behavior. Combobox, Select, Menu, Dialog, Popover, Listbox, and Tabs use selected React Aria hooks behind `@scnx/core-ui`. Vendor types and props stay private.
+1. **Interaction foundation:** Button, Disclosure/Accordion, Navigation, Sidebar, and layout primitives use native/custom behavior. Combobox, Select, Menu, Dialog, Popover, Listbox, and Tabs use selected React Aria hooks behind `@scnx/core-ui`, subject to the decision rule in the UI Platform decision register (UIP-DEC-001). Vendor types and props stay private.
 2. **Theme isolation:** public themes use `[data-scnx-theme="<theme-id>"]` roots; resets are scoped; portals mount inside the originating root. A separate `:root` compatibility stylesheet may support a single-brand document. Shadow DOM is outside v1.
-3. **Styling ownership:** one versioned token source generates Sass-facing and Panda-facing contracts. Panda is frozen to its existing recipe surface during P0. Sass components and Panda recipes use named cascade layers. The P0 exit review decides consolidation from measurements.
+3. **Styling ownership:** one versioned token source generates Sass-facing and Panda-facing contracts. Panda is frozen to its existing recipe surface during P0. Sass components and Panda recipes use named cascade layers. The P0 exit review decides consolidation by the recorded rule in UIP-DEC-003.
 4. **Polymorphism:** interactive parts use `asChild` only at approved composition points. Typography/layout may use a closed `as` tag union. No component exposes both. Other components keep fixed elements.
-5. **Token package:** tokens remain in `@scnx/system` and publish stable `@scnx/system/tokens/*` subpaths. Independent non-component consumers or release cadence trigger extraction review.
+5. **Token package:** tokens remain in `@scnx/system` and publish explicit `@scnx/system/tokens/css/<theme-id>.css`, `tokens/json/<theme-id>.json`, and `tokens/scss` subpaths. Independent non-component consumers or release cadence trigger extraction review.
 6. **CSS delivery:** v1 publishes one aggregate component stylesheet and explicit theme stylesheets. A host or standalone composition root imports them once. Component JavaScript and remotes do not import CSS side effects. Per-component CSS subpaths are outside v1.
-7. **Federation sharing:** the host owns explicit singleton keys for React, React DOM, and every supported context-bearing UI request. `requiredVersion` comes from package manifests. Remotes remain lazy; only the host may choose eager loading.
+7. **Federation sharing:** under ADR-GLB-FE-012, the host shares `react`, `react-dom`, `@scnx/core-ui`, and every other context-bearing public entry as singletons with a strict compatible range, using explicit keys generated from the export inventory. Wildcard exports are removed. `@scnx/system` declares `@scnx/core-ui` as a peer and dev dependency. `requiredVersion` is the consuming application's declared range. Remotes remain lazy; only the host may choose eager loading. An incompatible version produces a controlled failure.
 
 P0 means the **pre-release blocking remediation milestone** in the UI Platform execution plan. Evidence can keep a component or capability outside stable exports; it does not silently change these decisions.
 
@@ -66,7 +67,7 @@ Source tests prove interaction and state logic. Producer tests prove generated a
 
 Authorized UI standards: STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001.
 
-Related global authority: ADR-GLB-FE-010 and its revised frontend standards. Related accepted token decisions are corrected in place before production where required. No waiver is requested.
+Related global authority: ADR-GLB-FE-010 and its revised frontend standards, and the replacement decisions ADR-GLB-FE-011, ADR-GLB-FE-012, and ADR-GLB-FE-013. The UI Platform token and build decisions (ADR-UIP-TKN-001, -002, -003, ADR-UIP-BLD-001) govern only the unreleased UI Platform packages and are corrected in place under the pre-production rule. No waiver is requested.
 
 ## 8. Alternatives Considered
 

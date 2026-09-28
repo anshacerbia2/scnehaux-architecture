@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-007
   title: Enterprise Standards (STD) Guideline
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-29
+  last_reviewed: 2026-09-28
 ---
 
 <!-- lint_disable: inline_reference_missing (reason: standard docs) -->
@@ -116,9 +116,10 @@ doc_meta:
   title: Short Descriptive Title
   owner: Lead Domain Architect Name / Team
   version: Y.Y.Y
-  status: adopted | trial | assessed | hold
+  status: draft | proposed | approved | deprecated | assessed | trial | adopted | hold
   classification: public | internal | restricted
-  governed_by: [Parent Context ID] # Required: Must point to EAD, PAD, SAD, or GDC-000 (if purely technical/global)
+  governed_by: [Parent Context ID] # Required: Must point to EAD, PAD, or GDC-000 (if purely technical/global)
+  authorized_by: [ADR ID] # Required when the major version is 2 or higher: the ADR that authorized it (§2.4.2)
 ```
 
 **Project/Local Level (Project Repo)**
@@ -129,10 +130,11 @@ doc_meta:
   title: Short Descriptive Title
   owner: Lead System Engineer / Team Name
   version: Y.Y.Y
-  status: adopted | trial | assessed | hold
+  status: draft | proposed | approved | deprecated | assessed | trial | adopted | hold
   classification: public | internal | restricted
   parent_std: [Parent Enterprise Standard ID] # e.g., STD-GLB-001 or STD-E006 (Traceability link)
-  governed_by: [Parent Context ID] # Required: Must point to EAD, PAD, SAD, or GDC-000 (if purely technical/global)
+  governed_by: [Parent Context ID] # Required: Must point to EAD, PAD, or GDC-000 (if purely technical/global)
+  authorized_by: [ADR ID] # Required when the major version is 2 or higher: the ADR that authorized it (§2.4.2)
 ```
 
 | Metadata Field   | Type   | Description / Purpose                                            |
@@ -143,15 +145,23 @@ doc_meta:
 | `version`        | String | Must comply with Semantic Versioning (e.g., 1.0.0).              |
 | `status`         | Enum   | The current lifecycle state (must match Allowed Statuses below). |
 | `classification` | Enum   | The data sensitivity (must match Allowed Classifications below). |
+| `governed_by`    | List   | Attachment to an EAD, a PAD, or GDC-000 (GDC-000 §2.4.1).        |
+| `authorized_by`  | List   | ADRs that authorized the current major revision (§2.4.2).        |
 
 ##### Allowed Lifecycle Statuses
 
-| Status     | Meaning / Lifecycle Stage                                                   |
-| ---------- | --------------------------------------------------------------------------- |
-| `adopted`  | Formally accepted and enforced.                                             |
-| `trial`    | In evaluation or POC phase.                                                 |
-| `assessed` | Evaluated but not necessarily adopted.                                      |
-| `hold`     | Suspended or pending retirement. (Triggers linter block for new adoptions). |
+A Standard declares either a document status or, when the Standard governs the adoption of a technology, a GDC-004 maturity phase. The authority column is what the linter enforces.
+
+| Status       | Meaning / Lifecycle Stage                                               | Normative authority |
+| ------------ | ----------------------------------------------------------------------- | ------------------- |
+| `draft`      | Being written. Exempt from full validation for 30 days.                 | None                |
+| `proposed`   | Complete and under review; awaiting ratification.                       | None                |
+| `approved`   | Ratified and enforced.                                                  | Yes                 |
+| `deprecated` | Being retired; no new adoption.                                         | Retiring            |
+| `adopted`    | GDC-004 phase: formally accepted and enforced.                          | Yes                 |
+| `trial`      | GDC-004 phase: in evaluation or POC.                                    | Yes, within trial   |
+| `assessed`   | GDC-004 phase: evaluated but not necessarily adopted.                   | Yes, optional use   |
+| `hold`       | GDC-004 phase: suspended or pending retirement. (Blocks new adoptions.) | Yes, restrictive    |
 
 ##### Allowed Classifications
 
@@ -185,11 +195,11 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 #### 2.4.1 Standard Maturity Model
 
-To prevent rigid compliance grids from stifling innovation, every enterprise standard must declare a maturity phase in its `status` field.
+To prevent rigid compliance grids from stifling innovation, a Standard that governs the adoption of a technology may declare a GDC-004 maturity phase in its `status` field instead of a document status.
 
 > **Authoritative Source**: The canonical definitions of the four maturity phases (Assessed, Trial, Adopted, Hold), including their adoption requirements, deviation policies, and sunset procedures, are defined and maintained in **[GDC-004 — Technology Lifecycle & Standards Governance](GDC-004-tech-lifecycle.md)**.
 
-All STD artifacts must declare one of the four phases defined in GDC-004 in their `status` metadata field.
+Every STD artifact must declare one status from the Allowed Lifecycle Statuses table in §2.3.4. `draft` and `proposed` carry no normative authority; the previously ratified version in Git history remains binding until the revision is ratified.
 
 #### 2.4.2 The Living Specification Principle (Mutability & Versioning)
 
@@ -200,7 +210,10 @@ Unlike ADRs (which are immutable historical logs of a specific point-in-time dec
    - **Major (X.0.0)**: Introducing new mandatory restrictions, breaking changes, or deprecating existing active paths.
    - **Minor (1.X.0)**: Adding optional recommendations, non-breaking rules, or clarifying examples.
    - **Patch (1.0.X)**: Fixing typos, broken links, or minor metadata updates.
-3. **ADR Authorization Invariant**: Any change resulting in a **Major (X.0.0)** version bump of an enterprise standard MUST be authorized by an approved ADR. The `governed_by` metadata field of the STD must be updated to point to the new ADR.
+3. **ADR Authorization Invariant**: Any change resulting in a **Major (X.0.0)** version bump of an enterprise standard MUST be authorized by an ADR. The STD names that ADR in `authorized_by` and keeps its `governed_by` attachment to an EAD, PAD, or GDC-000; the ADR names the STD in `authorizes` ([GDC-010 §2.3.4](GDC-010-adr-guideline.md)).
+   - A Standard without authority (`draft`, `proposed`) may be authorized by a `proposed` or `accepted` ADR.
+   - A Standard with authority requires every authorizing ADR to be `accepted`. The linter evaluates the final state of the commit, so a Standard and its ADR may be promoted in the same ratification commit.
+   - The linter rule `unauthorized_major_revision` enforces this invariant for every Standard whose major version is 2 or higher. Standards that reached a major revision before `authorized_by` existed are listed, each with an owner-facing reason and an expiry date, under `legacy_unauthorized_major_revisions` in `base.schema.json`. They raise a warning until the date passes and an error afterwards.
 
 ---
 

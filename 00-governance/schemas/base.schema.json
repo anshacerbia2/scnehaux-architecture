@@ -53,6 +53,33 @@
           "error_message": "Document with status '{doc_status}' has an age of {age_days} days (since {depend_on}), exceeding limit of {limit} days. Must be fully retired and deleted."
         }
       ],
+      "legacy_unauthorized_major_revisions": [
+        {
+          "id": "STD-IAM-001",
+          "expires": "2026-12-31",
+          "reason": "Major version 2 predates the authorized_by field; the Identity Platform owner must record the authorizing ADR."
+        },
+        {
+          "id": "STD-GLB-002",
+          "expires": "2026-12-31",
+          "reason": "Major version 2 (commit 68c128a) predates the authorized_by field; the database standard owner must record the authorizing ADR."
+        },
+        {
+          "id": "STD-GLB-004",
+          "expires": "2026-12-31",
+          "reason": "Major version 3 predates the authorized_by field; the event-driven standard owner must record the authorizing ADR."
+        },
+        {
+          "id": "STD-GLB-FE-003",
+          "expires": "2026-12-31",
+          "reason": "Major version 2 (commit 68c128a) predates the authorized_by field; the frontend security owner must record the authorizing ADR."
+        },
+        {
+          "id": "STD-GLB-FE-010",
+          "expires": "2026-12-31",
+          "reason": "Major version 2 (commit 68c128a) predates the authorized_by field; the frontend data-access owner must record the authorizing ADR."
+        }
+      ],
       "max_review_age_days": {
         "value": 365,
         "error_message": "Document review age of {age_days} days exceeds limit of {limit} days."
@@ -97,6 +124,7 @@
         "cross_reference_missing": "ERROR",
         "duplicate_id": "CRITICAL",
         "inline_reference_missing": "WARNING",
+        "decision_lineage_violation": "ERROR",
         "orphan_document": "ERROR",
         "traceability_violation": "ERROR",
         "broken_internal_link": "ERROR"
@@ -125,6 +153,7 @@
         "exception_expired": "ERROR",
         "exempt_document_skipped": "INFO",
         "review_age_violation": "WARNING",
+        "unauthorized_major_revision": "ERROR",
         "version_bump_required": "ERROR"
       },
       "5. Architecture Constraints Domain (Hard Technical Limits)": {

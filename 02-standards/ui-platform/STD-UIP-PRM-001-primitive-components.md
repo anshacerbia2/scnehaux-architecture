@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
-  governed_by: [ADR-UIP-PLT-001]
+  governed_by: [PAD-PLT-003]
+  authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -86,7 +87,7 @@ Use the native element when it represents the action accurately. Interactive par
 
 #### Styled Separation (Zero Recipes Rule)
 
-- **Styling Agnosticism**: Primitives must remain 100% styling-agnostic. They must not import stylesheets, style engines (such as Tailwind or Panda CSS), or define design token recipes (such as sizes, color variants, or visual treatments).
+- **Styling Agnosticism**: Primitives carry no styling. They must not import stylesheets, style engines (such as Tailwind or Panda CSS), or define design token recipes (such as sizes, color variants, or visual treatments).
 - **Design System Responsibility**: Styling, visual recipes, and token variables reside in `@scnx/system`, which may wrap `@scnx/core-ui` primitives.
 
 ---
@@ -101,7 +102,7 @@ Use the native element when it represents the action accurately. Interactive par
 
 ### Property Contracts
 
-To guarantee component boundary isolation and maintain clean API design:
+To keep component boundaries isolated and APIs clean:
 
 - **Public Props**: Shared primitives accept presentation and interaction inputs, not Product domain aggregates or authorization decisions. Complex values such as option collections are allowed when required by the widget contract; stability and rendering cost are measured rather than inferred from value shape alone.
 
@@ -109,8 +110,9 @@ To guarantee component boundary isolation and maintain clean API design:
 
 ### Accessibility Integration
 
-- **Semantic HTML First**: Primitives must render native semantic HTML tags (`<button>`, `<a>`, `<nav>`, `<input>`) instead of styling generic tags (`<div>`, `<span>`) with custom ARIA attributes.
-- **Focus Management**: Overlay structures (Dialogs, Drawers, Modals) must trap focus internally during activation and restore focus to the trigger element upon closure.
+- **Semantic HTML First**: A primitive renders the native element (`<button>`, `<a href>`, `<nav>`, `<input>`, `<dialog>`) whenever one provides the required semantics and behavior. A composite widget without a native equivalent (listbox, menu, tabs, tree, grid) follows its APG pattern, which assigns roles and states to generic elements. Generic elements with ARIA roles are prohibited only where a native element fits.
+- **Focus Management**: A modal overlay (modal dialog, drawer, or alert dialog) contains focus while open and restores focus to its trigger, or to a documented fallback when the trigger no longer exists, on close. A non-modal overlay (popover, non-modal dialog, menu) does not trap focus: it follows its APG pattern for moving focus in, closing on Escape, and returning focus, and it leaves the rest of the page operable.
+- **Focus Indicator**: Every focusable part shows a `:focus-visible` outline as defined in STD-GLB-FE-005 section 3.9. Shadows may enhance but never replace it.
 - **Keyboard Navigation**: Components must implement the keyboard navigation specifications declared in the WAI-ARIA Authoring Practices Guide (APG).
 - **Per-pattern matrix**: Required keys are defined per widget, not by counting `onKeyDown` occurrences or imposing one key list on all widgets.
 - **Evidence**: Source tests cover behavior; packed-package consumers and manual assistive-technology checks cover integration. Results are recorded in a Component Accessibility Conformance Report using applicable WCAG 2.2 and APG criteria. The report is not a VPAT or complete-page certification.

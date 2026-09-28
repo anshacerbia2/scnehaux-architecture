@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
-  governed_by: [ADR-UIP-PLT-001]
+  governed_by: [PAD-PLT-003]
+  authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -41,7 +42,7 @@ The styling and compilation engine adheres to four core principles to ensure ren
 
 All styling engines deployed within the UI platform (such as static CSS-in-JS engines or Sass/SCSS compilers) must compile styles statically during the application build phase.
 
-- **Prohibition of Runtime CSS-in-JS**: Using styling libraries that perform runtime style injection or dynamic evaluation in the React render path (such as legacy runtime CSS-in-JS libraries) is prohibited on performance-sensitive paths.
+- **Prohibition of Runtime CSS-in-JS**: Styling libraries that inject styles or evaluate style strings in the React render path are prohibited in the UI Platform (ADR-GLB-FE-013).
 - **Output contract**: SCSS component rules and the existing Panda recipe surface coexist during P0. One versioned token source generates both contracts. Panda adds no new recipe ownership until the P0 exit review. `@scnx/system` exports one aggregate component stylesheet plus explicit theme stylesheets. The composition root imports each once; component JavaScript and remotes MUST NOT inject duplicates. Per-component CSS subpaths are outside v1.
 - **Producer boundary**: Panda generates assets in the producer workspace. `@scnx/core-ui` MUST remain style-engine agnostic; after verifying it has no Panda callsites, its source MUST NOT be a Panda scan input. Packed consumers MUST NOT run Panda to render shipped components.
 
@@ -58,6 +59,7 @@ To prevent visual layout conflicts when multiple micro-frontends share the same 
 - **CSS Modules Naming**: CSS modules must resolve to hash-appended unique classes during compilation.
 - **Cascade contract**: The exact order is `reset, tokens, base, components, recipes, utilities, overrides`. Sass components belong to `components`; Panda recipes belong to `recipes`; UI Platform rules outside a declared layer fail the release gate.
 - **Theme coexistence**: Packed-package tests render two roots with distinct themes and check computed styles for leakage. Modal, tooltip, and other portal fixtures mount inside the originating theme container.
+- **Focus indicator**: Every focusable part renders a `:focus-visible` outline from focus tokens; `effect.shadow.focus` may enhance it but never replaces it. A forced-colors fixture verifies the outline (STD-GLB-FE-005 section 3.9).
 
 ---
 

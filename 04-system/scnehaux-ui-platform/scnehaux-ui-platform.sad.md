@@ -6,7 +6,7 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: public
-  governed_by: [GDC-000, ADR-UIP-PLT-001]
+  governed_by: [GDC-009]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -46,7 +46,7 @@ The system realizes [PAD-PLT-003](../../03-domain/PAD-PLT-003-scnehaux-ui-platfo
 
 ## 2. Enterprise Traceability
 
-The parent capability is PAD-PLT-003. Global authority includes ADR-GLB-FE-010 and the frontend standards it authorizes. UI authority includes ADR-UIP-PLT-001, ADR-UIP-TKN-001 through ADR-UIP-TKN-003, and the five UI Platform standards. Component designs live in the UI Platform repository under `docs/designs/` and attach to this SAD through `parent_sad: SAD-003`.
+The parent capability is PAD-PLT-003. Global authority includes ADR-GLB-FE-010 and the frontend standards it authorizes, and the replacement decisions ADR-GLB-FE-011 (federated toolchain), ADR-GLB-FE-012 (Module Federation runtime contract), and ADR-GLB-FE-013 (static CSS output). Until they are ratified, ADR-GLB-FE-002, ADR-GLB-FE-004, and ADR-GLB-FE-006 remain the binding accepted decisions. UI authority includes ADR-UIP-PLT-001, ADR-UIP-TKN-001 through ADR-UIP-TKN-003, and the five UI Platform standards. Component designs live in the UI Platform repository under `docs/designs/` and attach to this SAD through `parent_sad: SAD-003`.
 
 ## 3. Solution Context
 
@@ -98,9 +98,9 @@ Runtime component state belongs to a component instance or explicit provider. Th
 - Package tarballs are produced with `pnpm pack`. Packed manifests contain publishable dependency versions and no `workspace:` ranges.
 - Every documented JS, type, CSS, Sass, font, and token subpath resolves without workspace aliases.
 - Server-safe and client entries are explicit. A hook-name or filename regex is insufficient.
-- Strict CSP works without `unsafe-eval`.
-- The federation host owns explicit singleton share keys, manifest-derived required versions, and remote loading policy.
-- Both remote load orders produce one React identity, one context identity, one aggregate component stylesheet hash, and one selected theme asset.
+- A strict Content Security Policy rejects `unsafe-eval` and `unsafe-inline` for scripts and styles; inline bootstrap code runs only through a consumer-controlled nonce or hash.
+- The federation host follows ADR-GLB-FE-012: explicit singleton share keys for React, React DOM, `@scnx/core-ui`, and every context-bearing entry, `requiredVersion` from the consumer's declared range, lazy remotes, and a controlled failure for an incompatible version.
+- Both remote load orders produce one React identity, one context identity, one aggregate component stylesheet hash, and one instance of each selected theme asset.
 - Public token references resolve to valid computed property values inside every supported theme scope.
 
 ## 7. Security & Trust Boundary
@@ -121,7 +121,7 @@ Budgets name the import scenario, tool, environment, representation, baseline, a
 
 ### Accessibility and reliability
 
-Component Accessibility Conformance Reports cover applicable WCAG 2.2 and APG behavior. Release contrast targets include SC 1.4.3 and SC 1.4.11. Required widget behavior covers keyboard, focus, accessible name, disabled state, controlled/uncontrolled state, reduced motion, and cleanup.
+Component Accessibility Conformance Reports cover applicable WCAG 2.2 and APG behavior. Contrast gates enforce SC 1.4.3 and SC 1.4.11. Every focusable part shows a `:focus-visible` outline, verified in a forced-colors fixture; shadows only enhance it. Required widget behavior covers keyboard, focus, accessible name, disabled state, controlled/uncontrolled state, reduced motion, and cleanup.
 
 Failures include unresolved CSS variables, invalid substituted properties, missing fonts, missing exports, duplicate package identity, incompatible federation versions, missing transition completion events, and provider coexistence errors. Each required scenario has a pass/fail test or keeps the affected capability outside stable exports.
 
@@ -135,7 +135,7 @@ CI runs source tests, producer generation/build tests, `pnpm pack` consumers, ex
 
 ## 10. Architecture Decisions
 
-ADR-UIP-PLT-001 owns seven v1 decisions: interaction foundation, theme isolation, styling ownership, polymorphism, token package boundary, CSS delivery, and federation sharing. ADR-GLB-FE-010 resolves the related global conflicts. ADR-UIP-TKN-001 through ADR-UIP-TKN-003 own token tiering, OKLCH authoring, alpha behavior, and canonical names.
+ADR-UIP-PLT-001 owns seven v1 decisions: interaction foundation, theme isolation, styling ownership, polymorphism, token package boundary, CSS delivery, and federation sharing. ADR-GLB-FE-010 resolves the related global conflicts and authorizes the revised global standards. ADR-GLB-FE-011, ADR-GLB-FE-012, and ADR-GLB-FE-013 replace ADR-GLB-FE-002, ADR-GLB-FE-004, and ADR-GLB-FE-006 on ratification. ADR-UIP-TKN-001 through ADR-UIP-TKN-003 own token tiering, OKLCH authoring, alpha behavior, and canonical names.
 
 ### Rejected
 
@@ -151,7 +151,7 @@ ADR-UIP-PLT-001 owns seven v1 decisions: interaction foundation, theme isolation
 
 Target consumers can load static CSS assets and satisfy declared React peer ranges. Federated applications provide a composition host. Supported assistive technology, browsers, bundlers, and framework versions are listed per release.
 
-No governed system has reached production, so accepted ADR corrections follow the pre-production in-place rule.
+The UI Platform packages have not reached production, so UI Platform ADR corrections follow the pre-production in-place rule of GDC-010. The global frontend ADRs also govern the approved Experience systems SAD-002, SAD-012, SAD-014, and SAD-015, whose production status is not recorded in this repository; their changes therefore use replacement ADRs.
 
 ## 12. Compatibility Strategy
 

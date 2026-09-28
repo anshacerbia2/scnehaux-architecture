@@ -37,7 +37,7 @@ Historically, design token systems inside the Scnehaux UI Platform and downstrea
 
 ## 4. Decision Drivers
 
-Adopting this combinatorial taxonomy achieves maximum semantic clarity and architectural predictability. By grouping tokens into strict Design Domains (Color, Dimension, Typography, Motion), we prevent cross-contamination of token values.
+The combinatorial taxonomy makes each token's domain, intent, and state readable from its name. Grouping tokens into design domains (Color, Effect, Dimension, Typography, Motion) prevents values of different types from sharing a name.
 
 The hierarchical structure separates raw scales (Tier 1), shared semantic intent (Tier 2), and component aliases (Tier 3). A brand may change Tier-2 mappings when the relevant component styles use those mappings and the emitted theme is verified.
 
@@ -51,58 +51,48 @@ We officially adopt a unified, technology-agnostic **Design Token Taxonomy** acr
 
 Tier 1 and Tier 2 use a design-domain root to prevent value-type collisions. Tier 3 starts with component ownership and carries the relevant property in its path.
 
-1. **Color Domain**: Governs all paints, fills, and shadows.
-2. **Dimension Domain**: Governs all physical layout space (spacing, sizing, radii, borders, z-index).
-3. **Typography Domain**: Governs all text rendering properties.
-4. **Motion Domain**: Governs all temporal transitions and physics.
+1. **Color Domain**: Governs paints and fills, including the color of shadows.
+2. **Effect Domain**: Governs composite visual effects, currently shadows.
+3. **Dimension Domain**: Governs physical layout space (spacing, sizing, radii, borders, z-index).
+4. **Typography Domain**: Governs text rendering properties.
+5. **Motion Domain**: Governs durations and easing.
 
 The domain segment prevents mixing values such as z-index and font weight. Generated types and documentation provide autocomplete.
 
-### 4.2 Naming Convention Vocabulary (The Bracket Variables)
+### 4.2 Naming Vocabulary
 
-Before defining the tier structures, we must establish the precise definitions for the variables used in the naming convention brackets `[...]`:
+The normative vocabularies (schemes, roles, emphasis values including `solid` and the neutral elevation values, states) and the Role × Emphasis and Role × State compatibility tables are defined once in [STD-UIP-TKN-001](../../02-standards/ui-platform/STD-UIP-TKN-001-design-tokens.md). This record keeps only the rationale and the examples below, which match that standard.
 
-- **`[property]`**: The specific CSS or design property being scaled (e.g., `spacing`, `radius`, `font-weight`, `shadow`).
-- **`[scale]`**: The general magnitude or variant of a property. Depending on the domain, this is specifically expressed as:
-  - **`[size]`**: Can be a numeric value (e.g., `spacing.4`, `opacity.60`) or a T-shirt size (e.g., `radius.sm`, `shadow.lg`).
-  - **`[speed]`**: Used for motion properties (e.g., `duration.fast`, `easing.standard`).
-  - **`[intent]`**: Used for context-driven semantic magnitudes (e.g., `container-width.prose`, `font-weight.bold`).
-- **`[color]`**: The hue family (e.g., `blue`, `neutral`).
-- **`[step]`**: The monotonic grade (`1-12` for Solid, `1A-12A` for Alpha) used exclusively for color contrast scaling. See [ADR-UIP-TKN-002](ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md).
-- **`[axis]`**: The lighting context (`light` or `dark`) required for Symmetrical Palette Generation. See [ADR-UIP-TKN-002](ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md).
+- **`[hue]`**: The Tier-1 hue family (e.g., `blue`, `neutral`).
+- **`[axis]`**: The lighting context (`light` or `dark`) used for symmetrical palette generation. See [ADR-UIP-TKN-002](ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md).
+- **`[step]`**: A Tier-1 scale grade. Color uses `1-12` for solid and `1A-12A` for alpha; other domains use numeric or opaque steps that never reuse Tier-2 intent words.
 
 ### 4.3 Tier-1: Core/Primitive Tokens (The Raw Scales)
 
-The taxonomy format diverges based on the domain:
-
-- **Color Domain**: `color.[color].[axis].[step]`
-  - _Examples:_ `color.blue.light.9`, `color.neutral.dark.1A`
-  - _Axis Layer:_ Required to support Dual-Axis Symmetrical Palette Generation.
-  - _Step Variant:_ The `step` defines the scale grade, which consists of **Solid** steps (`1` to `12`) and **Alpha/Translucent** steps (`1A` to `12A`).
-- **Dimension Domain**: `dimension.[property].[size]` (for example `dimension.spacing.4` and `dimension.radius.lg`)
-- **Typography Domain**: `typography.[property].[size]` (for example `typography.font-size.16`)
-- **Motion Domain**: `motion.[property].[speed]` (for example `motion.duration.fast`)
+- **Color**: `color.[hue].[axis].[step]`, e.g. `color.blue.light.9`, `color.neutral.dark.1A`.
+- **Effect**: `effect.shadow.[sm|md|lg|xl]`. These sizes are internal and never emitted as public names.
+- **Dimension**: `dimension.[property].[step]`, e.g. `dimension.spacing.4`, `dimension.z-index.400`.
+- **Typography**: `typography.[property].[step]`, e.g. `typography.font-size.16`.
+- **Motion**: `motion.duration.[step]` and `motion.easing.[curve-id]`, e.g. `motion.duration.200`.
 
 ### 4.4 Tier-2: Semantic/System Tokens (The Global Intent)
 
-Unlike Tier-1 which scales mathematically, Tier-2 assigns structural UI intent. The taxonomy format here diverges significantly depending on the family:
-
-- **Color Domain:** `color.[scheme].[role].[emphasis].[state]`.
-  - _Examples:_ `color.primary.solid.default.hover`, `color.danger.surface.subtle.default`.
-- **Other Domains:** `[domain].[property].[intent]`.
-  - _Dimension:_ `dimension.spacing.compact`, `dimension.radius.control`, `dimension.z.modal`
-  - _Typography:_ `typography.font-size.body`, `typography.font-weight.strong`
-  - _Motion:_ `motion.duration.fast`, `motion.easing.standard`
+- **Color**: `color.[scheme].[role].[emphasis].[state]`, e.g. `color.primary.surface.solid.default`, `color.danger.surface.subtle.default`, `color.primary.text.contrast.default`.
+- **Effect**: `effect.shadow.[low|medium|high|overlay|focus]`. Every public theme emits this identical set.
+- **Dimension**: `dimension.[property].[intent]`, e.g. `dimension.spacing.compact`, `dimension.z-index.modal`.
+- **Typography**: `typography.[context].[variant]`, e.g. `typography.data.compact`.
+- **Motion**: `motion.[action].[duration|easing]`, e.g. `motion.enter.duration`.
 
 ### 4.5 Tier-3: Component/Alias Tokens (Unique Overrides)
 
 Format: `[component].[element?].[property].[state?]`.
 
-- **Examples (`[component].[property]`)**: `card.shadow`, `dialog.z-index`
-- **Examples (`[component].[property].[state]`)**: `button.surface.hover`, `input.border.focus`
-- **Examples (`[component].[element].[property].[state]`)**: `checkbox.indicator.color.checked`, `switch.track.surface.disabled`
+- `button.surface.hover`
+- `input.root.border.focus`
+- `checkbox.indicator.color.checked`
+- `dialog.root.z-index.default`
 
-CSS output prefixes `--ds-` and converts dots to hyphens. `color.primary.solid.default.default` becomes `--ds-color-primary-solid-default-default`; `checkbox.indicator.color.checked` becomes `--ds-checkbox-indicator-color-checked`.
+CSS output prefixes `--ds-` and converts dots to hyphens. `color.primary.surface.solid.default` becomes `--ds-color-primary-surface-solid-default`, `effect.shadow.low` becomes `--ds-effect-shadow-low`, and `dialog.root.z-index.default` becomes `--ds-dialog-root-z-index-default`.
 
 ---
 
@@ -144,8 +134,8 @@ CSS output prefixes `--ds-` and converts dots to hyphens. `color.primary.solid.d
 - [Documentation Governance Standard (GDC-000)](../../00-governance/GDC-000-governance-policy.md)
 - [Scnehaux UI Platform PAD (PAD-PLT-003)](../../03-domain/PAD-PLT-003-scnehaux-ui-platform/PAD-PLT-003-scnehaux-ui-platform.pad.md)
 - [Scnehaux UI Platform Physical SAD (SAD-003)](../../04-system/scnehaux-ui-platform/scnehaux-ui-platform.sad.md)
-- SCNX Master Semantic Taxonomy (located in `packages/design-system/src/styles/docs/scnx-master-semantic-taxonomy.md` of the UI Platform Repo)
-- SCNX Downstream Integration Standard (located in `packages/docs/05-standards/STD-UIP-ENG-001-developer-integration-standard.md` of the UI Platform Repo)
+- [UI Platform Token Standard (STD-UIP-TKN-001)](../../02-standards/ui-platform/STD-UIP-TKN-001-design-tokens.md)
+- TDD-ui-platform-tokens-003 (theme and token output) in the UI Platform repository
 
 ### Compliance Status
 
