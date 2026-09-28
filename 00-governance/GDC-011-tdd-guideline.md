@@ -14,6 +14,11 @@ doc_meta:
 
 # Technical Design Document (TDD) Guideline
 
+> **Revision 2.1.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, revision 1.1.0 remains binding until authorized human
+> principals approve the exact commit or ratification manifest containing this
+> revision. `last_reviewed` changes only in that ratification record.
+
 ## 1. Context & Scope
 
 TDDs represent the component-level (C3) blueprints, API contracts, ERDs, security boundaries, and failure handling mechanisms for specific implementations before code is written.

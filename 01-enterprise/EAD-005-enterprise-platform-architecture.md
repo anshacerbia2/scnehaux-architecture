@@ -14,6 +14,11 @@ doc_meta:
 
 # Enterprise Platform Architecture
 
+> **Revision 2.3.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, revision 2.2.0 remains binding until authorized human principals
+> approve the exact commit or ratification manifest containing this revision.
+> `last_reviewed` changes only in that ratification record.
+
 ## 1. Purpose
 
 Define how reusable Platform capabilities are grouped, qualified, product-managed, realized, operated, and evolved across the **Scnehaux Enterprise Cloud**.

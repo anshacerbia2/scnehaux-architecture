@@ -14,6 +14,11 @@ doc_meta:
 
 # System Architecture Document (SAD) Guideline
 
+> **Revision 2.0.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, revision 1.1.0 remains binding until authorized human
+> principals approve the exact commit or ratification manifest containing this
+> revision. `last_reviewed` changes only in that ratification record.
+
 ## 1. Context & Scope
 
 SADs represent the C2 System/Software Architecture layer of the C4 metamodel, defining the physical execution containment, deployment topology, container boundaries, failure modes, and runtime observability (e.g., backend service monoliths, web SPAs, or mobile clients).

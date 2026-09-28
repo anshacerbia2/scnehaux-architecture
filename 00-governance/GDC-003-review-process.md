@@ -14,6 +14,11 @@ doc_meta:
 
 # Architecture Review Process
 
+> **Revision 2.0.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, revision 1.0.0 remains binding until authorized human
+> principals approve the exact commit or ratification manifest containing this
+> revision. `last_reviewed` changes only in that ratification record.
+
 ## 1. Context & Scope
 
 This document defines the formal evaluation process, review rubric, and audit procedures used to assess architectural artifacts (PAD, SAD, TDD, ADR, EAD) against the Scnehaux Architecture Documentation Quality Framework.
