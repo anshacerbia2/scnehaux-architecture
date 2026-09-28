@@ -3,7 +3,7 @@ doc_meta:
   id: GDC-007
   title: Enterprise Standards (STD) Guideline
   owner: Architecture Authority
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: public
   governed_by: [GDC-000]
@@ -213,7 +213,7 @@ Unlike ADRs (which are immutable historical logs of a specific point-in-time dec
 3. **ADR Authorization Invariant**: Any change resulting in a **Major (X.0.0)** version bump of an enterprise standard MUST be authorized by an ADR. The STD names that ADR in `authorized_by` and keeps its `governed_by` attachment to an EAD, PAD, or GDC-000; the ADR names the STD in `authorizes` ([GDC-010 §2.3.4](GDC-010-adr-guideline.md)).
    - A Standard without authority (`draft`, `proposed`) may be authorized by a `proposed` or `accepted` ADR.
    - A Standard with authority requires every authorizing ADR to be `accepted`. The linter evaluates the final state of the commit, so a Standard and its ADR may be promoted in the same ratification commit.
-   - The linter rule `unauthorized_major_revision` enforces this invariant for every Standard whose major version is 2 or higher. Standards that reached a major revision before `authorized_by` existed are listed, each with an owner-facing reason and an expiry date, under `legacy_unauthorized_major_revisions` in `base.schema.json`. They raise a warning until the date passes and an error afterwards.
+   - The linter rule `unauthorized_major_revision` enforces this invariant for every Standard whose major version is 2 or higher. Standards that reached a major revision before `authorized_by` existed are listed under `legacy_unauthorized_major_revisions` in `base.schema.json`. Every allowance has a stable debt ID, named accountable owner, required action, reason, and expiry. It raises a warning until the expiry date and an error afterwards; extending an allowance requires an explicit ARB disposition rather than a silent date edit.
 
 ---
 

@@ -160,7 +160,11 @@ technology_radar:
       category: frontend-architecture
       date_entered: "2026-01-15"
       owner: UI Platform Team
-      # Promotion to adopt is proposed with ADR-GLB-FE-012; pending ARB.
+      # Remains assess. ADR-GLB-FE-011 constrains the toolchain only when a
+      # bounded SAD/ADR separately authorizes federation; ADR-GLB-FE-012 defines
+      # the evaluation contract. Neither ADR promotes this radar entry. A ring
+      # transition requires the P0 federation/CSP fixture evidence and a separate
+      # recorded ARB decision.
 
     # pending ARB: react-aria and dtcg-design-tokens assess entries.
     - name: react-aria

@@ -51,6 +51,18 @@ The v1 decisions are:
 6. **CSS delivery:** v1 publishes one aggregate component stylesheet and explicit theme stylesheets. A host or standalone composition root imports them once. Component JavaScript and remotes do not import CSS side effects. Per-component CSS subpaths are outside v1.
 7. **Federation sharing:** under ADR-GLB-FE-012, the host shares `react`, `react-dom`, `@scnx/core-ui`, and every other context-bearing public entry as singletons with a strict compatible range, using explicit keys generated from the export inventory. Wildcard exports are removed. `@scnx/system` declares `@scnx/core-ui` as a peer and dev dependency. `requiredVersion` is the consuming application's declared range. Remotes remain lazy; only the host may choose eager loading. An incompatible version produces a controlled failure.
 
+Module Federation remains in the enterprise `assess` radar ring. Item 7 governs
+the bounded P0 fixture and any federation scope separately authorized by an
+owning SAD/ADR; it neither mandates federation nor changes that radar status.
+The fixture must pass the same strict CSP policy as the standalone consumer,
+including nonce/hash handling for bootstrap and dynamically loaded chunks.
+
+The decision register may compare measured sizes and costs, but this ADR does
+not authorize universal 15 KB, 10%, or 2x thresholds. Every comparative result
+retains its import path, fixture, baseline, compression representation, tool,
+runner, and parse/evaluation context. Eligibility follows accessibility,
+security, licensing, correctness, and approved consumer performance gates.
+
 P0 means the **pre-release blocking remediation milestone** in the UI Platform execution plan. Evidence can keep a component or capability outside stable exports; it does not silently change these decisions.
 
 Source tests prove interaction and state logic. Producer tests prove generated assets. Isolated `pnpm pack` consumers prove exports, types, CSS, fonts, token subpaths, SSR/RSC, and CSP. A host with two packed remotes proves shared identity, version behavior, theme portals, load-order independence, and exactly one intended stylesheet set.
@@ -62,6 +74,7 @@ Source tests prove interaction and state logic. Producer tests prove generated a
 - **Negative:** fixtures, manual assistive-technology checks, and dual-engine measurements add release work.
 - **Operational:** every unresolved public variable, invalid substituted property, missing export, duplicate stylesheet, or required fixture failure blocks stable promotion.
 - **Operational:** a larger Node heap is diagnostic evidence and never a release fix or budget.
+- **Operational:** deterministic installation is the P0 entry gate. A clean checkout must pass `pnpm install --frozen-lockfile` with lifecycle scripts enabled, no `--ignore-scripts`, and no lockfile change before package feature work begins.
 
 ## 7. Compliance Impact
 

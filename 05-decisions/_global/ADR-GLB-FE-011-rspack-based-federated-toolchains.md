@@ -38,7 +38,9 @@ The production status of every frontend governed by ADR-GLB-FE-002 cannot be est
 
 ## 5. Decision
 
-1. **Federated applications.** Micro-frontend hosts and remotes compile with an Rspack-based toolchain: Rsbuild, or `@rspack/core` with its Module Federation plugin. The owning SAD records which one. Mixing compiler families inside one federation requires a fixture that proves the ADR-GLB-FE-012 contract across them.
+This decision is conditional on a separately authorized choice to use Module Federation. It does not adopt Module Federation, change its Technology Radar ring, or permit broad rollout. While Module Federation remains `assess`, only bounded evaluation and explicitly approved SAD scopes may use it.
+
+1. **Federated applications.** When an owning SAD and accepted decision authorize Module Federation for a bounded scope, its hosts and remotes compile with an Rspack-based toolchain: Rsbuild, or `@rspack/core` with its Module Federation plugin. The owning SAD records which one. Mixing compiler families inside one federation requires a fixture that proves the ADR-GLB-FE-012 contract across them.
 2. **Non-federated single-page applications, internal tools, and libraries.** Vite or an Rspack-based toolchain is permitted. A published library may use another bundler when its SAD records it and its packed-consumer tests pass.
 3. **Server-rendered applications** use their meta-framework compiler, as in ADR-GLB-FE-003.
 4. **Webpack** is prohibited for new repositories. Existing Webpack repositories migrate when they are next re-platformed; no new federation host or remote may be introduced on Webpack.
@@ -49,6 +51,7 @@ The production status of every frontend governed by ADR-GLB-FE-002 cannot be est
 - **Positive:** the federation fixtures test one compiler family.
 - **Negative:** the Platform Team maintains presets for Rsbuild, direct Rspack, and Vite.
 - **Operational:** a SAD that introduces federation records its toolchain before its first release.
+- **Governance:** Rspack is the conditional implementation rule for an authorized federation; it is not evidence that federation has advanced beyond `assess`.
 
 ## 7. Compliance Impact
 
