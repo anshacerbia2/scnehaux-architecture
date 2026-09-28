@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
-  governed_by: [ADR-GLB-FE-010]
+  governed_by: [GDC-000]
+  authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -55,12 +56,12 @@ Every remote exposes build/version metadata. The host validates compatibility be
 
 ### 3.3 Shared-module identity
 
-- `react` and `react-dom` are strict singleton shared modules.
+- `react`, `react-dom`, and `@tanstack/react-query` (mandated by STD-GLB-FE-001) are strict singleton shared modules.
 - Every supported package request carrying context or shared state is an explicit singleton key generated from the public export inventory.
-- `requiredVersion` equals the relevant manifest range.
+- `requiredVersion` is the peer or dependency range that the consuming application or package declares for that module. Shared packages publish explicit exports; wildcard subpath exports are not shareable contracts.
 - Remotes remain lazy. Only the host may choose eager loading for an entry required before remote execution.
 - A shared package preserves one module identity across host and remotes.
-- The host handles unsatisfied required versions as a controlled integration failure.
+- The host handles unsatisfied required versions as a controlled integration failure: the affected route or feature renders its fallback, the rest of the host keeps working, and telemetry records both versions (ADR-GLB-FE-012).
 
 Libraries with no required cross-remote identity remain ordinary remote dependencies unless measured duplication justifies sharing.
 
@@ -74,11 +75,11 @@ Portals preserve their originating theme container. Remotes do not mutate global
 
 Cross-remote communication uses versioned typed contracts: host-owned context where identity is required, documented custom events, or a published contract package. A remote does not import another remote's internal source or access another domain's state store directly.
 
-Network calls follow STD-GLB-FE-010. Authentication credentials remain under the approved browser/BFF security model. A remote receives identity/session state through approved contracts and never reads `HttpOnly` cookie contents from JavaScript.
+Network calls follow STD-GLB-FE-010. Authentication credentials remain under the approved browser/BFF security model. A logout or session revocation reaches every open host tab and every mounted remote without a page reload; remotes on separate origins receive it through an origin-checked channel such as `BroadcastChannel` or `postMessage`. The host fixture verifies propagation. A remote receives identity/session state through approved contracts and never reads `HttpOnly` cookie contents from JavaScript.
 
 ### 3.6 Failure and observability
 
-Remote loading, compatibility rejection, render failure, and timeout events emit approved telemetry with host, remote, version, route, and correlation identifiers. Error boundaries provide retry or navigation recovery. Cached fallback behavior is used only when integrity, compatibility, and staleness policies are defined.
+A second instance of React or of any shared singleton at runtime emits a telemetry event and fails the integration fixture. Remote loading, compatibility rejection, render failure, and timeout events emit approved telemetry with host, remote, version, route, and correlation identifiers. Error boundaries provide retry or navigation recovery. Cached fallback behavior is used only when integrity, compatibility, and staleness policies are defined.
 
 ### 3.7 Performance budgets
 

@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
-  governed_by: [ADR-GLB-FE-010]
+  governed_by: [GDC-000]
+  authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -20,7 +21,7 @@ doc_meta:
 
 ## 1. Objective & Scope
 
-This standard defines the mandatory performance limits, layout safety mechanics, memory management rules, and polymorphic constraints for all browser-executed frontend applications and shared component libraries within the Scnehaux enterprise ecosystem.
+This standard defines how performance budgets are declared and measured, layout safety mechanics, memory management rules, and polymorphic constraints for all browser-executed frontend applications and shared component libraries within the Scnehaux enterprise ecosystem.
 
 It establishes rendering efficiency and memory discipline as measurable platform behaviors. Page-level Web Vitals are evaluated in representative consumers; component trace budgets name the interaction, browser, device class, and workload.
 
@@ -30,7 +31,7 @@ The scope of this standard applies to all production builds, design systems, and
 
 ## 2. Design Principles
 
-All frontend performance architectures must strictly adhere to the Supreme Frontend Governance principles:
+All frontend performance architectures follow these principles:
 
 - **Measured Cost**: Optimize interactions whose traces show material work, rather than mandating unmeasured zero-allocation or zero-render rules.
 - **Determinism Over Cleverness**: Output must be predictable from input. Hidden side-effects and implicit behaviors are prohibited.
@@ -90,7 +91,8 @@ An exception names the affected consumer, interaction, measurement, risk, owner,
 
 ## 5. Enforcement Mechanism
 
-- Consumer scenarios declare their device/browser profile, interaction workload, metric, baseline, and threshold before a numeric gate is enforced. Core Web Vitals are measured on representative pages, not inferred from a library build.
+- User-facing pages meet the Core Web Vitals "good" thresholds at the 75th percentile of field data: LCP at most 2.5 s, INP at most 200 ms, and CLS at most 0.1. Pages without field data use a lab run on the declared device and network profile. Core Web Vitals are measured on real pages, not inferred from a library build.
+- Other consumer scenarios declare their device/browser profile, interaction workload, metric, baseline, and threshold before a numeric gate is enforced.
 - Package budgets cover each supported import path and its incremental cost in a consumer bundle. Remote and application budgets belong to their owning systems.
 - CI records bundle changes and browser traces for material regressions; thresholds are ratified from baseline data. A universal Lighthouse score or unscoped byte limit is not a substitute for a scenario contract.
 - Code review checks event-listener cleanup, dynamic cloning, geometry reads, and style scope when those paths are changed.

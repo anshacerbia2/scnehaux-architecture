@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-010
   title: Architecture Decision Record (ADR) Guideline
   owner: Architecture Authority
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-22
+  last_reviewed: 2026-09-28
 ---
 
 # Architecture Decision Record (ADR) Guideline
@@ -28,13 +28,13 @@ An Architecture Decision Record (ADR) is how we capture the _why_ behind these p
 
 Every ADR must declare its `adr_type` to clarify the intent of the decision. The allowed types are:
 
-| ADR Type                | Purpose                                                                                                      |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Foundational**        | Makes a core architectural decision for the first time when no prior decision exists.                        |
-| **Implementation**      | Selects an implementation or option that is mandated/permitted by an STD.                                    |
-| **Exception**           | Approves a deviation (waiver) against an active STD.                                                         |
-| **Conflict Resolution** | Resolves conflicting constraints between an STD, ADR, or business requirement.                               |
-| **Replacement**         | Replaces a pre-existing architectural decision. Used only after the first production deployment; see §2.4.2. |
+| ADR Type                | Purpose                                                                                                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Foundational**        | Makes a core architectural decision for the first time when no prior decision exists.                                                                    |
+| **Implementation**      | Selects an implementation or option that is mandated/permitted by an STD.                                                                                |
+| **Exception**           | Approves a deviation (waiver) against an active STD.                                                                                                     |
+| **Conflict Resolution** | Resolves conflicting constraints between an STD, ADR, or business requirement.                                                                           |
+| **Replacement**         | Replaces a pre-existing architectural decision. Used after the first production deployment, or when production status cannot be established; see §2.4.2. |
 
 ### 2.2 The Schema Architecture
 
@@ -93,15 +93,18 @@ scnehaux-architecture/
 
 #### 2.3.4 Metadata Schema Properties
 
-| Metadata Field | Type         | Description / Purpose                                                                                         |
-| -------------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
-| `id`           | String       | Unique identifier (e.g., `ADR-IAM-000`).                                                                      |
-| `title`        | String       | Descriptive title of the document.                                                                            |
-| `adr_type`     | Enum         | The intent of the decision (must match Allowed Types in §2.1).                                                |
-| `status`       | Enum         | The current lifecycle state (must match Allowed Statuses below).                                              |
-| `created`      | Date         | The creation date (YYYY-MM-DD).                                                                               |
-| `created_by`   | String       | The author of the ADR.                                                                                        |
-| `governed_by`  | List[String] | **Required**: Must point to EAD, PAD, SAD, or GDC-000 (if purely technical/global). Links the ADR to the DAG. |
+| Metadata Field  | Type         | Description / Purpose                                                                                                                                                        |
+| --------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | String       | Unique identifier (e.g., `ADR-IAM-000`).                                                                                                                                     |
+| `title`         | String       | Descriptive title of the document.                                                                                                                                           |
+| `adr_type`      | Enum         | The intent of the decision (must match Allowed Types in §2.1).                                                                                                               |
+| `status`        | Enum         | The current lifecycle state (must match Allowed Statuses below).                                                                                                             |
+| `created`       | Date         | The creation date (YYYY-MM-DD).                                                                                                                                              |
+| `created_by`    | String       | The author of the ADR.                                                                                                                                                       |
+| `governed_by`   | List[String] | **Required**: Must point to EAD, PAD, or GDC-000 (if purely technical/global). Links the ADR to the DAG (GDC-000 §2.4.1).                                                    |
+| `authorizes`    | List[String] | **Conditional**: Standards whose current major revision this ADR authorizes. Each listed STD names this ADR in `authorized_by` ([GDC-007 §2.4.2](GDC-007-std-guideline.md)). |
+| `supersedes`    | List[String] | **Conditional**: Required on a `replacement` ADR. The ADRs it replaces; each of them names this ADR in `superseded_by`.                                                      |
+| `superseded_by` | List[String] | **Conditional**: Required on a `superseded` ADR. The replacement ADRs.                                                                                                       |
 
 **Exception Info Required Fields (Conditional)** _Required only if `adr_type` is `exception`._
 
@@ -114,13 +117,13 @@ scnehaux-architecture/
 
 ##### Allowed Lifecycle Statuses
 
-| Status       | Meaning / Lifecycle Stage                                                             |
-| ------------ | ------------------------------------------------------------------------------------- |
-| `proposed`   | Under review or initial draft state.                                                  |
-| `accepted`   | Formalized and active.                                                                |
-| `rejected`   | The proposed decision was rejected.                                                   |
-| `superseded` | Replaced by a newer ADR. Used only after the first production deployment; see §2.4.2. |
-| `deprecated` | Phased out and no longer applicable.                                                  |
+| Status       | Meaning / Lifecycle Stage                                                                                                         |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `proposed`   | Under review or initial draft state.                                                                                              |
+| `accepted`   | Formalized and active.                                                                                                            |
+| `rejected`   | The proposed decision was rejected.                                                                                               |
+| `superseded` | Replaced by a newer ADR. Used after the first production deployment, or when production status cannot be established; see §2.4.2. |
+| `deprecated` | Phased out and no longer applicable.                                                                                              |
 
 ##### Allowed Classifications
 
@@ -161,12 +164,14 @@ Every architectural decision must progress through a managed, auditable lifecycl
 - **Proposed**: The decision is drafted and undergoing active peer review. It carries no authority.
 - **Accepted**: The decision has been reviewed, approved by the designated authority, and is active.
 - **Rejected**: The decision has been evaluated and declined. The record remains as historical context.
-- **Superseded**: The decision has been replaced by a newer ADR, which references the superseded record by ID. It is reachable only after the first production deployment (§2.4.2); before it, a changed decision is edited in place.
+- **Superseded**: The decision has been replaced by a newer ADR, which references the superseded record by ID. It is reachable only after the first production deployment, or when production status cannot be established (§2.4.2); before production, a changed decision is edited in place.
 - **Deprecated**: The decision is no longer recommended or valid, but has not been directly replaced.
 
 #### 2.4.2 Changing an Accepted ADR
 
 How an accepted ADR changes depends on one fact: whether any system it governs has reached production.
+
+**Production status must be shown, not assumed.** Before an accepted ADR is edited in place, the change records, for every system the ADR governs, the evidence that the system has not reached production: a deployment record, or an explicit statement in the owning SAD. A global ADR governs every system in its scope, not only the system that motivated the change. When the status of any governed system cannot be established, the change follows the production path below: the last accepted wording is restored, it stays `accepted` until its replacement is ratified, and the new decision is a `replacement` ADR. The ratification commit moves the replacement to `accepted` and the original to `superseded` together.
 
 **Before the first production deployment, an accepted ADR is a living decision.** When the decision changes, the ADR is edited in place so that it states the current decision cleanly:
 

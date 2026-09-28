@@ -10,6 +10,21 @@ This index documents the internal functions and classes of the Fitness Function 
 
 ## List of functions
 
+### `engine/auditors/authorization_auditor.py`
+
+| Function | Description |
+| :--- | :--- |
+| **_as_list** | Coerce a scalar value or None into a list format.<br>Used for normalizing metadata fields that can be either strings or lists. |
+| **_major_version** | Return the major component of a Semantic Version, or None when it cannot be read. |
+| **_parse_date** | Parse an ISO date (YYYY-MM-DD), returning None when it is absent or malformed. |
+| **_audit_authorizing_adrs** | Check that every `authorized_by` entry of one Standard resolves to an ADR that<br>declares the Standard back and whose status matches the Standard's status. |
+| **_audit_missing_authorization** | Require `authorized_by` on a Standard whose major version is 2 or higher,<br>honoring a dated legacy allowance recorded in the base schema. |
+| **_audit_authorizes_backlinks** | Check that every Standard named in an ADR's `authorizes` exists and names the ADR back. |
+| **audit_standard_authorization** | Enforce the ADR authorization invariant of GDC-007 section 2.4.2.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- local_doc_metadata (dict): Documents in the lint target, keyed by document ID.<br>&nbsp;&nbsp;&nbsp;&nbsp;- severity_levels (dict): Mapping of SeverityRule to severity string.<br>&nbsp;&nbsp;&nbsp;&nbsp;- legacy_entries (list, optional): Dated allowances for Standards that reached a<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;major version before the authorization field existed. Each entry carries `id`,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`expires`, and `reason`.<br>&nbsp;&nbsp;&nbsp;&nbsp;- registry (dict, optional): Full document registry used to resolve references.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Defaults to `local_doc_metadata`.<br>&nbsp;&nbsp;&nbsp;&nbsp;- today (date, optional): Evaluation date. Defaults to the current date.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples.<br></pre> |
+| **audit_replacement_lineage** | Enforce the replacement procedure of GDC-010 section 2.4.2 on the final state of a commit.<br><br>A `replacement` ADR names the decisions it replaces in `supersedes`. While the<br>replacement is `proposed`, every replaced ADR stays `accepted`, so a binding<br>decision exists throughout the review. When the replacement is `accepted`, every<br>replaced ADR is `superseded` and names the replacement in `superseded_by`. A<br>`superseded` ADR must point at an accepted replacement that points back.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;- local_doc_metadata (dict): Documents in the lint target, keyed by document ID.<br>&nbsp;&nbsp;&nbsp;&nbsp;- severity_levels (dict): Mapping of SeverityRule to severity string.<br>&nbsp;&nbsp;&nbsp;&nbsp;- registry (dict, optional): Full document registry used to resolve references.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Defaults to `local_doc_metadata`.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples.<br></pre> |
+| **_audit_replaced_decisions** | Check the ADRs named in a replacement's `supersedes` against the replacement's status. |
+| **_audit_superseded_decision** | Check that a superseded ADR points at accepted replacements that point back. |
+
 ### `engine/auditors/dependency_scanner.py`
 
 | Function | Description |
@@ -33,7 +48,7 @@ This index documents the internal functions and classes of the Fitness Function 
 | **build_upward_graph** | Build an adjacency map of upward references restricted to known, non-self ids.<br><br>This function parses specific metadata fields (`UPWARD_EDGE_FIELDS`) across all<br>registered documents to map their upward topological dependencies. Self-references<br>are explicitly filtered out to avoid false-positive cycles.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;dict: A mapping from document ID to a set of its upstream parent IDs. |
 | **audit_traceability_graph** | Return a list of (category, message) tuples for global traceability defects.<br><br>Currently detects circular dependencies (length >= 2) in the upward-reference<br>graph and emits them as 'traceability_violation' (a blocking ERROR). |
 | **audit_duplicate_ids** | Evaluate duplicate document IDs across the repository to enforce the SSOT (Single Source of Truth) invariant.<br><br>This auditor iterates over the duplicate map generated during the pre-scan phase. For every duplicated<br>ID, it generates an error tuple pointing to the conflicting file paths.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples. |
-| **audit_hierarchy_tiers** | Enforce C4 Tier Mapping (GDC-000 Section 2.3.1).<br>TDD -> SAD -> PAD -> EAD.<br>ADR -> EAD or PAD.<br>STD -> EAD, PAD, or an authorizing ADR for a major revision. |
+| **audit_hierarchy_tiers** | Enforce C4 Tier Mapping (GDC-000 Section 2.3.1).<br>TDD -> SAD -> PAD -> EAD.<br>ADR & STD -> EAD or PAD (GDC-000 for enterprise-wide technical rules).<br>The ADR that authorizes an STD major revision is declared in `authorized_by`<br>and audited by authorization_auditor; it is not an attachment edge. |
 | **audit_orphans** | Enforce architectural connectivity by ensuring no orphaned artifacts exist below the EAD tier.<br><br>This check validates that nodes with an in-degree of 0 (no incoming upward edges) are exclusively<br>top-level constructs (EADs or GDCs). Any lower-tier document (TDD, SAD, PAD) missing its requisite<br>parent reference (e.g. `parent_pad`, `governed_by`) is flagged as a traceability violation.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples for orphaned nodes. |
 
 ### `engine/auditors/waiver_auditor.py`

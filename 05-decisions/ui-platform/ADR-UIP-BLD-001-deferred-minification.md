@@ -4,12 +4,11 @@ doc_meta:
   title: Deferred Minification
   adr_type: foundational
   owner: Principal UI/UX Architect
-  version: 1.0.0
   status: proposed
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
-  last_reviewed: 2026-06-26
+  last_reviewed: 2026-09-28
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Staff Engineer

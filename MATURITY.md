@@ -11,7 +11,7 @@
 | **PAD** (Domain)     | 19              | -                 | -                | -                 |
 | **SAD** (System)     | 22              | -                 | -                | -                 |
 | **STD** (Standard)   | 30              | 19                | 11               | 0                 |
-| **ADR** (Decisions)  | 34              | 0                 | 9                | 0                 |
+| **ADR** (Decisions)  | 37              | 0                 | 10               | 0                 |
 
 ## 2. Capability Coverage
 

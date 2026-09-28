@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-000
   title: Documentation Governance Policy
   owner: Architecture Authority
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: public
   governed_by: []
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_reviewed: 2026-05-22
+  last_reviewed: 2026-09-28
 ---
 
 # Documentation Governance Policy (The Constitution)
@@ -361,8 +361,9 @@ To maintain the unbroken DAG illustrated above, the following structural policie
 2. **The Core Hierarchy (EAD → PAD → SAD → TDD)**: Starting from the PAD and moving downwards, every artifact **MUST** establish a strict upward relationship to exactly one structural parent above it. (A TDD attaches to a SAD, a SAD attaches to a PAD, and a PAD attaches to an EAD). **Orphan artifacts are strictly prohibited.**
 3. **The Meta Attachments (STD & ADR)**: Standards and Decision Records do not sit in the core execution hierarchy. Instead, they act as meta-level modifiers:
    - **Target Scope**: ADRs and STDs can be applied Globally (Enterprise-wide) or restricted to a specific Domain.
-   - **Attachment Policy**: ADRs and STDs can **ONLY** be attached to an **EAD** or a **PAD**. They cannot be attached to a SAD or a TDD.
-   - **Independence**: An STD is established directly by an EAD or PAD, it does not require an ADR to enforce its existence. ADRs and STDs have no structural relationship with each other.
+   - **Attachment Policy**: ADRs and STDs attach through `governed_by` **ONLY** to an **EAD** or a **PAD**, or to **GDC-000** when the rule is enterprise-wide and purely technical. They cannot be attached to a SAD or a TDD.
+   - **Independence**: An STD is established directly by an EAD or PAD; it does not require an ADR to enforce its existence. An ADR is never the structural parent of an STD.
+   - **Authorization Edge**: A major revision of an STD (version `X.0.0` with `X ≥ 2`) must be authorized by an ADR ([GDC-007 §2.4.2](GDC-007-std-guideline.md)). The STD names that ADR in `authorized_by`, and the ADR names the STD in `authorizes`. This edge records who authorized the current major version. It is not a lineage edge and never replaces the `governed_by` attachment.
 
 #### 2.4.2 The 1-to-N Execution Mapping (PAD to SAD)
 

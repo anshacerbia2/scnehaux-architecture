@@ -76,6 +76,28 @@
             {
               "if": {
                 "properties": {
+                  "adr_type": { "const": "replacement" }
+                },
+                "required": ["adr_type"]
+              },
+              "then": {
+                "required": ["supersedes"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "status": { "const": "superseded" }
+                },
+                "required": ["status"]
+              },
+              "then": {
+                "required": ["superseded_by"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
                   "adr_type": { "const": "exception" }
                 }
               },

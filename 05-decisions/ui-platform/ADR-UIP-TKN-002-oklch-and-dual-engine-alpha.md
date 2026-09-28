@@ -32,7 +32,7 @@ Legacy UI systems rely on sRGB color spaces (HEX, RGB, HSL). These legacy spaces
 
 ## 4. Decision Drivers
 
-By abandoning HSL and static universal opacities, we eradicate guesswork from the design system.
+HSL scales and static universal opacities are replaced by a perceptual authoring space and a rendered-pair verification step.
 
 - **OKLCH** provides a useful perceptual authoring space for generating candidate light and dark scales; it does not remove the need for theme-specific review.
 - **Alpha composition** requires checking the rendered foreground/background pairing. A calculated overlay is a candidate value, not a contrast guarantee.
@@ -44,13 +44,13 @@ By abandoning HSL and static universal opacities, we eradicate guesswork from th
 All Scnehaux Core Primitives (Tier 1) must be generated natively using the **OKLCH Color Space**, targeting the **P3 Wide-Gamut**.
 
 - **Perceptual Authoring:** OKLCH supports more predictable color-scale editing than HSL, while perceived appearance and rendered contrast still depend on hue, chroma, display gamut, and background.
-- **Contrast Evidence:** Declared semantic foreground/background pairs must be evaluated after alpha composition and color conversion in each supported theme. The release gate uses the chosen published accessibility target; APCA may be recorded as additional research evidence, not as a claim of WCAG 3 conformance.
+- **Contrast Evidence:** Declared semantic foreground/background pairs must be evaluated after alpha composition and color conversion in each supported theme. The release gate is WCAG 2.2 SC 1.4.3 for text and SC 1.4.11 for non-text UI; APCA may be recorded as additional research evidence, not as a claim of WCAG 3 conformance.
 
 ### 4.2. Dual-Engine Alpha Architecture
 
 To solve the issue of Alpha compositing, the UI Platform will employ a strict Dual-Engine split:
 
-1. **The Photometric Absolute Engine (Black & White):**
+1. **The Static Alpha Engine (Black & White):**
    - Treated strictly as **Universal Light Modifiers** (Illumination and Shadow), not as pigments.
    - Utilizes static alpha ramps (e.g., `0.05` to `0.95` opacity) across both Light and Dark axes.
 2. **The Chromatic Adaptive Engine (Colors & Neutrals):**

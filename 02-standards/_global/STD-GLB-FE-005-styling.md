@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
-  governed_by: [ADR-GLB-FE-010]
+  governed_by: [GDC-000]
+  authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -34,9 +35,9 @@ This standard defines styling ownership, token consumption, selector isolation, 
 
 Applications may use CSS Modules, token-bound utilities, Sass, PostCSS, or approved static CSS generators. Shared UI libraries publish compiled CSS and do not require consumers to run their producer toolchain.
 
-Runtime style evaluation or render-path style injection is prohibited for the shared UI Platform. A tool choice does not establish selector isolation, accessibility, tree shaking, or performance by itself.
+Runtime style evaluation or render-path style injection is prohibited for the shared UI Platform and for new applications. An existing application that injects styles at render time records a migration plan in its SAD. A tool choice does not establish selector isolation, accessibility, tree shaking, or performance by itself.
 
-The UI Platform may use Sass component rules and Panda recipes during the pre-release remediation milestone under ADR-GLB-FE-006. One generated token contract owns names across both outputs.
+The UI Platform may use Sass component rules and Panda recipes during the pre-release remediation milestone under ADR-GLB-FE-013. One generated token contract owns names across both outputs.
 
 ### 3.2 Token and local-value contract
 
@@ -46,9 +47,13 @@ Context-specific structural values remain valid for intrinsic sizing, percentage
 
 Hardcoded color literals in shared component styles are prohibited. Data visualization with product-specific palettes requires declared contrast and product ownership.
 
+`z-index` values use Tier-2 `dimension.z-index.*` tokens or Tier-3 component aliases; integer literals are prohibited. Custom properties in shared and application styles are either `--ds-*` tokens or documented Tier-3 aliases; ad-hoc custom properties are prohibited. Inline `style` props carry only values computed at runtime, such as pointer coordinates or measured sizes.
+
 ### 3.3 Selector and theme isolation
 
-Shared selectors use a documented `scnx-` class/data contract or locally scoped CSS Modules. Shared resets and base element rules live below a declared composition root.
+Shared selectors use a documented `scnx-` class/data contract or locally scoped CSS Modules. Classes in an application's global (non-module) stylesheets use the `scnx-<app>-` namespace, for example `.scnx-hris-card`. Shared resets and base element rules live below a declared composition root.
+
+Selectors contain no ID selectors, no type-qualified classes such as `button.card`, at most specificity `0,4,0`, at most three compound selectors, and at most two levels of nesting.
 
 Public multi-brand themes use `[data-scnx-theme="<theme-id>"]`. A separate `:root` compatibility stylesheet may serve a single-brand document and is excluded from multi-brand and federated support. Theme portals mount inside the originating theme container. Shadow DOM is outside the v1 UI Platform contract.
 
@@ -56,7 +61,7 @@ Public multi-brand themes use `[data-scnx-theme="<theme-id>"]`. A separate `:roo
 
 ### 3.4 Cascade layers
 
-The application entry declares this exact order:
+An application entry that consumes UI Platform CSS declares this exact order. Other applications may omit layers they do not use but keep the relative order of the layers they declare:
 
 ```css
 @layer reset, tokens, base, components, recipes, utilities, overrides;
@@ -102,16 +107,21 @@ A fixed enterprise-wide CSS byte limit has no authority without those fields. Ru
 
 Motion uses semantic duration/easing tokens and honors `prefers-reduced-motion`. Structural transitions may animate dimensions when the interaction requires them. Their implementation includes interruption, completion-event, timeout fallback, and cleanup tests. Browser traces determine whether layout work is acceptable.
 
+### 3.9 Focus indicators
+
+Every focusable element shows a `:focus-visible` indicator drawn with `outline`, using tokenized width, offset, and color. A shadow may add emphasis but never replaces the outline, because forced-colors mode computes `box-shadow` as `none`. Under `@media (forced-colors: active)` the outline uses a system color such as `Highlight` or `CanvasText`. The indicator meets WCAG 2.2 SC 1.4.11 non-text contrast against adjacent colors.
+
 ## 4. Exceptions
 
 A charting, canvas, or vendor integration may use a local adapter when it cannot consume the normal token or selector contract. The adapter must isolate its selectors, document its inputs, provide required accessibility behavior, and include a removal or migration condition.
 
 ## 5. Enforcement Mechanism
 
-- Stylelint and source analysis check prohibited shared color literals, unscoped shared selectors, layer placement, and `!important` policy.
+- Stylelint and source analysis check prohibited shared color literals, integer `z-index`, ad-hoc custom properties, unscoped shared selectors, ID and type-qualified selectors, specificity above `0,4,0`, more than three compound selectors or two nesting levels, layer placement, and `!important` policy.
 - Producer tests verify generated Sass/Panda parity and layer ownership.
 - Packed browser consumers verify exports, computed values, theme isolation, portal scope, and consumer overrides.
-- Federation fixtures assert one aggregate component stylesheet hash and one selected theme asset under both remote load orders.
+- Federation fixtures assert one aggregate component stylesheet hash and one instance of each selected theme asset under both remote load orders.
+- A forced-colors browser fixture asserts a visible outline on every focusable supported component.
 - Payload reports enforce only scenario-defined baselines and thresholds.
 
 Rules become release gates when their configured checks run in CI. Missing required checks fail stable promotion.

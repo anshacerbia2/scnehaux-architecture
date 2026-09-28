@@ -19,6 +19,7 @@ class SeverityRule(str, Enum):
     # 1. TOPOLOGY & IDENTITY DOMAIN (Graph & Lineage)
     CIRCULAR_DEPENDENCY = "circular_dependency"
     CROSS_REFERENCE_MISSING = "cross_reference_missing"
+    DECISION_LINEAGE_VIOLATION = "decision_lineage_violation"
     DUPLICATE_ID = "duplicate_id"
     INLINE_REFERENCE_MISSING = "inline_reference_missing"
     ORPHAN_DOCUMENT = "orphan_document"
@@ -49,6 +50,7 @@ class SeverityRule(str, Enum):
     EXCEPTION_EXPIRED = "exception_expired"
     EXEMPT_DOCUMENT_SKIPPED = "exempt_document_skipped"
     REVIEW_AGE_VIOLATION = "review_age_violation"
+    UNAUTHORIZED_MAJOR_REVISION = "unauthorized_major_revision"
     VERSION_BUMP_REQUIRED = "version_bump_required"
 
     # 5. ARCHITECTURE CONSTRAINTS DOMAIN (Hard Technical Limits)
