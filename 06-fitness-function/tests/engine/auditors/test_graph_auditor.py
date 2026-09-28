@@ -57,10 +57,27 @@ def test_audit_hierarchy_tiers_accepts_multiple_sad_parents():
     assert audit_hierarchy_tiers(meta, sev) == []
 
 
-def test_audit_hierarchy_tiers_accepts_std_authorizing_adr():
+def test_audit_hierarchy_tiers_rejects_adr_as_std_attachment():
     meta = {
         "STD-GLB-FE-001": {
             "governed_by": ["ADR-GLB-FE-010"],
+            "_filepath": "STD-GLB-FE-001.md",
+        }
+    }
+    sev = {"structural_integrity_violation": "CRITICAL"}
+
+    findings = audit_hierarchy_tiers(meta, sev)
+
+    assert len(findings) == 1
+    assert "STD 'STD-GLB-FE-001' cannot attach to 'ADR-GLB-FE-010'" in findings[0][1]
+    assert "authorized_by" in findings[0][1]
+
+
+def test_audit_hierarchy_tiers_ignores_authorized_by():
+    meta = {
+        "STD-GLB-FE-001": {
+            "governed_by": ["GDC-000"],
+            "authorized_by": ["ADR-GLB-FE-010"],
             "_filepath": "STD-GLB-FE-001.md",
         }
     }

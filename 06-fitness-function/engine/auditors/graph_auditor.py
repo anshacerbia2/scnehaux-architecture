@@ -125,8 +125,9 @@ def audit_hierarchy_tiers(
     """
     Enforce C4 Tier Mapping (GDC-000 Section 2.3.1).
     TDD -> SAD -> PAD -> EAD.
-    ADR -> EAD or PAD.
-    STD -> EAD, PAD, or an authorizing ADR for a major revision.
+    ADR & STD -> EAD or PAD (GDC-000 for enterprise-wide technical rules).
+    The ADR that authorizes an STD major revision is declared in `authorized_by`
+    and audited by authorization_auditor; it is not an attachment edge.
     """
     findings = []
     sev = severity_levels[SeverityRule.STRUCTURAL_INTEGRITY_VIOLATION]
@@ -179,8 +180,8 @@ def audit_hierarchy_tiers(
                     )
                 )
 
-        # Check ADR
-        elif doc_id.startswith("ADR-"):
+        # Check ADR / STD
+        elif doc_id.startswith("ADR-") or doc_id.startswith("STD-"):
             parents = _as_list(meta.get("governed_by")) + _as_list(
                 meta.get("parent_pad")
             )
@@ -188,31 +189,15 @@ def audit_hierarchy_tiers(
                 if not (
                     p.startswith("EAD-") or p.startswith("PAD-") or p.startswith("GDC-")
                 ):
-                    findings.append(
-                        (
-                            sev,
-                            f"Hierarchy violation: ADR '{doc_id}' cannot attach to '{p}'. Must be EAD or PAD.",
-                            filepath,
-                        )
+                    hint = (
+                        " Name an authorizing ADR in 'authorized_by' instead."
+                        if doc_id.startswith("STD-") and p.startswith("ADR-")
+                        else ""
                     )
-
-        # Check STD. GDC-007 section 2.4.2 requires a major revision to
-        # point at its authorizing ADR, so ADR is a valid governance edge.
-        elif doc_id.startswith("STD-"):
-            parents = _as_list(meta.get("governed_by")) + _as_list(
-                meta.get("parent_pad")
-            )
-            for p in parents:
-                if not (
-                    p.startswith("EAD-")
-                    or p.startswith("PAD-")
-                    or p.startswith("GDC-")
-                    or p.startswith("ADR-")
-                ):
                     findings.append(
                         (
                             sev,
-                            f"Hierarchy violation: STD '{doc_id}' cannot attach to '{p}'. Must be EAD, PAD, or an authorizing ADR.",
+                            f"Hierarchy violation: {doc_id[:3]} '{doc_id}' cannot attach to '{p}'. Must be EAD or PAD.{hint}",
                             filepath,
                         )
                     )

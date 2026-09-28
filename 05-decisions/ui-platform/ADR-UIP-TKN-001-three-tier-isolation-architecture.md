@@ -38,7 +38,7 @@ As the Scnehaux ecosystem scales across multiple standalone portals and federate
 
 This boundary separates the naming of a design value from the naming of its intended use. Correct theme output and consumer usage still require tests.
 
-- **Enterprise Theming:** A brand can remap `color.primary.solid.default.default` at Tier 2 when consumers use the semantic contract and the new theme passes visual and accessibility checks.
+- **Enterprise Theming:** A brand can remap `color.primary.surface.solid.default` at Tier 2 when consumers use the semantic contract and the new theme passes visual and accessibility checks.
 - **Predictable Maintenance:** Developers consume contextual intent (`color.danger.surface.subtle.default`), making the reason for a color choice reviewable across themes.
 
 ## 5. Decision
@@ -52,7 +52,7 @@ The UI Platform uses a **Three-Tier Design Token Isolation Architecture** for go
 
 ### Tier 2: Semantic Tokens (The Global Intent)
 
-- **Definition:** The shared mapping from Tier 1 primitives to structural UI intent (for example `color.primary.solid.default.default` and `dimension.spacing.compact`).
+- **Definition:** The shared mapping from Tier 1 primitives to structural UI intent (for example `color.primary.surface.solid.default` and `dimension.spacing.compact`).
 - **Rule:** This is the default consumption layer for governed shared styling. Theme overrides preserve semantic meaning; justified Tier-3 aliases may vary independently.
 
 ### Tier 3: Component Aliases (Unique Overrides)

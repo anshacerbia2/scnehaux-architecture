@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: public
-  governed_by: [ADR-UIP-PLT-001]
+  governed_by: [PAD-PLT-003]
+  authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28

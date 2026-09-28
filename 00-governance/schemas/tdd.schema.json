@@ -49,7 +49,7 @@
                 "status": {
                   "title": "Allowed Statuses",
                   "type": "string",
-                  "enum": ["draft", "approved", "deprecated"]
+                  "enum": ["proposed", "approved", "deprecated"]
                 },
                 "parent_sad": {
                   "title": "Parent SAD",

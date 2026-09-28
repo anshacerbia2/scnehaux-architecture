@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
-  governed_by: [ADR-GLB-FE-010]
+  governed_by: [GDC-000]
+  authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -38,7 +39,7 @@ The frontend technology stack prioritizes long-term maintainability, ecosystem m
 
 To prevent technology fragmentation and ensure consistent platform optimization, all web applications must compile under the following core technologies. Deviations are prohibited unless backed by an approved Architecture Decision Record (ADR).
 
-- **Core UI Framework (React 19+)**: React is the designated framework for UI composition. Applications must target React 19+ to take advantage of native compiler optimizations, asynchronous form actions, and advanced hydration controls.
+- **Core UI Framework (React 19)**: React is the designated framework for UI composition. Applications target React 19 for native compiler optimizations, asynchronous form actions, and hydration controls. The supported range, peer-dependency alignment, and the advisory-driven security baseline are defined in STD-GLB-FE-006 section 3.10.
 - **Static Typing (TypeScript)**: TypeScript must be used across all source files, configured with strict compilers.
 - **Server State Management (TanStack Query)**: Server-originated data fetching, query caching, and mutations must be managed via TanStack Query.
 - **Client-Global State Management (Zustand)**: Global client state (e.g., UI layout states) must be managed using selector-bound Zustand stores.
@@ -200,5 +201,6 @@ None. All frontend technology stack mandates apply universally. Deviations requi
 ## 5. Enforcement Mechanism
 
 - **Boundary Linting (ESLint & Dependency Cruiser)**: Build pipelines must run static analysis tools (e.g. Dependency Cruiser) and ESLint plugins (`eslint-plugin-import`) configured with strict boundary rules to block imports that violate the directory layering layout (such as UI elements importing domain logic or cross-feature imports).
-- **Automated Visual Token Scanner**: A custom pre-commit and CI scanner script must parse all CSS/SCSS/TSX files, flagging any hardcoded HEX, RGB, or HSL color values and blocking the commit if styling rules do not resolve through centralized design tokens.
+- **Automated Visual Token Scanner**: A pre-commit and CI scanner parses CSS/SCSS/TSX files and blocks hardcoded HEX, RGB, HSL, or OKLCH color literals in shared component and product styles. Values inside a documented STD-GLB-FE-005 exception adapter or a product-owned data-visualization palette with declared contrast are reported but not blocked.
+- **Dependency Security Audit**: CI audits the lockfile-resolved dependency graph, or its SBOM, and framework advisories as defined in STD-GLB-FE-006 section 3.10.
 - **Waiver Protocol**: Architectural deviations (such as introducing third-party state managers or custom rendering layers) must be documented in a local project ADR and approved by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.

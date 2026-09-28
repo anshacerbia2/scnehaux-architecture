@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
-  governed_by: [ADR-GLB-FE-010]
+  governed_by: [GDC-000]
+  authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -42,7 +43,7 @@ A Component ACR is evidence for a component. VPAT-based reporting is reserved fo
 
 Interactive elements use native elements where their semantics and behavior fit. Custom composite widgets document their applicable APG pattern, focus model, required and optional keys, typeahead, disabled behavior, and controlled/uncontrolled state.
 
-Every operable element is reachable and usable with the keyboard. Focus indicators satisfy WCAG 2.2 SC 2.4.7 and SC 2.4.11 where applicable. Dialogs and other modal overlays contain focus according to their pattern and restore focus to a valid target on close.
+Every operable element is reachable and usable with the keyboard. Focus is visible (WCAG 2.2 SC 2.4.7) and the focused element is not entirely hidden by author-created content (SC 2.4.11). The indicator is an `outline`; a shadow may enhance it but never replaces it, because forced-colors mode computes `box-shadow` as `none` (STD-GLB-FE-005 section 3.9). Modal overlays contain focus according to their pattern and restore focus to a valid target on close; non-modal overlays do not trap focus.
 
 Icon-only controls expose an accessible name. Dynamic announcements use an appropriate live region. Decorative images use empty alternative text.
 
@@ -51,7 +52,7 @@ Icon-only controls expose an accessible name. Dynamic announcements use an appro
 - Normal text meets WCAG 2.2 SC 1.4.3 at 4.5:1.
 - Large-scale text meets SC 1.4.3 at 3:1.
 - User interface components and meaningful graphical objects meet SC 1.4.11 at 3:1 against adjacent colors.
-- Focus indicators meet their applicable WCAG 2.2 contrast and area requirements.
+- Focus indicators meet SC 1.4.11 at 3:1 against the colors adjacent to the indicator. The Level AAA focus appearance criterion (SC 2.4.13) is outside the AA target.
 - Color is not the sole means of conveying information.
 
 Tests use actual foreground/background pairs after alpha composition in each supported theme and state. OKLCH or APCA measurements may provide additional design evidence and do not replace the published WCAG 2.2 release target.
@@ -86,7 +87,9 @@ Canvas, virtualized, or specialized widgets without a native equivalent may use 
 
 - Source and interaction tests validate semantics, ARIA state, keyboard behavior, focus, and cleanup.
 - Browser tests cover reflow, target size, themes, reduced motion, forced colors, direction, and declared contrast pairs.
-- Automated accessibility scans run on components and critical product routes.
+- Automated accessibility scans (for example axe-core) run on components and critical product routes. A pull request that introduces a new automated violation on a covered component or route is blocked.
+- The build fails when a user-facing string resolves to a missing translation key or a declared locale lacks its message resource.
+- A forced-colors browser fixture asserts a visible focus outline on every focusable supported component.
 - Manual NVDA and VoiceOver evidence is required for stable composite widgets.
 - Product release review evaluates full-page WCAG 2.2 conformance and known limitations.
 

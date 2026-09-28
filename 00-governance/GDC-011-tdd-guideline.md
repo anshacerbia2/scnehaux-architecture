@@ -3,13 +3,13 @@ doc_meta:
   id: GDC-011
   title: Technical Design Document (TDD) Guideline
   owner: Architecture Authority
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: public
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
 ---
 
 # Technical Design Document (TDD) Guideline
@@ -115,6 +115,8 @@ doc_meta:
 | `proposed`   | The design is under review.                                  |
 | `approved`   | The design is approved for implementation.                   |
 | `deprecated` | The implementation is being phased out or has been replaced. |
+
+Every new TDD starts at `proposed` and is fully schema- and content-validated in that state. TDD does not define a separate `draft` lifecycle state; local working notes are not TDDs and carry no TDD identifier.
 
 ##### Allowed Classifications
 

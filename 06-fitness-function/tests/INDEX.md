@@ -17,6 +17,43 @@ This index documents the test suite utilities and fixtures.
 | **_get_real_config** | *(No docstring provided)* |
 | **make_validator** | Create a validator instance that calls the REAL __init__,<br>ensuring lint_disable parsing and all initialisation logic is exercised.<br>It merges test rules with the real validated global schema, ensuring<br>tests cannot instantiate a validator with a broken configuration. |
 
+### `tests/engine/auditors/test_authorization_auditor.py`
+
+| Function | Description |
+| :--- | :--- |
+| **_std** | *(No docstring provided)* |
+| **_adr** | *(No docstring provided)* |
+| **_run** | *(No docstring provided)* |
+| **test_proposed_std_with_proposed_adr_is_clean** | *(No docstring provided)* |
+| **test_major_revision_without_authorized_by_fails** | *(No docstring provided)* |
+| **test_first_major_version_needs_no_authorization** | *(No docstring provided)* |
+| **test_unparseable_version_is_left_to_metadata_rules** | *(No docstring provided)* |
+| **test_active_std_requires_accepted_adr_in_same_commit** | *(No docstring provided)* |
+| **test_simultaneous_promotion_is_clean** | *(No docstring provided)* |
+| **test_proposed_std_rejects_rejected_adr** | *(No docstring provided)* |
+| **test_deprecated_std_skips_status_and_presence_checks** | *(No docstring provided)* |
+| **test_unresolved_authorizer_fails** | *(No docstring provided)* |
+| **test_non_adr_authorizer_fails** | *(No docstring provided)* |
+| **test_missing_backlink_on_adr_fails** | *(No docstring provided)* |
+| **test_adr_authorizing_std_that_does_not_point_back_fails** | *(No docstring provided)* |
+| **test_adr_authorizing_unknown_std_fails** | *(No docstring provided)* |
+| **test_legacy_allowance_warns_until_expiry** | *(No docstring provided)* |
+| **test_expired_legacy_allowance_fails** | *(No docstring provided)* |
+| **test_legacy_allowance_with_invalid_date_fails** | *(No docstring provided)* |
+| **test_obsolete_and_unknown_legacy_entries_warn** | *(No docstring provided)* |
+| **test_registry_resolves_references_outside_the_lint_target** | *(No docstring provided)* |
+| **test_non_dict_metadata_and_default_date_are_tolerated** | *(No docstring provided)* |
+| **_replacement** | *(No docstring provided)* |
+| **_lineage** | *(No docstring provided)* |
+| **test_proposed_replacement_keeps_original_accepted** | *(No docstring provided)* |
+| **test_proposed_replacement_rejects_early_supersession** | *(No docstring provided)* |
+| **test_ratified_replacement_is_clean** | *(No docstring provided)* |
+| **test_accepted_replacement_requires_superseded_original** | *(No docstring provided)* |
+| **test_replacement_of_unknown_adr_fails** | *(No docstring provided)* |
+| **test_superseded_without_replacement_fails** | *(No docstring provided)* |
+| **test_superseded_by_non_replacement_fails** | *(No docstring provided)* |
+| **test_lineage_ignores_non_adr_and_non_dict** | *(No docstring provided)* |
+
 ### `tests/engine/auditors/test_dependency_scanner.py`
 
 | Function | Description |
@@ -38,7 +75,8 @@ This index documents the test suite utilities and fixtures.
 | **test_audit_hierarchy_tiers** | *(No docstring provided)* |
 | **test_audit_orphans** | *(No docstring provided)* |
 | **test_audit_hierarchy_tiers_accepts_multiple_sad_parents** | *(No docstring provided)* |
-| **test_audit_hierarchy_tiers_accepts_std_authorizing_adr** | *(No docstring provided)* |
+| **test_audit_hierarchy_tiers_rejects_adr_as_std_attachment** | *(No docstring provided)* |
+| **test_audit_hierarchy_tiers_ignores_authorized_by** | *(No docstring provided)* |
 | **test_audit_traceability_graph_cycle_detected** | *(No docstring provided)* |
 | **test_audit_traceability_graph_self_reference** | *(No docstring provided)* |
 | **test_audit_traceability_graph_acyclic_clean** | *(No docstring provided)* |
@@ -163,6 +201,7 @@ This index documents the test suite utilities and fixtures.
 
 | Function | Description |
 | :--- | :--- |
+| **test_tdd_lifecycle_schema_uses_governed_statuses** | *(No docstring provided)* |
 | **test_missing_doc_meta_for_all** | *(No docstring provided)* |
 
 ### `tests/engine/validators/domains/test_ead_validator.py`

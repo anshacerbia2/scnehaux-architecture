@@ -6,7 +6,8 @@ doc_meta:
   version: 2.0.0
   status: proposed
   classification: restricted
-  governed_by: [ADR-GLB-FE-010]
+  governed_by: [GDC-000]
+  authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
   last_reviewed: 2026-09-28
@@ -69,13 +70,19 @@ Server-safe entries contain no browser globals, event handlers, client hooks, or
 
 Filename lists and hook-name regexes are diagnostic tools and cannot define the release contract. Packed SSR/RSC consumers supply the evidence.
 
-SSR output avoids unstable values from time, randomness, locale, or browser-only state unless a deterministic server/client baseline exists.
+SSR output avoids unstable values from time, randomness, locale, or browser-only state unless a deterministic server/client baseline exists. Element IDs shared between server and client markup come from `useId`.
+
+An application adopts React Server Components or streaming SSR only through a decision recorded in its SAD or an ADR.
 
 ### 3.6 Composition and public APIs
 
 Public components inherit relevant native attributes and refs. Component-only props are consumed before DOM spread. Impossible prop combinations use discriminated unions.
 
 Compound widgets use composition when parts share behavior and anatomy. The UI Platform polymorphism rules live in STD-UIP-PRM-001 and remain bounded per component.
+
+Public component props are explicitly typed. `any` is prohibited in exported prop types; `unknown` is narrowed before use.
+
+Every rendered list item has a stable `key` derived from domain identity. Array indexes are used as keys only for static lists that never reorder, insert, or remove items.
 
 ### 3.7 Transitions and asynchronous work
 
@@ -91,16 +98,28 @@ Critical route or feature boundaries provide recoverable error UI and a reset pa
 
 A rendering budget identifies component tree, interaction, data size, React mode/compiler state, browser, device class, tool, baseline, and threshold. Universal render-count, tree-depth, allocation, or 16 ms mandates have no authority outside a defined scenario.
 
+### 3.10 Supported React line and security baseline
+
+- **Supported line:** applications and shared packages target React 19. `react` and `react-dom` resolve to the same version. A shared package declares both as peer dependencies with identical ranges, and packed-consumer fixtures prove the lowest and highest versions in that range.
+- **Security baseline:** the minimum acceptable version is not fixed in this standard. It is derived on every CI run from the published advisories that apply to the resolved dependency graph.
+- **Audit input:** the audit reads the lockfile-resolved graph, or an SBOM generated from it, including transitive and vendored packages. Checking direct dependencies in `package.json` alone does not satisfy this rule.
+- **Server components:** `react-server-dom-*` packages are audited as their own entries. Because a meta-framework may bundle them inside its own package, the audit also checks the resolved framework version against that framework's advisories.
+- **Blocking threshold:** an advisory rated high or critical against a resolved React, React DOM, `react-server-dom-*`, or meta-framework version blocks merge and release until the resolved version is patched. A moderate advisory is reported and resolved within 30 days.
+
 ## 4. Exceptions
 
 An imperative integration may use a dedicated wrapper with effects or layout effects when the external API requires direct DOM ownership. The wrapper must define initialization, update, teardown, error, SSR, and accessibility behavior.
 
 ## 5. Enforcement Mechanism
 
-- TypeScript strict mode and React Hooks lint rules enforce type and dependency correctness.
+- TypeScript compiles with `strict`, `noUncheckedIndexedAccess`, and `exactOptionalPropertyTypes`.
+- ESLint runs `eslint-plugin-react`, `eslint-plugin-react-hooks` (including rules-of-hooks and exhaustive-deps), and `eslint-plugin-jsx-a11y` as errors. A suppression names its reason on the same line.
+- Lint rules enforce stable list keys, no `any` in exported prop types, and file naming: PascalCase for component files, kebab-case for directories, hooks, contexts, and other non-component files.
+- Development builds render inside `<React.StrictMode>`.
 - Source tests cover controlled state, cleanup, error reset, keyboard/focus behavior, and transition interruption.
 - Profiler or browser traces enforce only scenario-defined performance budgets.
 - Packed consumers verify public types, refs, DOM props, server/client entries, hydration, and supported peer ranges.
 - Federation fixtures verify React and context identity.
+- A dependency audit over the lockfile-resolved graph or its SBOM, with framework advisories for server-component packages, enforces section 3.10 on every CI run.
 
 A required check that does not execute blocks stable promotion.
