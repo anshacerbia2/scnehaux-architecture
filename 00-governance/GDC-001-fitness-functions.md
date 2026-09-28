@@ -89,6 +89,7 @@ scnehaux-architecture/
 └── 06-fitness-function/
 │       ├── engine/              # (Core automated execution logic)
 │       │   ├── auditors/         # (External environment validators)
+│       │   │   ├── authorization_auditor.py
 │       │   │   ├── dependency_scanner.py
 │       │   │   ├── git_auditor.py
 │       │   │   ├── graph_auditor.py
@@ -138,6 +139,7 @@ scnehaux-architecture/
 │           ├── conftest.py
 │           ├── engine/          # (Core automated execution logic)
 │           │   ├── auditors/     # (External environment validators)
+│           │   │   ├── test_authorization_auditor.py
 │           │   │   ├── test_dependency_scanner.py
 │           │   │   ├── test_git_auditor.py
 │           │   │   ├── test_graph_auditor.py
