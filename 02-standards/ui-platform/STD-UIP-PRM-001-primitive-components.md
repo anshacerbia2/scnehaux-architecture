@@ -3,23 +3,23 @@ doc_meta:
   id: STD-UIP-PRM-001
   title: Enterprise UI Platform Primitive Components Standard
   owner: Principal Frontend Architect
-  version: 1.0.0
-  status: approved
+  version: 2.0.0
+  status: proposed
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-21
+  last_reviewed: 2026-09-28
 ---
 
 # Enterprise UI Platform Primitive Components Standard (STD-UIP-PRM-001)
+
+> **Review draft:** the behavioral contract below is proposed for principal review. It does not assert that the extracted implementation already conforms.
 
 ---
 
 ## 1. Objective & Scope
 
-This standard defines the mandatory design patterns, accessibility integrations, polymorphic rendering slots, and property contracts for all reusable primitive UI components developed within the Scnehaux enterprise design system.
-
-It guarantees that core UI primitives are highly accessible, performant, structurally isolated, and customizable across different product layouts.
+This standard defines the public behavior, accessibility, composition, and ownership contracts for reusable UI primitives. Release evidence, not the choice of an implementation library, establishes whether a primitive meets the contract.
 
 ---
 
@@ -28,9 +28,9 @@ It guarantees that core UI primitives are highly accessible, performant, structu
 The primitive component library is built on four core principles to ensure accessibility, behavioral predictability, and performance:
 
 1. **Semantic and Native Structure First**: Components utilize standard semantic HTML elements rather than generic tags, ensuring native compatibility with screen readers and browsers.
-2. **Complete Behavioral Encapsulation**: Interactive behaviors and keyboard interactions are governed by internal, deterministic state machines, decoupling logic from style and DOM markup.
+2. **Behavioral Ownership**: A primitive owns its documented keyboard, focus, state, and ARIA behavior; native browser behavior is preferred when it satisfies the contract.
 3. **Ref & Composition Transparency**: Polymorphic components forward references and merge HTML attributes transparently to preserve runtime node access.
-4. **Property Contract Boundaries**: Primitive components strictly receive leaf value properties rather than complex domain objects to avoid parent ref dependency and rendering thrashing.
+4. **Property Contract Boundaries**: Primitive props describe reusable presentation and interaction, not product authorization or business decisions.
 
 ## 3. Normative Rules
 
@@ -40,11 +40,13 @@ Primitives are organized into Layout Primitives (styling and geometry skeletal s
 
 #### Layout Primitives
 
-- **Zero-Dependency Mandate**: Core layout and presentation elements (such as `Box`, `Flex`, `Grid`, `Text`, `Slot`) must be custom-built with zero external dependencies to ensure absolute bundle size optimization and styling purity.
+- Core layout and presentation elements (such as `Box`, `Flex`, `Grid`, `Text`, `Slot`) preserve small, semantic DOM contracts. An external dependency is evaluated on measured cost and provenance; zero dependencies does not automatically optimize a bundle.
 
-#### Interactive Primitives (100% In-House Engine)
+#### Interactive Primitives
 
-- **Bespoke Headless Wrappers**: Stateful interactive components (such as `Dialog`, `Dropdown`, `Popover`, `Select`, `Combobox`) MUST be built completely from scratch using our own internal state machines and focus management systems. We strictly prohibit the use of third-party headless libraries (including Radix UI or Headless UI). Our internal engines are solely responsible for fully implementing the W3C WAI-ARIA Authoring Practices (APG) standard, guaranteeing WCAG 2.2 AA accessibility compliance deterministically without relying on black-box dependencies.
+- Interactive components such as `Dialog`, `Popover`, `Select`, and `Combobox` MUST expose a documented behavior matrix for keyboard, focus, pointer, touch, disabled state, controlled/uncontrolled state, and assistive technology.
+- A maintained third-party accessibility foundation MAY be used behind the `@scnx/core-ui` public contract. Selection requires an ADR covering bundle cost, accessibility evidence, internationalization, security, maintenance, and migration risk. The extent of React Aria adoption remains an open decision.
+- Using a third-party foundation does not transfer responsibility for the integration's accessibility or the consuming page's WCAG conformance to that dependency.
 
 #### Visual Segregation
 
@@ -60,51 +62,36 @@ Any styling configuration (such as component variants, sizes, and recipes) is st
 
 #### Behavior & Logic Engine Concern (State Machine)
 
-- **Deterministic State Transition**: Interactive primitives must manage their behavior using Finite State Machines (FSM) or highly encapsulated state engines. Components must not maintain ad-hoc, uncontrolled states that can lead to race conditions or invalid states (e.g., a component being simultaneously `loading` and `disabled`).
+- **Deterministic State Transition**: Interactive primitives must define valid states and transitions. A finite state machine is one implementation option; the public contract and tests determine correctness.
 - **Input & Event Orchestration**: The logic engine must process keyboard inputs, focus cycles, and gesture events, returning pure state descriptors and handler hooks to the rendering layer.
 
 #### Data Contract Concern (Exposed DOM Contract)
 
 The primitive component must declare an explicit, stable interface to the DOM. The DOM contract is divided into:
 
-- **Component Anatomy (`data-part` & `data-scope`)**: Primitives must segment their layout into defined anatomical parts. Each element in the component's DOM tree must expose its identity:
+- **Component Anatomy (`data-part` & `data-scope`)**: Publicly styled parts expose stable identifiers where the styling contract needs them:
   - `data-scope="[component]"` (e.g., `data-scope="dialog"`)
   - `data-part="[part-name]"` (e.g., `data-part="trigger"`, `data-part="content"`, `data-part="close"`)
 - **Generic Child Slots (`data-slot`)**: For elements passed dynamically by the consumer or standard generic sub-components (such as icons, avatars, labels), components must expose or require a generic `data-slot` attribute (e.g., `data-slot="icon"`, `data-slot="avatar"`, `data-slot="label"`). This allows global theme packages and layout selectors to style children uniformly without coupling to tag names or custom component wrappers.
 - **Interactive State Attributes (`data-[state]`)**: Dynamic visual states must be rendered as raw, Boolean or enum data attributes (e.g., `data-state="open|closed"`, `data-active="true|false"`, `data-disabled="true|false"`). Styling sheets must bind exclusively to these attributes.
 - **Accessibility Contract (`aria-*`)**: Interactive elements must compile and apply designated `aria-*` and `role` attributes based on the WAI-ARIA specification, bound directly to the active state machine.
 
-#### Polymorphism & Rendering Strategy (Tag `as` vs. `Slot`)
+#### Polymorphism & Rendering Strategy
 
-Primitives must allow custom rendering nodes without sacrificing performance:
-
-- **Primary Option: Tag Selection (`as` Prop)**: By default, components must utilize tag-name selection via an `as` prop (e.g., `as="span"`, `as="a"`). This is the highest-performance path because it renders the dynamic tag directly with zero virtual DOM node manipulation.
-- **Secondary Option: Component Composition (`Slot` / `asChild`)**: The custom Scnehaux `asChild` composition pattern using our native custom Slot engine is reserved as a secondary option. Because the custom `Slot` utility performs runtime element cloning and prop merging (`React.cloneElement`), it is prohibited in high-frequency rendering pipelines (such as virtualized list elements, grid cells, active motion animations) to prevent garbage collection spikes and CPU thrashing.
+Use the native element when it represents the action accurately. A component that offers polymorphism MUST document which tags and composition forms are supported and preserve ref, event, and accessible-name behavior. `as`, `asChild`, and a fixed native element are implementation options until a single public polymorphism strategy is chosen by ADR; no one form is declared universally faster without measurement.
 
 #### Styled Separation (Zero Recipes Rule)
 
 - **Styling Agnosticism**: Primitives must remain 100% styling-agnostic. They must not import stylesheets, style engines (such as Tailwind or Panda CSS), or define design token recipes (such as sizes, color variants, or visual treatments).
-- **Design System Responsibility**: All styling, visual recipes, and token variables must reside in the downstream styled components package (e.g. `@scnx/core-ui`) that wraps the primitive.
+- **Design System Responsibility**: Styling, visual recipes, and token variables reside in `@scnx/system`, which may wrap `@scnx/core-ui` primitives.
 
 ---
 
-### Polymorphism & Slot API (asChild Pattern)
+### Polymorphism & Slot API
 
-Polymorphic elements that allow downstream consumers to customize the DOM node must support the `asChild` composition pattern using Scnehaux's native custom Slot engine. Bypassing this engine or importing third-party slot packages (such as Radix UI's Slot) is prohibited.
-
-#### Standard Polymorphic Contract
-
-The polymorphic composition system must enforce a uniform property and reference contract:
-
-- **Ref Transparency**: The custom Slot engine must forward and compose refs transparently, ensuring that parent and child refs are chained without memory leaks or unnecessary re-renders. Under React 19, `ref` must be processed as a standard property.
-- **Intelligent Attribute Merging**: The Slot engine must perform a shallow merge of properties (`className`, inline `style`) and chain event execution sequences (executing both parent and child handlers).
-- **TypeScript Contract Safety**: Components supporting polymorphism must expose an `asChild` contract using generic type helpers that omit overlapping native HTML attributes to prevent compiler bailouts.
-- **Reference Implementation**: For concrete code blueprints, type definitions (e.g. `SlotProps`), and integration examples, developers must refer to the local repository technical standards and decision records.
-
-#### Performance Constraints
-
-- **Low-Frequency Layouts**: The use of `asChild` is permitted in static areas or low-frequency rendering contexts (such as card layouts, main layout headers).
-- **High-Frequency Execution**: The `asChild` pattern is prohibited in high-frequency rendering environments (such as active animations, drag-and-drop loops, dynamic list virtualizers). Under these performance-sensitive contexts, components must use dynamic `as` prop tags (e.g. `const Comp = as || 'div'; return <Comp />`) to bypass children array cloning overhead.
+- A polymorphic implementation MUST preserve the native meaning of the rendered element. Links require a destination; actions use button semantics. An anchor with `role="button"` must implement the missing Space behavior or be replaced with a native button.
+- Ref composition, merged handlers, ARIA attributes, and TypeScript props MUST be tested for every supported polymorphic form.
+- Slot cloning and dynamic tag selection are evaluated on correctness and measured consumer cost. Similarity to another library is not proof of provenance; any derived code requires a license review.
 
 ---
 
@@ -112,10 +99,7 @@ The polymorphic composition system must enforce a uniform property and reference
 
 To guarantee component boundary isolation and maintain clean API design:
 
-- **UI Primitives (Leaf Props)**: Generic UI primitives (such as Buttons, Inputs, Badges, Tooltips) must accept only leaf primitive values (such as `label`, `isDisabled`, `onClick`) as props. Passing complex domain objects as props to generic UI primitives is prohibited.
-- **Rationale**:
-  - **Re-render Isolation**: Restricting props to leaf primitives isolates the component from parent object reference changes, preventing unnecessary rendering cycles in legacy/bailout compilation states.
-  - **Testing Simplification**: Restricting props streamlines unit testing by eliminating the need to construct complex mock domain objects.
+- **Public Props**: Shared primitives accept presentation and interaction inputs, not Product domain aggregates or authorization decisions. Complex values such as option collections are allowed when required by the widget contract; stability and rendering cost are measured rather than inferred from value shape alone.
 
 ---
 
@@ -124,14 +108,17 @@ To guarantee component boundary isolation and maintain clean API design:
 - **Semantic HTML First**: Primitives must render native semantic HTML tags (`<button>`, `<a>`, `<nav>`, `<input>`) instead of styling generic tags (`<div>`, `<span>`) with custom ARIA attributes.
 - **Focus Management**: Overlay structures (Dialogs, Drawers, Modals) must trap focus internally during activation and restore focus to the trigger element upon closure.
 - **Keyboard Navigation**: Components must implement the keyboard navigation specifications declared in the WAI-ARIA Authoring Practices Guide (APG).
+- **Per-pattern matrix**: Required keys are defined per widget, not by counting `onKeyDown` occurrences or imposing one key list on all widgets.
+- **Evidence**: Source tests cover behavior; packed-package consumers and manual assistive-technology checks cover integration. WCAG 2.2 AA conformance is evaluated for complete pages, not claimed for an isolated primitive.
 
 ---
 
 ## 4. Exceptions
 
-None. All primitive component architecture rules apply unconditionally. Deviations require formal architectural exception approval through the enterprise governance review process.
+An exception must document the affected public behavior and its impact on consumers. A widget that fails a required contract is excluded from stable exports until repaired or explicitly scoped as experimental.
 
 ## 5. Enforcement Mechanism
 
-- **Accessibility Audits**: Build pipelines must execute static accessibility testing (e.g. `eslint-plugin-jsx-a11y`) to block accessibility violations.
-- **Waiver Protocol**: Custom polymorphic patterns or non-headless interactive widgets require a documented project ADR and approval by the Architecture Review Board. The Board must respond with a review decision within **5 business days** of the ADR submission.
+- **Behavior tests**: Unit and interaction tests execute the per-widget matrix, including native keyboard behavior, focus restoration, reduced motion, and controlled/uncontrolled state.
+- **Consumer tests**: Packed-package tests verify public exports, ref behavior, DOM semantics, and supported SSR/RSC use.
+- **Manual review**: Screen-reader and high-contrast results are recorded for each stable complex widget. Automated lint and axe checks cannot alone establish conformance.

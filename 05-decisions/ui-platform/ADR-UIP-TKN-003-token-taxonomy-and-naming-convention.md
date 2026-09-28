@@ -11,6 +11,8 @@ doc_meta:
 
 # ADR-UIP-TKN-003: Adoption of a unified Design Token Taxonomy & Naming Convention across all UI platform tiers.
 
+> **Pre-production review draft:** taxonomy is a naming contract, not proof of emitted bytes, accessibility, or cross-platform generators.
+
 ---
 
 ## 1. Title
@@ -36,7 +38,7 @@ Historically, design token systems inside the Scnehaux UI Platform and downstrea
 
 Adopting this combinatorial taxonomy achieves maximum semantic clarity and architectural predictability. By grouping tokens into strict Design Domains (Color, Dimension, Typography, Motion), we prevent cross-contamination of token values.
 
-Furthermore, the strict hierarchical structure allows us to cleanly divide raw, mode-agnostic mathematical scales (Tier-1 Core/Primitive Tokens) from the human-readable global semantic contracts (Tier-2 Semantic/System Tokens) and the highly specific overrides (Tier-3 Component/Alias Tokens). This isolation guarantees that brand re-skinning or theme generation can occur entirely at Tier-2 without ever touching a component's source code or the raw primitive scales.
+The hierarchical structure separates raw scales (Tier 1), shared semantic intent (Tier 2), and component aliases (Tier 3). A brand may change Tier-2 mappings when the relevant component styles use those mappings and the emitted theme is verified.
 
 ---
 
@@ -105,10 +107,9 @@ Format: `[component].[element].[property].[state]` (Note: `[element]` and `[stat
 
 ### Positive
 
-- **Predictable Payload**: Matrix compilation generates exactly 740 pre-resolved semantic color tokens, well within the 12KB gzip budget.
-- **Zero DOM Bloat**: Eliminates the need for pseudo-element (`::before`) interaction overlays.
-- **Strict Contract Validation**: The hierarchical 4-layer structure enables compile-time linting and automated audits to ensure multi-brand themes only override valid `$system` contract keys.
-- **Technology-Agnostic**: Dot-notation compiles perfectly to Figma variables, CSS Custom Properties, SCSS variables, Style Dictionary JSON, and native mobile properties (iOS/Android).
+- **Reviewable names:** The hierarchy makes roles and token ownership easier to inspect. Emitted token count and compressed size are measured for each build.
+- **Potential validation:** Structured names support compile-time checks, but checks must exist and execute in CI to establish conformance.
+- **Portability target:** Mapping to Figma, CSS, Sass, or native platforms requires explicit converters and tests.
 
 ### Negative
 
@@ -116,22 +117,22 @@ Format: `[component].[element].[property].[state]` (Note: `[element]` and `[stat
 
 ### Tradeoffs
 
-- We trade the simplicity of a tiny token dictionary + runtime pseudo-elements for a larger pre-compiled CSS variable dictionary to guarantee native performance and flawless color blending accuracy.
+- The larger semantic dictionary adds authoring and payload cost. Its visual and runtime benefits must be verified against alternatives in representative consumers.
 
 ### Operational Impact
 
-- The CI pipeline automatically validates all custom brand contract overrides (`_achromatic-contract.scss`) using the Python linter, preventing undocumented keys from leaking into production.
+- Brand contract checks and emitted CSS validation are release gates to implement and run before production claims.
 
 ### Security Impact
 
-- Restricts custom CSS injection, forcing developers to use governed paved-road design tokens which are pre-audited for accessibility and security contrast compliance.
+- Token names do not restrict CSS injection or prove contrast. Security and accessibility are checked in the actual consumer context.
 
 ---
 
 ### Operational
 
 - The domain-based taxonomy is formalized as the core design token API standard starting with `version: 1.0.0`.
-- The compilation pipeline automatically maps logical dot-notation tokens to physical space-separated HSL or OKLCH custom properties to support dynamic runtime opacity modifiers (`hsl(var(--ds-...) / opacity)` or `oklch(var(--ds-...) / opacity)`).
+- The web implementation maps logical names to CSS custom properties. Each emitted value must be valid for its consuming CSS property and supported browser.
 
 ## 7. Compliance Impact
 
@@ -145,7 +146,7 @@ Format: `[component].[element].[property].[state]` (Note: `[element]` and `[stat
 
 ### Compliance Status
 
-Compliant.
+Taxonomy accepted; implementation conformance pending packed-package and consumer evidence.
 
 ### Required Waivers
 
@@ -156,13 +157,13 @@ None.
 ### Alternative A: Legacy DOM-based Pseudo Element Overlays (`::before`/`::after` with `rgba`)
 
 - **Pros**: Doesn't require compiling hundreds of flat CSS state variables.
-- **Cons**: Introduces massive DOM bloat. Breaks React performance due to extra node rendering. Generic `rgba` black/white causes Hue shifting and muddying on wide-gamut colors, violating the Dual-Engine Photometric rule.
-- **Why Rejected**: Disallowed due to poor rendering performance, layout thrashing risks, and color inaccuracy in the OKLCH P3 Gamut.
+- **Cons**: Adds styling complexity and can produce unwanted results on varied backgrounds.
+- **Why Rejected**: A semantic state contract is easier to govern for current use. No universal DOM or runtime performance claim is made.
 
 ### Alternative B: Direct CSS `color-mix` for all States Globally
 
 - **Pros**: Fully native browser-level color mixing.
-- **Cons**: Doing complex runtime OKLCH math on every single interaction across thousands of DOM nodes can introduce paint lag on lower-end devices.
-- **Why Rejected**: Retained strictly for Photometric Alpha utility usage, but rejected as the primary matrix compiler in favor of Ahead-Of-Time (AOT) static CSS variable generation for maximum runtime performance.
+- **Cons**: Browser support, color output, and paint cost need consumer testing.
+- **Why Rejected**: Precompiled variables remain the present implementation. This choice may be revisited after comparative measurement.
 
 ---

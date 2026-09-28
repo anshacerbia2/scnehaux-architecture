@@ -3,15 +3,17 @@ doc_meta:
   id: STD-GLB-FE-001
   title: Enterprise Frontend Technology Stack & Layered Architecture Standard
   owner: Principal Frontend Architect
-  version: 1.0.0
-  status: approved
+  version: 2.0.0
+  status: proposed
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-21
+  last_reviewed: 2026-09-28
 ---
 
 # Enterprise Frontend Technology Stack & Layered Architecture Standard (STD-GLB-FE-001)
+
+> **Review draft:** the former unconditional library requirement conflicts with STD-UIP-PRM-001 and is proposed for replacement by an evidence-based foundation decision.
 
 ---
 
@@ -19,7 +21,7 @@ doc_meta:
 
 This standard defines the mandatory frontend technology stack selections, 4-layer structural architecture model, state management taxonomy, rendering systems topology, and routing guidelines for all web applications built within the Scnehaux enterprise.
 
-It establishes strict separation of concerns, framework-agnostic domain logic isolation, and hardware-aligned rendering paths to guarantee performance, maintainability, and security across all codebases.
+It establishes separation of concerns, framework-agnostic domain logic isolation, and measurable rendering contracts. Performance, maintainability, and security are verified in their application context.
 
 The scope of this standard applies to all frontend applications, including standalone Single Page Applications (SPAs) and federated micro-frontend portals.
 
@@ -39,8 +41,8 @@ To prevent technology fragmentation and ensure consistent platform optimization,
 - **Static Typing (TypeScript)**: TypeScript must be used across all source files, configured with strict compilers.
 - **Server State Management (TanStack Query)**: Server-originated data fetching, query caching, and mutations must be managed via TanStack Query.
 - **Client-Global State Management (Zustand)**: Global client state (e.g., UI layout states) must be managed using selector-bound Zustand stores.
-- **Visual Presentation (CSS Modules & Tailwind CSS)**: CSS Modules must be utilized for core component library isolation. Tailwind CSS is permitted for rapid application layout assembly.
-- **Accessible Headless UI (Radix UI)**: Interactive primitives (e.g. `Dialog`, `Dropdown`, `Popover`, `Select`, `Combobox`) must build upon Radix UI primitives to leverage their WCAG 2.2 AA accessibility, keyboard focus traps, and screen reader behaviors. Styling-only layout primitives (e.g. `Box`, `Flex`, `Grid`, `Text`, `Slot`) must remain dependency-free to ensure absolute bundle optimization and styling purity.
+- **Visual Presentation**: Applications may use CSS Modules or Tailwind for local composition. Shared UI Platform packages may emit compiled Sass and Panda CSS while their public selectors, token contract, and cascade behavior pass the packed-package isolation tests. Tool selection is not a substitute for selector scoping.
+- **Accessible Interactive Foundations**: Shared widgets (e.g. `Dialog`, `Dropdown`, `Popover`, `Select`, `Combobox`) must meet a tested keyboard, focus, ARIA, internationalization, and consumer-package contract. A maintained headless foundation MAY be used behind the UI Platform API after an approved decision records the trade-offs. No dependency alone guarantees WCAG conformance of a component integration or a complete page. Layout primitives should remain dependency-light, with size assessed from consumer builds.
 
 ---
 
@@ -73,7 +75,7 @@ To prevent abstraction leakage, eliminate rendering bottlenecks, and enforce str
 - **Architectural Rules**:
   - Components must derive styling from platform-wide design tokens. Declaring hardcoded values is prohibited.
   - Declaring global CSS selectors inside individual component styles is prohibited. Style boundaries must utilize CSS Modules or unique class name prefixes.
-  - Interactive elements must be keyboard navigable and support semantic ARIA attributes to satisfy WCAG 2.2 AA standards.
+  - Interactive elements must provide the keyboard and accessible semantics appropriate to their widget pattern. Complete-page WCAG 2.2 AA conformance remains the consumer application's evaluation scope.
 
 #### Layer 3: State & Synchronization Layer
 
@@ -88,7 +90,7 @@ To prevent abstraction leakage, eliminate rendering bottlenecks, and enforce str
 - **Responsibility**: Low-level browser adapters, HTTP client configurations, route authorization guards, event listeners, and hardware-synchronized rendering.
 - **Architectural Rules**:
   - **HTTP Interceptors**: All outgoing requests must route through a centralized wrapper injecting authorization tokens, tenant headers, and correlation trace IDs (e.g. `X-Trace-Id`).
-  - **V-Sync & Motion Schedulers**: Active animations, drag-and-drop operations, and coordinate calculations must bypass UI framework rendering lifecycles. They must execute mutations directly on DOM elements using stable references (Refs) scheduled within `requestAnimationFrame` (rAF).
+  - **Motion Scheduling**: Prefer native CSS behavior where it meets the interaction contract. For measured high-frequency paths, schedule reads and writes deliberately and document their trace evidence; `requestAnimationFrame` does not by itself eliminate layout work.
   - **Event Target Registry**: Low-level browser event subscriptions (such as keyboard keys or resize triggers) must bind to infrastructure handlers that enforce cleanup on component unmounting.
 
 ---
