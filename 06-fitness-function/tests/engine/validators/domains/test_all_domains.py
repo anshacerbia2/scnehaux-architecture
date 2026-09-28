@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from tests.conftest import make_validator
 from engine.validators.domains.adr_validator import ADRValidator
 from engine.validators.domains.ead_validator import EADValidator
@@ -6,6 +9,21 @@ from engine.validators.domains.pad_validator import PADValidator
 from engine.validators.domains.sad_validator import SADValidator
 from engine.validators.domains.std_validator import STDValidator
 from engine.validators.domains.tdd_validator import TDDValidator
+
+
+ROOT = Path(__file__).resolve().parents[5]
+
+
+def test_tdd_lifecycle_schema_uses_governed_statuses():
+    schema = json.loads(
+        (ROOT / "00-governance" / "schemas" / "tdd.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    statuses = schema["definitions"]["metadata_rules"]["properties"]["doc_meta"][
+        "allOf"
+    ][1]["properties"]["status"]["enum"]
+    assert statuses == ["proposed", "approved", "deprecated"]
 
 
 def test_missing_doc_meta_for_all():

@@ -201,6 +201,7 @@ This index documents the test suite utilities and fixtures.
 
 | Function | Description |
 | :--- | :--- |
+| **test_tdd_lifecycle_schema_uses_governed_statuses** | *(No docstring provided)* |
 | **test_missing_doc_meta_for_all** | *(No docstring provided)* |
 
 ### `tests/engine/validators/domains/test_ead_validator.py`
