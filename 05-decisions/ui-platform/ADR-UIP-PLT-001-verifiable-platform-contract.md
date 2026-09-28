@@ -18,9 +18,9 @@ Authorize the proposed major UI Platform standard revisions for package, token, 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type            | Reviewers                           | Approver                        |
-| ---------- | -------- | ------------------- | ----------------------------------- | ------------------------------- |
-| 2026-09-28 | proposed | conflict_resolution | Three principal architects, pending | Architecture authority, pending |
+| Date       | Status   | ADR Type            | Reviewers                                                                                | Approver                        |
+| ---------- | -------- | ------------------- | ---------------------------------------------------------------------------------------- | ------------------------------- |
+| 2026-09-28 | proposed | conflict_resolution | Principal review round 1: approve with required changes; remaining consolidation pending | Architecture authority, pending |
 
 ## 3. Context
 
@@ -35,15 +35,18 @@ The baseline has two physical packages and three logical token tiers. Static rev
 
 ## 5. Decision
 
-**Proposed, not yet authoritative:** Authorize the major revisions of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001. Keep three token tiers as a logical model and two packages as the present physical model. Use source tests for interaction and state logic. Use isolated `npm pack` consumers for exports, types, CSS, fonts, SSR/RSC, CSP, and shell/remote integration. Report component accessibility evidence without claiming page-level certification. Declare theme scope, styling ownership, performance scenarios, and release exceptions explicitly.
+**Proposed, not yet authoritative:** Authorize the major revisions of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001. Keep three token tiers as a logical model and two packages as the present physical model. Use source tests for interaction and state logic. Use isolated `npm pack` consumers for exports, types, CSS, fonts, SSR/RSC, CSP, and shell/remote integration. Report component evidence in a Component Accessibility Conformance Report without claiming page-level certification. Declare theme scope, styling ownership, performance scenarios, and release exceptions explicitly.
 
-React Aria adoption, multiple brands in one DOM, long-term Sass/Panda ownership, and polymorphism remain open decisions; this ADR does not resolve them by implication. Approval authorizes the standards revision, while specific implementation choices still require recorded evidence and review.
+The working CSS delivery contract exports aggregate component CSS and explicit theme CSS. A standalone shell or federated host composition root imports each required stylesheet once. Component JavaScript has no CSS side-effect import, and remotes do not inject another copy. Portaled UI receives an explicit themed container or equivalent propagation contract. Panda runs only in the producer build; a packed consumer never scans source or runs Panda to render shipped components. After verifying that `@scnx/core-ui` has no Panda callsites, its source is removed from Panda scan inputs.
+
+React Aria adoption, multiple brands in one DOM, long-term Sass/Panda ownership, and polymorphism retain empirical gates; this ADR does not resolve them by implication. The working candidates are selected React Aria hooks behind complex-widget APIs, scoped subtree themes, both style engines during P0, and `asChild` where polymorphism is justified. Approval authorizes the standards revision, while each candidate still requires recorded evidence, provenance review, and migration impact.
 
 ## 6. Consequences
 
 - Positive: a reproducible release gate for the shipped artifact and clearer package ownership.
 - Negative: isolated consumers and scenario matrices add maintenance cost.
 - Operational: the extracted baseline cannot be promoted until P0 failures and conformance gaps are resolved.
+- Operational: arbitrary size limits and a larger Node heap are not conformance evidence; budgets require a named scenario and heap overrides remain diagnostic only.
 
 ## 7. Compliance Impact
 

@@ -19,7 +19,7 @@ doc_meta:
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
-> **Pre-production review draft.** Revision 2.0 was opened on 2026-09-28; the original SAD dates to 2026-01-01. This proposed revision records the three-principal working consensus. It has no new production conformance claim; normative changes require the proposed authorizing ADRs and architecture review.
+> **Pre-production review draft.** Revision 2.0 was opened on 2026-09-28; the original SAD dates to 2026-01-01. Principal review accepted the evidence corrections and composition-root CSS contract, while consolidated ratification remains pending. It has no new production conformance claim; normative changes require the proposed authorizing ADRs and architecture review.
 
 ## 1. Purpose & Scope
 
@@ -60,13 +60,13 @@ graph LR
 
 ### 4.2 Token and style flow
 
-Tier 1 core values map to Tier 2 semantic intent. Tier 3 aliases are introduced where a component needs independent semantic control. The baseline compiles Sass and Panda output; one documented token contract and explicit style ownership are required across both. The decision to keep both engines is evidence-based and remains open.
+Tier 1 core values map to Tier 2 semantic intent. Tier 3 aliases are introduced where a component needs independent semantic control. The baseline compiles Sass and Panda output; one documented token contract and explicit style ownership are required across both. Both engines remain during P0 and are measured before a later consolidation decision. Panda is a producer build tool and does not scan `@scnx/core-ui` after the absence of Panda callsites is verified.
 
-CSS custom properties and emitted stylesheet assets are checked in the packed consumer. Theme selectors and resets must respect the consumer root. Cascade layers control precedence; they do not provide selector scope. Multiple brands in one DOM require an explicit tested scope contract.
+CSS custom properties and emitted stylesheet assets are checked in the packed consumer. `@scnx/system` exports aggregate component CSS and explicit theme CSS. A host or standalone composition root imports each required stylesheet once; component JavaScript and federated remotes do not inject duplicates. Theme selectors and resets are scoped to the consumer root. Cascade layers control precedence; they do not provide selector scope. Multiple brands and portaled UI require explicit tested scope and propagation contracts.
 
 ### 4.3 Component and interaction flow
 
-Native elements provide their native keyboard behavior. Each exposed composite widget needs a behavior matrix based on its relevant APG pattern, covering focus order, keyboard actions, state, disabled behavior, and screen-reader naming. OFSM is an implementation technique for complex transitions; its presence does not prove interaction quality. Polymorphism (`as`, `asChild`, or a restricted combination) remains an API decision to validate against semantics, refs, type safety, and consumer cost.
+Native elements provide their native keyboard behavior. Each exposed composite widget needs a behavior matrix based on its relevant APG pattern, covering focus order, keyboard actions, state, disabled behavior, and screen-reader naming. Selected React Aria hooks are a candidate for high-risk composite widgets behind the `@scnx/core-ui` API; simple primitives retain native/custom behavior. OFSM is an implementation technique for complex transitions; its presence does not prove interaction quality. `asChild` is the preferred polymorphism candidate, but it remains subject to semantics, refs, typing, handler order, single-child failure, consumer cost, and `Slot.tsx` provenance evidence.
 
 ### 4.4 C3 realization
 
@@ -76,14 +76,14 @@ The C3 drafts in `ui-platform/docs/02-designs/` are TDD-ui-platform-packaging-00
 
 ## 5. State & Data Architecture
 
-The token dictionary is build input, and compiled CSS is a published artifact. Theme state may be local to a provider or inherited from a scoped root; the multi-brand contract remains open. Provider implementation must work with multiple roots, SSR/hydration, and strict CSP without `unsafe-eval`. A single global callback is not a valid multi-provider subscription model.
+The token dictionary is build input, and compiled CSS is a published artifact. Theme state may be local to a provider or inherited from a scoped subtree root. Document-wide mode is optional and does not establish multi-brand isolation. Provider implementation must work with multiple roots, explicit portal containers, SSR/hydration, and strict CSP without `unsafe-eval`. A single global callback is not a valid multi-provider subscription model.
 
 Runtime component state belongs in the primitive instance or its explicit context boundary. Federation tests must demonstrate context identity across shell and remote when those components interact.
 
 ## 6. Integration Contracts
 
 - Package exports must resolve from an installed tarball without source aliases. Documented JS, type, CSS, font, and subpath imports are tested.
-- The P0 delivery target is an explicit stylesheet import that styles the supported component set. Optional per-component CSS exports require packed-consumer evidence. Every documented consumption path must render styled components correctly.
+- The P0 delivery target exports aggregate component CSS and explicit theme CSS. The host or standalone composition root imports each required stylesheet once. Component JS and remotes do not inject duplicate UI Platform CSS. Optional per-component CSS exports require packed-consumer evidence.
 - SSR and RSC boundaries must be explicit. Build heuristics that guess `"use client"` from a short hook list are insufficient; a packed Next App Router consumer is the release evidence.
 - Module Federation verification covers React singleton identity, package/context identity, version compatibility, remote loading, and duplicate CSS behavior.
 - Versioned package artifacts and migration notes define compatibility. No current publication or CDN topology is assumed merely from a plan.
@@ -92,11 +92,11 @@ Runtime component state belongs in the primitive instance or its explicit contex
 
 The build and consumer must pass a strict CSP scenario without `unsafe-eval`; any inline style or script requirement must be documented and tested under the actual policy. Package integrity and provenance are part of the release process.
 
-Accessibility evidence is reported for each component and state in an **Accessibility Conformance Report**. WCAG 2.2 AA applies to a complete page; component checks are necessary but do not certify the consuming page. Reflow, target size, focus visibility, contrast, motion, and keyboard scenarios are measured where applicable. React Aria adoption is an open implementation decision, not inherited conformance.
+Accessibility evidence is reported for each component and state in a **Component Accessibility Conformance Report (Component ACR)** based on applicable WCAG 2.2 and APG criteria. It is not labeled a VPAT and does not certify the consuming page. Reflow, target size, focus visibility, contrast, motion, and keyboard scenarios are measured where applicable. A dependency does not transfer conformance responsibility.
 
 ## 8. Nonfunctional Requirements
 
-Performance budgets are specified by consumer scenario, environment, metric, baseline, and threshold. Record CSS size by import path, JavaScript cost, build time, theme switch behavior, and layout work on representative interactions. No universal zero-reflow, 60 FPS, zero-CLS, sub-50 ms, or fixed 12 KB guarantee is made without measured scope.
+Performance budgets are specified by consumer scenario, environment, metric, baseline, and threshold. Record CSS size by import path, JavaScript cost, build time, theme switch behavior, and layout work on representative interactions. Size evidence identifies raw/minified/compressed representation, tool, and incremental consumer cost. No universal zero-reflow, 60 FPS, zero-CLS, sub-50 ms, `<2 KB`, or fixed 12 KB guarantee is made without measured scope.
 
 Failure handling includes missing CSS, unresolved variables, font load failure, duplicate package instances, and a provider mounted beside another provider. These are release tests, not presumed graceful fallbacks.
 
@@ -106,14 +106,14 @@ The standalone repository uses a pnpm workspace with `packages/core-ui` and `pac
 
 1. **Source checks:** type check, build, state-machine/interaction tests, static analysis, and component accessibility behavior.
 2. **Packed-package checks:** install tarballs in an isolated consumer without aliases; resolve exports and types; parse and compute CSS custom properties for every supported theme; verify fonts and styled rendering.
-3. **Integration checks:** SSR/RSC, strict CSP, multiple provider roots, shell/remote package identity, and relevant visual and accessibility scenarios.
+3. **Integration checks:** SSR/RSC, strict CSP, multiple provider roots, portal theme propagation, shell/remote package identity, one intended stylesheet set, deterministic CSS order, and relevant visual and accessibility scenarios.
 4. **Governance:** review the conformance report, deviations, compatibility impact, and measured budgets before promotion.
 
 The first phase establishes a running test harness and diagnoses the extracted baseline; passing TypeScript alone does not qualify a release.
 
 ## 10. Architecture Decisions
 
-The [three-tier ADR](../../05-decisions/ui-platform/ADR-UIP-TKN-001-three-tier-isolation-architecture.md) governs token meaning. Proposed authorizing ADRs for changed global and UI standards are pending review. The following decisions are open: React Aria scope, theme isolation for multiple brands in one DOM, Sass/Panda ownership and future engine count, and the public polymorphism API. A decision record must include alternatives, measured evidence, migration impact, and review authority.
+The [three-tier ADR](../../05-decisions/ui-platform/ADR-UIP-TKN-001-three-tier-isolation-architecture.md) governs token meaning. Proposed authorizing ADRs for changed global and UI standards are pending review. Six governed choices are tracked: React Aria scope, multi-brand isolation, Sass/Panda ownership, public polymorphism, token package topology, and CSS delivery. The CSS composition-root model has working consensus; the remaining candidate choices retain empirical gates. A decision record must include alternatives, measured evidence, migration impact, and review authority.
 
 ## 11. Assumptions & Constraints
 
