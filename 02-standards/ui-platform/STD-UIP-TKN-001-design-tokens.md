@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -16,6 +16,12 @@ doc_meta:
 ---
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
+
+> **Revision 2.1.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, revision 2.0.0 remains binding until the authorized human
+> authority approves the exact commit containing this revision. The existing
+> `approved` lifecycle value does not pre-approve these edits, and
+> `last_reviewed` is updated only in the ratification commit or manifest.
 
 > **Implementation boundary:** Sass maps are current. A DTCG 2025.10 source generating CSS, Sass, and Panda contracts remains a migration target, not an implemented guarantee.
 
@@ -62,9 +68,11 @@ The platform enforces a strict **3-Tier Token Architecture**:
 
 Tier-1 steps are numeric or opaque identifiers; Tier-2 names carry intent. A Tier-1 name never reuses a Tier-2 intent word, so `motion.duration.fast` and `dimension.z.modal` are not valid names in either tier.
 
+Each domain's Tier-2 vocabulary is listed below: color and effect in this section, dimension in _Dimension vocabulary_, typography in _Typography & Motion Semantic Families_, and motion in _Semantic Motion Language_. A Tier-2 name outside these vocabularies is invalid.
+
 Tier-3 examples: `button.surface.hover`, `checkbox.indicator.color.checked`, `dialog.root.z-index.default`.
 
-**CSS emission:** the emitted custom property is `--ds-` followed by the logical path with separators converted to hyphens. `color.primary.surface.solid.default` emits `--ds-color-primary-surface-solid-default`; `effect.shadow.low` emits `--ds-effect-shadow-low`; `dimension.z-index.modal` emits `--ds-dimension-z-index-modal`. Every emitted `--ds-*` name must parse back to a valid path in this grammar.
+**CSS emission:** the emitted custom property is `--ds-` followed by the logical path with separators converted to hyphens. `color.primary.surface.solid.default` emits `--ds-color-primary-surface-solid-default`; `effect.shadow.low` emits `--ds-effect-shadow-low`; `dimension.z-index.modal` emits `--ds-dimension-z-index-modal`. Every emitted `--ds-*` name must parse back to a valid path in this grammar. A composite typography token emits one custom property per member, suffixed with the CSS property name: `typography.body.default` emits `--ds-typography-body-default-font-size` and the four other members listed under _Typography & Motion Semantic Families_.
 
 #### Color vocabularies
 
@@ -102,6 +110,29 @@ Every role supports the `default` rest state.
 Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
 
 The Sass validator rejects unsupported generated role/state combinations. Packed-output checks for grammar, key parity across themes, and value validity are release gates in STD-UIP-ENG-001.
+
+#### Dimension vocabulary
+
+Tier-2 dimension names are `dimension.{property}.{intent}`. The property and intent vocabularies are closed:
+
+| Property       | Intents                                                                         | Intended use                                                                                        |
+| :------------- | :------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------- |
+| `spacing`      | `inset-compact`, `inset-default`, `inset-comfortable`                           | Padding between a container's edge and its content                                                  |
+| `spacing`      | `stack-compact`, `stack-default`, `stack-comfortable`                           | Block-axis gap between sibling elements                                                             |
+| `spacing`      | `inline-compact`, `inline-default`, `inline-comfortable`                        | Inline-axis gap between sibling elements                                                            |
+| `spacing`      | `section`, `page`                                                               | Gap between major page regions; gutter between the viewport edge and content                        |
+| `radius`       | `element`, `control`, `container`, `pill`                                       | Small inline elements such as code and badges; controls; cards, panels, menus; fully rounded shapes |
+| `border-width` | `default`, `strong`                                                             | Dividers and outlines; emphasized indicators such as an active-item marker                          |
+| `z-index`      | `base`, `dropdown`, `sticky`, `overlay`, `modal`, `popover`, `tooltip`, `toast` | Stacking layers                                                                                     |
+
+Values within each spacing relationship ascend from `compact` to `comfortable`. `z-index` values strictly ascend in the listed order in every theme. Intents are single path segments; a hyphen inside an intent joins its relationship and density.
+
+#### Values that are not Tier-2 tokens
+
+- **Component geometry**, such as a sidebar width, a navigation-bar height, control, icon, and avatar sizes, and container maximum widths, is owned by its component as a Tier-3 alias with an alias review record.
+- **Breakpoints** are not emitted as custom properties, because `var()` is not valid in a media-query condition. Responsive thresholds are build-time constants of the consuming layer.
+- **Opacity** has no Tier-2 token. A translucent state is a color token whose alpha is part of its value and is verified on its actual background.
+- **Transition shorthands** are not tokens. Components compose `motion.{action}.duration` and `motion.{action}.easing` with the properties they animate.
 
 ---
 
@@ -184,11 +215,19 @@ Portals declare semantic logical aliases that internally map directly to scheme 
 
 Typography tokens must be grouped by **semantic reading layout**, not by linear sequential text scaling. This prevents teams from scaling fonts arbitrarily across dense dashboards and article-style portals:
 
-| Group       | Token                         | Intended Reading Context                                             |
-| :---------- | :---------------------------- | :------------------------------------------------------------------- |
-| **Data**    | `typography.data.compact`     | High-density data-grids, tabular controls, dense dashboard summaries |
-| **Article** | `typography.article.readable` | Sustained reading of text-heavy prose, articles, documentation       |
-| **Metric**  | `typography.metric.display`   | Standalone numeric KPIs, scores, and display indicators              |
+| Group       | Tokens                                                                      | Intended Reading Context                                             |
+| :---------- | :-------------------------------------------------------------------------- | :------------------------------------------------------------------- |
+| **Body**    | `typography.body.large`, `typography.body.default`, `typography.body.small` | Running text in components and pages                                 |
+| **Label**   | `typography.label.default`, `typography.label.small`                        | Control labels, captions, and metadata                               |
+| **Heading** | `typography.heading.{xxlarge\|xlarge\|large\|medium\|small\|xsmall}`        | Titles; the size is independent of the heading element's level       |
+| **Code**    | `typography.code.default`, `typography.code.small`                          | Inline and block code                                                |
+| **Data**    | `typography.data.compact`                                                   | High-density data-grids, tabular controls, dense dashboard summaries |
+| **Article** | `typography.article.readable`                                               | Sustained reading of text-heavy prose, articles, documentation       |
+| **Metric**  | `typography.metric.display`                                                 | Standalone numeric KPIs, scores, and display indicators              |
+
+Each token above is a composite with exactly five members: `font-family`, `font-size`, `font-weight`, `line-height`, and `letter-spacing`. Every theme defines all five for every composite. Heading sizes descend from `xxlarge` to `xsmall` in every theme.
+
+A component that varies only the weight of a composite uses `typography.weight.{regular|medium|semibold|bold}`. This family is the one single-member typography family; each token is a font weight, and the four values ascend in the listed order.
 
 #### Semantic Motion Language
 
@@ -196,12 +235,15 @@ Timing durations and mathematical easing curves must map to high-level communica
 
 Each action emits a `duration` and an `easing` token, for example `motion.enter.duration` and `motion.enter.easing`.
 
-| Motion Action       | Communicative Action                                                             |
-| :------------------ | :------------------------------------------------------------------------------- |
-| `motion.enter`      | Mounting actions such as a drawer sliding in or a dropdown opening               |
-| `motion.exit`       | Decelerating exits for dismissed or unmounted content                            |
-| `motion.attention`  | Scale or opacity emphasis on a critical action without moving surrounding layout |
-| `motion.disclosure` | Height expand/collapse for accordions, menus, and detail triggers                |
+| Motion Action       | Communicative Action                                                                                   |
+| :------------------ | :----------------------------------------------------------------------------------------------------- |
+| `motion.enter`      | Mounting actions such as a drawer sliding in or a dropdown opening; content decelerates into place     |
+| `motion.exit`       | Dismissed or unmounted content; it accelerates away and takes no longer than the matching enter        |
+| `motion.attention`  | Scale or opacity emphasis on a critical action without moving surrounding layout                       |
+| `motion.disclosure` | Height expand/collapse for accordions, menus, and detail triggers                                      |
+| `motion.feedback`   | State feedback on the same element, such as hover, press, focus, and selection color or shadow changes |
+
+`motion.enter.easing` is a decelerating curve and `motion.exit.easing` an accelerating one. `motion.exit.duration` does not exceed `motion.enter.duration`, and `motion.feedback.duration` is the shortest of the five durations.
 
 **Performance Constraint**: Dynamic-height motion may involve layout. Reduced-motion behavior and interaction traces determine whether a transition is acceptable. Claims about forced layout and frame rate require named scenarios and measurements.
 

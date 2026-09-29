@@ -52,7 +52,7 @@ The UI Platform uses a **Three-Tier Design Token Isolation Architecture** for go
 
 ### Tier 2: Semantic Tokens (The Global Intent)
 
-- **Definition:** The shared mapping from Tier 1 primitives to structural UI intent (for example `color.primary.surface.solid.default` and `dimension.spacing.compact`).
+- **Definition:** The shared mapping from Tier 1 primitives to structural UI intent (for example `color.primary.surface.solid.default` and `dimension.spacing.inset-compact`).
 - **Rule:** This is the default consumption layer for governed shared styling. Theme overrides preserve semantic meaning; justified Tier-3 aliases may vary independently.
 
 ### Tier 3: Component Aliases (Unique Overrides)
