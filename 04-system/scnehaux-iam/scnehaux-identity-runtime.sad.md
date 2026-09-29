@@ -149,7 +149,7 @@ Internal system containers are:
 2. **Identity Control Service** — Scnehaux-owned desired-state, orchestration, mapping, drift, reconciliation, event translation, context-revocation propagation, and migration system.
 3. **Identity Event Adapter** — minimal Keycloak extension or supported event integration with completeness reconciliation.
 4. **Keycloak Private Database** — internal Keycloak persistence, accessed only by Keycloak.
-5. **Control Database** — Scnehaux mappings, desired state, reconciliation cursors, migration state, Consumer Verification Profile metadata, and transactional outbox; no duplicate Principal secrets or sessions.
+5. **Control Database** — Scnehaux mappings, desired state, reconciliation cursors, migration state, Consumer Verification Profile metadata, and transactional outbox; no duplicate Principal secrets or sessions, and no client secret or client private key. A client's registered public keys are recorded, and they are public by design.
 6. **Verification Distribution** — discovery and public-key material exposed through Keycloak and safely cached by consumers.
 
 Consumer connection registries are not an Identity Runtime container. They are consumer-owned enforcement mechanisms receiving bounded revocation/context facts from the identity/event contract.
@@ -209,6 +209,7 @@ graph TB
 
 - Maintains desired-state records for Scnehaux-controlled realm, client, resource, and projection configuration.
 - Validates Application and owner references before provisioning a client/resource.
+- Registers a confidential or workload client's public keys on the kernel client and rotates them by adding the new key before removing the old one (`ADR-IAM-001 §5.12`). It refuses a key that carries private material.
 - Projects the minimum Tenant/Membership context required by approved token and administration policies.
 - Maintains canonical mapping between Scnehaux identifiers and Keycloak-local identifiers.
 - Detects drift between desired state and Keycloak runtime state.
@@ -216,7 +217,7 @@ graph TB
 - Translates Keycloak events into canonical Scnehaux events.
 - Publishes versioned context-revocation facts for consumers according to declared verification profiles.
 - Coordinates legacy migration, cutover, and rollback.
-- Does not authenticate users, issue tokens, store credentials, or implement a parallel session engine.
+- Does not authenticate users, issue tokens, store credentials, or implement a parallel session engine. It never generates, receives, or stores a client secret or a client private key.
 
 #### Identity Event Adapter
 
@@ -282,7 +283,7 @@ sequenceDiagram
 
     C-->>S: Application lifecycle event / approved reference
     S->>S: Validate owner, environment and security profile
-    S->>K: Create or update client/resource via Admin API
+    S->>K: Create or update client/resource via Admin API, with its public keys for a confidential or workload client
     K-->>S: Registration result
     S->>S: Persist mapping, desired state and evidence
 ```
@@ -457,7 +458,7 @@ Authoritative for:
 - migration batches, identity mappings, and cutover state;
 - operational evidence references.
 
-It is not authoritative for Principal credentials, sessions, Product authorization, or Organization Membership truth.
+It is not authoritative for Principal credentials, client private keys, sessions, Product authorization, or Organization Membership truth.
 
 ### 5.2 Cache and Session State
 
@@ -521,7 +522,7 @@ Owned by Keycloak through standards-based OAuth/OIDC/SAML interfaces.
 
 Owned by the Identity Control Service for:
 
-- Application client/resource onboarding;
+- Application client/resource onboarding, and client public-key registration, rotation, and revocation;
 - desired configuration inspection;
 - Tenant/Membership projection status;
 - Consumer Verification Profile and revocation-propagation status;
@@ -575,7 +576,7 @@ identity.migration.*
 
 ### 7.1 Authentication
 
-Keycloak owns authentication ceremonies and authenticator verification. The Control Service never receives plaintext passwords, passkey private material, TOTP secrets, or refresh tokens.
+Keycloak owns authentication ceremonies and authenticator verification. The Control Service never receives plaintext passwords, passkey private material, TOTP secrets, refresh tokens, client secrets, or client private keys.
 
 ### 7.2 Authorization
 
@@ -593,7 +594,8 @@ This is distinct from restricted Admin Console access. That path operates on the
 ### 7.3 Encryption and Secrets
 
 - TLS protects all external and internal network paths carrying identity data.
-- client secrets, admin credentials, database credentials, and signing keystores are stored in approved secret management.
+- admin credentials, database credentials, and signing keystores are stored in approved secret management;
+- registered clients hold no client secret (`STD-IAM-001 §3.2`). Each client's private key is in its own deployable's approved secret custody, and the kernel holds only the client's public keys. The bootstrap clients that stand the registration path up hold secrets in development only.
 - secrets are never committed to realm export, source control, logs, events, or analytics.
 - database and backup encryption is mandatory for restricted identity data.
 
@@ -637,8 +639,8 @@ The propagation budget is 60 seconds as the planning figure, against an operatio
 | Session               | kernel session removal                                                                                                         | class of that session's audience | 60s + class                                                                      |
 | Principal             | kernel user disable → remove every kernel session → remove projected context → quarantine the control-plane mapping            | worst class the Principal holds  | 60s + worst class                                                                |
 | Authenticator         | kernel authenticator removal                                                                                                   | none for future ceremonies       | 60s, and the Session delay in addition when the removal is a compromise response |
-| Client or grant       | client disable → grant revocation → refresh invalidation                                                                       | class of that client's audience  | 60s + class                                                                      |
-| Workload              | workload credential disable → grant and session removal                                                                        | `L3`, 9 minutes                  | 10 minutes                                                                       |
+| Client or grant       | client disable or key removal → grant revocation → refresh invalidation                                                        | class of that client's audience  | 60s + class                                                                      |
+| Workload              | workload client disable or key removal → grant and session removal                                                             | `L3`, 9 minutes                  | 10 minutes                                                                       |
 | Contextual Membership | Organization priority event → Identity Control removes projected context → kernel session removal → consumer projection update | `L1`, 9 minutes                  | 10 minutes                                                                       |
 
 **Ordering inside the Principal and Membership classes is load-bearing.** The projected context is removed before the kernel sessions. Reversed, a refresh landing between the two steps can mint a fresh token asserting the context that was just revoked and the new token outlives the revocation by a full lifetime class.
@@ -765,7 +767,7 @@ Runbooks cover:
 - event backlog;
 - projection drift;
 - context-revocation enforcement lag;
-- client credential compromise;
+- client private-key compromise: remove the compromised public key from the client and register a replacement;
 - Principal/session containment;
 - delegated-identity compromise;
 - failed upgrade and rollback;
@@ -902,7 +904,7 @@ The pipeline must:
 
 ### Governing
 
-- ADR-IAM-001 — adopt Keycloak as identity protocol and authentication kernel.
+- ADR-IAM-001 — adopt Keycloak as identity protocol and authentication kernel. §5.12 decides that confidential and workload clients authenticate with registered keys (`private_key_jwt`), not client secrets.
 - ADR for Realm/issuer strategy — required before production approval.
 - ADR for signing-key custody — required before production approval.
 - ADR for Membership projection representation — required after fit-gap PoC.
@@ -939,7 +941,7 @@ The pipeline must:
 2. inventory Principals, credentials, clients, sessions, Tenant assumptions, federation links, and consumers;
 3. establish Keycloak target Realm, identifiers, clients, key strategy, and Consumer Verification Profiles;
 4. create repeatable migration tooling and reconciliation reports;
-5. migrate non-secret identity metadata and clients in dry runs;
+5. migrate non-secret identity metadata and clients in dry runs, re-keying any legacy client that authenticates with a secret to a registered key pair;
 6. choose credential migration strategy: verified import where compatible, first-login migration, or forced reset according to security evidence;
 7. migrate federation links using issuer-plus-subject identity and collision review rather than mutable-attribute auto-link;
 8. dual-run selected consumers with explicit issuer/audience separation and measured context-revocation behavior;

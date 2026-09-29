@@ -118,7 +118,7 @@ graph LR
 1. **Hosted Login Theme/Extension** — Keycloak-hosted authentication pages using supported extension points.
 2. **Account Security Experience** — initially supported Keycloak account capabilities with Scnehaux branding; custom replacement only through supported APIs.
 3. **Identity Admin Portal** — Scnehaux application for identity, client, federation, session, and security operations.
-4. **Developer Identity Console** — application/client onboarding, redirect/audience configuration workflow, credential rotation request, and integration guidance.
+4. **Developer Identity Console** — application/client onboarding, redirect/audience configuration workflow, client public-key registration and rotation, and integration guidance.
 5. **Identity Experience BFF** — secure browser-facing backend that manages application sessions and calls Identity Control/Runtime interfaces.
 
 #### Source Realization
@@ -206,8 +206,8 @@ Owns presentation for:
 
 - Application security onboarding;
 - redirect URI and audience request;
-- client authentication profile;
-- credential/certificate rotation request;
+- client authentication profile: `private_key_jwt` for a confidential or workload client (`STD-IAM-001 §3.2`);
+- public-key registration, rotation (the new key added before the old one is removed), and revocation. The team generates its key pair and submits only the public key. The console never issues, displays, or accepts a secret or a private key;
 - supported protocol documentation;
 - conformance and integration status.
 
@@ -352,7 +352,7 @@ Experience events are interaction signals, not authoritative identity facts. Ide
 ### 7.1 Authentication
 
 - hosted login remains inside the Keycloak authentication transaction;
-- Admin and Developer portals use Authorization Code flow and appropriate PKCE/confidential-client controls;
+- Admin and Developer portals use Authorization Code flow and appropriate PKCE/confidential-client controls. Their BFF authenticates to the kernel with `private_key_jwt`;
 - privileged operations require step-up and recent authentication;
 - the UI never marks authentication successful before Identity Runtime confirmation.
 
@@ -368,7 +368,7 @@ Experience events are interaction signals, not authoritative identity facts. Ide
 - TLS is mandatory;
 - cookies are Secure, HttpOnly, SameSite, narrowly scoped, and rotated;
 - CSRF and origin checks protect state-changing browser requests;
-- client secrets exist only in server-side trusted components or secret management;
+- a BFF's client private key exists only in its own deployable and approved secret custody. A registered client holds no client secret, and a bootstrap client holds one in development only (`STD-IAM-001 §3.2`);
 - CSP, frame protection, referrer policy, and secure headers are enforced.
 
 ### 7.4 Audit

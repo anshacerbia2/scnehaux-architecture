@@ -50,8 +50,14 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - Access tokens MUST be audience-bound and short-lived according to the approved token-lifetime class
 - An access token MUST NOT exceed a 15-minute lifetime unless an approved token-lifetime class defines a longer bound for a named audience; any longer lifetime MUST be carried into the revocation enforcement delay of every affected revocation class
 - Refresh tokens MUST use the approved identity kernel's rotation, reuse-detection, revocation, and session controls when refresh tokens are issued
-- Client credentials and private client secrets MUST never be embedded in public browser or mobile applications
-- Confidential clients MUST authenticate using an approved method appropriate to their threat model
+- Client credentials, client private keys, and client secrets MUST never be embedded in public browser or mobile applications
+- **Confidential and workload clients MUST authenticate to the token endpoint with a signed JWT client assertion (`private_key_jwt`, RFC 7523), signed `PS256` with an RSA key of at least 3072 bits**, the floor `STD-IAM-002 §3.2.2` sets for signing keys. `ADR-IAM-001 §5.12` records the decision:
+  - The client generates its key pair. The private key never leaves that client's deployable and its approved secret custody.
+  - The identity kernel holds only the client's public keys, registered on the client by the Identity Control Service. No Scnehaux component holds a client's private key.
+  - Each assertion MUST carry a unique `jti` and a short expiry, name the realm issuer as its audience, and be refused if presented twice.
+  - Rotation MUST overlap. A new public key is registered while the retiring one is still valid, and the retiring one is removed at the end of a bounded window. Revocation removes a key, and the kernel refuses it on the next request.
+- Shared client secrets (`client_secret_basic`, `client_secret_post`, `client_secret_jwt`) are PROHIBITED for registered clients. The kernel holds one secret per client, so a secret cannot rotate with an overlap without a feature the kernel classifies as preview. The kernel also stores a secret in a form its administrators can read.
+- A client created to bootstrap the registration path itself MAY hold a client secret in a development environment until it is registered. That exemption is a property of the environment, as for the ROPC grant above, and MUST NOT reach a shared production environment
 - Token introspection MAY be used where opaque-token or active-state semantics require it, but normal signed-token validation SHOULD remain local when sufficient
 
 ### 3.3 Token & Claim Profile
@@ -95,8 +101,8 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 
 ### 3.7 Workload Identity
 
-- Service, workload, automation, and AI-agent identities MUST use non-human credential profiles with explicit owner, audience, rotation, and lifecycle
-- Shared human credentials or long-lived static secrets are prohibited when a managed workload-identity mechanism is available
+- Service, workload, automation, and AI-agent identities MUST use non-human credential profiles with explicit owner, audience, rotation, and lifecycle. Toward the identity kernel, that credential is a registered key pair under §3.2, rotated by adding the new key before the old one is removed
+- Shared human credentials are prohibited. A shared client secret is prohibited for kernel client authentication under §3.2. Other long-lived static secrets are prohibited when a managed workload-identity mechanism is available
 - Workload identity MUST be distinguishable from human Principal context in audit and authorization flows
 
 ### 3.8 Audit & Security Evidence
@@ -126,3 +132,5 @@ Deviation from this standard requires formal exception approval under GDC-000 wi
 - administrative audit-event assertions
 - architecture fitness functions preventing Identity ownership of Tenant, Membership, Product Permission, or business state
 - client-registration assertion that no client in a shared environment enables the Resource Owner Password Credentials grant
+- client-registration assertion that every confidential or workload client in a shared environment authenticates with `private_key_jwt` and holds no client secret
+- compatibility test, against the pinned kernel release, that two registered client keys overlap, a removed key is refused on the next request, and a replayed assertion is refused
