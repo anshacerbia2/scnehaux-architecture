@@ -79,7 +79,7 @@ The normative vocabularies (schemes, roles, emphasis values including `solid` an
 
 - **Color**: `color.[scheme].[role].[emphasis].[state]`, e.g. `color.primary.surface.solid.default`, `color.danger.surface.subtle.default`, `color.primary.text.contrast.default`.
 - **Effect**: `effect.shadow.[low|medium|high|overlay|focus]`. Every public theme emits this identical set.
-- **Dimension**: `dimension.[property].[intent]`, e.g. `dimension.spacing.compact`, `dimension.z-index.modal`.
+- **Dimension**: `dimension.[property].[intent]`, e.g. `dimension.spacing.inset-compact`, `dimension.z-index.modal`.
 - **Typography**: `typography.[context].[variant]`, e.g. `typography.data.compact`.
 - **Motion**: `motion.[action].[duration|easing]`, e.g. `motion.enter.duration`.
 
