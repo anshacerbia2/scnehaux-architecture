@@ -129,7 +129,7 @@ Values within each spacing relationship ascend from `compact` to `comfortable`. 
 
 #### Values that are not Tier-2 tokens
 
-- **Component geometry**, such as a sidebar width, a navigation-bar height, control, icon, and avatar sizes, and container maximum widths, is owned by its component as a Tier-3 alias with an alias review record.
+- **Component geometry**, such as a sidebar width, a navigation-bar height, control, icon, and avatar sizes, and container maximum widths, is a documented structural value of its component (STD-UIP-TKN-002 section 3.1), not a token. A Tier-3 alias resolves to a Tier-2 token, and these values have no Tier-2 source.
 - **Breakpoints** are not emitted as custom properties, because `var()` is not valid in a media-query condition. Responsive thresholds are build-time constants of the consuming layer.
 - **Opacity** has no Tier-2 token. A translucent state is a color token whose alpha is part of its value and is verified on its actual background.
 - **Transition shorthands** are not tokens. Components compose `motion.{action}.duration` and `motion.{action}.easing` with the properties they animate.
