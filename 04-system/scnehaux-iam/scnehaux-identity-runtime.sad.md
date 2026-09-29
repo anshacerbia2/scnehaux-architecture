@@ -595,7 +595,7 @@ This is distinct from restricted Admin Console access. That path operates on the
 
 - TLS protects all external and internal network paths carrying identity data.
 - admin credentials, database credentials, and signing keystores are stored in approved secret management;
-- registered clients hold no client secret (`STD-IAM-001 §3.2`). Each client's private key is in its own deployable's approved secret custody, and the kernel holds only the client's public keys. The bootstrap clients that stand the registration path up hold secrets in development only.
+- no confidential or workload client in a shared environment holds a client secret (`STD-IAM-001 §3.2`). That includes the bootstrap clients that stand the registration path up and the realm-apply service account. Each client's private key is in its own deployable's approved secret custody, and the kernel holds only the client's public keys.
 - secrets are never committed to realm export, source control, logs, events, or analytics.
 - database and backup encryption is mandatory for restricted identity data.
 

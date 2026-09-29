@@ -63,7 +63,13 @@ Three findings drove the replacement, and each contradicts a premise of the orig
 
 **`RS256` is prohibited by the profile we are aligning to.** The Financial-grade API profile — the most rigorously reviewed OAuth security profile in production, and the one open banking is audited against — permits `PS256` and `ES256` and forbids `RS256`. PKCS#1 v1.5 signature padding, which `RS256` uses, carries no security proof; PSS does. The original decision made `RS256` the external default on interoperability grounds, which selected the one algorithm the reference profile rejects.
 
-**The bandwidth premise does not hold in this estate.** The original argued that `ES256` saves 30–40% of header size across billions of internal requests. `EAD-006 §5.4` establishes that service-to-service calls inside the runtime are authenticated by mutual TLS with workload identity, not by a bearer token. Internal tokens are presented at the edge and to protected resources, not on every internal hop, so the volume the saving was computed against is not there.
+**The bandwidth saving is real, and too small to pay for a second algorithm.** The original argued that `ES256` saves header size across billions of internal requests. Internal tokens do travel between services in this estate:
+
+- `STD-GLB-001` requires machine-to-machine calls to use mutual TLS _or_ a service-mesh token;
+- `SAD-004` has services call each other with audience-bound access tokens;
+- the Identity Control API authenticates every caller by its token.
+
+So the volume exists. What it saves is small. A `PS256` signature over a 3072-bit key is 384 bytes, and an `ES256` signature is 64. That is about 430 bytes more per token after encoding, well inside any header budget. Verification cost runs the other way: a token is signed once and verified on every hop, and RSA verification is several times cheaper than ECDSA verification. The workload this estate repeats most is therefore the one `PS256` does cheaply. A few hundred bytes per request does not justify a second key lifecycle and an algorithm branch in every verifier.
 
 **A second algorithm is a second attack surface, and the original said so.** Its own Consequences list names "Downstream Parsing Complexity" and "Double Key Management" as costs. Algorithm confusion — a verifier selecting the algorithm from the token rather than from its own configuration — is an exploited defect class, and it lives in exactly the branch a dual profile requires every verifier to carry. One algorithm removes the branch, halves key custody, and leaves nothing for a verifier to select.
 
@@ -163,8 +169,8 @@ None.
 _Evaluated at the 2026-08-18 amendment._
 
 - **Pros**: the compact-token argument for internal traffic, and `RS256` acceptance by every relying party without an exception record.
-- **Cons**: `RS256` is prohibited by the Financial-grade API profile, so the external half selects the one algorithm the reference profile rejects. Two algorithms require two key lifecycles, two rotation schedules, and an algorithm branch in every verifier, which is where algorithm confusion lives. The bandwidth saving is computed against a request volume that mutual TLS under `EAD-006 §5.4` means does not exist.
-- **Why Rejected**: it pays a real cost in key custody and verifier surface for a saving the architecture does not realise, while mandating a padding scheme that carries no security proof.
+- **Cons**: `RS256` is prohibited by the Financial-grade API profile, so the external half selects the one algorithm the reference profile rejects. Two algorithms require two key lifecycles, two rotation schedules, and an algorithm branch in every verifier, which is where algorithm confusion lives. The compact-token saving is about 430 bytes per token, while RSA verification, the operation repeated on every hop, is cheaper than ECDSA verification.
+- **Why Rejected**: it pays a real cost in key custody and verifier surface for a saving too small to matter, while mandating a padding scheme that carries no security proof.
 
 ### Alternative D: EdDSA (Ed25519) as the Baseline
 

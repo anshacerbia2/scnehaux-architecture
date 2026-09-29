@@ -368,7 +368,7 @@ Experience events are interaction signals, not authoritative identity facts. Ide
 - TLS is mandatory;
 - cookies are Secure, HttpOnly, SameSite, narrowly scoped, and rotated;
 - CSRF and origin checks protect state-changing browser requests;
-- a BFF's client private key exists only in its own deployable and approved secret custody. A registered client holds no client secret, and a bootstrap client holds one in development only (`STD-IAM-001 §3.2`);
+- a BFF's client private key exists only in its own deployable and approved secret custody. No confidential client in a shared environment holds a client secret, a bootstrap-created one included (`STD-IAM-001 §3.2`);
 - CSP, frame protection, referrer policy, and secure headers are enforced.
 
 ### 7.4 Audit
