@@ -14,6 +14,11 @@ doc_meta:
 
 # Architecture Decision Record (ADR) Guideline
 
+> **Revision 1.1.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, revision 1.0.0 remains binding until authorized human
+> principals approve the exact commit or ratification manifest containing this
+> revision. `last_reviewed` changes only in that ratification record.
+
 ## 1. Context & Scope
 
 Architecture is rarely a straight line. As our systems evolve, we frequently encounter crossroads where we must introduce a new paradigm, deviate from the 'paved road' (established Engineering Standards / STD), or accept a critical trade-off to meet business demands.

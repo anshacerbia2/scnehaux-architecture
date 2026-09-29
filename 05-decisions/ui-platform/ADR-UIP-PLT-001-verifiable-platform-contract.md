@@ -43,13 +43,13 @@ The repository uses pnpm and declares `workspace:*`. A release harness must use 
 
 The v1 decisions are:
 
-1. **Interaction foundation:** Button, Disclosure/Accordion, Navigation, Sidebar, and layout primitives use native/custom behavior. Combobox, Select, Menu, Dialog, Popover, Listbox, and Tabs use selected React Aria hooks behind `@scnx/core-ui`, subject to the decision rule in the UI Platform decision register (UIP-DEC-001). Vendor types and props stay private.
-2. **Theme isolation:** public themes use `[data-scnx-theme="<theme-id>"]` roots; resets are scoped; portals mount inside the originating root. A separate `:root` compatibility stylesheet may support a single-brand document. Shadow DOM is outside v1.
-3. **Styling ownership:** one versioned token source generates Sass-facing and Panda-facing contracts. Panda is frozen to its existing recipe surface during P0. Sass components and Panda recipes use named cascade layers. The P0 exit review decides consolidation by the recorded rule in UIP-DEC-003.
-4. **Polymorphism:** interactive parts use `asChild` only at approved composition points. Typography/layout may use a closed `as` tag union. No component exposes both. Other components keep fixed elements.
-5. **Token package:** tokens remain in `@scnx/system` and publish explicit `@scnx/system/tokens/css/<theme-id>.css`, `tokens/json/<theme-id>.json`, and `tokens/scss` subpaths. Independent non-component consumers or release cadence trigger extraction review.
-6. **CSS delivery:** v1 publishes one aggregate component stylesheet and explicit theme stylesheets. A host or standalone composition root imports them once. Component JavaScript and remotes do not import CSS side effects. Per-component CSS subpaths are outside v1.
-7. **Federation sharing:** under ADR-GLB-FE-012, the host shares `react`, `react-dom`, `@scnx/core-ui`, and every other context-bearing public entry as singletons with a strict compatible range, using explicit keys generated from the export inventory. Wildcard exports are removed. `@scnx/system` declares `@scnx/core-ui` as a peer and dev dependency. `requiredVersion` is the consuming application's declared range. Remotes remain lazy; only the host may choose eager loading. An incompatible version produces a controlled failure.
+1. **UIP-DEC-001 — Interaction foundation:** Button, Disclosure/Accordion, Navigation, Sidebar, and layout primitives use native/custom behavior. Combobox, Select, Menu, Dialog, Popover, Listbox, and Tabs use selected React Aria hooks behind `@scnx/core-ui`, subject to this recorded decision. Vendor types and props stay private.
+2. **UIP-DEC-002 — Theme isolation:** public themes use `[data-scnx-theme="<theme-id>"][data-scnx-resolved-mode="<mode>"]` roots; the URL-safe theme ID identifies the brand and the resolved mode is a separate attribute. Resets are scoped; portals mount inside the originating root. A separate `:root` compatibility stylesheet may support a single-brand document. Shadow DOM is outside v1.
+3. **UIP-DEC-003 — Styling ownership:** one versioned token source generates Sass-facing and Panda-facing contracts. Panda is frozen to its existing recipe surface during P0. Sass components and Panda recipes use named cascade layers. The P0 exit review decides consolidation against the dual-engine eligibility rule in the following paragraph and the Styled Component Delivery TDD.
+4. **UIP-DEC-004 — Polymorphism:** interactive parts use `asChild` only at approved composition points. Typography/layout may use a closed `as` tag union. No component exposes both. Other components keep fixed elements.
+5. **UIP-DEC-005 — Token package:** tokens remain in `@scnx/system` and publish explicit `@scnx/system/tokens/css/<theme-id>.css`, `tokens/json/<theme-id>.json`, and `tokens/scss` subpaths. Each theme asset contains the declared modes under separate resolved-mode selectors. Independent non-component consumers or release cadence trigger extraction review.
+6. **UIP-DEC-006 — CSS delivery:** v1 publishes one aggregate component stylesheet and explicit theme stylesheets. A host or standalone composition root imports them once. Component JavaScript and remotes do not import CSS side effects. Per-component CSS subpaths are outside v1.
+7. **UIP-DEC-007 — Federation sharing:** under ADR-GLB-FE-012, the host shares `react`, `react-dom`, `@scnx/core-ui`, and every other context-bearing public entry as singletons with a strict compatible range, using explicit keys generated from the export inventory. Wildcard exports are removed. `@scnx/system` declares `@scnx/core-ui` as a peer and dev dependency. `requiredVersion` is the consuming application's declared range. Remotes remain lazy; only the host may choose eager loading. An incompatible version produces a controlled failure.
 
 Module Federation remains in the enterprise `assess` radar ring. Item 7 governs
 the bounded P0 fixture and any federation scope separately authorized by an
@@ -57,7 +57,7 @@ owning SAD/ADR; it neither mandates federation nor changes that radar status.
 The fixture must pass the same strict CSP policy as the standalone consumer,
 including nonce/hash handling for bootstrap and dynamically loaded chunks.
 
-The decision register may compare measured sizes and costs, but this ADR does
+The P0 exit evidence may compare measured sizes and costs, but this ADR does
 not authorize universal 15 KB, 10%, or 2x thresholds. Every comparative result
 retains its import path, fixture, baseline, compression representation, tool,
 runner, and parse/evaluation context. Eligibility follows accessibility,

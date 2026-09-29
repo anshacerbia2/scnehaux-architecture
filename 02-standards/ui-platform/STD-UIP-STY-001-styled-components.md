@@ -52,7 +52,7 @@ All styling engines deployed within the UI platform (such as static CSS-in-JS en
 
 To prevent visual layout conflicts when multiple micro-frontends share the same browser DOM environment:
 
-- **Global Selector Prohibition**: Public multi-brand themes and resets use `[data-scnx-theme="<theme-id>"]`. A separate `:root` compatibility stylesheet MAY serve a single-brand document and is excluded from multi-brand/federated support. `@layer` controls precedence and does not scope a selector. Shadow DOM is outside v1.
+- **Global Selector Prohibition**: Public multi-brand themes and resets use `[data-scnx-theme="<theme-id>"][data-scnx-resolved-mode="<mode>"]`. A separate `:root` compatibility stylesheet MAY serve a single-brand document and is excluded from multi-brand/federated support. `@layer` controls precedence and does not scope a selector. Shadow DOM is outside v1.
 - **Prefix Isolation**: CSS class names must be prefixed uniquely based on the domain boundary:
   - Core design system: `scnx-` prefix.
   - Subdomain remotes: domain-specific prefixes (e.g. `scnx-hris-`, `scnx-fin-`).

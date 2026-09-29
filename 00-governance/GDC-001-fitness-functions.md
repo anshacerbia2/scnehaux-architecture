@@ -14,6 +14,11 @@ doc_meta:
 
 # Architecture Fitness Functions & Compliance Engine
 
+> **Revision 1.2.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, revision 1.1.0 remains binding until authorized human
+> principals approve the exact commit or ratification manifest containing this
+> revision. `last_reviewed` changes only in that ratification record.
+
 ## 1. Context & Scope
 
 ### 1.1 The Core Mandate: The Master Fitness Function

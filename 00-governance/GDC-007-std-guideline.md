@@ -16,6 +16,11 @@ doc_meta:
 
 # Enterprise Standards (STD) Guideline
 
+> **Revision 1.2.0 is pending exact-commit ratification.** Under GDC-000
+> section 2.6.7, revision 1.0.0 remains binding until authorized human
+> principals approve the exact commit or ratification manifest containing this
+> revision. `last_reviewed` changes only in that ratification record.
+
 ## 1. Context & Scope
 
 The `02-standards` directory is the authoritative collection of mandatory rules, constraints, patterns, and methodologies governing software development and architecture across the Scnehaux enterprise. Its scope encompasses lower-level technical instructions such as API Design guidelines, coding styles, and database schemas.

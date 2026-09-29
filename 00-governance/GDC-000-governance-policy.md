@@ -3,7 +3,7 @@ doc_meta:
   id: GDC-000
   title: Documentation Governance Policy
   owner: Architecture Authority
-  version: 1.3.0
+  version: 1.4.0
   status: approved
   classification: public
   governed_by: []
@@ -13,6 +13,11 @@ doc_meta:
 ---
 
 # Documentation Governance Policy (The Constitution)
+
+> **Revision 1.4.0 is pending exact-commit ratification.** Section 2.6.7 of the
+> currently binding revision already requires exact-commit approval for a GDC
+> change. Until that authorization is recorded, revision 1.3.0 remains binding
+> and this text is a review candidate.
 
 ## 1. Context & Scope
 
@@ -409,7 +414,7 @@ Architecture artifacts are not static, they represent the evolving truth of the 
 5. **The Version Bump Mandate**: From the first production deployment onward, any modification to the architectural content of an `approved` versioned artifact MUST include a corresponding version bump in its YAML metadata. Before it, artifacts are edited in place without amendment sections, and Git history is the revision record; the version-bump audit is disabled until then.
 6. **The Baseline Stability Mandate**: A versioned artifact whose status asserts it is, or has been, an official baseline (`approved`, `deprecated`) MUST carry a stable Semantic Version of `1.0.0` or higher. Semantic Versioning reserves major version zero for initial development, where anything MAY change at any time; an artifact cannot simultaneously be the blueprint other teams build against and a document whose contract may move underneath them. Pre-baseline statuses (`chartered`, `draft`, `proposed`) are the correct home for `0.y.z` and remain unconstrained — promotion to a baseline status and promotion to `1.0.0` are one act, not two. Enforced by the `approved_version_not_stable` fitness function.
 
-7. **Approved GDC Revision Authority**: A GDC's `approved` status identifies the active artifact class; it does not pre-approve unmerged edits to that file. A changed GDC revision becomes effective only when the Architecture Review Board explicitly approves the exact commit or ratification manifest containing the revision. CI success and merge permission are necessary evidence but never substitute for that human authorization. Until then, the previously approved Git revision remains the binding policy.
+7. **Approved Versioned-Artifact Revision Authority**: An `approved` status on a Versioned Artifact identifies its active artifact class and previously ratified baseline; it does not pre-approve working-tree, pull-request, or merged edits to that file. A changed revision of any approved GDC, EAD, PAD, SAD, STD, or TDD becomes effective only when the human authority defined by its governing guideline explicitly approves the exact commit or ratification manifest containing the revision. This rule also applies when an artifact schema has no pre-approval lifecycle value suitable for an in-place revision. CI success, review comments, and merge permission are necessary evidence but never substitute for that exact-revision authorization. Until authorization is recorded, the previously approved Git revision remains binding, and the changed revision must identify itself as pending ratification in its document body. At ratification, the artifact's `last_reviewed` date and any required lifecycle metadata are updated in the exact approved commit or manifest.
 
 ### 2.7 Policy-as-Code
 

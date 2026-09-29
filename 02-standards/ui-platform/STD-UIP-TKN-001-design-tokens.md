@@ -120,7 +120,7 @@ The current implementation generates color values using Sass maps and a compile-
 
 The platform supports multi-theme and multi-brand white-label capabilities under a strict cascading model:
 
-1. **Baseline Theme**: Every public theme supplies required variables below `[data-scnx-theme="<theme-id>"]`. A separate `:root` compatibility output MAY serve a single-brand document.
+1. **Baseline Theme**: Every public theme uses a URL-safe brand identifier and supplies required variables for each declared mode below `[data-scnx-theme="<theme-id>"][data-scnx-resolved-mode="<mode>"]`. Preference values such as `system` are resolved before selector application and are not CSS selector identities. A separate `:root` compatibility output MAY serve a single-brand document.
 2. **Cascading Overrides**: Brand themes (for example `achromatic`) may override a documented subset within that scoped root. Shadow DOM is outside v1.
 3. **Partial Contract Invariant**: An override may define fewer keys than the baseline. It must document inheritance and any additional public keys. Compile-time map checks do not alone prove CSS selector isolation or valid computed values.
 
@@ -209,7 +209,7 @@ Each action emits a `duration` and an `easing` token, for example `motion.enter.
 
 ### Tier-3 Alias Governance
 
-#### Component Alias Budget
+#### Component Alias Review
 
 To prevent unbounded aliases, the platform reviews their semantics and reuse:
 
