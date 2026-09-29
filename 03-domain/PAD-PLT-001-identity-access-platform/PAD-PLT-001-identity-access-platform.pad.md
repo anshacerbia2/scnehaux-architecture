@@ -398,7 +398,7 @@ Privileged identity administration requires stronger assurance, narrow scope, at
 | Identity linkage                   | external issuer/subject and linkage state                         | Restricted                              |
 | Authenticator and session metadata | method, device, session, revocation state                         | Restricted                              |
 | Delegation metadata                | source actor, target audience, scopes, purpose, TTL               | Restricted                              |
-| Protocol registration              | redirect URI, audience, grant policy                              | Internal; secrets Restricted            |
+| Protocol registration              | redirect URI, audience, grant policy, client public keys          | Internal; no client secret is held      |
 | Consent and grant                  | client, resource, scope, purpose                                  | Restricted                              |
 | Public verification material       | issuer metadata, public keys                                      | Public by design                        |
 | Security and investigation facts   | failures, anomalies, privileged actions                           | Restricted                              |

@@ -216,7 +216,7 @@ The existing Go IAM SHALL enter containment and migration mode:
 
 ### 5.10 Credential Containment and the Sole Administration Credential
 
-The Keycloak administration credential SHALL exist in the Identity Control Service and nowhere else in the estate. It SHALL be scoped to the narrowest role set permitting its operations — user creation, attribute write, user search, enable and disable, context projection, session enumeration and removal, client management, and credential rotation — and SHALL carry no realm administration and no credential-read authority.
+The Keycloak administration credential SHALL exist in the Identity Control Service and nowhere else in the estate. It SHALL be scoped to the narrowest role set permitting its operations — user creation, attribute write, user search, enable and disable, context projection, session enumeration and removal, client management, and client public-key registration and rotation (§5.12) — and SHALL carry no realm administration and no credential-read authority.
 
 Every enterprise identity operation SHALL transit the Identity Control API rather than the kernel directly, because that is where enterprise authorization, canonical identifier resolution, last-authenticator guards, idempotency, reason capture, and evidence publication live. A caller reaching the kernel directly bypasses all six.
 
@@ -238,6 +238,32 @@ Every enterprise identity operation SHALL transit the Identity Control API rathe
 The ceremony holds no credential. It creates the kernel user with a mandatory credential-setting action, so the first human interaction establishes the credential and the ceremony never handles one.
 
 **This is an entry point, not an exception.** No standing capability is created, nothing is exempted from authorization afterwards, and the ordinary path is unchanged. An out-of-band `INSERT` into `principal_mapping` remains prohibited, and `ADR-ORG-001` is why: an identifier that entered the canonical registry without a recorded decision is indistinguishable from one an attacker placed there.
+
+### 5.12 Confidential and Workload Clients Authenticate with Registered Keys
+
+A confidential or workload client proves which application is asking at every token request. The way it does so SHALL meet three requirements:
+
+- rotation without an outage, so that rotation keeps happening;
+- revocation that takes effect at once;
+- no Scnehaux component, the kernel included, holding material that would let a reader act as the client.
+
+**The client SHALL authenticate with a signed JWT client assertion (`private_key_jwt`, RFC 7523).** The client generates an RSA key pair and keeps the private key in its own deployable's approved secret custody. The Identity Control Service registers the public key on the kernel client as a JWKS held on the client, not fetched from a URL, so no application has to serve a key endpoint to be a client. `STD-IAM-001 §3.2` states the rule, the algorithm, and the assertion requirements.
+
+The mechanism is supported in the pinned kernel and needs no preview feature and no extension. `identity-kernel`'s compatibility suite answered it against 26.7.4 on 2026-09-29 (compat run 36606481342), and every step held:
+
+- two registered keys are accepted together;
+- a key removed from the client is refused on the next request;
+- an assertion presented twice is refused.
+
+The suite keeps asserting it on every upgrade.
+
+Its consequences:
+
+- **Rotation is add-then-remove.** The new public key is registered, the previous one becomes retiring, and it is removed at the end of a bounded overlap. The kernel accepts either key in between.
+- **Nothing secret is ever shown.** Registration and rotation carry a public key in and return no secret. There is no once-only display to lose, and a lost private key is replaced by registering a new one.
+- **A kernel breach exposes no client.** The kernel holds public keys only, where a client secret would be readable by its administrators and present in its database backups.
+
+**Bootstrap clients are the one exception, and only in development.** The clients created to stand the registration path up hold client secrets in a development environment until it can register them: the Identity Control Service's own Admin API clients and the first BFF clients. `STD-IAM-001 §3.2` bounds that exemption to development, as it bounds the password grant.
 
 ## 6. Consequences
 
@@ -322,3 +348,19 @@ Provision a reserved identity with the realm, holding a fixed `principal_id`, an
 - **Pros**: needs no new code — the ordinary API creates the first Principal like any other, and `SAD-001` already establishes an evidenced break-glass posture for the Admin Console, so the concept is not new to the estate.
 - **Cons**: it creates a credential that can create Principals _forever_, which is a permanent standing authority in exchange for solving a problem that occurs once. Its `principal_id` is in no registry, so every downstream consumer must tolerate an identifier the authority cannot resolve. And because it must exist before the service does, it can only be placed by the out-of-band write this architecture prohibits — the problem is relocated, not solved.
 - **Why Rejected**: a one-time problem does not justify a standing capability. The console break-glass in `SAD-001` is not a precedent for this: it is time-bounded, group-scoped, and evidenced per session, and it operates on the kernel rather than minting canonical identifiers. §5.11 keeps the property that matters — a legitimate entry point — while the capability expires by construction after one use.
+
+### Alternative F — Client Secrets with the Kernel's Secret-Rotation Policy
+
+Keep client secrets, and enable the kernel's `client-secret-rotation` feature. Under that feature a regenerated secret leaves the previous one valid for a configured period. This was the design `TDD-identity-control-003` first specified for §5.12.
+
+- **Pros**: the most widely supported client authentication method in any library, and the smallest change to the designs as first written.
+- **Cons**: the pinned kernel classifies the feature as preview, "not recommended for use in production" and liable to change or removal. The secret is readable by kernel administrators and present in kernel database backups.
+- **Why Rejected**: `§7 Required Waivers` requires its own ADR or exception for any preview feature. Building credential rotation on one would put every confidential client's availability on a feature the vendor does not support.
+
+### Alternative G — Client Secrets Rotated Without Overlap
+
+Keep client secrets without the preview feature. Rotation regenerates the secret, and the old one stops working at once.
+
+- **Pros**: supported, simple, and the most common kernel deployment in practice.
+- **Cons**: every rotation is an outage for the client, from the moment the secret changes until the new one is deployed.
+- **Why Rejected**: a rotation that causes an outage is a rotation teams postpone, which leaves long-lived secrets in place. That is the condition `STD-IAM-001 §3.7` exists to prevent. The supported alternative, §5.12, gives the overlap without the outage.

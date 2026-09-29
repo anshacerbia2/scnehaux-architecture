@@ -369,7 +369,7 @@ Frontend and server telemetry use common correlation identifiers with backend op
 
 ### 8.1 Authentication
 
-- Authorization Code + PKCE through Keycloak;
+- Authorization Code + PKCE through Keycloak, the BFF authenticating as a confidential client with `private_key_jwt` (`STD-IAM-001 §3.2`);
 - server-side callback and session creation;
 - step-up for provider cross-tenant, Tenant suspension, admin delegation, bulk grant, export, and offboarding finalization;
 - session termination on logout, security version change, or backend rejection.
