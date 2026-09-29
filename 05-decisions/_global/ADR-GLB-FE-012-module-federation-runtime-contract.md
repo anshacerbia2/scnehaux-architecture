@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-FE-012
   title: Module Federation Runtime Contract
   adr_type: replacement
-  status: proposed
+  status: accepted
   created: 2026-09-28
   created_date: 2026-09-28
   created_by: UI Platform Architecture
@@ -19,9 +19,9 @@ Replace ADR-GLB-FE-004 with a Module Federation decision defined by shared-modul
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                                 | Approver                            |
-| ---------- | -------- | ----------- | ----------------------------------------- | ----------------------------------- |
-| 2026-09-28 | proposed | replacement | Consolidated principal review in progress | Architecture Review Board — pending |
+| Date       | Status   | ADR Type    | Reviewers                   | Approver                                 |
+| ---------- | -------- | ----------- | --------------------------- | ---------------------------------------- |
+| 2026-09-29 | accepted | replacement | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
 
 ## 3. Context
 
@@ -29,7 +29,7 @@ STD-GLB-FE-007 permits a micro-frontend architecture only when release-autonomy 
 
 The UI Platform audit found the practical gap. Hosts declared `@scnx/system` and `@scnx/core-ui` as share keys while applications imported package subpaths, which those keys do not match. The context-bearing modules behind those subpaths were therefore outside the share configuration, and every remote was eager.
 
-The production status of every frontend governed by ADR-GLB-FE-004 cannot be established from the architecture repository (see ADR-GLB-FE-011 section 3). GDC-010 section 2.4.2 therefore requires a replacement ADR: ADR-GLB-FE-004 stays `accepted` and binding until this record is ratified.
+The production status of every frontend governed by ADR-GLB-FE-004 cannot be established from the architecture repository (see ADR-GLB-FE-011 section 3). GDC-010 section 2.4.2 therefore required a replacement ADR; acceptance of this record supersedes ADR-GLB-FE-004.
 
 ## 4. Decision Drivers
 

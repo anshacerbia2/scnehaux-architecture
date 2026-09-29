@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-UIP-TKN-001
   title: ADR-UIP-TKN-001 Three-Tier Design Token Isolation Architecture
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
@@ -12,7 +12,7 @@ doc_meta:
 
 # ADR-UIP-TKN-001: Adoption of a Three-Tier Design Token Architecture (Core, Semantic, Component) to Isolate Raw Visual Values from Semantic Intent.
 
-> **Pre-production correction candidate:** the three tiers remain the logical architecture. This wording carries no authority until the UI Platform Lead records actual approval.
+> **Implementation boundary:** the accepted three-tier architecture does not by itself establish source or packed-package conformance.
 
 ---
 
@@ -22,9 +22,9 @@ Adoption of a Three-Tier Design Token Architecture (Core, Semantic, Component) t
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                 | Approver                   |
-| ---------- | -------- | ------------ | ----------------------------------------- | -------------------------- |
-| 2026-09-28 | proposed | foundational | Consolidated principal review in progress | UI Platform Lead — pending |
+| Date       | Status   | ADR Type     | Reviewers                   | Approver                        |
+| ---------- | -------- | ------------ | --------------------------- | ------------------------------- |
+| 2026-09-29 | accepted | foundational | Principal 1 and Principal 2 | Ansha Cerbia (UI Platform Lead) |
 
 ## 3. Context
 

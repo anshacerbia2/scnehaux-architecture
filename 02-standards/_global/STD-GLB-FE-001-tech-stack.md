@@ -4,18 +4,18 @@ doc_meta:
   title: Enterprise Frontend Technology Stack & Layered Architecture Standard
   owner: Principal Frontend Architect
   version: 2.0.0
-  status: proposed
+  status: approved
   classification: restricted
   governed_by: [GDC-000]
   authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
 ---
 
 # Enterprise Frontend Technology Stack & Layered Architecture Standard (STD-GLB-FE-001)
 
-> **Review draft:** the former unconditional library requirement conflicts with STD-UIP-PRM-001 and is proposed for replacement by an evidence-based foundation decision.
+> **Decision boundary:** the former unconditional library requirement is replaced by the evidence-based foundation contract authorized by ADR-GLB-FE-010.
 
 ---
 

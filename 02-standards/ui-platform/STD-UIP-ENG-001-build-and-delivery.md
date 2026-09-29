@@ -4,18 +4,18 @@ doc_meta:
   title: UI Platform Build & Delivery Standards
   owner: Principal UI/UX Architect
   version: 2.0.0
-  status: proposed
+  status: approved
   classification: public
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
 ---
 
 # UI Platform Build & Delivery Standards (STD-UIP-ENG-001)
 
-> **Review draft:** this revision records the agreed release contract. Existing metadata is not evidence that these new rules have passed principal review or CI implementation.
+> **Implementation boundary:** this approved release contract does not establish that existing packages pass its CI and consumer gates.
 
 ## 1. Objective & Scope
 

@@ -4,11 +4,11 @@ doc_meta:
   title: Deferred Minification
   adr_type: foundational
   owner: Principal UI/UX Architect
-  status: proposed
+  status: accepted
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Staff Engineer
@@ -16,7 +16,7 @@ doc_meta:
 
 # Deferred Minification Strategy for UI Libraries (ADR-UIP-BLD-001)
 
-> **Pre-production correction candidate:** retaining readable library output is a delivery choice to verify in packed consumers. This wording carries no authority until the UI Platform Lead records actual approval.
+> **Implementation boundary:** retaining readable library output remains subject to packed-consumer verification.
 
 ---
 
@@ -26,9 +26,9 @@ Deferred Minification Strategy for UI Libraries to Enhance Debugging
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                 | Approver                   |
-| ---------- | -------- | ------------ | ----------------------------------------- | -------------------------- |
-| 2026-09-28 | proposed | foundational | Consolidated principal review in progress | UI Platform Lead — pending |
+| Date       | Status   | ADR Type     | Reviewers                   | Approver                        |
+| ---------- | -------- | ------------ | --------------------------- | ------------------------------- |
+| 2026-09-29 | accepted | foundational | Principal 1 and Principal 2 | Ansha Cerbia (UI Platform Lead) |
 
 ## 3. Context
 

@@ -10,8 +10,8 @@
 | **GDC** (Governance) | 12              | 12                | 0                | 0                 |
 | **PAD** (Domain)     | 19              | -                 | -                | -                 |
 | **SAD** (System)     | 22              | -                 | -                | -                 |
-| **STD** (Standard)   | 30              | 19                | 11               | 0                 |
-| **ADR** (Decisions)  | 37              | 0                 | 10               | 0                 |
+| **STD** (Standard)   | 30              | 30                | 0                | 0                 |
+| **ADR** (Decisions)  | 37              | 0                 | 1                | 0                 |
 
 ## 2. Capability Coverage
 

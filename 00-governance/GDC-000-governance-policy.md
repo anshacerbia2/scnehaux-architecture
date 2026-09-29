@@ -9,15 +9,10 @@ doc_meta:
   governed_by: []
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
 ---
 
 # Documentation Governance Policy (The Constitution)
-
-> **Revision 1.4.0 is pending exact-commit ratification.** Section 2.6.7 of the
-> currently binding revision already requires exact-commit approval for a GDC
-> change. Until that authorization is recorded, revision 1.3.0 remains binding
-> and this text is a review candidate.
 
 ## 1. Context & Scope
 

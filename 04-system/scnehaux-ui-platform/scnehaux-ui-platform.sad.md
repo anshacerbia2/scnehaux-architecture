@@ -4,12 +4,12 @@ doc_meta:
   title: Scnehaux UI Platform Software Architecture
   owner: Principal UI/UX Architect
   version: 2.1.0
-  status: proposed
+  status: approved
   classification: public
   governed_by: [GDC-009]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
   parent_pad: PAD-PLT-003
   technologies:
     - name: react
@@ -28,8 +28,8 @@ doc_meta:
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
-> **Pre-production review candidate.** `proposed` means the design is complete
-> enough for full validation and formal review. It is not production authority.
+> **Approved design baseline.** Approval establishes the architecture contract,
+> not implementation conformance or production release authority.
 
 ## 1. Purpose & Scope
 

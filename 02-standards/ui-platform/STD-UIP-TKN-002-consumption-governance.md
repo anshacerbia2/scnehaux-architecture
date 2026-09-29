@@ -4,18 +4,18 @@ doc_meta:
   title: Enterprise Design Token Governance
   owner: Enterprise Architect
   version: 2.0.0
-  status: proposed
+  status: approved
   classification: public
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
 ---
 
 # STD-UIP-TKN-002: Enterprise Design Token Governance
 
-> **Pre-production review draft.** Major rule changes require approval of ADR-UIP-PLT-001 before this revision becomes authoritative.
+> **Authorization:** ADR-UIP-PLT-001 authorizes these rules; implementation conformance remains subject to release gates.
 
 ## 1. Objective & Scope
 

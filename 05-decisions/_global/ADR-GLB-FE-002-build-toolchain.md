@@ -3,7 +3,8 @@ doc_meta:
   id: ADR-GLB-FE-002
   title: ADR-GLB-FE-002 Standardization on Next-Generation Build Toolchains
   adr_type: foundational
-  status: accepted
+  status: superseded
+  superseded_by: [ADR-GLB-FE-011]
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Principal Frontend Architect
@@ -19,10 +20,11 @@ Standardization on Next-Generation Build Toolchains (Rsbuild & Vite)
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                              | Approver                  |
-| ---------- | -------- | ------------ | -------------------------------------- | ------------------------- |
-| 2026-04-04 | proposed | foundational | Frontend SMEs (Subject Matter Experts) | Architecture Review Board |
-| 2026-04-07 | accepted | foundational | Frontend SMEs (Subject Matter Experts) | Architecture Review Board |
+| Date       | Status     | ADR Type     | Reviewers                              | Approver                                 |
+| ---------- | ---------- | ------------ | -------------------------------------- | ---------------------------------------- |
+| 2026-04-04 | proposed   | foundational | Frontend SMEs (Subject Matter Experts) | Architecture Review Board                |
+| 2026-04-07 | accepted   | foundational | Frontend SMEs (Subject Matter Experts) | Architecture Review Board                |
+| 2026-09-29 | superseded | foundational | Principal 1 and Principal 2            | Ansha Cerbia (Architecture Review Board) |
 
 ## 3. Context
 

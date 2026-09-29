@@ -4,11 +4,11 @@ doc_meta:
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
   version: 2.0.0
-  status: proposed
+  status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   references:
@@ -17,7 +17,7 @@ doc_meta:
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
 
-> **Review draft:** Sass maps are the current implementation. A DTCG 2025.10 source that generates CSS, Sass, and Panda contracts is a migration target, not an implemented guarantee.
+> **Implementation boundary:** Sass maps are current. A DTCG 2025.10 source generating CSS, Sass, and Panda contracts remains a migration target, not an implemented guarantee.
 
 ---
 

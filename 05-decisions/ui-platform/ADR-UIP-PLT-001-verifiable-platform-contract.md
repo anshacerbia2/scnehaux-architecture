@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-UIP-PLT-001
   title: Verifiable UI Platform Package and Release Contract
   adr_type: conflict_resolution
-  status: proposed
+  status: accepted
   created: 2026-09-28
   created_date: 2026-09-28
   created_by: UI Platform Architecture
@@ -19,9 +19,9 @@ Authorize the UI Platform package, interaction, theme, styling, and release cont
 
 ## 2. Status
 
-| Date       | Status   | ADR Type            | Reviewers                                                                          | Approver                   |
-| ---------- | -------- | ------------------- | ---------------------------------------------------------------------------------- | -------------------------- |
-| 2026-09-28 | proposed | conflict_resolution | Principal review: approve with required changes; consolidated verification pending | UI Platform Lead — pending |
+| Date       | Status   | ADR Type            | Reviewers                   | Approver                        |
+| ---------- | -------- | ------------------- | --------------------------- | ------------------------------- |
+| 2026-09-29 | accepted | conflict_resolution | Principal 1 and Principal 2 | Ansha Cerbia (UI Platform Lead) |
 
 ## 3. Context
 
@@ -39,7 +39,7 @@ The repository uses pnpm and declares `workspace:*`. A release harness must use 
 
 ## 5. Decision
 
-**Proposed pending UI Platform Lead approval.** This ADR authorizes version 2.0.0 of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001. Each standard names this ADR in `authorized_by` and keeps its `governed_by` attachment to PAD-PLT-003; this ADR names each standard in `authorizes`.
+This ADR authorizes version 2.0.0 of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-PRM-001, STD-UIP-STY-001, and STD-UIP-ENG-001. Each standard names this ADR in `authorized_by` and keeps its `governed_by` attachment to PAD-PLT-003; this ADR names each standard in `authorizes`.
 
 The v1 decisions are:
 
