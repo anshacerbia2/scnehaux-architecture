@@ -263,7 +263,13 @@ Its consequences:
 - **Nothing secret is ever shown.** Registration and rotation carry a public key in and return no secret. There is no once-only display to lose, and a lost private key is replaced by registering a new one.
 - **A kernel breach exposes no client.** The kernel holds public keys only, where a client secret would be readable by its administrators and present in its database backups.
 
-**Bootstrap clients are the one exception, and only in development.** The clients created to stand the registration path up hold client secrets in a development environment until it can register them: the Identity Control Service's own Admin API clients and the first BFF clients. `STD-IAM-001 §3.2` bounds that exemption to development, as it bounds the password grant.
+**Bootstrap clients authenticate with keys too.** The clients created to stand the registration path up are made by a bootstrap script, because the Identity Control Service cannot register them before it exists:
+
+- the Identity Control Service's own Admin API clients;
+- the first BFF clients;
+- the kernel's realm-apply service account.
+
+The script registers the public key its operator supplies, so these clients authenticate with `private_key_jwt` from their first request. No shared environment, development included, holds a client secret. The only exemption `STD-IAM-001 §3.2` keeps is a test fixture inside a throwaway kernel. It was first written as a development exemption for bootstrap clients, and removed before anything relied on it, so that development runs the mechanism production will.
 
 ## 6. Consequences
 
