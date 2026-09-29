@@ -3,7 +3,8 @@ doc_meta:
   id: ADR-GLB-FE-004
   title: ADR-GLB-FE-004 Standardizing Conditional MFE on Module Federation
   adr_type: foundational
-  status: accepted
+  status: superseded
+  superseded_by: [ADR-GLB-FE-012]
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Principal Frontend Architect
@@ -19,9 +20,10 @@ Standardizing Conditional MFE on Module Federation
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                     |
-| ---------- | -------- | ------------ | ------------------------- | ---------------------------- |
-| 2026-05-01 | accepted | foundational | Architecture Review Board | Principal Frontend Architect |
+| Date       | Status     | ADR Type     | Reviewers                   | Approver                                 |
+| ---------- | ---------- | ------------ | --------------------------- | ---------------------------------------- |
+| 2026-05-01 | accepted   | foundational | Architecture Review Board   | Principal Frontend Architect             |
+| 2026-09-29 | superseded | foundational | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
 
 ## 3. Context
 

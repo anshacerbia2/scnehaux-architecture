@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-FE-010
   title: Evidence-Based Frontend Contracts and UI Platform Alignment
   adr_type: conflict_resolution
-  status: proposed
+  status: accepted
   created: 2026-09-28
   created_date: 2026-09-28
   created_by: UI Platform Architecture
@@ -19,9 +19,9 @@ Authorize the version 2.0.0 revisions of six global frontend standards, rule by 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type            | Reviewers                                                                          | Approver                            |
-| ---------- | -------- | ------------------- | ---------------------------------------------------------------------------------- | ----------------------------------- |
-| 2026-09-28 | proposed | conflict_resolution | Principal review: approve with required changes; consolidated verification pending | Architecture Review Board — pending |
+| Date       | Status   | ADR Type            | Reviewers                   | Approver                                 |
+| ---------- | -------- | ------------------- | --------------------------- | ---------------------------------------- |
+| 2026-09-29 | accepted | conflict_resolution | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
 
 ## 3. Context
 
@@ -46,7 +46,7 @@ These standards and ADRs govern every frontend, including the approved Experienc
 
 ## 5. Decision
 
-**Proposed pending ARB approval.** This ADR authorizes the version 2.0.0 revisions of STD-GLB-FE-001, STD-GLB-FE-002, STD-GLB-FE-005, STD-GLB-FE-006, STD-GLB-FE-007, and STD-GLB-FE-009 exactly as listed in the rule delta below. Each standard names this ADR in `authorized_by`; this ADR names each standard in `authorizes`. A change to a standard that is not in the delta needs a revision of this ADR before ratification.
+This ADR authorizes the version 2.0.0 revisions of STD-GLB-FE-001, STD-GLB-FE-002, STD-GLB-FE-005, STD-GLB-FE-006, STD-GLB-FE-007, and STD-GLB-FE-009 exactly as listed in the rule delta below. Each standard names this ADR in `authorized_by`; this ADR names each standard in `authorizes`. A change to a standard that is not in the delta needs a new authorization.
 
 The coherent frontend contract is:
 
@@ -210,8 +210,8 @@ Status values: **Retained** (same obligation), **Restored** (dropped in the firs
 
 - **Positive:** global and UI standards form one enforceable contract, and every withdrawn rule has a recorded reason.
 - **Negative:** host and remote fixtures, packed consumers, browser measurements, and accessibility evidence add maintenance cost.
-- **Operational:** the proposed standards and the replacement ADRs have no authority until the ARB approves them; the ratification commit changes their statuses together.
-- **Operational:** rules marked ▲ need migration notes for established product teams before ratification takes effect.
+- **Operational:** acceptance of this ADR and the replacement ADRs establishes the design contract; implementation and release still require their own evidence gates.
+- **Operational:** rules marked ▲ need migration notes for established product teams before enforcement in their scopes.
 
 ## 7. Compliance Impact
 

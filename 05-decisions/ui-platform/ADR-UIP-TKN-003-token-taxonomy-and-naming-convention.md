@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-UIP-TKN-003
   title: ADR-UIP-TKN-003 Token Taxonomy & Naming Convention
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
@@ -12,7 +12,7 @@ doc_meta:
 
 # ADR-UIP-TKN-003: Adoption of a unified Design Token Taxonomy & Naming Convention across all UI platform tiers.
 
-> **Pre-production correction candidate:** taxonomy is a naming contract, not proof of emitted bytes, accessibility, or cross-platform generators. This wording carries no authority until the UI Platform Lead records actual approval.
+> **Implementation boundary:** the accepted naming contract is not proof of emitted bytes, accessibility, or cross-platform generators.
 
 ---
 
@@ -22,9 +22,9 @@ Adoption of a unified Design Token Taxonomy & Naming Convention across all UI pl
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                 | Approver                   |
-| ---------- | -------- | ------------ | ----------------------------------------- | -------------------------- |
-| 2026-09-28 | proposed | foundational | Consolidated principal review in progress | UI Platform Lead — pending |
+| Date       | Status   | ADR Type     | Reviewers                   | Approver                        |
+| ---------- | -------- | ------------ | --------------------------- | ------------------------------- |
+| 2026-09-29 | accepted | foundational | Principal 1 and Principal 2 | Ansha Cerbia (UI Platform Lead) |
 
 ## 3. Context
 

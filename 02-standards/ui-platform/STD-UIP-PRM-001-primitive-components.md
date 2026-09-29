@@ -4,18 +4,18 @@ doc_meta:
   title: Enterprise UI Platform Primitive Components Standard
   owner: Principal Frontend Architect
   version: 2.0.0
-  status: proposed
+  status: approved
   classification: restricted
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
 ---
 
 # Enterprise UI Platform Primitive Components Standard (STD-UIP-PRM-001)
 
-> **Review draft:** the behavioral contract below is proposed for principal review. It does not assert that the extracted implementation already conforms.
+> **Implementation boundary:** approval of this behavioral contract does not assert that the extracted implementation already conforms.
 
 ---
 

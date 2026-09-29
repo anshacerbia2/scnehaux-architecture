@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-UIP-TKN-002
   title: ADR-UIP-TKN-002 OKLCH Gamut and Dual-Engine Alpha Blending Architecture
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
@@ -12,7 +12,7 @@ doc_meta:
 
 # ADR-UIP-TKN-002: Adoption of OKLCH (P3 Wide-Gamut) Color Space and a Dual-Engine Alpha Architecture (Photometric vs Chromatic) for Enterprise Color Generation.
 
-> **Pre-production correction candidate:** the color decision is under consolidated review. This wording carries no authority until the UI Platform Lead records actual approval.
+> **Implementation boundary:** the accepted color decision still requires generator, emitted-asset, and contrast verification.
 
 ---
 
@@ -22,9 +22,9 @@ Adoption of OKLCH (P3 Wide-Gamut) Color Space and a Dual-Engine Alpha Architectu
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                 | Approver                   |
-| ---------- | -------- | ------------ | ----------------------------------------- | -------------------------- |
-| 2026-09-28 | proposed | foundational | Consolidated principal review in progress | UI Platform Lead — pending |
+| Date       | Status   | ADR Type     | Reviewers                   | Approver                        |
+| ---------- | -------- | ------------ | --------------------------- | ------------------------------- |
+| 2026-09-29 | accepted | foundational | Principal 1 and Principal 2 | Ansha Cerbia (UI Platform Lead) |
 
 ## 3. Context
 

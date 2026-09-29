@@ -4,18 +4,18 @@ doc_meta:
   title: Enterprise Frontend Performance and Rendering Standard
   owner: Principal Frontend Architect
   version: 2.0.0
-  status: proposed
+  status: approved
   classification: restricted
   governed_by: [GDC-000]
   authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
 ---
 
 # Enterprise Frontend Performance and Rendering Standard (STD-GLB-FE-002)
 
-> **Review draft:** universal zero-allocation, zero-reflow, and fixed-FPS claims are replaced with measured, scenario-specific contracts.
+> **Measured contract:** universal zero-allocation, zero-reflow, and fixed-FPS claims are replaced with scenario-specific verification.
 
 ---
 

@@ -9,15 +9,10 @@ doc_meta:
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-28
+  last_reviewed: 2026-09-29
 ---
 
 # System Architecture Document (SAD) Guideline
-
-> **Revision 2.0.0 is pending exact-commit ratification.** Under GDC-000
-> section 2.6.7, revision 1.1.0 remains binding until authorized human
-> principals approve the exact commit or ratification manifest containing this
-> revision. `last_reviewed` changes only in that ratification record.
 
 ## 1. Context & Scope
 

@@ -10,17 +10,11 @@ doc_meta:
   realizes_capability: [EAD-001, EAD-005]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-23
+  last_reviewed: 2026-09-29
   fulfilled_by: [SAD-003]
 ---
 
 # Enterprise UI Platform
-
-> **Revision 1.4.0 is pending exact-commit ratification.** Under GDC-000
-> section 2.6.7, the previously ratified PAD revision remains binding until the
-> authorized human authority approves the exact commit containing this revision.
-> The existing `approved` lifecycle value does not pre-approve these edits, and
-> `last_reviewed` is updated only in the ratification commit or manifest.
 
 ## 1. Purpose & Scope
 

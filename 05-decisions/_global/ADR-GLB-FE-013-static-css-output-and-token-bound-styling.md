@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-FE-013
   title: Static CSS Output and Token-Bound Styling
   adr_type: replacement
-  status: proposed
+  status: accepted
   created: 2026-09-28
   created_date: 2026-09-28
   created_by: UI Platform Architecture
@@ -19,9 +19,9 @@ Replace ADR-GLB-FE-006 with a styling decision governed by output ownership inst
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                                 | Approver                            |
-| ---------- | -------- | ----------- | ----------------------------------------- | ----------------------------------- |
-| 2026-09-28 | proposed | replacement | Consolidated principal review in progress | Architecture Review Board — pending |
+| Date       | Status   | ADR Type    | Reviewers                   | Approver                                 |
+| ---------- | -------- | ----------- | --------------------------- | ---------------------------------------- |
+| 2026-09-29 | accepted | replacement | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
 
 ## 3. Context
 
@@ -29,7 +29,7 @@ Runtime CSS evaluation and render-path style injection add client work, need rel
 
 ADR-GLB-FE-006 mandated Panda CSS or Vanilla Extract and rejected Sass. The UI Platform baseline already uses Sass for component skins and Panda for recipes. Tool identity alone does not prove token discipline, selector isolation, payload size, or server-component compatibility.
 
-The production status of every frontend governed by ADR-GLB-FE-006 cannot be established from the architecture repository (see ADR-GLB-FE-011 section 3). GDC-010 section 2.4.2 therefore requires a replacement ADR: ADR-GLB-FE-006 stays `accepted` and binding until this record is ratified.
+The production status of every frontend governed by ADR-GLB-FE-006 cannot be established from the architecture repository (see ADR-GLB-FE-011 section 3). GDC-010 section 2.4.2 therefore required a replacement ADR; acceptance of this record supersedes ADR-GLB-FE-006.
 
 ## 4. Decision Drivers
 

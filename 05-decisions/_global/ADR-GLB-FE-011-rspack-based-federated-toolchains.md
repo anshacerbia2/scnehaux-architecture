@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-GLB-FE-011
   title: Rspack-Based Toolchains for Federated Applications
   adr_type: replacement
-  status: proposed
+  status: accepted
   created: 2026-09-28
   created_date: 2026-09-28
   created_by: UI Platform Architecture
@@ -19,15 +19,15 @@ Replace ADR-GLB-FE-002 with a build toolchain decision that names the compiler f
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                                 | Approver                            |
-| ---------- | -------- | ----------- | ----------------------------------------- | ----------------------------------- |
-| 2026-09-28 | proposed | replacement | Consolidated principal review in progress | Architecture Review Board — pending |
+| Date       | Status   | ADR Type    | Reviewers                   | Approver                                 |
+| ---------- | -------- | ----------- | --------------------------- | ---------------------------------------- |
+| 2026-09-29 | accepted | replacement | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
 
 ## 3. Context
 
 ADR-GLB-FE-002 requires Rsbuild for every micro-frontend host and remote and prohibits Webpack for new repositories. The existing federated applications compile with `@rspack/core` and its Module Federation plugin directly, not through Rsbuild. The replacement Module Federation decision (ADR-GLB-FE-012) states the federation contract by runtime behavior and needs a toolchain rule that does not contradict it.
 
-The production status of every frontend governed by ADR-GLB-FE-002 cannot be established from the architecture repository. Approved Experience systems SAD-002, SAD-012, SAD-014, and SAD-015 are React frontends with no recorded deployment evidence either way. GDC-010 section 2.4.2 therefore requires a replacement ADR: ADR-GLB-FE-002 stays `accepted` and binding until this record is ratified.
+The production status of every frontend governed by ADR-GLB-FE-002 cannot be established from the architecture repository. Approved Experience systems SAD-002, SAD-012, SAD-014, and SAD-015 are React frontends with no recorded deployment evidence either way. GDC-010 section 2.4.2 therefore required a replacement ADR; acceptance of this record supersedes ADR-GLB-FE-002.
 
 ## 4. Decision Drivers
 
