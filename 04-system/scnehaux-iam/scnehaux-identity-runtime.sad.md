@@ -310,8 +310,8 @@ sequenceDiagram
     S->>K: Disable the client and set its not-before
     alt restored
         O->>S: Restore, with a reason
-        S->>S: Record the registration active
-        S->>K: Enable the client; its users sign in again
+        S->>K: Write the registered redirect URIs and keys, and enable the client; its users sign in again
+        S->>S: Record the registration active, in the same transaction
     else retired
         O->>S: Retire the suspended registration, with a reason
         S->>K: Remove its keys, then delete the client
@@ -319,7 +319,7 @@ sequenceDiagram
     end
 ```
 
-A suspension and a restore are recorded before the kernel is changed, because the record is the desired state: a kernel call that fails is converged by the reconciler, which holds a suspended registration's client disabled with its not-before, and an active one's enabled. A console re-enable of a suspended client is repaired the same way. A retirement changes the kernel first, because a deleted client cannot be converged back; a retirement retried after a failure finds the client already gone and records it. An access token issued before the suspension is outside the kernel's reach until it expires, which §7.7 declares. A resource, which holds no credential, is retired without a suspension, once no active registration names it in its audience.
+A suspension is recorded before the kernel is changed, because the record is the desired state: a kernel call that fails is converged by the reconciler, which holds a suspended registration's client disabled with its not-before and repairs a console re-enable the same way. A restore and a retirement change the kernel inside the transaction that records them. The reconciler never enables a client, because enabling grants access, so a restore recorded first and then failed would leave the client disabled with nothing to converge it; inside the transaction, a failed call leaves the registration suspended. A deleted client cannot be converged back, and a retirement retried after a failure finds the client already gone and records it. Every failure errs toward the stop. A restore writes the registered redirect URIs and keys before it enables the client, so a console change made during the suspension does not come back with it.
 
 #### Application Registration
 
