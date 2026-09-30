@@ -50,7 +50,7 @@ The architecture must distinguish three decisions:
 - Deliver urgent Identity capability faster than a custom protocol implementation.
 - Preserve the narrow authority boundary defined by PAD-PLT-001.
 - Avoid dual Principal sources of truth.
-- Support OAuth 2.0, OpenID Connect, SAML, MFA, passkeys, sessions, federation, and administration through a mature implementation.
+- Support OAuth 2.0, OpenID Connect, SAML, MFA, passkeys, sessions, federation, and administration through a mature implementation [R9][R10][R11][R13][R16].
 - Retain Scnehaux ownership of Tenant integration, Application onboarding, canonical events, audit integration, migration, and user experience.
 - Avoid a permanent vendor-core fork.
 - Maintain local token verification and bounded control-plane dependencies.
@@ -76,6 +76,8 @@ Scnehaux SHALL adopt **Keycloak** as the strategic runtime kernel for:
 - consent and delegated protocol scopes;
 - supported identity administration functions.
 
+The pinned release provides each of these through a documented feature or a supported specification [R16][R17][R19].
+
 Keycloak is a component of the Scnehaux Identity & Access Platform. It is not the enterprise authority for Tenant, Membership, Entitlement, Application ownership, Product authorization, or the enterprise evidence ledger.
 
 ### 5.2 Scnehaux-Owned Control Layer
@@ -93,7 +95,7 @@ Scnehaux SHALL implement a bounded **Identity Control Service**, preferably in G
 - administrative workflow not safely delegated to the vendor console;
 - conformance, upgrade, and operational automation.
 
-The Control Service SHALL use supported Keycloak interfaces. It SHALL NOT write directly to the Keycloak database or duplicate authoritative Principal, credential, or session records.
+The Control Service SHALL use supported Keycloak interfaces [R22][R23]. It SHALL NOT write directly to the Keycloak database or duplicate authoritative Principal, credential, or session records.
 
 ### 5.3 Authority Boundaries
 
@@ -118,7 +120,7 @@ Audit & Evidence
     immutable enterprise evidence and retention
 ```
 
-Keycloak Organizations, Groups, attributes, or roles MAY be used only as bounded local projections or protocol constructs. They SHALL NOT become canonical enterprise authority without a replacement ADR and PAD/EAD review.
+Keycloak Organizations, Groups, attributes, or roles MAY be used only as bounded local projections or protocol constructs. Organizations is a supported feature that brings multi-tenancy within one realm [R17][R19], which is exactly why it must not become the Tenant authority. They SHALL NOT become canonical enterprise authority without a replacement ADR and PAD/EAD review.
 
 ### 5.4 Realm Strategy
 
@@ -145,7 +147,7 @@ Keycloak roles and authorization capabilities SHALL be limited to:
 
 Product permissions such as refund, payroll approval, quality override, rate-card change, or access to a specific business resource SHALL remain outside Keycloak authority.
 
-Keycloak Authorization Services SHALL NOT become the universal enterprise PDP without a replacement architecture decision.
+Keycloak Authorization Services, which include a policy decision point [R24], SHALL NOT become the universal enterprise PDP without a replacement architecture decision.
 
 **A provider scope is an Organization grant projected into the kernel, never a kernel-owned authority.**
 
@@ -174,8 +176,8 @@ Preferred mechanisms:
 - standard configuration;
 - supported Admin REST APIs;
 - standards-based protocols;
-- supported theme and user-interface extension points;
-- a minimal event-listener extension where required;
+- supported theme and user-interface extension points [R33];
+- a minimal event-listener extension where required [R22];
 - external Scnehaux Control Service.
 
 Restricted mechanisms requiring explicit decision and compatibility tests:
@@ -197,12 +199,12 @@ Prohibited by default:
 
 ### 5.8 Operational Baseline
 
-- Initial production deployment uses a supported stable Keycloak release pinned through the technology lifecycle process.
-- Preview features are disabled by default and require a separate ADR.
-- Initial high availability is single-region and multi-availability-zone unless evidence requires more.
-- Multi-cluster and stateless preview architectures are not the default.
+- Every deployment runs the latest minor Keycloak release, pinned by digest through the technology lifecycle process. Keycloak supports only the latest minor release: when a new one is published, the previous one receives no more patches, and there is no long-term-support line [R25]. A new minor release is adopted once the kernel's compatibility suite passes against it, and a security patch release through the kernel's accelerated security-release path.
+- Preview features are disabled by default and require a separate ADR. Keycloak says they are not recommended for production and may change or be removed [R18].
+- Initial high availability is one cluster across availability zones [R20], in a single region unless evidence requires more.
+- Multi-cluster v2 and the stateless mode are preview in the pinned line [R18][R21] and are not used. Multi-cluster v1 is supported [R20], and is adopted only when evidence requires more than one region.
 - Database, key continuity, backup, restore, upgrade, vulnerability response, conformance, and disaster-recovery behavior are owned by the Identity Platform Team.
-- Products validate approved tokens locally.
+- Products validate approved tokens locally [R12].
 
 ### 5.9 Legacy Go IAM
 
@@ -216,7 +218,7 @@ The existing Go IAM SHALL enter containment and migration mode:
 
 ### 5.10 Credential Containment and the Sole Administration Credential
 
-The Keycloak administration credential SHALL exist in the Identity Control Service and nowhere else in the estate. It SHALL be scoped to the narrowest role set permitting its operations — user creation, attribute write, user search, enable and disable, context projection, session enumeration and removal, client management, and client public-key registration and rotation (§5.12) — and SHALL carry no realm administration and no credential-read authority.
+The Keycloak administration credential SHALL exist in the Identity Control Service and nowhere else in the estate. It SHALL be scoped to the narrowest role set permitting its operations [R15][R17] — user creation, attribute write, user search, enable and disable, context projection, session enumeration and removal, client management, and client public-key registration and rotation (§5.12) — and SHALL carry no realm administration and no credential-read authority.
 
 Every enterprise identity operation SHALL transit the Identity Control API rather than the kernel directly, because that is where enterprise authorization, canonical identifier resolution, last-authenticator guards, idempotency, reason capture, and evidence publication live. A caller reaching the kernel directly bypasses all six.
 
@@ -314,16 +316,16 @@ Every stop names its reason and the calling Principal, and is recorded (`STD-IAM
 - Avoids duplicate Principal authority.
 - Retains Go for the differentiated control, reconciliation, integration, and migration layer.
 - Provides a broad ecosystem, documented administration APIs, and established operational guidance.
-- Improves interoperability and conformance potential.
+- Improves interoperability and conformance potential. The last OpenID certification Keycloak lists is for 18.0.0 [R16], so the pinned release's conformance is asserted by the kernel's own compatibility suite, not by a certification.
 
 ### Negative
 
-- Introduces a Java/Quarkus runtime into a Go-default platform portfolio.
-- Requires Keycloak-specific operational skill, upgrades, cache/session understanding, and security response.
+- Introduces a Java/Quarkus runtime into a Go-default platform portfolio [R27].
+- Requires Keycloak-specific operational skill, upgrades, cache/session understanding, and security response [R26].
 - Some Scnehaux requirements may require adapters or controlled extensions.
-- Keycloak's internal data model and APIs create migration and upgrade coupling.
+- Keycloak's internal data model and APIs create migration and upgrade coupling; preview features and non-public APIs may change at any release [R25].
 - Organization or role features may tempt teams to violate authority boundaries.
-- High availability and multi-region operation are not free and require tested database/cache architecture.
+- High availability and multi-region operation are not free and require tested database/cache architecture [R20].
 
 ### Operational
 
@@ -372,9 +374,9 @@ None at proposal time. Any preview feature, unsupported extension, or deviation 
 
 ### Alternative C — ZITADEL as the Identity Kernel
 
-**Benefits:** modern API-first operation, strong native B2B organization/project model, Go-native implementation culture, simpler stateless runtime profile.
+**Benefits:** modern API-first operation, strong native B2B organization/project model, an implementation in Go, simpler stateless runtime profile [R30][R31].
 
-**Rejected for the current boundary because:** its primary native differentiation overlaps more directly with Scnehaux Organization, project/application, and role-assignment authorities. Preserving Scnehaux's narrow IAM boundary would reduce those benefits and increase model translation. Licensing and vendor-model coupling also require additional consideration.
+**Rejected for the current boundary because:** its primary native differentiation overlaps more directly with Scnehaux Organization, project/application, and role-assignment authorities. Preserving Scnehaux's narrow IAM boundary would reduce those benefits and increase model translation. Licensing and vendor-model coupling also require additional consideration: ZITADEL moved from Apache-2.0 to AGPL-3.0-only with version 3.0 [R29], where Keycloak remains Apache-2.0 [R28].
 
 ### Alternative D — Managed Proprietary Identity SaaS
 
@@ -388,14 +390,14 @@ Provision a reserved identity with the realm, holding a fixed `principal_id`, an
 
 - **Pros**: needs no new code — the ordinary API creates the first Principal like any other, and `SAD-001` already establishes an evidenced break-glass posture for the Admin Console, so the concept is not new to the estate.
 - **Cons**: it creates a credential that can create Principals _forever_, which is a permanent standing authority in exchange for solving a problem that occurs once. Its `principal_id` is in no registry, so every downstream consumer must tolerate an identifier the authority cannot resolve. And because it must exist before the service does, it can only be placed by the out-of-band write this architecture prohibits — the problem is relocated, not solved.
-- **Why Rejected**: a one-time problem does not justify a standing capability. The console break-glass in `SAD-001` is not a precedent for this: it is time-bounded, group-scoped, and evidenced per session, and it operates on the kernel rather than minting canonical identifiers. §5.11 keeps the property that matters — a legitimate entry point — while the capability expires by construction after one use.
+- **Why Rejected**: a one-time problem does not justify a standing capability, and NIST treats emergency accounts as ones to remove or disable after a bounded period [R15]. Standing emergency accounts are recommended for recovering an existing tenant from lockout [R32], which is a different problem from creating its first Principal, and `SAD-001`'s console break-glass is this estate's answer to that one. It is not a precedent for this either: it is time-bounded, group-scoped, and evidenced per session, and it operates on the kernel rather than minting canonical identifiers. §5.11 keeps the property that matters — a legitimate entry point — while the capability expires by construction after one use.
 
 ### Alternative F — Client Secrets with the Kernel's Secret-Rotation Policy
 
 Keep client secrets, and enable the kernel's `client-secret-rotation` feature. Under that feature a regenerated secret leaves the previous one valid for a configured period. This was the design `TDD-identity-control-003` first specified for §5.12.
 
 - **Pros**: the most widely supported client authentication method in any library, and the smallest change to the designs as first written.
-- **Cons**: the pinned kernel classifies the feature as preview, "not recommended for use in production" and liable to change or removal. The secret is readable by kernel administrators and present in kernel database backups.
+- **Cons**: the pinned kernel classifies the feature as preview, "not recommended for use in production" and liable to change or removal [R18]. The secret is returned to kernel administrators by the Admin API [R23] and is present in kernel database backups, where asymmetric client authentication leaves the server no secret to hold [R14].
 - **Why Rejected**: `§7 Required Waivers` requires its own ADR or exception for any preview feature. Building credential rotation on one would put every confidential client's availability on a feature the vendor does not support.
 
 ### Alternative G — Client Secrets Rotated Without Overlap
@@ -448,12 +450,20 @@ The Identity Control Service would stop managing an adopted client and leave it 
 
 ## 9. References
 
-These are the external sources §5.12 and §5.13 and their alternatives rest on. The sources of the earlier sections are added as they are reviewed. In-repository evidence, such as a compatibility run, is cited inline where it is used.
+These are the external sources this decision rests on. In-repository evidence, such as a compatibility run, is cited inline where it is used. Keycloak pages are cited at 26.7.4, the pinned release, where a versioned page exists.
 
 ### Normative
 
 - **[R1]** IETF RFC 7523, _JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants_, May 2015. <https://www.rfc-editor.org/rfc/rfc7523>. The `private_key_jwt` client assertion §5.12 requires.
 - **[R2]** NIST SP 800-61 Rev. 3, _Incident Response Recommendations and Considerations for Cybersecurity Risk Management_, April 2025, RS.MI-01 and RS.MI-02. <https://csrc.nist.gov/pubs/sp/800/61/r3/final>. Containment prevents an incident's expansion; eradication eliminates persistence mechanisms and entry points, including by disabling breached accounts.
+
+- **[R9]** IETF RFC 6749, _The OAuth 2.0 Authorization Framework_, October 2012. <https://www.rfc-editor.org/rfc/rfc6749>.
+- **[R10]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023. <https://openid.net/specs/openid-connect-core-1_0.html>.
+- **[R11]** OASIS, _Assertions and Protocols for the OASIS Security Assertion Markup Language (SAML) V2.0_, March 2005. <https://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf>.
+- **[R12]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §4: a resource server validates the token itself.
+- **[R13]** W3C, _Web Authentication: An API for accessing Public Key Credentials, Level 3_, Recommendation, accessed 2026-09-30. <https://www.w3.org/TR/webauthn-3/>.
+- **[R14]** IETF RFC 9700 (BCP 240), _Best Current Practice for OAuth 2.0 Security_, January 2025. <https://www.rfc-editor.org/rfc/rfc9700>. §2.5: with asymmetric client authentication the server holds no symmetric key.
+- **[R15]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_ (release 5.2.0). <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. AC-6 least privilege; AC-2(2) removing or disabling temporary and emergency accounts after a set period.
 
 ### Informative
 
@@ -463,3 +473,21 @@ These are the external sources §5.12 and §5.13 and their alternatives rest on.
 - **[R6]** HashiCorp, Terraform `removed` block (v1.16), accessed 2026-09-30. <https://developer.hashicorp.com/terraform/language/block/removed>. `destroy = false` removes a resource from state without destroying it, to hand its management to another tool or team.
 - **[R7]** Google Cloud, _Delete and undelete service accounts_, accessed 2026-09-30. <https://docs.cloud.google.com/iam/docs/service-accounts-delete-undelete>. Disable a service account instead of deleting it; a disabled one can be re-enabled.
 - **[R8]** AWS, IAM _Update access keys_, accessed 2026-09-30. <https://docs.aws.amazon.com/IAM/latest/UserGuide/id-credentials-access-keys-update.html>. Deactivate a key before deleting it, and reactivate it if something still uses it.
+- **[R16]** Keycloak, _Supported specifications_, accessed 2026-09-30. <https://www.keycloak.org/securing-apps/specifications>. OpenID Connect Core supported, last certified with 18.0.0; SAML 2.0 supported.
+- **[R17]** Keycloak, _Server Administration Guide_ 26.7.4. <https://www.keycloak.org/docs/26.7.4/server_admin/index.html>. Features; Organizations, "multi-tenancy within a realm"; the master realm; realm-management roles.
+- **[R18]** Keycloak, _Enabling and disabling features_, accessed 2026-09-30. <https://www.keycloak.org/server/features>. Preview features are disabled by default, not recommended for production, and may change or be removed; `client-secret-rotation` and `stateless` are preview.
+- **[R19]** Keycloak, _Release Notes_, accessed 2026-09-30. <https://www.keycloak.org/docs/latest/release_notes/index.html>. 26.0.0: Organizations fully supported; 26.4.0: passkeys supported.
+- **[R20]** Keycloak, _High availability_ guides, accessed 2026-09-30. <https://www.keycloak.org/high-availability/introduction>. One cluster across availability zones; multi-cluster v1 supported, v2 preview.
+- **[R21]** Keycloak blog, _Multi-Cluster v2 and Stateless Mode now in Preview_, July 2026. <https://www.keycloak.org/2026/07/multi-cluster-v2-and-stateless-mode>.
+- **[R22]** Keycloak, _Server Developer Guide_ 26.7.4. <https://www.keycloak.org/docs/26.7.4/server_development/index.html>. The Admin REST API; the Event Listener and User Storage SPIs.
+- **[R23]** Keycloak, _Admin REST API_ 26.7.4. <https://www.keycloak.org/docs-api/26.7.4/rest-api/index.html>. `GET .../clients/{client-uuid}/client-secret` returns a client's secret.
+- **[R24]** Keycloak, _Authorization Services Guide_ 26.7.4. <https://www.keycloak.org/docs/26.7.4/authorization_services/index.html>. A policy decision point.
+- **[R25]** Keycloak, `RELEASES.md`, accessed 2026-09-30. <https://github.com/keycloak/keycloak/blob/main/RELEASES.md>. Only the latest minor release receives patches; preview features and non-public APIs may change at any time.
+- **[R26]** Keycloak, _Configuring distributed caches_, accessed 2026-09-30. <https://www.keycloak.org/server/caching>. Sessions persisted in the database; caching built on Infinispan.
+- **[R27]** Keycloak, _Configuring Keycloak_, accessed 2026-09-30. <https://www.keycloak.org/server/configuration>. Built on Quarkus.
+- **[R28]** Keycloak, `LICENSE.txt`, <https://github.com/keycloak/keycloak/blob/main/LICENSE.txt>, Apache-2.0; and CNCF, _Keycloak_ project page, <https://www.cncf.io/projects/keycloak/>, incubating since April 2023.
+- **[R29]** ZITADEL, `LICENSING.md`, <https://github.com/zitadel/zitadel/blob/main/LICENSING.md>, and _Moving to AGPL 3.0_, March 2025, <https://zitadel.com/blog/apache-to-agpl>. AGPL-3.0-only from version 3.0.
+- **[R30]** ZITADEL, _Organizations_ and _Projects_, accessed 2026-09-30. <https://zitadel.com/docs/guides/manage/console/organizations-overview>, <https://zitadel.com/docs/concepts/structure/projects>. An organization is comparable to a tenant; granted organizations manage role assignments.
+- **[R31]** ZITADEL, _Principles_ and _Software Architecture_, accessed 2026-09-30. <https://zitadel.com/docs/concepts/principles>, <https://zitadel.com/docs/concepts/architecture/software>. API-first; stateless.
+- **[R32]** Microsoft, _Manage emergency access admin accounts in Microsoft Entra ID_, updated June 2026. <https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/security-emergency-access>.
+- **[R33]** Keycloak, _Working with themes_, accessed 2026-09-30. <https://www.keycloak.org/ui-customization/themes>.

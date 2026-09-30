@@ -63,8 +63,8 @@ claim set, the lifetime class, and the subject form.
 | `external`   | A partner, customer-owned, or third-party relying party                                       | Pairwise `sub`; no enterprise correlation identifier |
 
 - Every access token MUST carry `aud`, and `aud` MUST name registered protected
-  resources only.
-- A protected resource MUST reject a token whose `aud` does not name it.
+  resources only [R6][R8][R11].
+- A protected resource MUST reject a token whose `aud` does not name it [R1][R5][R6].
 - A token MUST NOT be issued for more than one audience class.
 
 #### 3.1.1 Privileged Scope Forms
@@ -96,6 +96,8 @@ every later Membership is derived.
 | `sub`                     | MUST                          | MUST                                                      | MUST                          | MUST, pairwise |
 | `aud`                     | MUST                          | MUST                                                      | MUST                          | MUST           |
 | `iat`, `exp`              | MUST                          | MUST                                                      | MUST                          | MUST           |
+| `jti`, `client_id`        | MUST                          | MUST                                                      | MUST                          | MUST           |
+| `scope`                   | SHOULD                        | SHOULD                                                    | SHOULD                        | SHOULD         |
 | `principal_id`            | MUST                          | MUST                                                      | MUST                          | MUST NOT       |
 | `subject_type`            | MUST                          | MUST                                                      | MUST                          | MUST NOT       |
 | `tenant_id`               | MUST                          | MUST when `tenant-scoped`; MUST NOT when `provider-scope` | MUST when tenant-scoped       | MUST NOT       |
@@ -131,8 +133,16 @@ carrying no such claim.
 - Personal data beyond what the audience requires MUST NOT appear in any token.
   Verified email and display name are released to `external` audiences only through an
   approved scope and consent.
-- A claim not defined here or by an approved audience profile MUST NOT be added to a
-  token.
+- An access token is a JWT access token as RFC 9068 defines it [R6]. Its header `typ` MUST
+  be `at+jwt`, which is what lets a resource tell it from an ID token or any other JWT, and
+  `iss`, `exp`, `aud`, `sub`, `client_id`, `iat` and `jti` are the claims RFC 9068 §2.2
+  requires. `scope` carries the scopes granted, when any were requested.
+- A claim not defined here, by RFC 9068 §2.2, or by an approved audience profile MUST NOT
+  be added to a token.
+- The claims `principal_id`, `subject_type`, `tenant_id`, `workspace_id`, the version claims,
+  `provider_scope` and `workload_owner` are this platform's private claims, which RFC 9068
+  §2.2.2 allows within a private subsystem [R6]. `acr` and `auth_time` are OpenID Connect's
+  [R7], and keep their meaning across a refresh [R9].
 
 #### 3.2.1 Claim Projection Profiles
 
@@ -155,6 +165,9 @@ that would disclose enterprise correlation identifiers to external clients.
 
 - `PS256` with an RSA key of at least 3072 bits is REQUIRED for newly registered
   `internal`, `privileged`, and `workload` profiles and is the default for `external`.
+  `PS256` is RSASSA-PSS with SHA-256, which JOSE allows with a key of 2048 bits or more
+  [R4]. The 3072-bit floor is this platform's: it gives 128-bit security strength, where
+  2048 bits gives 112 [R10].
 - `RS256` MAY be used only for an external compatibility registration that records the
   relying party, evidence that `PS256` is unsupported, an owner, and an expiry date.
 - No algorithm other than `PS256` or an explicitly registered `RS256` compatibility
@@ -162,7 +175,15 @@ that would disclose enterprise correlation identifiers to external clients.
   `HS*` algorithm are prohibited for enterprise-issued access tokens.
 - The registration fixes the permitted algorithm before a token is read. A verifier
   MUST compare the token header to that allowlist and MUST NOT select an implementation
-  from the untrusted `alg` header alone.
+  from the untrusted `alg` header alone [R2][R5].
+- **This allowlist departs from two mandatory-to-implement rules on purpose.** RFC 9068 §2.1
+  requires authorization and resource servers to support `RS256` [R6], and OpenID Connect
+  Core §15.1 requires an OpenID Provider to support `RS256` for ID tokens [R7]. This platform
+  follows the FAPI 2.0 Security Profile instead, which permits `PS256`, `ES256` and `Ed25519`
+  and not `RS256` [R12]: `RS256` uses PKCS#1 v1.5 padding, which carries no security proof,
+  and a second algorithm puts an algorithm branch in every verifier (`ADR-IAM-002`). A
+  relying party that can verify only `RS256` uses the registered compatibility exception
+  above. No internal resource accepts `RS256`.
 - The pinned identity-kernel compatibility suite MUST prove issuance and verification
   of every permitted algorithm. Failure to issue `PS256` blocks that kernel candidate.
 
@@ -174,6 +195,9 @@ class, minus the propagation budget the platform owns:
 ```text
 access_token_lifetime  =  revocation_target  −  propagation_budget
 ```
+
+The lifetime figures below are this platform's choice. The external sources require access
+tokens to be short-lived and audience-restricted and name no number [R8].
 
 The propagation budget is the interval between accepting a revocation and applying it
 at every enforcing mechanism. It is owned by the control plane and is currently
@@ -216,15 +240,19 @@ so the token-lifetime term does not bound it.
 A protected resource MUST perform the following before acting on a token, and MUST
 fail closed on any failure:
 
-1. Resolve the signing key by `kid` from approved discovery or JWKS material, and
-   reject an unknown `kid` rather than fetching on demand from an unverified source.
+1. Resolve the signing key by `kid` from the issuer's approved JWKS [R3]. An unknown `kid`
+   is resolved by fetching that JWKS again, rate-limited, which is how a verifier learns a
+   rotated key [R7], and the token is rejected when the `kid` stays unknown. Signing material
+   is never fetched from a location the token names.
 2. Verify the signature using the algorithm permitted by §3.2.2 and the audience
    registration.
    An algorithm named only inside the token MUST NOT select the verification path.
-3. Verify `iss` against the expected issuer for the environment.
-4. Verify `aud` names this resource.
-5. Verify token type and reject a token issued for a different purpose.
-6. Verify `iat` and `exp` with a clock-skew allowance no greater than 60 seconds.
+3. Verify `iss` against the expected issuer for the environment [R5][R6].
+4. Verify `aud` names this resource [R1][R6].
+5. Verify the header `typ` is `at+jwt`, and reject a token issued for a different purpose,
+   an ID token among them [R5][R6].
+6. Verify `iat` and `exp` with a clock-skew allowance no greater than 60 seconds [R1]. The
+   60-second cap is stricter than the "few minutes" RFC 7519 allows.
 7. Reject an `internal`, `privileged`, or `workload` token whose `principal_id` is
    absent, and reject a `workload` token whose `workload_owner` is absent.
 8. Where `tenant_id` is present, compare `membership_version` and
@@ -245,9 +273,9 @@ fail closed on any failure:
 - Introspection or an equivalent online check MAY be used where opaque-token or
   active-state semantics require it, and MUST NOT be placed on an ordinary request
   path where local validation plus bounded revocation mechanisms satisfy the
-  requirement.
+  requirement [R13].
 - Public verification material MUST remain published for at least the maximum lifetime
-  of any artifact signed with that key, plus consumer cache and clock-skew margin.
+  of any artifact signed with that key, plus consumer cache and clock-skew margin [R7].
 
 ### 3.6 External Profiles
 
@@ -256,7 +284,7 @@ fail closed on any failure:
 - An `external` token MUST NOT carry `principal_id`, `tenant_id`, or any version
   claim.
 - Pairwise subjects MUST be used where cross-relying-party correlation is not
-  justified.
+  justified [R7][R14].
 - Attribute release to an external relying party MUST be minimised by purpose and
   governed by an approved scope.
 
@@ -269,6 +297,23 @@ fail closed on any failure:
   event payload, or an error response.
 - A verification failure MUST be recorded with its failure reason class, issuer, and
   audience, and MUST NOT record the token.
+
+### 3.8 Bearer Tokens and Sender Constraint
+
+RFC 9700 §2.2.1 says authorization and resource servers SHOULD sender-constrain access
+tokens, by mutual TLS or DPoP [R8][R15][R16]. The initial baseline does not: its access
+tokens are bearer tokens. That is a recorded gap, and it is bounded by where the tokens go.
+
+- A browser never holds an access token. The BFF keeps it server-side and the browser holds
+  only a session cookie [R17].
+- A service calls another over mutual TLS or with a service-mesh token (`STD-GLB-001`), so a
+  token in transit between services is inside a channel that authenticates both ends.
+- An `external` relying party holds its tokens outside both paths. It is the case the gap
+  leaves open.
+
+Sender constraint is decided again, in an ADR, before an `external` profile is issued to a
+relying party the platform does not operate, or before an access token is issued to a
+browser. Until then the gap is tracked on the Identity Runtime roadmap.
 
 ## 4. Exceptions
 
@@ -283,8 +328,8 @@ discovered afterwards.
 
 ## 5. Enforcement Mechanism
 
-- Token contract tests asserting the claim set per audience class, executed against
-  the pinned identity kernel release.
+- Token contract tests asserting the claim set per audience class, the RFC 9068 claims, and
+  the `at+jwt` header type, executed against the pinned identity kernel release.
 - Negative token tests proving external clients never receive `principal_id`,
   `subject_type`, Tenant, Workspace, or version claims.
 - Algorithm tests proving `PS256` issuance and verification and rejecting `none`,
@@ -300,3 +345,32 @@ discovered afterwards.
 - Secret and token scanning across logs, traces, events, and error responses.
 - Architecture fitness functions preventing permission, entitlement, or business role
   claims from entering a token.
+
+## 6. References
+
+The external sources the rules above rest on, cited as `[Rn]`. A rule stricter than its source,
+or departing from it, says so where it is stated. The lifetime classes, the version claims, and
+the long-lived connection rules are this platform's own and cite no external source.
+
+### Normative
+
+- **[R1]** IETF RFC 7519, _JSON Web Token (JWT)_, May 2015. <https://www.rfc-editor.org/rfc/rfc7519>. §4.1.3 `aud` rejection; §4.1.4 a small clock-skew leeway.
+- **[R2]** IETF RFC 7515, _JSON Web Signature (JWS)_, May 2015. <https://www.rfc-editor.org/rfc/rfc7515>. §5.2: which algorithms may be used is an application decision.
+- **[R3]** IETF RFC 7517, _JSON Web Key (JWK)_, May 2015. <https://www.rfc-editor.org/rfc/rfc7517>. §4.5: `kid` selects a key within a set during rollover.
+- **[R4]** IETF RFC 7518, _JSON Web Algorithms (JWA)_, May 2015. <https://www.rfc-editor.org/rfc/rfc7518>. §3.5: `PS256`, with a key of 2048 bits or larger.
+- **[R5]** IETF RFC 8725 (BCP 225), _JSON Web Token Best Current Practices_, February 2020. <https://www.rfc-editor.org/rfc/rfc8725>. §3.1 algorithm allowlists; §3.8 issuer; §3.9 audience; §3.11 explicit typing.
+- **[R6]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §2.1 `typ` `at+jwt`, `none` prohibited, `RS256` mandatory to implement; §2.2 required claims; §2.2.2 private claims; §4 validation.
+- **[R7]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023. <https://openid.net/specs/openid-connect-core-1_0.html>. §2 `acr` and `auth_time`; §8 pairwise identifiers; §10.1.1 refetching a key set on an unfamiliar `kid` and retaining decommissioned keys; §15.1 `RS256` for ID tokens.
+- **[R8]** IETF RFC 9700 (BCP 240), _Best Current Practice for OAuth 2.0 Security_, January 2025. <https://www.rfc-editor.org/rfc/rfc9700>. §2.2.1 sender-constrained tokens; §2.3 audience-restricted access tokens.
+- **[R9]** IETF RFC 9470, _OAuth 2.0 Step Up Authentication Challenge Protocol_, September 2023. <https://www.rfc-editor.org/rfc/rfc9470>. §6.1: `acr` and `auth_time` do not change on renewal.
+- **[R10]** NIST SP 800-57 Part 1 Rev. 5, _Recommendation for Key Management: Part 1 – General_, May 2020. <https://doi.org/10.6028/NIST.SP.800-57pt1r5>. Table 2: RSA 2048 bits gives 112-bit and 3072 bits 128-bit security strength.
+
+### Informative
+
+- **[R11]** IETF RFC 8707, _Resource Indicators for OAuth 2.0_, February 2020. <https://www.rfc-editor.org/rfc/rfc8707>. Audience restriction to the resource requested.
+- **[R12]** OpenID Foundation, _FAPI 2.0 Security Profile_, Final, February 2025. <https://openid.net/specs/fapi-security-profile-2_0-final.html>. §5.4.1: `PS256`, `ES256` or `Ed25519`.
+- **[R13]** IETF RFC 7662, _OAuth 2.0 Token Introspection_, October 2015. <https://www.rfc-editor.org/rfc/rfc7662>. §4: caching introspection trades freshness for traffic.
+- **[R14]** NIST SP 800-63C-4, _Digital Identity Guidelines: Federation and Assertions_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63C-4>. §3.4.1 pairwise pseudonymous identifiers. It governs federation assertions, not API access tokens.
+- **[R15]** IETF RFC 8705, _OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens_, February 2020. <https://www.rfc-editor.org/rfc/rfc8705>.
+- **[R16]** IETF RFC 9449, _OAuth 2.0 Demonstrating Proof of Possession (DPoP)_, September 2023. <https://www.rfc-editor.org/rfc/rfc9449>.
+- **[R17]** IETF RFC 10017, _OAuth 2.0 for Browser-Based Applications_ (Best Current Practice), August 2026. <https://www.rfc-editor.org/rfc/rfc10017>. The backend-for-frontend pattern.
