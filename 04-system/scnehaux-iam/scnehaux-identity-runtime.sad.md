@@ -210,6 +210,8 @@ graph TB
 - Maintains desired-state records for Scnehaux-controlled realm, client, resource, and projection configuration.
 - Validates Application and owner references before provisioning a client/resource.
 - Registers a confidential or workload client's public keys on the kernel client and rotates them by adding the new key before removing the old one (`ADR-IAM-001 §5.12`). It refuses a key that carries private material.
+- Brings a client created before it existed under registration only by an explicit adoption. The adoption is planned first, is held to its declaration and to the keys the client already authenticates with, and is recorded (`ADR-IAM-001 §5.12`).
+- Disables a Keycloak client that no registration describes. The kernel's built-in clients and the service's own Admin API clients are excluded.
 - Projects the minimum Tenant/Membership context required by approved token and administration policies.
 - Maintains canonical mapping between Scnehaux identifiers and Keycloak-local identifiers.
 - Detects drift between desired state and Keycloak runtime state.
@@ -272,6 +274,25 @@ sequenceDiagram
 ```
 
 `P` is Keycloak-local or Control-managed projection state. This flow does not synchronously call Organization.
+
+#### Adopting a Client Created Before the Service
+
+```mermaid
+sequenceDiagram
+    participant O as Operator
+    participant S as Identity Control Service
+    participant K as Keycloak
+
+    O->>S: Adopt one client: its declared desired state and keys, a reason, plan only
+    S->>K: Read the client
+    S-->>O: Difference per field class; nothing changed
+    O->>S: Adopt, naming any repairable difference to converge
+    S->>S: Refuse if the redirect URIs or keys differ, or if the client is not key-authenticated
+    S->>S: Record the registration and the adoption: who, when, why, what the client held
+    S->>K: Converge only the named repairable differences
+```
+
+An adopted client is a registration like any other from then on, and the reconciler compares it.
 
 #### Application Registration
 
@@ -522,7 +543,7 @@ Owned by Keycloak through standards-based OAuth/OIDC/SAML interfaces.
 
 Owned by the Identity Control Service for:
 
-- Application client/resource onboarding, and client public-key registration, rotation, and revocation;
+- Application client/resource onboarding, adoption of a client created before this service existed, and client public-key registration, rotation, and revocation;
 - desired configuration inspection;
 - Tenant/Membership projection status;
 - Consumer Verification Profile and revocation-propagation status;

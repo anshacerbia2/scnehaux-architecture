@@ -271,6 +271,18 @@ Its consequences:
 
 The script registers the public key its operator supplies, so these clients authenticate with `private_key_jwt` from their first request. No shared environment, development included, holds a client secret. The only exemption `STD-IAM-001 §3.2` keeps is a test fixture inside a throwaway kernel. It was first written as a development exemption for bootstrap clients, and removed before anything relied on it, so that development runs the mechanism production will.
 
+**A bootstrap client comes under registration by an explicit adoption, once the Identity Control Service runs.** Registration refuses a `client_key` that an unregistered Keycloak client already holds, because adopting a client on a matching name would take over a client someone else configured. The bootstrap clients are that case by construction. So their path is a separate command, and it holds to five rules:
+
+1. **One client, named, with its whole desired state.** The command names one client and declares everything a registration declares, the Application reference included. Nothing is adopted because its name matched.
+2. **Plan before taking over.** A plan reports, per reconciled field class, how the live client differs from the declaration, and changes nothing.
+3. **The declaration matches what the client runs with.** Adoption proceeds only when the redirect URIs and the client's keys, the field classes the reconciler blocks on, do not differ. A difference in a field class the reconciler repairs converges only when the request names it.
+4. **Only a key-authenticated client is adopted.** The client must already authenticate with `private_key_jwt`, hold no usable secret, and hold exactly the public keys the declaration names. Adoption is how the service learns which keys a running client holds, and it will not learn them from a client it cannot see authenticating that way.
+5. **The adoption is recorded, insert-only.** The record names who adopted which client, when, why, and what the client held at that moment.
+
+**The Identity Control Service's own Admin API clients are not adopted.** They are the credentials the service reconciles with. They are created before it exists and held nowhere else (§5.10), so the service is not their controller, and a drift repair the service applied to its own credential could cut off its access to the kernel. These two clients are excluded from the rule that disables a Keycloak client no registration describes. The service excludes them by the identifiers its configuration already names, and it excludes the clients Keycloak creates in every realm the same way. The realm-apply service account lives in the master realm and is outside the realm the service manages.
+
+Releasing an adopted client without deleting it is part of the registration lifecycle and is decided with it.
+
 ## 6. Consequences
 
 ### Positive
@@ -370,3 +382,19 @@ Keep client secrets without the preview feature. Rotation regenerates the secret
 - **Pros**: supported, simple, and the most common kernel deployment in practice.
 - **Cons**: every rotation is an outage for the client, from the moment the secret changes until the new one is deployed.
 - **Why Rejected**: a rotation that causes an outage is a rotation teams postpone, which leaves long-lived secrets in place. That is the condition `STD-IAM-001 §3.7` exists to prevent. The supported alternative, §5.12, gives the overlap without the outage.
+
+### Alternative H — Adopt an Existing Client When Its clientId Matches a Registration
+
+Registration would adopt a Keycloak client that already holds the requested `client_key`, instead of refusing it.
+
+- **Pros**: the bootstrap clients would come under registration without a second command.
+- **Cons**: an equal name is not ownership. Whoever created a client under that name would have it adopted with whatever keys, secret and redirect URIs it holds, and the reconciler would then defend that configuration as desired state. The desired-state systems whose adoption is documented require each resource to be named explicitly: Terraform's `import` block, CloudFormation's resource import, Crossplane's `external-name`. Where they adopt by name or label, they refuse a resource another owner already holds.
+- **Why Rejected**: a takeover path that looks like a convenience. Explicit adoption (§5.12) keeps the convenience and holds the client to its declaration and its keys.
+
+### Alternative I — Register the Service's Own Admin API Clients
+
+The Identity Control Service would register its own two Admin API clients, like any other client.
+
+- **Pros**: the unmanaged-client rule would need no exclusion.
+- **Cons**: the service would be the controller of the credentials it controls with. A repair it applied to one of them could remove its own access to the kernel, and no registration profile describes a client whose authority is a set of kernel administration roles.
+- **Why Rejected**: a controller's own credentials are bootstrapped outside what it controls. The exclusion is narrow, and it is named by configuration the service already holds.
