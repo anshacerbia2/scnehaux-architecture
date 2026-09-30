@@ -79,6 +79,8 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - Maximum enforcement delay MUST be computed as `propagation_time + remaining_access_token_lifetime`; access token lifetime is therefore a security parameter of the revocation contract and MUST NOT be selected on performance grounds alone
 - Every revocation class MUST declare which mechanisms enforce it, covering context-projection removal, kernel session removal, consumer projection update, and termination of long-lived connections
 - Acknowledgement of a revocation request means the change is durable and queued; it MUST NOT be reported as enforced until the declared mechanisms have applied
+- Stopping a client MUST end the refresh tokens and sessions issued to it before the stop, not only refuse its new requests. A stop that a later re-enable undoes for the earlier sessions is a pause, and MUST NOT be used or reported as a revocation
+- A client MUST be stopped reversibly before it is removed permanently. The permanent removal MUST be refused for a client that has not been stopped first; a protected resource, which holds no credential and is issued no token, is exempt
 - Products MUST NOT require synchronous Identity calls for every request solely to check session state when local token validation plus bounded revocation/projection mechanisms satisfy the requirement
 - Privileged administrative sessions SHOULD use server-managed/BFF session patterns where the application architecture supports them
 
@@ -134,3 +136,4 @@ Deviation from this standard requires formal exception approval under GDC-000 wi
 - client-registration assertion that no client in a shared environment enables the Resource Owner Password Credentials grant
 - client-registration assertion that every confidential or workload client in a shared environment authenticates with `private_key_jwt` and holds no client secret
 - compatibility test, against the pinned kernel release, that two registered client keys overlap, a removed key is refused on the next request, and a replayed assertion is refused
+- compatibility test, against the pinned kernel release, that a stopped client gets no new token and no refresh, that the refresh tokens a stop ended stay refused after a re-enable, and that a deleted client's `clientId` can be registered again

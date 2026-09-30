@@ -194,7 +194,7 @@ Owns presentation and workflows for:
 - Principal lifecycle and investigation;
 - authenticator/session containment;
 - federation configuration workflow;
-- client/resource security registration;
+- client/resource security registration, and its suspension, restoration, and retirement (`ADR-IAM-001 §5.13`);
 - privileged Identity operations;
 - drift, reconciliation, and migration status.
 
@@ -485,6 +485,8 @@ Runbooks cover:
 - staging with production security headers and topology;
 - production;
 - migration/cutover rehearsal.
+
+**Production status.** As of 2026-09-30, no system this SAD governs has reached production. The only deployment is the development server. Until this statement changes, the ADRs governing these systems are changed in place (`GDC-010 §2.4.2`).
 
 ### 9.2 Infrastructure
 

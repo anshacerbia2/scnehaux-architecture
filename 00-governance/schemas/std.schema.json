@@ -69,7 +69,7 @@
         "Exceptions",
         "Enforcement Mechanism"
       ],
-      "recommended": [],
+      "recommended": ["References"],
       "x-titles": {
         "required": "Required Sections",
         "recommended": "Recommended Sections"
