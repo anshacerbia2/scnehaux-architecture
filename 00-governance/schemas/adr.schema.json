@@ -132,7 +132,7 @@
         "Compliance Impact",
         "Alternatives Considered"
       ],
-      "recommended": [],
+      "recommended": ["References"],
       "x-titles": {
         "required": "Required Sections",
         "recommended": "Recommended Sections"

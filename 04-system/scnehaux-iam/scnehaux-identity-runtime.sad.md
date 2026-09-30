@@ -212,6 +212,7 @@ graph TB
 - Registers a confidential or workload client's public keys on the kernel client and rotates them by adding the new key before removing the old one (`ADR-IAM-001 §5.12`). It refuses a key that carries private material.
 - Brings a client created before it existed under registration only by an explicit adoption. The adoption is planned first, is held to its declaration and to the keys the client already authenticates with, and is recorded (`ADR-IAM-001 §5.12`).
 - Disables a Keycloak client that no registration describes. The kernel's built-in clients and the service's own Admin API clients are excluded.
+- Stops a client by a suspension, which disables it and ends its earlier refresh tokens with the kernel's not-before, and removes it only by a retirement after one: its keys removed, the kernel client deleted, the record kept (`ADR-IAM-001 §5.13`). A workload's client is stopped through its workload.
 - Projects the minimum Tenant/Membership context required by approved token and administration policies.
 - Maintains canonical mapping between Scnehaux identifiers and Keycloak-local identifiers.
 - Detects drift between desired state and Keycloak runtime state.
@@ -288,11 +289,37 @@ sequenceDiagram
     S-->>O: Difference per field class; nothing changed
     O->>S: Adopt, naming any repairable difference to converge
     S->>S: Refuse if the redirect URIs or keys differ, or if the client is not key-authenticated
-    S->>S: Record the registration and the adoption: who, when, why, what the client held
     S->>K: Converge only the named repairable differences
+    S->>S: Record the registration and the adoption: who, when, why, what the client held
 ```
 
+The convergence comes before the record. A convergence left behind by a failed commit changed a client that is still unmanaged, and the retried adoption finds nothing left to converge. A record written before a failed convergence would describe a client that does not match it.
+
 An adopted client is a registration like any other from then on, and the reconciler compares it.
+
+#### Suspending, Restoring, and Retiring a Client
+
+```mermaid
+sequenceDiagram
+    participant O as Operator
+    participant S as Identity Control Service
+    participant K as Keycloak
+
+    O->>S: Suspend a registration, with a reason
+    S->>S: Record the registration suspended, with the caller and the reason
+    S->>K: Disable the client and set its not-before
+    alt restored
+        O->>S: Restore, with a reason
+        S->>S: Record the registration active
+        S->>K: Enable the client; its users sign in again
+    else retired
+        O->>S: Retire the suspended registration, with a reason
+        S->>K: Remove its keys, then delete the client
+        S->>S: Record the registration retired; its client_key can be registered again
+    end
+```
+
+A suspension and a restore are recorded before the kernel is changed, because the record is the desired state: a kernel call that fails is converged by the reconciler, which holds a suspended registration's client disabled with its not-before, and an active one's enabled. A console re-enable of a suspended client is repaired the same way. A retirement changes the kernel first, because a deleted client cannot be converged back; a retirement retried after a failure finds the client already gone and records it. An access token issued before the suspension is outside the kernel's reach until it expires, which §7.7 declares. A resource, which holds no credential, is retired without a suspension, once no active registration names it in its audience.
 
 #### Application Registration
 
@@ -543,7 +570,7 @@ Owned by Keycloak through standards-based OAuth/OIDC/SAML interfaces.
 
 Owned by the Identity Control Service for:
 
-- Application client/resource onboarding, adoption of a client created before this service existed, and client public-key registration, rotation, and revocation;
+- Application client/resource onboarding, adoption of a client created before this service existed, client suspension, restoration, and retirement, and client public-key registration, rotation, and revocation;
 - desired configuration inspection;
 - Tenant/Membership projection status;
 - Consumer Verification Profile and revocation-propagation status;
@@ -660,9 +687,11 @@ The propagation budget is 60 seconds as the planning figure, against an operatio
 | Session               | kernel session removal                                                                                                         | class of that session's audience | 60s + class                                                                      |
 | Principal             | kernel user disable → remove every kernel session → remove projected context → quarantine the control-plane mapping            | worst class the Principal holds  | 60s + worst class                                                                |
 | Authenticator         | kernel authenticator removal                                                                                                   | none for future ceremonies       | 60s, and the Session delay in addition when the removal is a compromise response |
-| Client or grant       | client disable or key removal → grant revocation → refresh invalidation                                                        | class of that client's audience  | 60s + class                                                                      |
+| Client or grant       | client disable and not-before at suspension → key removal and client deletion at retirement                                    | class of that client's audience  | 60s + class                                                                      |
 | Workload              | workload client disable or key removal → grant and session removal                                                             | `L3`, 9 minutes                  | 10 minutes                                                                       |
 | Contextual Membership | Organization priority event → Identity Control removes projected context → kernel session removal → consumer projection update | `L1`, 9 minutes                  | 10 minutes                                                                       |
+
+**A client's disable alone is not its revocation.** The kernel refuses a disabled client's refresh tokens and accepts them again once it is enabled (`ADR-IAM-001 §5.13`). The not-before set at the suspension is what ends them, so a restore does not revive them.
 
 **Ordering inside the Principal and Membership classes is load-bearing.** The projected context is removed before the kernel sessions. Reversed, a refresh landing between the two steps can mint a fresh token asserting the context that was just revoked and the new token outlives the revocation by a full lifetime class.
 
@@ -879,6 +908,8 @@ Multi-region active-active remains a future architecture decision.
 
 Production identity data is not copied into lower environments without approved anonymization or synthetic replacement.
 
+**Production status.** As of 2026-09-30, no system this SAD governs has reached production. The only deployment is the development server. Until this statement changes, the ADRs governing these systems are changed in place (`GDC-010 §2.4.2`).
+
 ### 9.2 Infrastructure
 
 Initial production profile:
@@ -925,7 +956,7 @@ The pipeline must:
 
 ### Governing
 
-- ADR-IAM-001 — adopt Keycloak as identity protocol and authentication kernel. §5.12 decides that confidential and workload clients authenticate with registered keys (`private_key_jwt`), not client secrets.
+- ADR-IAM-001 — adopt Keycloak as identity protocol and authentication kernel. §5.12 decides that confidential and workload clients authenticate with registered keys (`private_key_jwt`), not client secrets. §5.13 decides that a registration stops by a suspension that ends its sessions, and is removed only by a retirement after one.
 - ADR for Realm/issuer strategy — required before production approval.
 - ADR for signing-key custody — required before production approval.
 - ADR for Membership projection representation — required after fit-gap PoC.

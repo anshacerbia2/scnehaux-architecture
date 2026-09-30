@@ -247,7 +247,7 @@ A confidential or workload client proves which application is asking at every to
 - revocation that takes effect at once;
 - no Scnehaux component, the kernel included, holding material that would let a reader act as the client.
 
-**The client SHALL authenticate with a signed JWT client assertion (`private_key_jwt`, RFC 7523).** The client generates an RSA key pair and keeps the private key in its own deployable's approved secret custody. The Identity Control Service registers the public key on the kernel client as a JWKS held on the client, not fetched from a URL, so no application has to serve a key endpoint to be a client. `STD-IAM-001 §3.2` states the rule, the algorithm, and the assertion requirements.
+**The client SHALL authenticate with a signed JWT client assertion (`private_key_jwt`, RFC 7523 [R1]).** The client generates an RSA key pair and keeps the private key in its own deployable's approved secret custody. The Identity Control Service registers the public key on the kernel client as a JWKS held on the client, not fetched from a URL, so no application has to serve a key endpoint to be a client. `STD-IAM-001 §3.2` states the rule, the algorithm, and the assertion requirements.
 
 The mechanism is supported in the pinned kernel and needs no preview feature and no extension. `identity-kernel`'s compatibility suite answered it against 26.7.4 on 2026-09-29 (compat run 36606481342), and every step held:
 
@@ -281,7 +281,28 @@ The script registers the public key its operator supplies, so these clients auth
 
 **The Identity Control Service's own Admin API clients are not adopted.** They are the credentials the service reconciles with. They are created before it exists and held nowhere else (§5.10), so the service is not their controller, and a drift repair the service applied to its own credential could cut off its access to the kernel. These two clients are excluded from the rule that disables a Keycloak client no registration describes. The service excludes them by the identifiers its configuration already names, and it excludes the clients Keycloak creates in every realm the same way. The realm-apply service account lives in the master realm and is outside the realm the service manages.
 
-Releasing an adopted client without deleting it is part of the registration lifecycle and is decided with it.
+An adopted client is a registration like any other from then on. It is not released back to being unmanaged; §5.13 decides how every registration stops, adopted or not.
+
+### 5.13 A Registration Stops by Suspension, and Is Removed Only After One
+
+A registered client is stopped through the Identity Control Service in two steps, so that a stop can be undone until the operator decides it is final. The steps rest on what the pinned kernel does to a stopped client. `identity-kernel`'s compatibility suite answered that against 26.7.4 on 2026-09-30 (compat run 36765561606):
+
+- a disabled client gets no token, and its refresh tokens are refused, but they are accepted again once the client is enabled;
+- a not-before set on the client while it is disabled keeps every refresh token issued before it refused after the client is enabled again, and a new sign-in works;
+- a deleted client gets no token, its refresh tokens are refused, its service-account user is deleted with it, and a new client may then take its `clientId`;
+- an access token issued before either stop still verifies at a consumer until it expires.
+
+**Suspension contains; it does not pause.** `:suspend` disables the kernel client and sets its not-before in the same step. It keeps the client's keys and its registration. A refresh token that a compromised client held is therefore ended, not held in waiting. Containment prevents an incident from expanding, and eradication removes the persistence mechanisms and entry points it left [R2]; a suspension whose restore revived every earlier session would leave one. `:restore` enables the client again. Its users sign in again; a workload, which authenticates with its key on every request, notices nothing. Until the registration is restored, the reconciler holds the client disabled and repairs a console re-enable as drift.
+
+**Retirement is final, and comes only after a suspension.** `:retire` is refused for a registration that is not suspended. Reversible first, then permanent, is how Google Cloud and AWS IAM ask for a service account or an access key to be removed [R7][R8]: a dependency the operator did not know about breaks during the suspension, while the client can still be restored. `:retire` removes the client's keys, then deletes the kernel client. The registration, its keys, and its findings remain as the record. Deleting the client, rather than leaving it disabled, lets the `client_key` be registered again, and leaves no kernel client that no live registration describes.
+
+**A resource is retired without a suspension.** A protected resource holds no credential and is issued no token, so there is nothing for a suspension to stop. It is refused retirement while an active registration names it in its audience.
+
+**A stop does not reach an access token already issued.** Consumers verify access tokens locally, so a token issued before a stop is outside the kernel's reach until it expires. The exposure is bounded by the audience's lifetime class (`STD-IAM-002 §3.3`), and `SAD-001 §7.7` declares it as the Client or grant revocation class.
+
+**A workload's client is stopped through its workload.** Deleting a client deletes its service-account user, and that user is the workload's identity in the kernel. So the registration path refuses to suspend, restore, or retire a workload's client, and the workload lifecycle stops the client and its Principal together.
+
+Every stop names its reason and the calling Principal, and is recorded (`STD-IAM-001 §3.8`).
 
 ## 6. Consequences
 
@@ -310,6 +331,8 @@ Releasing an adopted client without deleting it is part of the registration life
 - A Scnehaux Control Service and Identity Experience system remain required.
 - Technology radar and vulnerability-management processes must include Keycloak and its extensions.
 - Every upgrade requires compatibility, conformance, migration, and rollback evidence.
+- Restoring a suspended BFF signs its users out: they sign in again, because the suspension ended their refresh tokens (§5.13).
+- Retirement deletes the kernel client and cannot be undone there. The record stays in the Control Database.
 
 ## 7. Compliance Impact
 
@@ -388,7 +411,7 @@ Keep client secrets without the preview feature. Rotation regenerates the secret
 Registration would adopt a Keycloak client that already holds the requested `client_key`, instead of refusing it.
 
 - **Pros**: the bootstrap clients would come under registration without a second command.
-- **Cons**: an equal name is not ownership. Whoever created a client under that name would have it adopted with whatever keys, secret and redirect URIs it holds, and the reconciler would then defend that configuration as desired state. The desired-state systems whose adoption is documented require each resource to be named explicitly: Terraform's `import` block, CloudFormation's resource import, Crossplane's `external-name`. Where they adopt by name or label, they refuse a resource another owner already holds.
+- **Cons**: an equal name is not ownership. Whoever created a client under that name would have it adopted with whatever keys, secret and redirect URIs it holds, and the reconciler would then defend that configuration as desired state. The desired-state systems whose adoption is documented require each resource to be named explicitly: Terraform's `import` block [R3], CloudFormation's resource import [R4], Crossplane's `external-name` [R5]. Where they adopt by name or label, they refuse a resource another owner already holds.
 - **Why Rejected**: a takeover path that looks like a convenience. Explicit adoption (§5.12) keeps the convenience and holds the client to its declaration and its keys.
 
 ### Alternative I — Register the Service's Own Admin API Clients
@@ -398,3 +421,45 @@ The Identity Control Service would register its own two Admin API clients, like 
 - **Pros**: the unmanaged-client rule would need no exclusion.
 - **Cons**: the service would be the controller of the credentials it controls with. A repair it applied to one of them could remove its own access to the kernel, and no registration profile describes a client whose authority is a set of kernel administration roles.
 - **Why Rejected**: a controller's own credentials are bootstrapped outside what it controls. The exclusion is narrow, and it is named by configuration the service already holds.
+
+### Alternative J — Release an Adopted Client Without Deleting It
+
+The Identity Control Service would stop managing an adopted client and leave it running in the kernel, as Terraform's `removed` block with `destroy = false` [R6], and a Crossplane managed resource whose management policies omit `Delete` [R5], leave the real resource in place.
+
+- **Pros**: a mistaken adoption could be undone without touching the running client.
+- **Cons**: those tools offer it to hand a resource to another tool or team. This estate has no other legitimate controller of a client (§5.7). A released client is unmanaged: reported on every sweep, and disabled once the unmanaged rule runs in `disable`. That is a retirement without the key removal and without the record. A wrong declaration is corrected by changing the registration, not by releasing it.
+- **Why Rejected**: it is a stop with less evidence than the stops §5.13 already provides.
+
+### Alternative K — Retire by Disabling and Keeping the Kernel Client
+
+`:retire` would remove the keys and disable the client, as a suspension does, and never delete it.
+
+- **Pros**: nothing irreversible happens in the kernel.
+- **Cons**: the live client keeps holding its `clientId`, so the `client_key` could never be registered again. A disabled client that no live registration describes is exactly what the reconciler reports as unmanaged, so every retirement would leave a permanent finding. And the reversible state it offers is the suspension, which already precedes a retirement.
+- **Why Rejected**: it gives the retirement nothing the suspension does not, and costs the name and a finding that never converges.
+
+### Alternative L — Suspend by Disabling the Client Only
+
+`:suspend` would disable the client and leave its sessions alone.
+
+- **Pros**: a restore would resume every session, and no user would sign in again.
+- **Cons**: the compatibility suite shows that the refresh tokens a disabled client held are accepted again when it is enabled. A suspension that contains a compromised client would hand the stolen refresh tokens back at the restore. That is an entry point left in place, which eradication exists to remove [R2].
+- **Why Rejected**: a stop used for containment must not resume what it stopped.
+
+## 9. References
+
+These are the external sources §5.12 and §5.13 and their alternatives rest on. The sources of the earlier sections are added as they are reviewed. In-repository evidence, such as a compatibility run, is cited inline where it is used.
+
+### Normative
+
+- **[R1]** IETF RFC 7523, _JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants_, May 2015. <https://www.rfc-editor.org/rfc/rfc7523>. The `private_key_jwt` client assertion §5.12 requires.
+- **[R2]** NIST SP 800-61 Rev. 3, _Incident Response Recommendations and Considerations for Cybersecurity Risk Management_, April 2025, RS.MI-01 and RS.MI-02. <https://csrc.nist.gov/pubs/sp/800/61/r3/final>. Containment prevents an incident's expansion; eradication eliminates persistence mechanisms and entry points, including by disabling breached accounts.
+
+### Informative
+
+- **[R3]** HashiCorp, Terraform `import` block, accessed 2026-09-30. <https://developer.hashicorp.com/terraform/language/import>. Adoption names each resource explicitly.
+- **[R4]** AWS, CloudFormation resource import, accessed 2026-09-30. <https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resource-import.html>. Adoption names each resource, and a resource another stack holds is refused.
+- **[R5]** Crossplane, Managed Resources (v2.4), accessed 2026-09-30. <https://docs.crossplane.io/latest/managed-resources/managed-resources/>. `external-name` adoption, the `Observe` management policy, and management policies without `Delete`, under which deleting the managed resource leaves the external one.
+- **[R6]** HashiCorp, Terraform `removed` block (v1.16), accessed 2026-09-30. <https://developer.hashicorp.com/terraform/language/block/removed>. `destroy = false` removes a resource from state without destroying it, to hand its management to another tool or team.
+- **[R7]** Google Cloud, _Delete and undelete service accounts_, accessed 2026-09-30. <https://docs.cloud.google.com/iam/docs/service-accounts-delete-undelete>. Disable a service account instead of deleting it; a disabled one can be re-enabled.
+- **[R8]** AWS, IAM _Update access keys_, accessed 2026-09-30. <https://docs.aws.amazon.com/IAM/latest/UserGuide/id-credentials-access-keys-update.html>. Deactivate a key before deleting it, and reactivate it if something still uses it.
