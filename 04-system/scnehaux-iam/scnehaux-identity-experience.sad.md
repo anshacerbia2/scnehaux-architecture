@@ -362,6 +362,7 @@ Experience events are interaction signals, not authoritative identity facts. Ide
 - BFF and Control Service enforce every administrative operation;
 - Tenant and Product administration are not inferred from Identity roles;
 - provider cross-Tenant administration is explicit, scoped, short-lived, and evidenced.
+- the Developer Console acts on a client registration as one of its owners, an authority the Identity Control Service records and checks for each request (`ADR-IAM-003`). An owner rotates and revokes its client's keys and suspends the client, and a change to a production client's redirect URIs, audience or lifetime class is approved by a provider other than its proposer. Until the console is built, a provider does this from the Admin Portal.
 
 ### 7.3 Encryption and Secrets
 
