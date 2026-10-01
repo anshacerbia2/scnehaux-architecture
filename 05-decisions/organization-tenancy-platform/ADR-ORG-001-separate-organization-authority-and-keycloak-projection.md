@@ -198,6 +198,34 @@ The existing Workspace and IAM-owned Tenant/Membership data SHALL enter migratio
 
 Dual authoritative writes are prohibited.
 
+### 5.11 Provider and Consumer Authority Are Organization Records, Checked Where They Are Held
+
+The Organization Control API recognizes three callers: a Tenant administrator, a provider acting across Tenants, and a registered projection consumer. It SHALL decide which one a token is from the standard's claims and from its own records, and SHALL NOT read a role from the token. `STD-IAM-002 §3.2` keeps roles out of every access token, and a role the kernel held would make the kernel a second authority for a fact this platform owns (§5.1).
+
+**A provider is a Principal holding a provider grant this platform records.** The grant names the Principal by `principal_id`, the registered scope `provider:organization-control`, who granted it, and why. The Organization Control API reads it for each request, by the token's `principal_id`, and the token carries only identity and assurance: `principal_id`, `subject_type` `human`, `acr` and `auth_time`, and no `tenant_id`. This is how Google Cloud IAM and Kubernetes decide access: authentication establishes who the caller is, and the resource evaluates the policy it holds, denying by default [R2][R3]. Two things follow:
+
+- **The grant is not projected into the kernel.** `ADR-IAM-001 §5.6` projects a provider grant so that a resource outside Organization can check it from the token. This resource holds it, so a projection would add a copy that can drift, and a `provider_scope` claim that means nothing to the Identity Control API it would also travel to. RFC 9068 forbids that for `scope`, and RFC 8707 tells an authorization server to trim a token to what its resource needs [R1][R4].
+- **A revoked grant stops the next request.** A claim would stop only when the token carrying it expires.
+
+**The first grant is made by a single-use bootstrap command, recorded like the first Principal.** A provider grant is made by a provider, so the first one has no one to make it. `ADR-IAM-001 §5.11` solved the same cycle for the first Principal, and the grant follows the same four rules:
+
+1. it succeeds at most once per database, enforced by a constraint;
+2. it refuses to run when any provider grant exists;
+3. it records, in a row no runtime role can change, the operator who ran it and the reason;
+4. it names a Principal that already exists, minted by the Identity Control API's ceremony, and creates no identity.
+
+Every later grant, and every revocation, is made by a provider through the API, with a reason.
+
+**A projection consumer is a workload Principal this platform registered.** The consumer registry records the consumer's `principal_id`, and a token is a consumer's when:
+
+- its `subject_type` is `workload`;
+- it carries a `workload_owner`;
+- its `principal_id` is that of an active registered consumer.
+
+No role and no private claim names the consumer. It is not named by `client_id` either. A retired client registration frees its `client_key` (`ADR-IAM-001 §5.13`), so a `client_id` names whichever client holds it now, and RFC 9068 warns against authorizing on a client identifier a client can choose [R1]. A `principal_id` is never reused.
+
+**Every actor is recorded by `principal_id`.** `STD-IAM-002 §3.2` makes `principal_id` the identifier a domain persists, and keeps `sub` out of every foreign key.
+
 ## 6. Consequences
 
 ### Positive
@@ -238,6 +266,7 @@ Dual authoritative writes are prohibited.
 - SAD-004 — Scnehaux Organization Control.
 - SAD-012 — Scnehaux Organization Experience.
 - ADR-IAM-001 — Adopt Keycloak Identity Kernel.
+- STD-IAM-002 — Enterprise Token and Verification Profile.
 - ADR-GLB-001 — Modular Monolith.
 - ADR-GLB-002 — PostgreSQL RLS.
 - ADR-GLB-016 — Transactional Outbox and durable delivery profiles.
@@ -291,3 +320,36 @@ None at proposal time. Any temporary dual-write, direct Keycloak database access
 **Benefits:** independent deployment and scaling.
 
 **Rejected because:** current scale, teams, and lifecycle evidence do not justify the distributed-system complexity. Logical boundaries are preserved inside one initial control runtime.
+
+### Alternative G — Read Provider and Consumer Authority from Realm Roles
+
+**Benefits:** the first implementation did this, and Keycloak puts realm roles in `realm_access.roles` without configuration.
+
+**Rejected because:** `STD-IAM-002 §3.2` keeps roles out of every access token, and a realm role would make the kernel hold a grant this platform owns (§5.1, `ADR-IAM-001 §5.6`). A role in a token also outlives its revocation until the token expires.
+
+### Alternative H — Project the Grant and Carry Several Provider Scopes in One Claim
+
+**Benefits:** one mechanism for every resource; the kernel's user-attribute mapper emits a multivalued attribute as an array [R5].
+
+**Rejected because:** a token sent to the Organization Control API would carry `provider:identity-control` as well, a scope that means nothing to it. RFC 9068 §2.2.3 requires every scope in an access token to mean something to the resources its `aud` names, and RFC 8707 §2.2 has an authorization server downscope a token to what its resource needs [R1][R4]. It would also put a second copy of a grant this resource holds into the kernel.
+
+### Alternative I — Name a Consumer by Its `client_id`
+
+**Benefits:** `client_id` is in every RFC 9068 access token, and needs no lookup of a workload Principal.
+
+**Rejected because:** a retired client registration frees its `client_key` for a later registration (`ADR-IAM-001 §5.13`), so the identifier would hand a retired consumer's authority to whichever client took the name next. `principal_id` is never reused.
+
+## 9. References
+
+The external sources §5.11 rests on, cited as `[Rn]`.
+
+### Normative
+
+- **[R1]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §2.2.3: every scope must mean something to the resources `aud` names; §5: an authorization server should prevent a client from registering an arbitrary `client_id`, or the client could pose as a privileged subject.
+
+### Informative
+
+- **[R2]** Google Cloud, _IAM overview_, accessed 2026-10-01. <https://docs.cloud.google.com/iam/docs/overview>. An allow policy is attached to a resource, and IAM checks the resource's allow policy when an authenticated principal accesses it.
+- **[R3]** Kubernetes, _Authorization_, accessed 2026-10-01. <https://kubernetes.io/docs/reference/access-authn-authz/authorization/>. Authorization takes place in the API server, against the user and groups authentication established; access is denied by default.
+- **[R4]** IETF RFC 8707, _Resource Indicators for OAuth 2.0_, February 2020. <https://www.rfc-editor.org/rfc/rfc8707>. §2.2: the authorization server should downscope a token to what the resource is able to process and needs to know.
+- **[R5]** Keycloak, `UserAttributeMapper` API documentation, accessed 2026-10-01. <https://www.keycloak.org/docs-api/latest/javadocs/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.html>. A multivalued user-attribute mapper sets every value of the attribute as the claim.

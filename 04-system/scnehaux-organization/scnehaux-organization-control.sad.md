@@ -516,6 +516,16 @@ Notification requests and enterprise evidence facts are asynchronous. Local auth
 - browser clients never call the Control API without the BFF or approved protected-client profile;
 - anonymous access is limited to explicitly approved invitation/public lookup endpoints with enumeration resistance.
 
+A caller's authority is read from the standard's claims and this system's own records, never from a role in the token (`ADR-ORG-001 §5.11`):
+
+| Caller               | Token                                                                       | Record checked for each request                       |
+| :------------------- | :-------------------------------------------------------------------------- | :---------------------------------------------------- |
+| Tenant administrator | `principal_id`, `subject_type`, `tenant_id`                                 | —                                                     |
+| Provider             | `principal_id`, `subject_type` `human`, `acr`, `auth_time`; no `tenant_id`  | an active provider grant for the `principal_id`       |
+| Projection consumer  | `principal_id`, `subject_type` `workload`, `workload_owner`; no `tenant_id` | an active consumer registered with the `principal_id` |
+
+Every actor is recorded by `principal_id`, never by `sub` (`STD-IAM-002 §3.2`).
+
 ### 8.2 Authorization
 
 Authorization combines:
@@ -550,7 +560,7 @@ Product permission is never evaluated here.
 
 Provider administration requires:
 
-- distinct provider scope;
+- distinct provider scope: an active provider grant this system records, read for each request, so a revocation stops the next request (`ADR-ORG-001 §5.11`). The first grant is made once, by a bootstrap command whose record names the operator and the reason;
 - strong authentication and step-up;
 - short-lived privileged context;
 - explicit Tenant/operation scope;
@@ -766,7 +776,7 @@ Additional decisions are required for:
 - exact lifecycle state machines;
 - API/event contracts;
 - isolation and residency profile taxonomy;
-- provider-admin privilege model;
+- provider-admin privilege model beyond the one scope `provider:organization-control` (`ADR-ORG-001 §5.11` decides where provider authority is held and checked);
 - migration and cutover;
 - provisioning orchestration;
 - offboarding obligation protocol.
