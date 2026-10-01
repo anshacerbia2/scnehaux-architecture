@@ -24,9 +24,18 @@ doc_meta:
       type: build-tool
     - name: vitest
       type: test-runner
+    - name: storybook
+      type: component-workshop
+    - name: chromatic
+      type: visual-regression-service
 ---
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
+
+> **Revision pending exact-commit ratification.** The component-workshop
+> additions (ADR-UIP-WKS-001) are pending under GDC-000 section 2.6.7; the
+> previously ratified revision remains binding until the authorized human
+> authority approves the exact commit containing them.
 
 > **Approved design baseline.** Approval establishes the architecture contract,
 > not implementation conformance or production release authority.
@@ -76,7 +85,7 @@ runtime Product telemetry, application routing, and business authorization.
 The system fulfills approved PAD-PLT-003. Global frontend authority includes
 ADR-GLB-FE-010 and replacement decisions ADR-GLB-FE-011 through -013 according
 to their lifecycle. UI authority includes ADR-UIP-PLT-001, ADR-UIP-TKN-001
-through -003, ADR-UIP-BLD-001, STD-UIP-ENG-001, STD-UIP-PRM-001,
+through -003, ADR-UIP-BLD-001, proposed ADR-UIP-WKS-001, STD-UIP-ENG-001, STD-UIP-PRM-001,
 STD-UIP-STY-001, STD-UIP-TKN-001, and STD-UIP-TKN-002. Component
 designs live in the UI repository with `parent_sad: SAD-003`.
 
@@ -136,6 +145,10 @@ graph LR
   subpaths.
 - **Conformance harness:** source, packed, browser, SSR/RSC, CSP, accessibility,
   and conditional federation fixtures.
+- **Component workshop:** Storybook stories of every supported component,
+  state, theme, and mode, rendered from the built CSS artifacts; story browser
+  tests, accessibility checks, and Chromatic visual review (ADR-UIP-WKS-001).
+  Producer-only: nothing in it enters a package tarball.
 - **Release assembler:** inventory, checksums, provenance, evidence, and channel
   promotion.
 
@@ -175,6 +188,7 @@ graph TB
 | Token pipeline         | Sass + Panda build-time generation | Validate and generate theme/token contracts            | CSS, JSON, Sass, generated recipes |
 | System builder         | TypeScript + tsup + Sass           | Styled entries and static assets                       | `@scnx/system` tarball             |
 | Test harness           | Vitest + browser/consumer fixtures | Prove source and external-consumer behavior            | Reports and traces                 |
+| Component workshop     | Storybook 10 + Vitest browser mode | Operable stories, story tests, a11y, visual review     | Static Storybook CI artifact       |
 | Release assembler      | CI scripts + `pnpm pack`           | Inventory, checksum, SBOM, provenance, evidence        | Release record                     |
 
 ### 4.2 Dependency invariants
@@ -393,7 +407,8 @@ Environments are release channels: local/candidate, prerelease, and stable.
 5. `pnpm pack` both packages and inspect contents/manifests.
 6. Install tarballs into isolated supported-scenario fixtures.
 7. Run browser, SSR/RSC, CSP, accessibility, visual, and conditional federation
-   gates.
+   gates; story tests and Chromatic visual review run on the static Storybook
+   build.
 8. Generate SBOM, provenance, checksums, support matrix, and release evidence.
 9. Human release authority promotes an exact artifact digest.
 

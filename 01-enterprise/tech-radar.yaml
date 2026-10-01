@@ -1,7 +1,7 @@
 # tech-radar.yaml — Enterprise Technology Radar
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
-# Last updated: 2026-09-28
+# Last updated: 2026-10-01
 #
 # Ring changes are ARB decisions (GDC-004 section 3.2). Entries marked
 # "pending ARB" were proposed with the UI Platform ratification package on
@@ -136,6 +136,21 @@ technology_radar:
       owner: UI Platform Team
       rationale_adr: ADR-UIP-BLD-001
       trial_end_date: "2026-10-28"
+
+    # pending ARB: storybook and chromatic trial entries, proposed 2026-10-01.
+    - name: storybook
+      category: component-workshop
+      date_entered: "2026-10-01"
+      owner: UI Platform Team
+      rationale_adr: ADR-UIP-WKS-001
+      trial_end_date: "2026-12-31"
+
+    - name: chromatic
+      category: visual-regression-service
+      date_entered: "2026-10-01"
+      owner: UI Platform Team
+      rationale_adr: ADR-UIP-WKS-001
+      trial_end_date: "2026-12-31"
 
     - name: vite
       category: frontend-build-tool
