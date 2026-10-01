@@ -8,7 +8,7 @@ doc_meta:
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-29
+  last_reviewed: 2026-10-01
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   references:
@@ -16,12 +16,6 @@ doc_meta:
 ---
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
-
-> **Revision 2.1.0 is pending exact-commit ratification.** Under GDC-000
-> section 2.6.7, revision 2.0.0 remains binding until the authorized human
-> authority approves the exact commit containing this revision. The existing
-> `approved` lifecycle value does not pre-approve these edits, and
-> `last_reviewed` is updated only in the ratification commit or manifest.
 
 > **Implementation boundary:** Sass maps are current. A DTCG 2025.10 source generating CSS, Sass, and Panda contracts remains a migration target, not an implemented guarantee.
 
@@ -129,7 +123,7 @@ Values within each spacing relationship ascend from `compact` to `comfortable`. 
 
 #### Values that are not Tier-2 tokens
 
-- **Component geometry**, such as a sidebar width, a navigation-bar height, control, icon, and avatar sizes, and container maximum widths, is owned by its component as a Tier-3 alias with an alias review record.
+- **Component geometry**, such as a sidebar width, a navigation-bar height, control, icon, and avatar sizes, and container maximum widths, is a documented structural value of its component (STD-UIP-TKN-002 section 3.1), not a token. A Tier-3 alias resolves to a Tier-2 token, and these values have no Tier-2 source.
 - **Breakpoints** are not emitted as custom properties, because `var()` is not valid in a media-query condition. Responsive thresholds are build-time constants of the consuming layer.
 - **Opacity** has no Tier-2 token. A translucent state is a color token whose alpha is part of its value and is verified on its actual background.
 - **Transition shorthands** are not tokens. Components compose `motion.{action}.duration` and `motion.{action}.easing` with the properties they animate.
