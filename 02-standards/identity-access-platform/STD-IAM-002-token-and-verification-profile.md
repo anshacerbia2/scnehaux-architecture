@@ -143,6 +143,17 @@ carrying no such claim.
   `provider_scope` and `workload_owner` are this platform's private claims, which RFC 9068
   §2.2.2 allows within a private subsystem [R6]. `acr` and `auth_time` are OpenID Connect's
   [R7], and keep their meaning across a refresh [R9].
+- **Three claims are written by the kernel itself, and are admitted.** The pinned kernel writes
+  `azp`, `sid` and a payload `typ` into the access tokens it issues from its token code, not
+  through a mapper, so none can be removed without a kernel extension (`ADR-IAM-001 §5.7`).
+  `azp` is OpenID Connect's authorized party [R7]. `sid` is the session identifier OpenID
+  Connect logout defines [R18], which a BFF needs to match a back-channel logout to its
+  session. The payload `typ` is the kernel's own, and a consumer MUST NOT base a decision on
+  it: the header `typ` is the type check (§3.5).
+- **An access token carries no personal data and no role.** Email, names, usernames, and
+  realm or client role claims MUST NOT appear in an access token of any class. A first-party
+  BFF that shows the signed-in Principal's name reads it from its ID token, which the
+  `scnehaux-profile` scope gives it (§3.2.1).
 
 #### 3.2.1 Claim Projection Profiles
 
@@ -156,10 +167,21 @@ scopes rather than realm-wide default mappers:
 | `scnehaux-provider`   | `principal_id`, `subject_type`, `provider_scope`, `acr`, `auth_time`; `tenant_id` and version claims prohibited |
 | `scnehaux-workload`   | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped |
 | `scnehaux-external`   | Pairwise `sub`; enterprise and context claims prohibited                                                        |
+| `scnehaux-profile`    | `name` and `preferred_username` in the ID token only, never in an access token; requested by a first-party BFF  |
 
-The client registration authority MUST attach exactly one of these profile scopes. A
-mapper carrying `principal_id` or context claims MUST NOT be a realm default because
-that would disclose enterprise correlation identifiers to external clients.
+The client registration authority MUST attach exactly one of the five audience profile scopes.
+`scnehaux-profile` is not an audience profile: a first-party BFF requests it at sign-in for the
+name it shows. A mapper carrying `principal_id` or context claims MUST NOT be a realm default
+because that would disclose enterprise correlation identifiers to external clients.
+
+**The realm's default client scopes are `basic` and `acr` only.** `basic` gives `sub` and
+`auth_time`, and `acr` the authentication context; a workload client does not hold `acr`. The
+kernel's built-in `profile`, `email`, `roles` and `web-origins` scopes MUST NOT be realm
+defaults, and a workload client MUST NOT hold the built-in `service_account` scope, whose
+mappers write the client's network address: each puts a claim this table does not define into
+an access token, personal data among them. A workload's `client_id` comes from its own mapper,
+as every client's does. The registration authority detaches any of these scopes from a client it
+registers or adopts, and the reconciler holds them detached.
 
 #### 3.2.2 Signing Algorithm Allowlist
 
@@ -330,6 +352,8 @@ discovered afterwards.
 
 - Token contract tests asserting the claim set per audience class, the RFC 9068 claims, and
   the `at+jwt` header type, executed against the pinned identity kernel release.
+- Token contract tests asserting that an access token carries no claim outside §3.2, RFC 9068
+  §2.2 and the three kernel-written claims, and no personal data.
 - Negative token tests proving external clients never receive `principal_id`,
   `subject_type`, Tenant, Workspace, or version claims.
 - Algorithm tests proving `PS256` issuance and verification and rejecting `none`,
@@ -364,6 +388,8 @@ the long-lived connection rules are this platform's own and cite no external sou
 - **[R8]** IETF RFC 9700 (BCP 240), _Best Current Practice for OAuth 2.0 Security_, January 2025. <https://www.rfc-editor.org/rfc/rfc9700>. §2.2.1 sender-constrained tokens; §2.3 audience-restricted access tokens.
 - **[R9]** IETF RFC 9470, _OAuth 2.0 Step Up Authentication Challenge Protocol_, September 2023. <https://www.rfc-editor.org/rfc/rfc9470>. §6.1: `acr` and `auth_time` do not change on renewal.
 - **[R10]** NIST SP 800-57 Part 1 Rev. 5, _Recommendation for Key Management: Part 1 – General_, May 2020. <https://doi.org/10.6028/NIST.SP.800-57pt1r5>. Table 2: RSA 2048 bits gives 112-bit and 3072 bits 128-bit security strength.
+
+- **[R18]** OpenID Foundation, _OpenID Connect Back-Channel Logout 1.0 incorporating errata set 1_, December 2023. <https://openid.net/specs/openid-connect-backchannel-1_0.html>. §2.4 the `sid` claim in a logout token, matching the session an ID token's `sid` named.
 
 ### Informative
 
