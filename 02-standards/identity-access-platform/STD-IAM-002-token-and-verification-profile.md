@@ -69,13 +69,14 @@ claim set, the lifetime class, and the subject form.
 
 #### 3.1.1 Privileged Scope Forms
 
-The `privileged` class covers two operations with incompatible context requirements, and
+The `privileged` class covers three operations with incompatible context requirements, and
 conflating them made the class unimplementable. A token MUST declare exactly one form.
 
-| Form             | Meaning                                                                                                                                               | Context claim                                                                            |
-| :--------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- |
-| `tenant-scoped`  | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant                                     | `tenant_id` MUST, with both version claims                                               |
-| `provider-scope` | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST, except at the resource that holds the grant; `tenant_id` MUST NOT |
+| Form              | Meaning                                                                                                                                               | Context claim                                                                                               |
+| :---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------- |
+| `tenant-scoped`   | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant                                     | `tenant_id` MUST, with both version claims                                                                  |
+| `provider-scope`  | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST, except at the resource that holds the grant; `tenant_id` MUST NOT                    |
+| `resource-scoped` | An operation on records the resource itself holds grants over — an owner managing the client registrations they own                                   | `tenant_id` MUST NOT; the authority is the grant the resource records for the `principal_id` and the target |
 
 `provider_scope` names the bounded authority the operation runs under, and it exists because
 the alternative was to put a Tenant identifier on a token whose action does not belong to a
@@ -94,6 +95,14 @@ every provider token a claim with no meaning for the resource receiving it, whic
 for `scope` and RFC 8707 tells an authorization server to trim [R6][R11]. A provider-scope token
 sent to the holder carries `principal_id`, `subject_type` `human`, `acr` and `auth_time`, and no
 `tenant_id`. A revoked grant then stops the next request rather than the next token.
+
+**The `resource-scoped` form** is for an authority bounded by records the resource holds, such as
+the owners of a client registration (`ADR-IAM-003`). The token carries `principal_id`,
+`subject_type` `human`, `acr` and `auth_time`, and no `tenant_id`; the resource reads the grant for
+the `principal_id` and the record the request names, for each request, and refuses a request naming
+anything else. A token carrying a `provider_scope` the resource accepts is a provider's, and is not
+narrowed to this form. The resource separates the forms by route: a provider-only route refuses a
+`resource-scoped` caller before reading any record.
 
 `provider_scope` names one scope. A Principal holding grants for two resources outside
 Organization would need two scopes in one claim, sent to both resources, which is the claim RFC
@@ -307,7 +316,8 @@ fail closed on any failure:
    version cannot be compared against a revocation, so accepting it would make the
    revocation contract unenforceable while every check appeared to pass.
 9. Reject a `privileged` token that carries neither `tenant_id` nor a provider authority,
-   and reject one that carries both. A privileged token whose scope form cannot be
+   at a resource with no `resource-scoped` grant for it, and reject one that carries both
+   `tenant_id` and a provider authority. A privileged token whose scope form cannot be
    determined has no bounded authority, and the safe reading of an ambiguous scope is
    not the narrow one — it is refusal. The provider authority is the `provider_scope`
    claim, except at the resource that holds provider grants, where it is an active grant
