@@ -72,10 +72,10 @@ claim set, the lifetime class, and the subject form.
 The `privileged` class covers two operations with incompatible context requirements, and
 conflating them made the class unimplementable. A token MUST declare exactly one form.
 
-| Form             | Meaning                                                                                                                                               | Context claim                               |
-| :--------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------ |
-| `tenant-scoped`  | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant                                     | `tenant_id` MUST, with both version claims  |
-| `provider-scope` | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST; `tenant_id` MUST NOT |
+| Form             | Meaning                                                                                                                                               | Context claim                                                                            |
+| :--------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- |
+| `tenant-scoped`  | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant                                     | `tenant_id` MUST, with both version claims                                               |
+| `provider-scope` | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST, except at the resource that holds the grant; `tenant_id` MUST NOT |
 
 `provider_scope` names the bounded authority the operation runs under, and it exists because
 the alternative was to put a Tenant identifier on a token whose action does not belong to a
@@ -83,30 +83,48 @@ Tenant. The claim MUST name a registered provider scope or an explicit bounded T
 value meaning "all Tenants" MUST NOT be issued, because an unbounded scope is what
 `PAD-PLT-002 §5.2` requires cross-tenant administration never to be.
 
+**The resource that holds a provider grant checks its own record.** A provider scope is a grant
+Organization records (`ADR-IAM-001 §5.6`). A resource outside Organization learns it from the
+`provider_scope` claim, which identity-control projects into the kernel. The Organization Control
+API holds the grants itself, so it MUST check its own record for each request, by the token's
+`principal_id`, and MUST NOT read the grant from a claim (`ADR-ORG-001 §5.11`). That is how Google
+Cloud IAM and Kubernetes decide access: the token establishes who the caller is, and the resource
+evaluates the policy it holds [R19][R20]. Projecting the grant to its holder would also put in
+every provider token a claim with no meaning for the resource receiving it, which RFC 9068 forbids
+for `scope` and RFC 8707 tells an authorization server to trim [R6][R11]. A provider-scope token
+sent to the holder carries `principal_id`, `subject_type` `human`, `acr` and `auth_time`, and no
+`tenant_id`. A revoked grant then stops the next request rather than the next token.
+
+`provider_scope` names one scope. A Principal holding grants for two resources outside
+Organization would need two scopes in one claim, sent to both resources, which is the claim RFC
+9068 and RFC 8707 rule out. That case is not supported, and no registered scope needs it today:
+`provider:identity-control` is the only scope a resource outside Organization checks.
+
 A provider-scope token MUST take lifetime class `L0`, MUST carry `acr` and `auth_time`, and its
-issuance MUST be evidenced with the actor, the scope, and the reason. Creating a Principal is
-provider-scope: it is irreversible, it belongs to no Tenant, and it is the operation from which
-every later Membership is derived.
+issuance MUST be evidenced with the actor, the scope, and the reason. At the resource that holds
+the grant, the grant's own record and the access record written for each request are that
+evidence. Creating a Principal is provider-scope: it is irreversible, it belongs to no Tenant,
+and it is the operation from which every later Membership is derived.
 
 ### 3.2 Claim Set
 
-| Claim                     | `internal`                    | `privileged`                                              | `workload`                    | `external`     |
-| :------------------------ | :---------------------------- | :-------------------------------------------------------- | :---------------------------- | :------------- |
-| `iss`                     | MUST                          | MUST                                                      | MUST                          | MUST           |
-| `sub`                     | MUST                          | MUST                                                      | MUST                          | MUST, pairwise |
-| `aud`                     | MUST                          | MUST                                                      | MUST                          | MUST           |
-| `iat`, `exp`              | MUST                          | MUST                                                      | MUST                          | MUST           |
-| `jti`, `client_id`        | MUST                          | MUST                                                      | MUST                          | MUST           |
-| `scope`                   | SHOULD                        | SHOULD                                                    | SHOULD                        | SHOULD         |
-| `principal_id`            | MUST                          | MUST                                                      | MUST                          | MUST NOT       |
-| `subject_type`            | MUST                          | MUST                                                      | MUST                          | MUST NOT       |
-| `tenant_id`               | MUST                          | MUST when `tenant-scoped`; MUST NOT when `provider-scope` | MUST when tenant-scoped       | MUST NOT       |
-| `workspace_id`            | MAY                           | MAY                                                       | MAY                           | MUST NOT       |
-| `membership_version`      | MUST when `tenant_id` present | MUST when `tenant_id` present                             | MUST when `tenant_id` present | MUST NOT       |
-| `tenant_security_version` | MUST when `tenant_id` present | MUST when `tenant_id` present                             | MUST when `tenant_id` present | MUST NOT       |
-| `provider_scope`          | MUST NOT                      | MUST when `provider-scope`; MUST NOT otherwise            | MUST NOT                      | MUST NOT       |
-| `acr`, `auth_time`        | MAY                           | MUST                                                      | MUST NOT                      | MAY            |
-| `workload_owner`          | MUST NOT                      | MUST NOT                                                  | MUST                          | MUST NOT       |
+| Claim                     | `internal`                    | `privileged`                                                                 | `workload`                    | `external`     |
+| :------------------------ | :---------------------------- | :--------------------------------------------------------------------------- | :---------------------------- | :------------- |
+| `iss`                     | MUST                          | MUST                                                                         | MUST                          | MUST           |
+| `sub`                     | MUST                          | MUST                                                                         | MUST                          | MUST, pairwise |
+| `aud`                     | MUST                          | MUST                                                                         | MUST                          | MUST           |
+| `iat`, `exp`              | MUST                          | MUST                                                                         | MUST                          | MUST           |
+| `jti`, `client_id`        | MUST                          | MUST                                                                         | MUST                          | MUST           |
+| `scope`                   | SHOULD                        | SHOULD                                                                       | SHOULD                        | SHOULD         |
+| `principal_id`            | MUST                          | MUST                                                                         | MUST                          | MUST NOT       |
+| `subject_type`            | MUST                          | MUST                                                                         | MUST                          | MUST NOT       |
+| `tenant_id`               | MUST                          | MUST when `tenant-scoped`; MUST NOT when `provider-scope`                    | MUST when tenant-scoped       | MUST NOT       |
+| `workspace_id`            | MAY                           | MAY                                                                          | MAY                           | MUST NOT       |
+| `membership_version`      | MUST when `tenant_id` present | MUST when `tenant_id` present                                                | MUST when `tenant_id` present | MUST NOT       |
+| `tenant_security_version` | MUST when `tenant_id` present | MUST when `tenant_id` present                                                | MUST when `tenant_id` present | MUST NOT       |
+| `provider_scope`          | MUST NOT                      | MUST when `provider-scope`, except at the grant's holder; MUST NOT otherwise | MUST NOT                      | MUST NOT       |
+| `acr`, `auth_time`        | MAY                           | MUST                                                                         | MUST NOT                      | MAY            |
+| `workload_owner`          | MUST NOT                      | MUST NOT                                                                     | MUST                          | MUST NOT       |
 
 The two version claims are conditional on `tenant_id` in every class, including `privileged`.
 An earlier revision made them unconditional there, which was unsatisfiable for a
@@ -288,12 +306,15 @@ fail closed on any failure:
    either version claim is absent, reject the token: a context asserted without a
    version cannot be compared against a revocation, so accepting it would make the
    revocation contract unenforceable while every check appeared to pass.
-9. Reject a `privileged` token that carries neither `tenant_id` nor `provider_scope`,
+9. Reject a `privileged` token that carries neither `tenant_id` nor a provider authority,
    and reject one that carries both. A privileged token whose scope form cannot be
    determined has no bounded authority, and the safe reading of an ambiguous scope is
-   not the narrow one — it is refusal.
+   not the narrow one — it is refusal. The provider authority is the `provider_scope`
+   claim, except at the resource that holds provider grants, where it is an active grant
+   that resource records for the token's `principal_id` (§3.1.1).
 10. Reject a `provider_scope` value that is not a registered scope or an explicit
-    bounded Tenant set.
+    bounded Tenant set. At the resource that holds provider grants, reject a token whose
+    `principal_id` holds no active grant, or whose `subject_type` is not `human`.
 11. Enforce Product authorization locally. A valid signature is one input and is never
     the authorization decision.
 
@@ -388,7 +409,7 @@ the long-lived connection rules are this platform's own and cite no external sou
 - **[R3]** IETF RFC 7517, _JSON Web Key (JWK)_, May 2015. <https://www.rfc-editor.org/rfc/rfc7517>. §4.5: `kid` selects a key within a set during rollover.
 - **[R4]** IETF RFC 7518, _JSON Web Algorithms (JWA)_, May 2015. <https://www.rfc-editor.org/rfc/rfc7518>. §3.5: `PS256`, with a key of 2048 bits or larger.
 - **[R5]** IETF RFC 8725 (BCP 225), _JSON Web Token Best Current Practices_, February 2020. <https://www.rfc-editor.org/rfc/rfc8725>. §3.1 algorithm allowlists; §3.8 issuer; §3.9 audience; §3.11 explicit typing.
-- **[R6]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §2.1 `typ` `at+jwt`, `none` prohibited, `RS256` mandatory to implement; §2.2 required claims; §2.2.2 private claims; §4 validation.
+- **[R6]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §2.1 `typ` `at+jwt`, `none` prohibited, `RS256` mandatory to implement; §2.2 required claims; §2.2.2 private claims; §2.2.3 every scope must mean something to the resources `aud` names; §4 validation.
 - **[R7]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023. <https://openid.net/specs/openid-connect-core-1_0.html>. §2 `acr` and `auth_time`; §8 pairwise identifiers; §10.1.1 refetching a key set on an unfamiliar `kid` and retaining decommissioned keys; §15.1 `RS256` for ID tokens.
 - **[R8]** IETF RFC 9700 (BCP 240), _Best Current Practice for OAuth 2.0 Security_, January 2025. <https://www.rfc-editor.org/rfc/rfc9700>. §2.2.1 sender-constrained tokens; §2.3 audience-restricted access tokens.
 - **[R9]** IETF RFC 9470, _OAuth 2.0 Step Up Authentication Challenge Protocol_, September 2023. <https://www.rfc-editor.org/rfc/rfc9470>. §6.1: `acr` and `auth_time` do not change on renewal.
@@ -398,10 +419,12 @@ the long-lived connection rules are this platform's own and cite no external sou
 
 ### Informative
 
-- **[R11]** IETF RFC 8707, _Resource Indicators for OAuth 2.0_, February 2020. <https://www.rfc-editor.org/rfc/rfc8707>. Audience restriction to the resource requested.
+- **[R11]** IETF RFC 8707, _Resource Indicators for OAuth 2.0_, February 2020. <https://www.rfc-editor.org/rfc/rfc8707>. Audience restriction to the resource requested; §2.2 downscoping a token to what the resource needs to know.
 - **[R12]** OpenID Foundation, _FAPI 2.0 Security Profile_, Final, February 2025. <https://openid.net/specs/fapi-security-profile-2_0-final.html>. §5.4.1: `PS256`, `ES256` or `Ed25519`.
 - **[R13]** IETF RFC 7662, _OAuth 2.0 Token Introspection_, October 2015. <https://www.rfc-editor.org/rfc/rfc7662>. §4: caching introspection trades freshness for traffic.
 - **[R14]** NIST SP 800-63C-4, _Digital Identity Guidelines: Federation and Assertions_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63C-4>. §3.4.1 pairwise pseudonymous identifiers. It governs federation assertions, not API access tokens.
 - **[R15]** IETF RFC 8705, _OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens_, February 2020. <https://www.rfc-editor.org/rfc/rfc8705>.
 - **[R16]** IETF RFC 9449, _OAuth 2.0 Demonstrating Proof of Possession (DPoP)_, September 2023. <https://www.rfc-editor.org/rfc/rfc9449>.
 - **[R17]** IETF RFC 10017, _OAuth 2.0 for Browser-Based Applications_ (Best Current Practice), August 2026. <https://www.rfc-editor.org/rfc/rfc10017>. The backend-for-frontend pattern.
+- **[R19]** Google Cloud, _IAM overview_, accessed 2026-10-01. <https://docs.cloud.google.com/iam/docs/overview>. An allow policy is attached to a resource, and IAM checks the resource's allow policy when an authenticated principal accesses it.
+- **[R20]** Kubernetes, _Authorization_, accessed 2026-10-01. <https://kubernetes.io/docs/reference/access-authn-authz/authorization/>. Authorization takes place in the API server, against the user and groups authentication established; access is denied by default.
