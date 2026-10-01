@@ -201,7 +201,7 @@ Prohibited by default:
 
 ### 5.8 Operational Baseline
 
-- Every deployment runs the latest minor Keycloak release, pinned by digest through the technology lifecycle process. Keycloak supports only the latest minor release: when a new one is published, the previous one receives no more patches, and there is no long-term-support line [R25]. A new minor release is adopted once the kernel's compatibility suite passes against it, and a security patch release through the kernel's accelerated security-release path.
+- Every deployment runs the latest minor Keycloak release, pinned by digest through the technology lifecycle process. Keycloak supports only the latest minor release: when a new one is published, the previous one receives no more patches, and there is no long-term-support line [R25]. A new minor release is adopted once the kernel's compatibility suite passes against it, and a security patch release through the kernel's accelerated security-release path. The pin moved to 26.7.5 on 2026-10-01 by that path. Among its fixes is CVE-2026-93999, a token-exchange refresh that kept issuing tokens for a disabled audience client [R37], which bears on §5.13 because a suspension disables the client.
 - Preview features are disabled by default and require a separate ADR. Keycloak says they are not recommended for production and may change or be removed [R18].
 - Initial high availability is one cluster across availability zones [R20], in a single region unless evidence requires more.
 - Multi-cluster v2 and the stateless mode are preview in the pinned line [R18][R21] and are not used. Multi-cluster v1 is supported [R20], and is adopted only when evidence requires more than one region.
@@ -452,7 +452,7 @@ The Identity Control Service would stop managing an adopted client and leave it 
 
 ## 9. References
 
-These are the external sources this decision rests on. In-repository evidence, such as a compatibility run, is cited inline where it is used. Keycloak pages are cited at 26.7.4, the pinned release, where a versioned page exists.
+These are the external sources this decision rests on. In-repository evidence, such as a compatibility run, is cited inline where it is used. Keycloak pages are cited at 26.7.5, the pinned release, where a versioned page exists.
 
 ### Normative
 
@@ -476,14 +476,14 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R7]** Google Cloud, _Delete and undelete service accounts_, accessed 2026-09-30. <https://docs.cloud.google.com/iam/docs/service-accounts-delete-undelete>. Disable a service account instead of deleting it; a disabled one can be re-enabled.
 - **[R8]** AWS, IAM _Update access keys_, accessed 2026-09-30. <https://docs.aws.amazon.com/IAM/latest/UserGuide/id-credentials-access-keys-update.html>. Deactivate a key before deleting it, and reactivate it if something still uses it.
 - **[R16]** Keycloak, _Supported specifications_, accessed 2026-09-30. <https://www.keycloak.org/securing-apps/specifications>. OpenID Connect Core supported, last certified with 18.0.0; SAML 2.0 supported.
-- **[R17]** Keycloak, _Server Administration Guide_ 26.7.4. <https://www.keycloak.org/docs/26.7.4/server_admin/index.html>. Features; Organizations, "multi-tenancy within a realm"; the master realm; realm-management roles.
+- **[R17]** Keycloak, _Server Administration Guide_ 26.7.5. <https://www.keycloak.org/docs/26.7.5/server_admin/index.html>. Features; Organizations, "multi-tenancy within a realm"; the master realm; realm-management roles.
 - **[R18]** Keycloak, _Enabling and disabling features_, accessed 2026-09-30. <https://www.keycloak.org/server/features>. Preview features are disabled by default, not recommended for production, and may change or be removed; `client-secret-rotation` and `stateless` are preview.
 - **[R19]** Keycloak, _Release Notes_, accessed 2026-09-30. <https://www.keycloak.org/docs/latest/release_notes/index.html>. 26.0.0: Organizations fully supported; 26.4.0: passkeys supported.
 - **[R20]** Keycloak, _High availability_ guides, accessed 2026-09-30. <https://www.keycloak.org/high-availability/introduction>. One cluster across availability zones; multi-cluster v1 supported, v2 preview.
 - **[R21]** Keycloak blog, _Multi-Cluster v2 and Stateless Mode now in Preview_, July 2026. <https://www.keycloak.org/2026/07/multi-cluster-v2-and-stateless-mode>.
-- **[R22]** Keycloak, _Server Developer Guide_ 26.7.4. <https://www.keycloak.org/docs/26.7.4/server_development/index.html>. The Admin REST API; the Event Listener and User Storage SPIs.
-- **[R23]** Keycloak, _Admin REST API_ 26.7.4. <https://www.keycloak.org/docs-api/26.7.4/rest-api/index.html>. `GET .../clients/{client-uuid}/client-secret` returns a client's secret.
-- **[R24]** Keycloak, _Authorization Services Guide_ 26.7.4. <https://www.keycloak.org/docs/26.7.4/authorization_services/index.html>. A policy decision point.
+- **[R22]** Keycloak, _Server Developer Guide_ 26.7.5. <https://www.keycloak.org/docs/26.7.5/server_development/index.html>. The Admin REST API; the Event Listener and User Storage SPIs.
+- **[R23]** Keycloak, _Admin REST API_ 26.7.5. <https://www.keycloak.org/docs-api/26.7.5/rest-api/index.html>. `GET .../clients/{client-uuid}/client-secret` returns a client's secret.
+- **[R24]** Keycloak, _Authorization Services Guide_ 26.7.5. <https://www.keycloak.org/docs/26.7.5/authorization_services/index.html>. A policy decision point.
 - **[R25]** Keycloak, `RELEASES.md`, accessed 2026-09-30. <https://github.com/keycloak/keycloak/blob/main/RELEASES.md>. Only the latest minor release receives patches; preview features and non-public APIs may change at any time.
 - **[R26]** Keycloak, _Configuring distributed caches_, accessed 2026-09-30. <https://www.keycloak.org/server/caching>. Sessions persisted in the database; caching built on Infinispan.
 - **[R27]** Keycloak, _Configuring Keycloak_, accessed 2026-09-30. <https://www.keycloak.org/server/configuration>. Built on Quarkus.
@@ -496,3 +496,4 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R34]** Google Cloud, _IAM overview_, accessed 2026-10-01. <https://docs.cloud.google.com/iam/docs/overview>. An allow policy is attached to a resource, and IAM checks the resource's allow policy when an authenticated principal accesses it.
 - **[R35]** Kubernetes, _Authorization_, accessed 2026-10-01. <https://kubernetes.io/docs/reference/access-authn-authz/authorization/>. Authorization takes place in the API server, against the user and groups authentication established; access is denied by default.
 - **[R36]** IETF RFC 8707, _Resource Indicators for OAuth 2.0_, February 2020. <https://www.rfc-editor.org/rfc/rfc8707>. §2.2: the authorization server should downscope a token to what the resource is able to process and needs to know.
+- **[R37]** Keycloak, _Keycloak 26.7.5 released_, September 2026. <https://www.keycloak.org/2026/09/keycloak-2675-released>, and the GitHub release <https://github.com/keycloak/keycloak/releases/tag/26.7.5>. The security fixes in the patch release, CVE-2026-93999 among them.

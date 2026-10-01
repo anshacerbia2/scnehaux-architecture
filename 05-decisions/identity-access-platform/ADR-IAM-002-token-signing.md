@@ -169,7 +169,7 @@ The external sources this decision rests on, cited as `[Rn]`. In-repository evid
 
 - **[R9]** OpenID Foundation, _FAPI 2.0 Security Profile_, Final, February 2025. <https://openid.net/specs/fapi-security-profile-2_0-final.html>. §5.4.1: `PS256`, `ES256` or `Ed25519`.
 - **[R10]** OpenID Foundation, _Financial-grade API Security Profile 1.0 – Part 2: Advanced_, Final, March 2021. <https://openid.net/specs/openid-financial-api-part-2-1_0.html>. §8.6: `PS256` or `ES256`, and `RS256` should not be used.
-- **[R11]** Keycloak, _Server Administration Guide_ 26.7.4, realm keys. <https://www.keycloak.org/docs/26.7.4/server_admin/index.html>. Active and passive keys; the `rsa-generated`, `rsa` and `java-keystore` providers, each holding a key pair.
+- **[R11]** Keycloak, _Server Administration Guide_ 26.7.5, realm keys. <https://www.keycloak.org/docs/26.7.5/server_admin/index.html>. Active and passive keys; the `rsa-generated`, `rsa` and `java-keystore` providers, each holding a key pair.
 - **[R12]** Keycloak, _Upgrading Guide_, "Migrating to 24.0.0", accessed 2026-09-30. <https://www.keycloak.org/docs/latest/upgrading/index.html>. Refresh tokens are signed with an internal HMAC algorithm, HS512.
 - **[R13]** OpenSSL 3.5.5 `speed`, one core, measured 2026-09-30 for this decision: RSA-3072 verify about 30,000 per second against ECDSA P-256 about 18,000; P-256 sign about 57,000 per second against RSA-3072 about 1,500. A measurement on one host, not a published result.
 - **[R14]** HashiCorp, _Vault Transit secrets engine API_, sign endpoint, `marshaling_algorithm`, accessed 2026-09-30. <https://developer.hashicorp.com/vault/api-docs/secret/transit>. ASN.1 DER is the default; the JWS form has to be requested.
