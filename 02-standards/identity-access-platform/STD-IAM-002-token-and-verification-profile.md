@@ -177,11 +177,16 @@ because that would disclose enterprise correlation identifiers to external clien
 **The realm's default client scopes are `basic` and `acr` only.** `basic` gives `sub` and
 `auth_time`, and `acr` the authentication context; a workload client does not hold `acr`. The
 kernel's built-in `profile`, `email`, `roles` and `web-origins` scopes MUST NOT be realm
-defaults, and a workload client MUST NOT hold the built-in `service_account` scope, whose
-mappers write the client's network address: each puts a claim this table does not define into
-an access token, personal data among them. A workload's `client_id` comes from its own mapper,
-as every client's does. The registration authority detaches any of these scopes from a client it
-registers or adopts, and the reconciler holds them detached.
+defaults: each puts a claim this table does not define into an access token, personal data among
+them. The registration authority detaches any of them from a client it registers or adopts, and the
+reconciler holds them detached.
+
+**The built-in `service_account` scope keeps only its `client_id` mapper.** The pinned kernel
+attaches it to every client whose service accounts are enabled, and attaches it again on every
+update of such a client, so detaching it from a workload does not hold. Its other two mappers write
+the client's network address, `clientHost` and `clientAddress`, which this table does not define.
+So the identity kernel declares the scope with its `client_id` mapper alone, a workload holds it,
+and the address never reaches a token.
 
 #### 3.2.2 Signing Algorithm Allowlist
 
