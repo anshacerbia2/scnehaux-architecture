@@ -28,12 +28,17 @@ doc_meta:
       type: component-workshop
     - name: chromatic
       type: visual-regression-service
+    - name: cyclonedx
+      type: sbom-format
+    - name: github-artifact-attestations
+      type: provenance-service
 ---
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
 > **Revision pending exact-commit ratification.** The component-workshop
-> additions (ADR-UIP-WKS-001) are pending under GDC-000 section 2.6.7; the
+> additions (ADR-UIP-WKS-001) and the supply-chain evidence additions
+> (ADR-UIP-SEC-001) are pending under GDC-000 section 2.6.7; the
 > previously ratified revision remains binding until the authorized human
 > authority approves the exact commit containing them.
 
@@ -85,7 +90,7 @@ runtime Product telemetry, application routing, and business authorization.
 The system fulfills approved PAD-PLT-003. Global frontend authority includes
 ADR-GLB-FE-010 and replacement decisions ADR-GLB-FE-011 through -013 according
 to their lifecycle. UI authority includes ADR-UIP-PLT-001, ADR-UIP-TKN-001
-through -003, ADR-UIP-BLD-001, proposed ADR-UIP-WKS-001, STD-UIP-ENG-001, STD-UIP-PRM-001,
+through -003, ADR-UIP-BLD-001, proposed ADR-UIP-WKS-001, proposed ADR-UIP-SEC-001, STD-UIP-ENG-001, STD-UIP-PRM-001,
 STD-UIP-STY-001, STD-UIP-TKN-001, and STD-UIP-TKN-002. Component
 designs live in the UI repository with `parent_sad: SAD-003`.
 
@@ -132,7 +137,8 @@ graph LR
 | Actor/system           | Contract                                                                     |
 | :--------------------- | :--------------------------------------------------------------------------- |
 | UI Platform engineer   | Changes source and TDD-governed implementation through protected review      |
-| Developer Platform     | Supplies CI runners, package storage, provenance, and signing                |
+| Developer Platform     | Supplies CI runners and package storage; provenance and signing once offered |
+| Sigstore public good   | Interim signing and public transparency log for `main` build attestations    |
 | Product build          | Installs a declared version and imports supported public entries             |
 | Product browser        | Executes component behavior and static CSS without UI Platform network calls |
 | Accessibility reviewer | Provides manual assistive-technology evidence and Component ACR review       |
@@ -282,7 +288,10 @@ Build inputs and outputs are public/internal engineering assets and contain no
 Product PII. CI logs retain technical identifiers and digests, not secrets.
 Release evidence is retained for the support life of the major version plus the
 governed audit window. Temporary fixture output may be discarded after evidence
-is published.
+is published. Build attestations of `main` are written to the Sigstore public
+transparency log: they are public and permanent, and contain only artifact
+digests and the repository, workflow, ref, and commit identity
+(ADR-UIP-SEC-001).
 
 ## 6. Integration Contracts
 
@@ -318,8 +327,8 @@ applicable, and rollback evidence.
 
 | Threat                      | Control                                                                               | Evidence                           |
 | :-------------------------- | :------------------------------------------------------------------------------------ | :--------------------------------- |
-| Compromised dependency      | Frozen lockfile, SBOM, applicable advisory gate, provenance                           | Dependency report                  |
-| Artifact substitution       | Content digest and producer provenance                                                | Release verification               |
+| Compromised dependency      | Frozen lockfile, CycloneDX SBOM, advisory and license gates over every resolved graph | Audit, license, and SBOM reports   |
+| Artifact substitution       | Content digest and SLSA Build L2 provenance attestation (ADR-UIP-SEC-001)             | `gh attestation verify`            |
 | Build-script execution      | Reviewed lifecycle scripts; no bypassed clean-install gate                            | Clean-checkout CI                  |
 | DOM/code injection          | React escaping by default; no dynamic code evaluation; reviewed rich-content API only | CSP and adversarial tests          |
 | CSS escape or theme leakage | Scoped roots, declared layers, two-root/federated tests                               | Computed-style fixture             |
