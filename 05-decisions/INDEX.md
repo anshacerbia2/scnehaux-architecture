@@ -36,6 +36,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-IAM-002](identity-access-platform/ADR-IAM-002-token-signing.md) | ADR-IAM-002 Token Signing Algorithm and Key Lifecycle Management | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-IAM-003](identity-access-platform/ADR-IAM-003-client-registration-ownership.md) | Client Registration Ownership and the Developer Console's Authority | foundational | accepted | 2026-10-01 | N/A |
 | [ADR-ORG-001](organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) | Separate Organization Authority from Identity and Use Keycloak as a Projection Target | foundational | accepted | 2026-08-06 | N/A |
+| [ADR-ORG-002](organization-tenancy-platform/ADR-ORG-002-eligible-provider-authority.md) | Eligible Provider Authority, Activated for a Bounded Time and Approved by Another Provider | foundational | accepted | 2026-10-02 | N/A |
 | [ADR-SCH-002](scheduling-platform/ADR-SCH-002-postgresql-profiled-durable-dispatch.md) | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch | implementation | accepted | 2026-08-24 | N/A |
 | [ADR-UIP-BLD-001](ui-platform/ADR-UIP-BLD-001-deferred-minification.md) | Deferred Minification | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-PLT-001](ui-platform/ADR-UIP-PLT-001-verifiable-platform-contract.md) | Verifiable UI Platform Package and Release Contract | conflict_resolution | accepted | 2026-09-28 | N/A |

@@ -3,13 +3,13 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.2.0
+  version: 1.3.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-08-11
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-10-02
 ---
 
 # Enterprise Token and Verification Profile (STD-IAM-002)
@@ -75,7 +75,7 @@ conflating them made the class unimplementable. A token MUST declare exactly one
 | Form              | Meaning                                                                                                                                               | Context claim                                                                                               |
 | :---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------- |
 | `tenant-scoped`   | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant                                     | `tenant_id` MUST, with both version claims                                                                  |
-| `provider-scope`  | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST, except at the resource that holds the grant; `tenant_id` MUST NOT                    |
+| `provider-scope`  | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST, except at a resource that holds the grant or its projection; `tenant_id` MUST NOT    |
 | `resource-scoped` | An operation on records the resource itself holds grants over — an owner managing the client registrations they own                                   | `tenant_id` MUST NOT; the authority is the grant the resource records for the `principal_id` and the target |
 
 `provider_scope` names the bounded authority the operation runs under, and it exists because
@@ -84,24 +84,29 @@ Tenant. The claim MUST name a registered provider scope or an explicit bounded T
 value meaning "all Tenants" MUST NOT be issued, because an unbounded scope is what
 `PAD-PLT-002 §5.2` requires cross-tenant administration never to be.
 
-**The resource that holds a provider grant checks its own record.** A provider scope is a grant
-Organization records (`ADR-IAM-001 §5.6`). A resource outside Organization learns it from the
-`provider_scope` claim, which identity-control projects into the kernel. The Organization Control
-API holds the grants itself, so it MUST check its own record for each request, by the token's
-`principal_id`, and MUST NOT read the grant from a claim (`ADR-ORG-001 §5.11`). That is how Google
+**The resource that holds a provider grant, or a projection of it, checks its record.** A provider
+scope is a grant Organization records, and it confers authority only while an activation of it, or
+an emergency grant, is in force (`ADR-ORG-002 §5.1`, §5.2). The Organization Control API holds the
+grants. The Identity Control API holds a projection of the grants for `provider:identity-control`
+(`ADR-IAM-001 §5.6`, `ADR-ORG-002 §5.3`). Each MUST check its record for each request, by the
+token's `principal_id`, and MUST NOT read the grant from a claim (`ADR-ORG-001 §5.11`). A claim would
+outlive an activation ended early until the token carrying it expired. That is how Google
 Cloud IAM and Kubernetes decide access: the token establishes who the caller is, and the resource
 evaluates the policy it holds [R19][R20]. Projecting the grant to its holder would also put in
 every provider token a claim with no meaning for the resource receiving it, which RFC 9068 forbids
 for `scope` and RFC 8707 tells an authorization server to trim [R6][R11]. A provider-scope token
 sent to the holder carries `principal_id`, `subject_type` `human`, `acr` and `auth_time`, and no
-`tenant_id`. A revoked grant then stops the next request rather than the next token.
+`tenant_id`. A revoked grant then stops the next request rather than the next token. No resource
+in this estate checks a provider grant from a claim, so no `provider_scope` claim is issued. The
+claim and rule 10 remain for a future resource that neither holds a grant nor a projection of it,
+and adopting one needs a decision of its own.
 
 **The `resource-scoped` form** is for an authority bounded by records the resource holds, such as
 the owners of a client registration (`ADR-IAM-003`). The token carries `principal_id`,
 `subject_type` `human`, `acr` and `auth_time`, and no `tenant_id`; the resource reads the grant for
 the `principal_id` and the record the request names, for each request, and refuses a request naming
-anything else. A token carrying a `provider_scope` the resource accepts is a provider's, and is not
-narrowed to this form. The resource separates the forms by route: a provider-only route refuses a
+anything else. A caller whose `principal_id` holds provider authority in force at the resource is
+a provider, and is not narrowed to this form. The resource separates the forms by route: a provider-only route refuses a
 `resource-scoped` caller before reading any record.
 
 `provider_scope` names one scope. A Principal holding grants for two resources outside
@@ -117,23 +122,23 @@ and it is the operation from which every later Membership is derived.
 
 ### 3.2 Claim Set
 
-| Claim                     | `internal`                    | `privileged`                                                                 | `workload`                    | `external`     |
-| :------------------------ | :---------------------------- | :--------------------------------------------------------------------------- | :---------------------------- | :------------- |
-| `iss`                     | MUST                          | MUST                                                                         | MUST                          | MUST           |
-| `sub`                     | MUST                          | MUST                                                                         | MUST                          | MUST, pairwise |
-| `aud`                     | MUST                          | MUST                                                                         | MUST                          | MUST           |
-| `iat`, `exp`              | MUST                          | MUST                                                                         | MUST                          | MUST           |
-| `jti`, `client_id`        | MUST                          | MUST                                                                         | MUST                          | MUST           |
-| `scope`                   | SHOULD                        | SHOULD                                                                       | SHOULD                        | SHOULD         |
-| `principal_id`            | MUST                          | MUST                                                                         | MUST                          | MUST NOT       |
-| `subject_type`            | MUST                          | MUST                                                                         | MUST                          | MUST NOT       |
-| `tenant_id`               | MUST                          | MUST when `tenant-scoped`; MUST NOT when `provider-scope`                    | MUST when tenant-scoped       | MUST NOT       |
-| `workspace_id`            | MAY                           | MAY                                                                          | MAY                           | MUST NOT       |
-| `membership_version`      | MUST when `tenant_id` present | MUST when `tenant_id` present                                                | MUST when `tenant_id` present | MUST NOT       |
-| `tenant_security_version` | MUST when `tenant_id` present | MUST when `tenant_id` present                                                | MUST when `tenant_id` present | MUST NOT       |
-| `provider_scope`          | MUST NOT                      | MUST when `provider-scope`, except at the grant's holder; MUST NOT otherwise | MUST NOT                      | MUST NOT       |
-| `acr`, `auth_time`        | MAY                           | MUST                                                                         | MUST NOT                      | MAY            |
-| `workload_owner`          | MUST NOT                      | MUST NOT                                                                     | MUST                          | MUST NOT       |
+| Claim                     | `internal`                    | `privileged`                                                                                      | `workload`                    | `external`     |
+| :------------------------ | :---------------------------- | :------------------------------------------------------------------------------------------------ | :---------------------------- | :------------- |
+| `iss`                     | MUST                          | MUST                                                                                              | MUST                          | MUST           |
+| `sub`                     | MUST                          | MUST                                                                                              | MUST                          | MUST, pairwise |
+| `aud`                     | MUST                          | MUST                                                                                              | MUST                          | MUST           |
+| `iat`, `exp`              | MUST                          | MUST                                                                                              | MUST                          | MUST           |
+| `jti`, `client_id`        | MUST                          | MUST                                                                                              | MUST                          | MUST           |
+| `scope`                   | SHOULD                        | SHOULD                                                                                            | SHOULD                        | SHOULD         |
+| `principal_id`            | MUST                          | MUST                                                                                              | MUST                          | MUST NOT       |
+| `subject_type`            | MUST                          | MUST                                                                                              | MUST                          | MUST NOT       |
+| `tenant_id`               | MUST                          | MUST when `tenant-scoped`; MUST NOT when `provider-scope`                                         | MUST when tenant-scoped       | MUST NOT       |
+| `workspace_id`            | MAY                           | MAY                                                                                               | MAY                           | MUST NOT       |
+| `membership_version`      | MUST when `tenant_id` present | MUST when `tenant_id` present                                                                     | MUST when `tenant_id` present | MUST NOT       |
+| `tenant_security_version` | MUST when `tenant_id` present | MUST when `tenant_id` present                                                                     | MUST when `tenant_id` present | MUST NOT       |
+| `provider_scope`          | MUST NOT                      | MUST when `provider-scope`, except at a holder of the grant or its projection; MUST NOT otherwise | MUST NOT                      | MUST NOT       |
+| `acr`, `auth_time`        | MAY                           | MUST                                                                                              | MUST NOT                      | MAY            |
+| `workload_owner`          | MUST NOT                      | MUST NOT                                                                                          | MUST                          | MUST NOT       |
 
 The two version claims are conditional on `tenant_id` in every class, including `privileged`.
 An earlier revision made them unconditional there, which was unsatisfiable for a
@@ -320,11 +325,13 @@ fail closed on any failure:
    `tenant_id` and a provider authority. A privileged token whose scope form cannot be
    determined has no bounded authority, and the safe reading of an ambiguous scope is
    not the narrow one — it is refusal. The provider authority is the `provider_scope`
-   claim, except at the resource that holds provider grants, where it is an active grant
-   that resource records for the token's `principal_id` (§3.1.1).
+   claim, except at a resource that holds provider grants or their projection, where it is
+   provider authority in force, an approved activation or an emergency grant, that the
+   resource records for the token's `principal_id` (§3.1.1).
 10. Reject a `provider_scope` value that is not a registered scope or an explicit
-    bounded Tenant set. At the resource that holds provider grants, reject a token whose
-    `principal_id` holds no active grant, or whose `subject_type` is not `human`.
+    bounded Tenant set. At a resource that holds provider grants or their projection, reject a
+    token whose `principal_id` holds no provider authority in force for a provider route, or
+    whose `subject_type` is not `human`.
 11. Enforce Product authorization locally. A valid signature is one input and is never
     the authorization decision.
 

@@ -149,25 +149,24 @@ Product permissions such as refund, payroll approval, quality override, rate-car
 
 Keycloak Authorization Services, which include a policy decision point [R24], SHALL NOT become the universal enterprise PDP without a replacement architecture decision.
 
-**A provider scope is an Organization grant projected into the kernel, never a kernel-owned authority.**
+**A provider scope is an Organization grant, never a kernel-owned authority, and it is projected to the resource that checks it, not into the kernel** (`ADR-ORG-002 §5.3`). This replaces the kernel projection this section first decided. That projection was never built, and a claim would outlive an activation ended early until its token expired.
 
 `STD-IAM-002 §3.1.1` requires a provider-scope token to carry a `provider_scope` claim naming a bounded provider authority. The claim is permitted here as "a claim required by an approved consumer contract", and the authority behind it is not this platform's to create: `PAD-PLT-002 §3.1` places provider cross-tenant scope in the Tenancy Administration context, and `ADR-ORG-001 §5.1` makes organization-administrative roles the Organization Platform's sole authority.
 
-The grant therefore travels the path `ADR-ORG-001 §5.4` already fixes for Membership:
+The grant and its activations travel Organization's projection to the Identity Control Service, which reads them from its own database for each request (`ADR-ORG-001 §5.7`, `ADR-ORG-002 §5.3`):
 
 ```text
-Organization authoritative grant
-    → canonical event / snapshot
-    → Scnehaux Identity Control Service
-    → supported Keycloak Admin API
-    → Keycloak-local attribute, projected into the claim
+Organization authoritative grant and activation
+    → canonical event / snapshot, priority lane for an end or a revocation
+    → Scnehaux Identity Control Service, as a registered projection consumer
+    → its own database, read per request by principal_id
 ```
 
 Granting a provider scope by writing the kernel attribute directly is prohibited, for the same reason a direct Membership write is: it would make the kernel a second authority for a fact Organization owns, and `PAD-PLT-002 §3.3` invariant 22 requires cross-tenant administration to carry explicit scope, elevated assurance, and evidence — none of which a kernel attribute records.
 
 **A grant is projected only to a resource that does not hold it.** The projection exists so that a resource outside Organization, such as the Identity Control API, can check a provider grant from the token without calling Organization on every request. The Organization Control API holds the grants itself, so it checks `provider:organization-control` from its own record for each request, by the token's `principal_id`, and that scope is never projected (`ADR-ORG-001 §5.11`). This is how Google Cloud IAM and Kubernetes decide access: the token says who the caller is, and the resource reads the policy it holds [R34][R35]. Projecting the scope as well would put in every provider token a claim that means nothing to the resource it is sent to, which RFC 9068 forbids for `scope` and RFC 8707 tells an authorization server to trim [R12][R36]. A Principal's `provider_scope` therefore names at most one scope, the one a resource outside Organization checks, and the attribute stays single-valued.
 
-**The bootstrap ceremony is the one exception, and it is bounded by its own record.** §5.11 creates the first Principal before any Organization authority can exist, and a first Principal holding no provider scope could call nothing: the ceremony would produce an identity that cannot reach the API that issues every later one. The ceremony therefore grants exactly one provider scope to exactly one Principal, recorded in the same immutable row that names the operator and the reason. Every grant after it is Organization's.
+**The bootstrap ceremony is the one exception, and it is bounded by its own record.** §5.11 creates the first Principal before any Organization authority can exist, and a first Principal holding no provider authority could call nothing: the ceremony would produce an identity that cannot reach the API that issues every later one. The ceremony therefore records exactly one local emergency grant for exactly one Principal, in the same immutable row that names the operator and the reason. That grant is retired once the projection delivers an emergency grant for `provider:identity-control` (`ADR-ORG-002 §5.4`), and every grant after it is Organization's.
 
 Recording this rather than deciding it later matters because the alternative was already in the working harness: a script setting the attribute directly, which is indistinguishable from the prohibited path once it is normal.
 
