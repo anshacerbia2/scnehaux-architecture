@@ -49,7 +49,7 @@ A provider grant makes a Principal **eligible** for a scope. It confers nothing 
 An activation names:
 
 - the grant;
-- the duration asked for, at most the scope's maximum (`ORG_PROVIDER_ACTIVATION_MAX`, default `8h`, where Entra allows one to 24 hours [R2]);
+- the duration asked for, at most the scope's maximum (`ORGANIZATION_PROVIDER_ACTIVATION_MAX`, default `8h`, where Entra allows one to 24 hours [R2]);
 - the reason;
 - who approved it, and when;
 - when it ends.
@@ -64,7 +64,7 @@ It ends at the earliest of:
 
 **In production an activation is approved by another provider.** The approver is a Principal that holds a grant for the same scope, eligible or emergency, other than the requester. The approver does not need an active activation of its own, as an Entra approver "doesn't have to have any roles" [R2]. An unapproved request lapses after 24 hours, as Entra's does [R3].
 
-**Outside production** a deployment may let an eligible provider activate with a reason alone (`ORG_PROVIDER_ACTIVATION_APPROVAL`, `required` by default). A development environment often has one provider, and approval is optional per role in both Entra and Google [R2][R4].
+**Outside production** a deployment may let an eligible provider activate with a reason alone (`ORGANIZATION_PROVIDER_ACTIVATION_APPROVAL`, `required` by default). A development environment often has one provider, and approval is optional per role in both Entra and Google [R2][R4].
 
 ### 5.2 Emergency Grants Are Standing, Few and Watched
 

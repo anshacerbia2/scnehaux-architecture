@@ -560,7 +560,7 @@ Product permission is never evaluated here.
 
 Provider administration requires:
 
-- distinct provider scope: provider authority this system records, read for each request, so a revocation stops the next request (`ADR-ORG-001 §5.11`). A provider grant is eligible, and confers authority only while an activation of it lasts. In production a provider other than the requester approves the activation, and the activation ends at most `ORG_PROVIDER_ACTIVATION_MAX` after it starts (`ADR-ORG-002 §5.1`). Emergency grants are standing, at least two in production, and every request they authorize is reported (`ADR-ORG-002 §5.2`). The first grant is made once, by a bootstrap command whose record names the operator and the reason, and it is an emergency grant;
+- distinct provider scope: provider authority this system records, read for each request, so a revocation stops the next request (`ADR-ORG-001 §5.11`). A provider grant is eligible, and confers authority only while an activation of it lasts. In production a provider other than the requester approves the activation, and the activation ends at most `ORGANIZATION_PROVIDER_ACTIVATION_MAX` after it starts (`ADR-ORG-002 §5.1`). Emergency grants are standing, at least two in production, and every request they authorize is reported (`ADR-ORG-002 §5.2`). The first grant is made once, by a bootstrap command whose record names the operator and the reason, and it is an emergency grant;
 - strong authentication and step-up;
 - short-lived privileged context;
 - explicit Tenant/operation scope;
