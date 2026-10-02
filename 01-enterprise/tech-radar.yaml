@@ -1,7 +1,7 @@
 # tech-radar.yaml — Enterprise Technology Radar
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
-# Last updated: 2026-10-01
+# Last updated: 2026-10-02
 #
 # Ring changes are ARB decisions (GDC-004 section 3.2). Entries marked
 # "pending ARB" were proposed with the UI Platform ratification package on
@@ -78,7 +78,9 @@ technology_radar:
       category: frontend-build-tool
       date_adopted: "2026-04-07"
       owner: UI Platform Team
-      rationale_adr: ADR-GLB-FE-002
+      # ADR-GLB-FE-002 was superseded by ADR-GLB-FE-011 (accepted 2026-09-29),
+      # which keeps Rsbuild as one Rspack-based toolchain for federated apps.
+      rationale_adr: ADR-GLB-FE-011
 
     - name: vitest
       category: test-runner
@@ -152,12 +154,29 @@ technology_radar:
       rationale_adr: ADR-UIP-WKS-001
       trial_end_date: "2026-12-31"
 
+    # pending ARB: cyclonedx and github-artifact-attestations trial entries,
+    # proposed 2026-10-02 with ADR-UIP-SEC-001.
+    - name: cyclonedx
+      category: sbom-format
+      date_entered: "2026-10-02"
+      owner: UI Platform Team
+      rationale_adr: ADR-UIP-SEC-001
+      trial_end_date: "2026-12-31"
+
+    - name: github-artifact-attestations
+      category: provenance-service
+      date_entered: "2026-10-02"
+      owner: UI Platform Team
+      rationale_adr: ADR-UIP-SEC-001
+      trial_end_date: "2026-12-31"
+
     - name: vite
       category: frontend-build-tool
       date_entered: "2026-04-07"
       owner: UI Platform Team
-      rationale_adr: ADR-GLB-FE-002
-      # Recommended, not mandated, by ADR-GLB-FE-002; trial review is pending ARB.
+      rationale_adr: ADR-GLB-FE-011
+      # Permitted for non-federated applications and libraries by ADR-GLB-FE-011
+      # section 5 item 2 (superseding ADR-GLB-FE-002); trial review is pending ARB.
       trial_end_date: "2026-10-28"
 
   assess:
@@ -180,6 +199,16 @@ technology_radar:
       # the evaluation contract. Neither ADR promotes this radar entry. A ring
       # transition requires the P0 federation/CSP fixture evidence and a separate
       # recorded ARB decision.
+
+    # pending ARB: rspack assess entry, proposed 2026-10-02. ADR-GLB-FE-011
+    # names @rspack/core with its Module Federation plugin as a federated
+    # toolchain; the UI Platform uses it only in the P0 federation evaluation
+    # fixture, so it stays assess with module-federation.
+    - name: rspack
+      category: frontend-build-tool
+      date_entered: "2026-10-02"
+      owner: UI Platform Team
+      rationale_adr: ADR-GLB-FE-011
 
     # pending ARB: react-aria and dtcg-design-tokens assess entries.
     - name: react-aria
