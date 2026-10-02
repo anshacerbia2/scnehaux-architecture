@@ -3,7 +3,7 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.3.0
+  version: 1.4.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
@@ -64,6 +64,22 @@ claim set, the lifetime class, and the subject form.
 
 - Every access token MUST carry `aud`, and `aud` MUST name registered protected
   resources only [R6][R8][R11].
+- **A protected resource is named by its own `resource` registration, which holds no
+  credential.** A client that authenticates to the kernel (a confidential, workload or
+  administrative client) MUST NOT be named in any `aud`, including the client a service uses for
+  its own outbound calls. The resource identifier and the client identifier are different things:
+  RFC 9068 §4 has the resource check that `aud` holds "an identifier the resource server expects for
+  itself" [R6], and Microsoft Entra has a Web API "only accept tokens containing one of their AppId
+  URIs as the `aud` claim", the client being a separate party [R21]. In the kernel the difference is
+  also a privilege: standard token exchange requires that "the `subject_token` sent to the token
+  exchange endpoint must have the requester client set as an audience in the `aud` claim" [R22], so
+  a credential-holding client in `aud` is a client entitled to exchange every token sent to that
+  resource. A keyless `resource` registration cannot authenticate, so it can exchange nothing. A
+  service's API is therefore registered as `<service>-api` (`identity-control-api`,
+  `organization-control-api`), distinct from every client the service authenticates as.
+  The cost is one registration per service and a changed `aud` for every caller already
+  configured, against a token exchange path that would otherwise sit with the most privileged
+  client in the estate.
 - A protected resource MUST reject a token whose `aud` does not name it [R1][R5][R6].
 - A token MUST NOT be issued for more than one audience class.
 
@@ -192,14 +208,14 @@ carrying no such claim.
 The identity kernel MUST realize the table above through audience-specific client
 scopes rather than realm-wide default mappers:
 
-| Client scope          | Required projected claims                                                                                       |
-| :-------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| `scnehaux-internal`   | `principal_id`, `subject_type`, and active context/version claims                                               |
-| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` with both version claims                      |
-| `scnehaux-provider`   | `principal_id`, `subject_type`, `provider_scope`, `acr`, `auth_time`; `tenant_id` and version claims prohibited |
-| `scnehaux-workload`   | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped |
-| `scnehaux-external`   | Pairwise `sub`; enterprise and context claims prohibited                                                        |
-| `scnehaux-profile`    | `name` and `preferred_username` in the ID token only, never in an access token; requested by a first-party BFF  |
+| Client scope          | Required projected claims                                                                                                |
+| :-------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| `scnehaux-internal`   | `principal_id`, `subject_type`, and active context/version claims                                                        |
+| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` with both version claims                               |
+| `scnehaux-provider`   | `principal_id`, `subject_type`, `acr`, `auth_time`; `provider_scope`, `tenant_id` and version claims prohibited (§3.1.1) |
+| `scnehaux-workload`   | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped          |
+| `scnehaux-external`   | Pairwise `sub`; enterprise and context claims prohibited                                                                 |
+| `scnehaux-profile`    | `name` and `preferred_username` in the ID token only, never in an access token; requested by a first-party BFF           |
 
 The client registration authority MUST attach exactly one of the five audience profile scopes.
 `scnehaux-profile` is not an audience profile: a first-party BFF requests it at sign-in for the
@@ -445,3 +461,5 @@ the long-lived connection rules are this platform's own and cite no external sou
 - **[R17]** IETF RFC 10017, _OAuth 2.0 for Browser-Based Applications_ (Best Current Practice), August 2026. <https://www.rfc-editor.org/rfc/rfc10017>. The backend-for-frontend pattern.
 - **[R19]** Google Cloud, _IAM overview_, accessed 2026-10-01. <https://docs.cloud.google.com/iam/docs/overview>. An allow policy is attached to a resource, and IAM checks the resource's allow policy when an authenticated principal accesses it.
 - **[R20]** Kubernetes, _Authorization_, accessed 2026-10-01. <https://kubernetes.io/docs/reference/access-authn-authz/authorization/>. Authorization takes place in the API server, against the user and groups authentication established; access is denied by default.
+- **[R21]** Microsoft, _Access tokens in the Microsoft identity platform_, §Token ownership and §Validate tokens, accessed 2026-10-02. <https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens>. "An access token request involves two parties: the client, who requests the token, and the resource (Web API) that accepts the token"; Web APIs "must only accept tokens containing one of their AppId URIs as the `aud` claim".
+- **[R22]** Keycloak, _Configuring and using token exchange_, §Standard token exchange, accessed 2026-10-02. <https://www.keycloak.org/securing-apps/token-exchange>. "The `subject_token` sent to the token exchange endpoint must have the requester client set as an audience in the `aud` claim"; only confidential clients may send a token exchange request.
