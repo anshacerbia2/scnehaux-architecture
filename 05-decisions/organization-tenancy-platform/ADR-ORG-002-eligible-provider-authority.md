@@ -81,7 +81,7 @@ The first grant, made by the single-use bootstrap command (`ADR-ORG-001 §5.11`)
 
 **The Organization Control API reads the activation for each request,** as it reads the grant today. A provider is a caller with an active activation, or an emergency grant, for `provider:organization-control`.
 
-**The Identity Control API reads a local projection.** It no longer reads a `provider_scope` claim. It registers as a projection consumer (`ADR-ORG-001 §5.7`) of `provider:identity-control` grants and activations, keeps them in its own database, and reads them for each request by the token's `principal_id`, as Google Cloud IAM and Kubernetes evaluate the policy the resource holds [`ADR-IAM-001` R34, R35]. Its declaration under `ADR-ORG-001 §5.7`:
+**The Identity Control API reads a local projection.** It no longer reads a `provider_scope` claim. It registers as a projection consumer (`ADR-ORG-001 §5.7`), subscribed to the provider authority event types (`ADR-GLB-018 §5.1`), of `provider:identity-control` grants and activations, keeps them in its own database, and reads them for each request by the token's `principal_id`, as Google Cloud IAM and Kubernetes evaluate the policy the resource holds [`ADR-IAM-001` R34, R35]. Its declaration under `ADR-ORG-001 §5.7`:
 
 | Field                     | Declaration                                                                                                                                                                |
 | :------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -174,7 +174,7 @@ Operator assertion, `transport_accepted`, and scalar progress marks such as high
 
 Debt SHOULD be attributed to the consumer that refused the message, so one consumer's parked message does not refuse another consumer's traffic. A message whose consumer is not recorded counts for every consumer.
 
-The first implementation of these rules is `foundation-platform`'s dispatcher with `foundation-reference`'s HTTP publisher, closed by `organization-control`'s resolver (`TDD-organization-control-005`).
+The first implementation of these rules is `foundation-platform`'s dispatcher with `foundation-reference`'s HTTP publisher, closed by `organization-control`'s resolver (`TDD-organization-control-005`). Delivery to several named consumers from one outbox, each with its own outcome, is `ADR-GLB-018`.
 
 A pure background Worker remains non-public under ADR-GLB-014. Direct delivery targets the owning application's governed acceptance boundary, not an arbitrary Worker URL.
 
