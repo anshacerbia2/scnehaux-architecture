@@ -208,14 +208,14 @@ carrying no such claim.
 The identity kernel MUST realize the table above through audience-specific client
 scopes rather than realm-wide default mappers:
 
-| Client scope          | Required projected claims                                                                                       |
-| :-------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| `scnehaux-internal`   | `principal_id`, `subject_type`, and active context/version claims                                               |
-| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` with both version claims                      |
+| Client scope          | Required projected claims                                                                                                |
+| :-------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| `scnehaux-internal`   | `principal_id`, `subject_type`, and active context/version claims                                                        |
+| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` with both version claims                               |
 | `scnehaux-provider`   | `principal_id`, `subject_type`, `acr`, `auth_time`; `provider_scope`, `tenant_id` and version claims prohibited (§3.1.1) |
-| `scnehaux-workload`   | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped |
-| `scnehaux-external`   | Pairwise `sub`; enterprise and context claims prohibited                                                        |
-| `scnehaux-profile`    | `name` and `preferred_username` in the ID token only, never in an access token; requested by a first-party BFF  |
+| `scnehaux-workload`   | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped          |
+| `scnehaux-external`   | Pairwise `sub`; enterprise and context claims prohibited                                                                 |
+| `scnehaux-profile`    | `name` and `preferred_username` in the ID token only, never in an access token; requested by a first-party BFF           |
 
 The client registration authority MUST attach exactly one of the five audience profile scopes.
 `scnehaux-profile` is not an audience profile: a first-party BFF requests it at sign-in for the
