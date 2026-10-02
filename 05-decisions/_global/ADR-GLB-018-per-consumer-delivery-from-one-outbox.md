@@ -71,13 +71,23 @@ The dispatcher for a consumer claims only that consumer's deliveries, by lane an
 - **Dead letters.** A dead letter is keyed by event and consumer. One consumer's permanent refusal parks that consumer's delivery and no other. A security-priority delivery is never parked for unavailability, as before.
 - **Debt.** A consumer's security debt counts its own unresolved dead letters. A dead letter that records no consumer, written before this decision, counts for every consumer (`ADR-GLB-016 §5.4`).
 - **Closure.** Replay, resolution as delivered or as superseded, and waivers name the consumer whose delivery they act on, and evidence is read from that consumer's receipts.
-- **Retention.** An event is retained while any of its deliveries is unpublished or dead-lettered, as a managed service keeps a message until "at least one subscriber for each subscription has acknowledged" it [R1].
+- **Retention.** An event is retained while any of its deliveries is unpublished or dead-lettered and not abandoned (§5.5), as a managed service keeps a message until "at least one subscriber for each subscription has acknowledged" it [R1].
 
 ### 5.4 One Dispatcher per Consumer
 
 Each consumer is served by its own dispatcher instance, named by the consumer and configured with that consumer's acceptance endpoint and credential, as the current dispatcher is configured for one. A dispatcher claims only its consumer's deliveries, so its leases, backoff and lane workers are that consumer's. Two consumers never share a lease, and one slow endpoint never holds another's priority lane.
 
-### 5.5 What Does Not Change
+### 5.5 A Retired Consumer's Owed Deliveries Are Abandoned
+
+Retiring a consumer retires its subscription, and the deliveries still owed to it are closed as **abandoned**: marked published, with the reason recorded, and no receipt. Nothing will ever deliver them. The retired consumer's dispatcher refuses to start, and a consumer rebuilt under a new identity bootstraps from a snapshot (`STD-GLB-004 §3.12`). Left owed, they would hold retention for every event they belong to (§5.3) for as long as the estate runs. This is how a managed service treats a deleted subscription: "Even if the deleted subscription had many unacknowledged messages, a new subscription created with the same name would have no backlog" [R5].
+
+An abandoned delivery is not a dead letter and resolves nothing. It is neither evidence nor debt: no receipt is written, so no closure can cite it. Abandoning applies only to a consumer with no active subscription, so a consumer that is still enforcing never has a delivery it is owed abandoned.
+
+### 5.6 Appending Needs No Read of the Outbox
+
+The statement that appends an event writes its deliveries from values it computes itself, not by reading back the inserted row. PostgreSQL requires "`SELECT` privilege on all columns mentioned in `RETURNING`" [R6], so reading the row back would grant every role that appends the right to read the outbox. The request roles that publish events hold `INSERT` on the outbox today and nothing more. The statement reads only the active subscriptions, and since "if you use the _query_ clause to insert rows from a query, you of course need to have `SELECT` privilege on any table or column used in the query" [R6], an appending role holds `SELECT` on `platform.subscription`'s `consumer`, `event_types` and `retired_at` columns, and `INSERT` on `platform.outbox_delivery`.
+
+### 5.7 What Does Not Change
 
 - At-least-once delivery, consumer deduplication by event and consumer in `platform.processed_event`, and version-guarded application (`STD-GLB-004 §3.9`, §3.11). A relay may still deliver an event more than once, and a consumer "must be idempotent" [R4].
 - The producer's commit path writes rows and calls nothing (`STD-GLB-004 §3.3`).
@@ -97,11 +107,13 @@ Each consumer is served by its own dispatcher instance, named by the consumer an
 - **The dead-letter key changes** from event to event and consumer. Replay, resolution, waivers and the frontier change with it, in `foundation-platform` and in Organization Control.
 - **Each consumer is a deployment.** A dispatcher runs per consumer, with its own endpoint and credential.
 - **A subscription change is a re-bootstrap,** not an edit.
+- **Retirement discards a consumer's backlog** (§5.5). A consumer retired by mistake does not resume where it stopped; it is registered again and bootstraps from a snapshot.
+- **Appending roles read the subscriptions** (§5.6). They learn which consumers exist and what each subscribes to, which is configuration rather than authority data.
 
 ### Operational
 
 - Lane lag, oldest unpublished age and security debt are reported per consumer.
-- Retention removes an event only once every delivery it owes is published, or dead-lettered and closed or waived.
+- Retention removes an event only once every delivery it owes is published, dead-lettered and closed or waived, or abandoned at its consumer's retirement.
 
 ## 7. Compliance Impact
 
@@ -146,6 +158,18 @@ None.
 
 **Rejected because:** the second consumer's enforcement would depend on the first consumer's availability and correctness, and its evidence would be the first consumer's assertion. `ADR-GLB-016 §5.4` requires evidence from the consumer the enforcement depends on.
 
+### Alternative E — Keep a Retired Consumer's Deliveries Owed
+
+**Benefits:** a consumer retired by mistake could be revived and resume where it stopped.
+
+**Rejected because:** nothing delivers to a retired consumer, so its deliveries would stay owed for as long as the estate runs and hold retention for every event they belong to. A revived consumer's model is also older than its own declared freshness allows, and the bootstrap contract already rebuilds it from a snapshot. A managed service discards a deleted subscription's backlog for the same reason [R5].
+
+### Alternative F — Read the Inserted Event Back to Write Its Deliveries
+
+**Benefits:** the deliveries copy the event's columns exactly as stored, including the database-assigned `created_at`.
+
+**Rejected because:** `RETURNING` requires `SELECT` on the columns it names [R6], which would give every role that appends the right to read the outbox. The statement computes the creation instant and the position itself, writes both into the event and its deliveries, and so the two still cannot disagree.
+
 ## 9. References
 
 ### Informative
@@ -154,3 +178,5 @@ None.
 - **[R2]** Google Cloud, _Filter messages from a subscription_, accessed 2026-10-02. <https://docs.cloud.google.com/pubsub/docs/subscription-message-filter>. "The Pub/Sub service automatically acknowledges the messages that don't match the filter"; "The filter is an immutable property of a subscription."
 - **[R3]** PostgreSQL 18, _Sequence Manipulation Functions_, accessed 2026-10-02. <https://www.postgresql.org/docs/current/functions-sequence.html>. "PostgreSQL sequence objects cannot be used to obtain 'gapless' sequences."
 - **[R4]** Chris Richardson, _Pattern: Transactional outbox_, accessed 2026-10-02. <https://microservices.io/patterns/data/transactional-outbox.html>. "The Message relay might publish a message more than once … a message consumer must be idempotent."
+- **[R5]** Google Cloud, _Subscription overview_, accessed 2026-10-02. <https://docs.cloud.google.com/pubsub/docs/subscription-overview>. "Although you can create a new subscription with the same name as a deleted one, the new subscription has no relationship to the old one"; "Even if the deleted subscription had many unacknowledged messages, a new subscription created with the same name would have no backlog (no messages waiting for delivery) at the time it's created."
+- **[R6]** PostgreSQL 18, _INSERT_, accessed 2026-10-02. <https://www.postgresql.org/docs/current/sql-insert.html>. "Use of the `RETURNING` clause requires `SELECT` privilege on all columns mentioned in `RETURNING`"; "If you use the _query_ clause to insert rows from a query, you of course need to have `SELECT` privilege on any table or column used in the query."
