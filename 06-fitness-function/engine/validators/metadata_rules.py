@@ -242,10 +242,23 @@ def _validate_technologies_whitelist(v: BaseValidator) -> None:
             if name:
                 approved_techs.add(name.lower())
 
+    # GDC-004 section 2.2 Stage 2: during the grace window before a hold
+    # entry's sunset_date, a reference is reported as a warning, not a failure.
+    grace_until = {}
+    today = datetime.date.today()
     for entry in tech_radar.get("hold", []):
         name = entry.get("name") if isinstance(entry, dict) else entry
         if name:
             hold_techs.add(name.lower())
+            sunset = entry.get("sunset_date") if isinstance(entry, dict) else None
+            try:
+                sunset_day = (
+                    datetime.date.fromisoformat(str(sunset)) if sunset else None
+                )
+            except ValueError:
+                sunset_day = None
+            if sunset_day and sunset_day > today:
+                grace_until[name.lower()] = sunset_day
 
     for tech in technologies:
         if not isinstance(tech, dict):
@@ -262,7 +275,13 @@ def _validate_technologies_whitelist(v: BaseValidator) -> None:
 
         for item in items_to_check:
             item_lower = item.lower()
-            if item_lower in hold_techs:
+            if item_lower in grace_until:
+                v.add_error(
+                    "technology_sunset_grace",
+                    f"Document implements technology on HOLD: '{item}'. It is in its sunset grace window until "
+                    f"{grace_until[item_lower].isoformat()} (GDC-004 section 2.2, Stage 2); migrate before then.",
+                )
+            elif item_lower in hold_techs:
                 v.add_error(
                     "technology_hold_violation",
                     f"Document implements technology on HOLD status: '{item}'.",

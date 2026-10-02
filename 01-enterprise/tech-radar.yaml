@@ -123,29 +123,29 @@ technology_radar:
       # docs/reviews/2026-10-02-p0-exit-review.md, "D2 recommendation: oklch".
       trial_end_date: "2026-12-31"
 
-    # pending ARB: sass, panda-css, and tsup trial entries.
+    # ARB decision 2026-10-02 (D2): sass and panda-css stay trial with the
+    # trial extended; tsup moves to hold. Basis and sources: ui-platform docs/reviews/2026-10-02-d2-arb-recommendations.md.
     - name: sass
       category: css-preprocessor
       date_entered: "2026-09-28"
       owner: UI Platform Team
       rationale_adr: ADR-GLB-FE-013
-      trial_end_date: "2026-10-28"
+      # Adoption criteria: a named Product consumer in production and no
+      # deprecated Sass API in use (@import is deprecated since Dart Sass 1.80.0).
+      trial_end_date: "2026-12-31"
 
     - name: panda-css
       category: css-generator
       date_entered: "2026-09-28"
       owner: UI Platform Team
       rationale_adr: ADR-GLB-FE-013
-      trial_end_date: "2026-10-28"
+      # On 1.x. Condition: evaluate the v2 migration (ESM only, Node 22) before
+      # the trial ends; generated recipe CSS must stay byte-identical, and the
+      # postcss and browserslist overrides must become removable.
+      trial_end_date: "2026-12-31"
 
-    - name: tsup
-      category: javascript-build-tool
-      date_entered: "2026-09-28"
-      owner: UI Platform Team
-      rationale_adr: ADR-UIP-BLD-001
-      trial_end_date: "2026-10-28"
-
-    # pending ARB: storybook and chromatic trial entries, proposed 2026-10-01.
+    # ARB decision 2026-10-02 (D2): storybook and chromatic stay trial with
+    # ADR-UIP-WKS-001 accepted; chromatic depends on TurboSnap (snapshot quota).
     - name: storybook
       category: component-workshop
       date_entered: "2026-10-01"
@@ -160,8 +160,8 @@ technology_radar:
       rationale_adr: ADR-UIP-WKS-001
       trial_end_date: "2026-12-31"
 
-    # pending ARB: cyclonedx and github-artifact-attestations trial entries,
-    # proposed 2026-10-02 with ADR-UIP-SEC-001.
+    # ARB decision 2026-10-02 (D2): cyclonedx and github-artifact-attestations
+    # stay trial with ADR-UIP-SEC-001 accepted.
     - name: cyclonedx
       category: sbom-format
       date_entered: "2026-10-02"
@@ -182,8 +182,10 @@ technology_radar:
       owner: UI Platform Team
       rationale_adr: ADR-GLB-FE-011
       # Permitted for non-federated applications and libraries by ADR-GLB-FE-011
-      # section 5 item 2 (superseding ADR-GLB-FE-002); trial review is pending ARB.
-      trial_end_date: "2026-10-28"
+      # section 5 item 2 (superseding ADR-GLB-FE-002). ARB decision 2026-10-02
+      # (D2): trial extended; used only for Vitest and Storybook so far, and a
+      # candidate in the tsup successor assessment.
+      trial_end_date: "2026-12-31"
 
   assess:
     - name: wasm
@@ -206,28 +208,54 @@ technology_radar:
       # transition requires the P0 federation/CSP fixture evidence and a separate
       # recorded ARB decision.
 
-    # pending ARB: rspack assess entry, proposed 2026-10-02. ADR-GLB-FE-011
-    # names @rspack/core with its Module Federation plugin as a federated
-    # toolchain; the UI Platform uses it only in the P0 federation evaluation
-    # fixture, so it stays assess with module-federation.
+    # ARB decision 2026-10-02 (D2): assess. ADR-GLB-FE-011 names @rspack/core
+    # with its Module Federation plugin as a federated toolchain; the UI
+    # Platform uses it only in the P0 federation evaluation fixture, so it
+    # moves only with module-federation.
     - name: rspack
       category: frontend-build-tool
       date_entered: "2026-10-02"
       owner: UI Platform Team
       rationale_adr: ADR-GLB-FE-011
 
-    # pending ARB: react-aria and dtcg-design-tokens assess entries.
+    # ARB decision 2026-10-02 (D2): react-aria, dtcg-design-tokens, and tsdown
+    # are assess, each with an exit condition. Basis and sources: ui-platform docs/reviews/2026-10-02-d2-arb-recommendations.md.
     - name: react-aria
       category: accessibility-library
       date_entered: "2026-09-28"
       owner: UI Platform Team
+      # Not used. Evaluate only when a primitive needs a composite widget the
+      # platform does not provide (TDD primitives).
 
     - name: dtcg-design-tokens
       category: interchange-standard
       date_entered: "2026-09-28"
       owner: UI Platform Team
+      # Format Module 2025.10 is a stable Final Community Group Report, not a
+      # W3C Standard. Move to trial when the DTCG generator passes full output
+      # parity (TDD tokens).
+
+    - name: tsdown
+      category: javascript-build-tool
+      date_entered: "2026-10-02"
+      owner: UI Platform Team
+      # Candidate successor to tsup (official Rolldown project, still 0.x),
+      # assessed against Vite library mode on the packaging gates. The successor
+      # decision record is due within 30 days of tsup's hold (GDC-004 2.2).
 
   hold:
+    # ARB decision 2026-10-02 (D2): tsup's README states "This project is not
+    # actively maintained anymore" and recommends tsdown. GDC-004 2.2 sunset:
+    # successor decision record due 2026-11-01; grace window ends 2027-03-31.
+    - name: tsup
+      category: javascript-build-tool
+      date_hold: "2026-10-02"
+      sunset_date: "2027-03-31"
+      successor: null # decided by the successor record (tsdown or vite, under assessment)
+      migration_guide: null # due 2026-11-01 with the successor record
+      owner: UI Platform Team
+      rationale_adr: ADR-UIP-BLD-001
+
     - name: angularjs
       category: frontend-framework
       date_hold: "2025-06-01"

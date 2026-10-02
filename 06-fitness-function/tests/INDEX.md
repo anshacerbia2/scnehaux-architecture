@@ -314,6 +314,7 @@ This index documents the test suite utilities and fixtures.
 | **test_validate_exempt_age_missing_config** | *(No docstring provided)* |
 | **test_validate_technologies_whitelist** | *(No docstring provided)* |
 | **test_validate_technologies_whitelist_missing_tech_radar** | *(No docstring provided)* |
+| **test_validate_technologies_whitelist_sunset_grace** | GDC-004 2.2 Stage 2: a hold entry warns in its grace window, then fails. |
 
 ### `tests/engine/validators/test_registry.py`
 

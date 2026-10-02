@@ -4,7 +4,7 @@ doc_meta:
   title: Supply-Chain Evidence with CycloneDX SBOMs and SLSA Build L2 Attestations
   adr_type: foundational
   owner: Principal UI/UX Architect
-  status: proposed
+  status: accepted
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
@@ -26,9 +26,10 @@ Describe every UI Platform tarball with a CycloneDX 1.7 SBOM, gate the dependenc
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------ | ------------------------------------------------ |
-| 2026-10-02 | proposed | foundational | Pending principal review | Pending Architecture Review Board (Ansha Cerbia) |
+| Date       | Status   | ADR Type     | Reviewers                               | Approver                                         |
+| ---------- | -------- | ------------ | --------------------------------------- | ------------------------------------------------ |
+| 2026-10-02 | proposed | foundational | Pending principal review                | Pending Architecture Review Board (Ansha Cerbia) |
+| 2026-10-02 | accepted | foundational | Architecture Review Board (decision D2) | Ansha Cerbia (Architecture Review Board)         |
 
 ## 3. Context
 

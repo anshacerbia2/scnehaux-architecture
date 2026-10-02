@@ -42,8 +42,8 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-SCH-002](scheduling-platform/ADR-SCH-002-postgresql-profiled-durable-dispatch.md) | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch | implementation | accepted | 2026-08-24 | N/A |
 | [ADR-UIP-BLD-001](ui-platform/ADR-UIP-BLD-001-deferred-minification.md) | Deferred Minification | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-PLT-001](ui-platform/ADR-UIP-PLT-001-verifiable-platform-contract.md) | Verifiable UI Platform Package and Release Contract | conflict_resolution | accepted | 2026-09-28 | N/A |
-| [ADR-UIP-SEC-001](ui-platform/ADR-UIP-SEC-001-supply-chain-evidence.md) | Supply-Chain Evidence with CycloneDX SBOMs and SLSA Build L2 Attestations | foundational | proposed | 2026-10-02 | N/A |
+| [ADR-UIP-SEC-001](ui-platform/ADR-UIP-SEC-001-supply-chain-evidence.md) | Supply-Chain Evidence with CycloneDX SBOMs and SLSA Build L2 Attestations | foundational | accepted | 2026-10-02 | N/A |
 | [ADR-UIP-TKN-001](ui-platform/ADR-UIP-TKN-001-three-tier-isolation-architecture.md) | ADR-UIP-TKN-001 Three-Tier Design Token Isolation Architecture | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-TKN-002](ui-platform/ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md) | ADR-UIP-TKN-002 OKLCH Gamut and Dual-Engine Alpha Blending Architecture | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-TKN-003](ui-platform/ADR-UIP-TKN-003-token-taxonomy-and-naming-convention.md) | ADR-UIP-TKN-003 Token Taxonomy & Naming Convention | foundational | accepted | 2026-01-01 | N/A |
-| [ADR-UIP-WKS-001](ui-platform/ADR-UIP-WKS-001-storybook-component-workshop.md) | Storybook Component Workshop with Story Tests and Chromatic Visual Review | foundational | proposed | 2026-10-01 | N/A |
+| [ADR-UIP-WKS-001](ui-platform/ADR-UIP-WKS-001-storybook-component-workshop.md) | Storybook Component Workshop with Story Tests and Chromatic Visual Review | foundational | accepted | 2026-10-01 | N/A |
