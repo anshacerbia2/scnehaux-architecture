@@ -20,6 +20,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-GLB-016](_global/ADR-GLB-016-durable-messaging-substrate-profiles.md) | ADR-GLB-016 Separate Transactional Publication from Durable Messaging Substrate Selection | foundational | accepted | 2026-08-24 | N/A |
 | [ADR-GLB-017](_global/ADR-GLB-017-durable-scheduling-profiled-dispatch.md) | ADR-GLB-017 Preserve Enterprise Durable Scheduling Boundary with Profiled Dispatch | foundational | accepted | 2026-08-24 | N/A |
 | [ADR-GLB-018](_global/ADR-GLB-018-per-consumer-delivery-from-one-outbox.md) | ADR-GLB-018 Deliver One Outbox to Several Named Consumers, Each with Its Own Outcome | foundational | accepted | 2026-10-02 | N/A |
+| [ADR-GLB-019](_global/ADR-GLB-019-data-changes-in-migrations.md) | ADR-GLB-019 A Migration Changes Existing Data Only as a Bounded Data Migration, and Never Seeds | foundational | accepted | 2026-10-03 | N/A |
 | [ADR-GLB-FE-001](_global/ADR-GLB-FE-001-react-ecosystem.md) | ADR-GLB-FE-001 Standardization on React and Framework Paved Road | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-FE-002](_global/ADR-GLB-FE-002-build-toolchain.md) | ADR-GLB-FE-002 Standardization on Next-Generation Build Toolchains | foundational | superseded | 2026-01-01 | N/A |
 | [ADR-GLB-FE-003](_global/ADR-GLB-FE-003-meta-framework.md) | ADR-GLB-FE-003 Standardization on Enterprise Meta-Framework | foundational | accepted | 2026-01-01 | N/A |

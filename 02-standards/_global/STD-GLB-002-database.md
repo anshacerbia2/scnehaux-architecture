@@ -3,13 +3,14 @@ doc_meta:
   id: STD-GLB-002
   title: Enterprise Database & Persistence Standard
   owner: Architecture Review Board
-  version: 2.0.0
+  version: 3.0.0
   status: approved
   classification: internal
   governed_by: [GDC-000]
+  authorized_by: [ADR-GLB-019]
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_reviewed: 2026-08-10
+  last_reviewed: 2026-10-03
 ---
 
 # STD-GLB-002: Enterprise Database & Persistence Standard
@@ -69,6 +70,20 @@ Define the default persistence and isolation rules for **Scnehaux-owned data sto
 - Production schema changes require traceable deployment authorization and rollback/recovery planning
 - Vendor-managed database migrations MUST use the vendor-supported upgrade lifecycle
 
+### Data in Migrations
+
+Authorized by ADR-GLB-019.
+
+- **Seed data MUST NOT be written by a migration.** Data that does not derive from rows already present (a first account or grant, a resource a service registers for itself, reference rows, demo data, test fixtures) is created by a command or a seed script. A production's first records are created by a command that records the operator and the reason.
+- **A change to existing rows that a schema change requires MUST be a versioned data migration.** It is part of the change, and the code that depends on it ships with it.
+- A data migration MUST:
+  - sit in its own migration file, ordered after the schema migration it serves;
+  - derive every value from rows already in the database;
+  - change only the rows that still need it, so it is idempotent and a no-op on an empty database;
+  - complete within the deployment's migration budget of three minutes.
+- **A data change that cannot complete within that budget MUST run as a batched job**: scheduled by a migration, executed by the application outside the deployment in batches with bounded queries, and following expand/migrate/contract so that code tolerates the rows not yet reached.
+- Migrations applied before ADR-GLB-019 are not edited. Its file-separation rule applies to every migration written after it.
+
 ### Durability & Recovery
 
 - Every authoritative data store declares backup, restore, RPO, RTO, retention, and integrity requirements according to its reliability class
@@ -82,6 +97,7 @@ Exceptions require formal approval under GDC-000 and must state the data authori
 ## Enforcement Mechanism
 
 - schema and migration validation in CI/CD
+- review of every migration that writes data against §Data in Migrations: its own file, derived values, idempotent, bounded
 - architecture checks for cross-domain database access
 - tenant-isolation tests for pooled relational stores
 - restore evidence for authoritative databases

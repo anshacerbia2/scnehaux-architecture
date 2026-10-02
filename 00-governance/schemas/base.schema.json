@@ -63,14 +63,6 @@
           "reason": "Major version 2 predates the authorized_by field; the Identity Platform owner must record the authorizing ADR."
         },
         {
-          "debt_id": "GOV-DEBT-002",
-          "id": "STD-GLB-002",
-          "owner": "Architecture Review Board",
-          "expires": "2026-12-31",
-          "required_action": "Record the ADR that authorizes the active major revision or replace the standard through the governed lifecycle.",
-          "reason": "Major version 2 (commit 68c128a) predates the authorized_by field; the database standard owner must record the authorizing ADR."
-        },
-        {
           "debt_id": "GOV-DEBT-003",
           "id": "STD-GLB-004",
           "owner": "Enterprise Architect",
@@ -188,12 +180,20 @@
       "type": "object",
       "required": ["id", "title", "status", "created_date"],
       "properties": {
-        "id": { "title": "Document ID", "type": "string" },
-        "title": { "title": "Title", "type": "string" },
+        "id": {
+          "title": "Document ID",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
         "owner": {
           "title": "Owner",
           "type": ["string", "array"],
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "version": {
           "title": "Version",
