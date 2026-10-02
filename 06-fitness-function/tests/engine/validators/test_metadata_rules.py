@@ -236,7 +236,9 @@ def test_validate_technologies_whitelist_sunset_grace(monkeypatch, tmp_path):
         '      sunset_date: "2000-01-01"\n'
         "    - name: undated\n"
     )
-    monkeypatch.setattr("engine.validators.metadata_rules.TECH_RADAR_YAML_PATH", str(radar))
+    monkeypatch.setattr(
+        "engine.validators.metadata_rules.TECH_RADAR_YAML_PATH", str(radar)
+    )
     rules = {
         "severity_levels": {
             "technology_hold_violation": "CRITICAL",
@@ -245,7 +247,14 @@ def test_validate_technologies_whitelist_sunset_grace(monkeypatch, tmp_path):
         }
     }
     v = make_validator(
-        doc_meta={"technologies": [{"name": "graceful"}, {"name": "expired"}, {"name": "undated"}, {"name": "postgresql"}]},
+        doc_meta={
+            "technologies": [
+                {"name": "graceful"},
+                {"name": "expired"},
+                {"name": "undated"},
+                {"name": "postgresql"},
+            ]
+        },
         rules=rules,
     )
     v.doc_type_name = "SAD"

@@ -252,7 +252,9 @@ def _validate_technologies_whitelist(v: BaseValidator) -> None:
             hold_techs.add(name.lower())
             sunset = entry.get("sunset_date") if isinstance(entry, dict) else None
             try:
-                sunset_day = datetime.date.fromisoformat(str(sunset)) if sunset else None
+                sunset_day = (
+                    datetime.date.fromisoformat(str(sunset)) if sunset else None
+                )
             except ValueError:
                 sunset_day = None
             if sunset_day and sunset_day > today:
