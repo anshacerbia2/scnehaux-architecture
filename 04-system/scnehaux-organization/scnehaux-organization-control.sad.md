@@ -147,7 +147,7 @@ The runtime contains one deployable application and one private database:
 1. **Organization Control Application** — Go HTTP/gRPC-capable control application containing Organization, Tenant, Workspace, Membership, invitation, projection, reconciliation, and offboarding modules.
 2. **Tenancy PostgreSQL Database** — private authoritative persistence, outbox, idempotency, projection-consumer state, and migration state.
 
-Background delivery and reconciliation execute inside the same application deployment using bounded worker pools and database-backed coordination. Extraction requires a later SAD/ADR when independent scaling or failure isolation is demonstrated.
+Background delivery and reconciliation execute inside the same application deployment using bounded worker pools and database-backed coordination. Delivery is one outbox dispatcher per registered projection consumer, on the dispatch role's own database credential, pushing to the acceptance API that consumer registered (`ADR-GLB-018 §5.4`). No consumer holds a credential to this database. Extraction requires a later SAD/ADR when independent scaling or failure isolation is demonstrated.
 
 ## 4. Architecture Model
 
@@ -228,7 +228,7 @@ Each application replica runs:
 
 - HTTP administration and exceptional fresh-query handlers;
 - transactional domain command processing;
-- outbox dispatcher with database-backed claim/lease;
+- one outbox dispatcher per registered projection consumer, with database-backed claim/lease, authenticating to the consumer as this system's workload (`ADR-GLB-018 §5.4`);
 - lifecycle event consumer workers;
 - projection snapshot and reconciliation workers;
 - migration and repair jobs explicitly enabled by operation profile.
@@ -493,7 +493,7 @@ Membership security events currently reach the projection consumer through the D
 
 Security debt is reported per consumer: the dispatcher records which consumer refused each event, and a consumer's frontier counts its own dead letters plus any that record no consumer. One consumer's poison event therefore does not refuse another consumer's traffic.
 
-**Several projection consumers each have their own outcome** (`ADR-GLB-018`). A consumer subscribes to the event types it receives. Each appended event writes, in the same transaction, one delivery for each subscription that includes its type. Each consumer is served by its own dispatcher, and its evidence, dead letters, debt and closure are its own. A consumer subscribed after an event committed bootstraps from the snapshot (§7.7). The named consumers are `foundation-reference` (Membership and Tenant) and the Identity Control Service (provider authority for `provider:identity-control`, `ADR-ORG-002 §5.3`).
+**Several projection consumers each have their own outcome** (`ADR-GLB-018`). A consumer subscribes to the event types it receives. Each appended event writes, in the same transaction, one delivery for each subscription that includes its type. Each consumer is served by its own dispatcher, run by this application and authenticated to the consumer with this system's workload access token rather than a shared secret (`ADR-GLB-018 §5.4`, `STD-IAM-001 §3`), and its evidence, dead letters, debt and closure are its own. A consumer subscribed after an event committed bootstraps from the snapshot (§7.7). The named consumers are `foundation-reference` (Membership and Tenant) and the Identity Control Service (provider authority for `provider:identity-control`, `ADR-ORG-002 §5.3`).
 
 ### 7.7 Projection Bootstrap
 
@@ -620,7 +620,7 @@ Threats and controls include:
 
 #### 9.1.3 Circuit Breaker, Retry, Timeout, Failover
 
-- outbound calls are limited to explicit administrative or provisioning journeys;
+- outbound calls are limited to explicit administrative or provisioning journeys, and to delivering the outbox to the acceptance API each registered projection consumer declared (`ADR-GLB-018 §5.4`);
 - synchronous dependency timeout defaults are defined per integration contract and must remain below caller budget;
 - retries use bounded exponential backoff with jitter only for idempotent operations;
 - circuit breakers isolate Provisioning, Catalog, Notification, and other optional dependencies;
