@@ -220,3 +220,37 @@ def test_validate_technologies_whitelist_missing_tech_radar(monkeypatch, tmp_pat
     monkeypatch.setattr("os.path.exists", lambda path: False)
     _validate_technologies_whitelist(v)
     assert len(v.errors) == 0
+
+
+def test_validate_technologies_whitelist_sunset_grace(monkeypatch, tmp_path):
+    """GDC-004 section 2.2 Stage 2: a hold entry inside its grace window warns; after it, it fails."""
+    radar = tmp_path / "tech-radar.yaml"
+    radar.write_text(
+        "technology_radar:\n"
+        "  adopt:\n"
+        "    - name: postgresql\n"
+        "  hold:\n"
+        "    - name: graceful\n"
+        '      sunset_date: "2999-01-01"\n'
+        "    - name: expired\n"
+        '      sunset_date: "2000-01-01"\n'
+        "    - name: undated\n"
+    )
+    monkeypatch.setattr("engine.validators.metadata_rules.TECH_RADAR_YAML_PATH", str(radar))
+    rules = {
+        "severity_levels": {
+            "technology_hold_violation": "CRITICAL",
+            "technology_sunset_grace": "WARNING",
+            "unapproved_technology": "ERROR",
+        }
+    }
+    v = make_validator(
+        doc_meta={"technologies": [{"name": "graceful"}, {"name": "expired"}, {"name": "undated"}, {"name": "postgresql"}]},
+        rules=rules,
+    )
+    v.doc_type_name = "SAD"
+    _validate_technologies_whitelist(v)
+    severities = sorted(severity for severity, _ in v.errors)
+    assert severities == ["CRITICAL", "CRITICAL", "WARNING"]
+    assert any("grace window until 2999-01-01" in message for _, message in v.errors)
+

@@ -58,6 +58,7 @@ class SeverityRule(str, Enum):
     PROHIBITED_TECHNOLOGY_VIOLATION = "prohibited_technology_violation"
     SECURITY_ISOLATION_VIOLATION = "security_isolation_violation"
     TECHNOLOGY_HOLD_VIOLATION = "technology_hold_violation"
+    TECHNOLOGY_SUNSET_GRACE = "technology_sunset_grace"
     UNAPPROVED_TECHNOLOGY = "unapproved_technology"
 
 

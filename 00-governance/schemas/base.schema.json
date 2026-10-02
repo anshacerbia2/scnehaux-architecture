@@ -176,6 +176,7 @@
         "prohibited_technology_violation": "ERROR",
         "security_isolation_violation": "CRITICAL",
         "technology_hold_violation": "CRITICAL",
+        "technology_sunset_grace": "WARNING",
         "unapproved_technology": "ERROR"
       }
     },

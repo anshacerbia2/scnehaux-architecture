@@ -4,11 +4,11 @@ doc_meta:
   title: Storybook Component Workshop with Story Tests and Chromatic Visual Review
   adr_type: foundational
   owner: Principal UI/UX Architect
-  status: proposed
+  status: accepted
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
-  last_reviewed: 2026-10-01
+  last_reviewed: 2026-10-02
   created: 2026-10-01
   created_date: 2026-10-01
   created_by: UI Platform Team
@@ -26,9 +26,10 @@ Adopt Storybook as the UI Platform component workshop, run every story as a brow
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------ | ------------------------------------------------ |
-| 2026-10-01 | proposed | foundational | Pending principal review | Pending Architecture Review Board (Ansha Cerbia) |
+| Date       | Status   | ADR Type     | Reviewers                               | Approver                                         |
+| ---------- | -------- | ------------ | --------------------------------------- | ------------------------------------------------ |
+| 2026-10-01 | proposed | foundational | Pending principal review                | Pending Architecture Review Board (Ansha Cerbia) |
+| 2026-10-02 | accepted | foundational | Architecture Review Board (decision D2) | Ansha Cerbia (Architecture Review Board)         |
 
 ## 3. Context
 
