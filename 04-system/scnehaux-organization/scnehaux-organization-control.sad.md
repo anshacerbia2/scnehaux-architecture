@@ -518,11 +518,11 @@ Notification requests and enterprise evidence facts are asynchronous. Local auth
 
 A caller's authority is read from the standard's claims and this system's own records, never from a role in the token (`ADR-ORG-001 §5.11`):
 
-| Caller               | Token                                                                       | Record checked for each request                       |
-| :------------------- | :-------------------------------------------------------------------------- | :---------------------------------------------------- |
-| Tenant administrator | `principal_id`, `subject_type`, `tenant_id`                                 | —                                                     |
-| Provider             | `principal_id`, `subject_type` `human`, `acr`, `auth_time`; no `tenant_id`  | an active provider grant for the `principal_id`       |
-| Projection consumer  | `principal_id`, `subject_type` `workload`, `workload_owner`; no `tenant_id` | an active consumer registered with the `principal_id` |
+| Caller               | Token                                                                       | Record checked for each request                                                                                                        |
+| :------------------- | :-------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| Tenant administrator | `principal_id`, `subject_type`, `tenant_id`                                 | —                                                                                                                                      |
+| Provider             | `principal_id`, `subject_type` `human`, `acr`, `auth_time`; no `tenant_id`  | provider authority in force for the `principal_id`: an approved activation of an eligible grant, or an emergency grant (`ADR-ORG-002`) |
+| Projection consumer  | `principal_id`, `subject_type` `workload`, `workload_owner`; no `tenant_id` | an active consumer registered with the `principal_id`                                                                                  |
 
 Every actor is recorded by `principal_id`, never by `sub` (`STD-IAM-002 §3.2`).
 
@@ -560,7 +560,7 @@ Product permission is never evaluated here.
 
 Provider administration requires:
 
-- distinct provider scope: an active provider grant this system records, read for each request, so a revocation stops the next request (`ADR-ORG-001 §5.11`). The first grant is made once, by a bootstrap command whose record names the operator and the reason;
+- distinct provider scope: provider authority this system records, read for each request, so a revocation stops the next request (`ADR-ORG-001 §5.11`). A provider grant is eligible, and confers authority only while an activation of it lasts. In production a provider other than the requester approves the activation, and the activation ends at most `ORG_PROVIDER_ACTIVATION_MAX` after it starts (`ADR-ORG-002 §5.1`). Emergency grants are standing, at least two in production, and every request they authorize is reported (`ADR-ORG-002 §5.2`). The first grant is made once, by a bootstrap command whose record names the operator and the reason, and it is an emergency grant;
 - strong authentication and step-up;
 - short-lived privileged context;
 - explicit Tenant/operation scope;

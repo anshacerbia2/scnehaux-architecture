@@ -661,6 +661,7 @@ This is distinct from restricted Admin Console access. That path operates on the
 - requested Tenant context is validated against projected Membership state.
 - Realm administrator is not equivalent to Product or Tenant administrator.
 - cross-Tenant provider administration requires elevated assurance, narrow scope, and evidence.
+- the Identity Control Service reads provider authority for `provider:identity-control` from its projection of Organization's grants and activations, for each request, and never from a token claim (`ADR-ORG-002 §5.3`).
 - cross-tenant negative tests cover tokens, admin APIs, projections, cache, events, exports, migration, and delegated execution.
 
 ### 7.6 Supply Chain
