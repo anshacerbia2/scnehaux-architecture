@@ -9,16 +9,10 @@ doc_meta:
   governed_by: [GDC-000]
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_reviewed: 2026-09-29
+  last_reviewed: 2026-10-02
 ---
 
 # Architecture Fitness Functions & Compliance Engine
-
-> **Revision pending exact-commit ratification.** The `technology_sunset_grace`
-> rule (WARNING: a technology on hold inside its sunset grace window, as
-> GDC-004 section 2.2 Stage 2 requires) is pending under GDC-000 section
-> 2.6.7; the previously ratified revision remains binding until the authorized
-> human authority approves the exact commit containing it.
 
 ## 1. Context & Scope
 

@@ -36,12 +36,6 @@ doc_meta:
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
-> **Revision pending exact-commit ratification.** The removal of "proposed"
-> before ADR-UIP-WKS-001 and ADR-UIP-SEC-001, after both were accepted on
-> 2026-10-02, is pending under GDC-000 section 2.6.7; the revision ratified on
-> 2026-10-02 (`19a1442`) remains binding until the authorized human authority
-> approves the exact commit containing it.
-
 > **Approved design baseline.** Approval establishes the architecture contract,
 > not implementation conformance or production release authority.
 
