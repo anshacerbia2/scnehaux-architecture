@@ -8,6 +8,7 @@ from engine.validators.metadata_rules import (
 )
 from engine.config.severity import SeverityRule
 import datetime
+import yaml
 
 
 def test_validate_review_age():
@@ -223,19 +224,19 @@ def test_validate_technologies_whitelist_missing_tech_radar(monkeypatch, tmp_pat
 
 
 def test_validate_technologies_whitelist_sunset_grace(monkeypatch, tmp_path):
-    """GDC-004 section 2.2 Stage 2: a hold entry inside its grace window warns; after it, it fails."""
+    """GDC-004 2.2 Stage 2: a hold entry warns in its grace window, then fails."""
+    radar_data = {
+        "technology_radar": {
+            "adopt": [{"name": "postgresql"}],
+            "hold": [
+                {"name": "graceful", "sunset_date": "2999-01-01"},
+                {"name": "expired", "sunset_date": "2000-01-01"},
+                {"name": "undated"},
+            ],
+        }
+    }
     radar = tmp_path / "tech-radar.yaml"
-    radar.write_text(
-        "technology_radar:\n"
-        "  adopt:\n"
-        "    - name: postgresql\n"
-        "  hold:\n"
-        "    - name: graceful\n"
-        '      sunset_date: "2999-01-01"\n'
-        "    - name: expired\n"
-        '      sunset_date: "2000-01-01"\n'
-        "    - name: undated\n"
-    )
+    radar.write_text(yaml.safe_dump(radar_data))
     monkeypatch.setattr(
         "engine.validators.metadata_rules.TECH_RADAR_YAML_PATH", str(radar)
     )
@@ -246,20 +247,12 @@ def test_validate_technologies_whitelist_sunset_grace(monkeypatch, tmp_path):
             "unapproved_technology": "ERROR",
         }
     }
+    names = ["graceful", "expired", "undated", "postgresql"]
     v = make_validator(
-        doc_meta={
-            "technologies": [
-                {"name": "graceful"},
-                {"name": "expired"},
-                {"name": "undated"},
-                {"name": "postgresql"},
-            ]
-        },
-        rules=rules,
+        doc_meta={"technologies": [{"name": n} for n in names]}, rules=rules
     )
     v.doc_type_name = "SAD"
     _validate_technologies_whitelist(v)
     severities = sorted(severity for severity, _ in v.errors)
     assert severities == ["CRITICAL", "CRITICAL", "WARNING"]
     assert any("grace window until 2999-01-01" in message for _, message in v.errors)
-
