@@ -71,7 +71,9 @@ Key rotation needs no approval. It is the operation the console exists to make r
 
 ### 5.3 Creating a Registration
 
-A provider grants a Principal **application developer** standing, with a reason, as Entra's Application Developer role grants the ability to create registrations once self-service is restricted [R4]. Such a Principal creates non-production registrations and becomes their first owner. A production registration is created only by approval: an application developer proposes it, and a provider other than the proposer approves it, naming at least two owners.
+A provider grants a Principal **application developer** standing, with a reason, as Entra's Application Developer role grants the ability to create registrations once self-service is restricted [R4]. Such a Principal creates non-production registrations and becomes their first owner. An application developer's production registration is created only by approval: the developer proposes it, naming at least two owners, and a provider other than the proposer approves it.
+
+**A provider creates a registration directly**, in production too, as Entra's Application Administrator "can create and manage all aspects of … application registrations" [R4]. The role carries no approval of its own; Entra adds a second person, where an organization wants one, when the role is activated (§5.7) [R8]. A provider is already the privileged administrator of the registration authority, and its direct creation is recorded under its `principal_id`. A provider's direct creation in production is reported each time, so a review sees every one. §5.7 records where two-person control over providers belongs instead.
 
 ### 5.4 Where Authority Is Checked, and the Token
 
@@ -89,6 +91,12 @@ Keycloak can grant an administrator permission over individual clients [R7]. Tha
 
 When the Software Catalog exists and says which team owns an Application, ownership moves from the registration to the Application: every registration of the Application has the Application's owners. The rules above do not change, only the scope of a grant, as an Entra custom role is assigned to one application or to all of them [R4].
 
+### 5.7 Two-Person Control Over Providers Belongs at Activation
+
+Requiring a second provider to approve each of a provider's registrations is not how the established platforms constrain their own administrators. Entra puts the second person at the moment administrative authority is activated: Privileged Identity Management can "require approval for activation of an eligible assignment", recommending "at least two approvers" [R8], after which the administrator acts without approval per action. NIST SP 800-53 AC-5 asks an organization to identify the duties it separates and to define access authorizations that support the separation [R1]. It does not ask for every privileged action to be approved by a second person.
+
+So provider authority, not each registration, is where two-person control is added: a provider grant that is eligible rather than standing, activated for a bounded time with another provider's approval. That changes how Organization Control and the Identity Control Service hold provider authority (`ADR-ORG-001 §5.11`) and needs its own decision. Until it is made, providers are few, every grant is recorded with its reason, and a provider's direct production registration is reported.
+
 ## 6. Consequences
 
 ### Positive
@@ -102,11 +110,13 @@ When the Software Catalog exists and says which team owns an Application, owners
 - The Identity Control Service accepts two forms of privileged token, and its routes must keep them apart.
 - Owners and proposals are new tables, routes and review work.
 - Until the Software Catalog exists, ownership is granted registration by registration.
+- A single provider can register a production client alone, and Entra notes that an application administrator can add credentials to an application and use them to impersonate it [R4]. A compromised provider account is therefore a production client takeover until two-person control at activation (§5.7) exists. Reporting every direct production registration makes it visible, not prevented.
 
 ### Operational
 
 - Registrations without an active owner, ownerships held by an inactive Principal, and overdue reviews are reported.
 - Proposals waiting for approval past a threshold are reported.
+- Every production registration a provider creates directly is reported, with the provider and the client.
 
 ## 7. Compliance Impact
 
@@ -151,17 +161,24 @@ None.
 
 **Rejected because:** every key rotation waits on an operator, and the Developer Console has no user it can serve.
 
+### Alternative E — Every Production Registration by Approval, a Provider's Too
+
+**Benefits:** no single person creates a production client; separation of duties at the level of each registration.
+
+**Rejected because:** it is not how the platforms the decision follows constrain their administrators. Entra's Application Administrator creates registrations directly [R4], and its two-person control is approval at role activation [R8]. Per-registration approval would also route every workload and every adoption through a second person, so a deployment that registers a client waits on one, and a lone operator during an incident cannot register a replacement client. §5.7 places the control at activation instead, where it constrains everything a provider does, not only registration.
+
 ## 9. References
 
 ### Normative
 
-- **[R1]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_, AC-5 Separation of Duties. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. Divide functions among different individuals or roles to reduce the risk of abuse of authorized privilege.
+- **[R1]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_, AC-5 Separation of Duties. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. Divide functions among different individuals or roles to reduce the risk of abuse of authorized privilege: "Identify and document [organization-defined duties of individuals]" and "Define system access authorizations to support separation of duties".
 - **[R2]** NIST SP 800-53 Rev. 5, AC-6 Least Privilege. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>.
 - **[R3]** NIST SP 800-53 Rev. 5, AC-2 Account Management, (j) review at a defined frequency. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>.
 
 ### Informative
 
-- **[R4]** Microsoft, _Delegate application management administrator permissions_, accessed 2026-10-01. <https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/delegate-app-roles>. Owners manage a specific application; the Application Developer role grants creation once self-service is restricted; a custom role can be scoped to a single app registration or to all.
+- **[R4]** Microsoft, _Delegate application management administrator permissions_, accessed 2026-10-02. <https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/delegate-app-roles>. Owners manage a specific application; the Application Developer role grants creation once self-service is restricted; a custom role can be scoped to a single app registration or to all. "Application Administrator: Users in this role can create and manage all aspects of enterprise applications, application registrations, and application proxy settings", and "can add credentials to an application and use those credentials to impersonate the application's identity".
 - **[R5]** Microsoft, _Assign enterprise application owners_, accessed 2026-10-01. <https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/assign-app-owners>. Owners can manage only the applications they own.
 - **[R6]** Okta, _Custom admin roles_ and _Create a resource set_, accessed 2026-10-01. <https://help.okta.com/en-us/content/topics/security/custom-admin-role/custom-admin-roles.htm>, <https://help.okta.com/en-us/content/topics/security/custom-admin-role/create-resource-set.htm>. An administrator role constrained to a set of applications.
 - **[R7]** Keycloak, _Server Administration Guide_ 26.7.5, fine-grained admin permissions. <https://www.keycloak.org/docs/26.7.5/server_admin/index.html>. Permissions over individual resources, such as a client.
+- **[R8]** Microsoft, _Configure Microsoft Entra role settings in PIM_, accessed 2026-10-02. <https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-how-to-change-default-settings>. "Require approval for activation of an eligible assignment … We recommend that you select at least two approvers."
