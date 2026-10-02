@@ -59,7 +59,7 @@ Tooling constraints:
 1. **Workshop:** Storybook 10 with the `@storybook/react-vite` framework is the UI Platform component workshop. Its configuration lives at the UI repository root; stories sit beside the component they render (`*.stories.tsx`).
 2. **Faithful rendering:** the workshop preview loads the built `@scnx/system/styles/components.css` and `tokens/css/<theme-id>.css` artifacts, not Sass or Panda source, so it shows what a consumer loads. Every story renders inside the `@scnx/core-ui` ThemeProvider; toolbar controls select each supported theme ID and mode.
 3. **Story tests:** `@storybook/addon-vitest` runs every story as a test in Vitest browser mode with Playwright Chromium. `@storybook/addon-a11y` runs axe-core on every story with `parameters.a11y.test: "error"`; a violation fails CI. A story may set `"todo"` only with a recorded reason and owner.
-4. **Visual regression:** Chromatic captures every story on each push and blocks merge on unreviewed visual changes (`exitZeroOnChanges: false`). Baselines are accepted in Chromatic by the UI Platform owner. Chromatic receives the built static Storybook only: component stories rendered with fixture content, never Product data or secrets.
+4. **Visual regression:** Chromatic tests every story on each push and blocks merge on unreviewed visual changes (`exitZeroOnChanges: false`). TurboSnap (`onlyChanged: true`) captures only the stories affected by the change and copies the rest from the baseline. Baselines are accepted in Chromatic by the UI Platform owner. Chromatic receives the built static Storybook only: component stories rendered with fixture content, never Product data or secrets.
 5. **Boundary:** Storybook, its addons, and Chromatic are development dependencies of the private workspace root. Stories, the Storybook configuration, and the static build never enter a package tarball; the packed-artifact inspector enforces this. Documentation pages use Storybook autodocs from component types and stories; no MDX or Markdown documentation is added.
 6. **Hosting:** each CI run uploads the static Storybook build as a workflow artifact. The workshop is not published to a public site by this decision.
 
@@ -74,7 +74,7 @@ Tooling constraints:
 ### Negative (Cons)
 
 - Storybook adds a large development dependency tree and its own upgrade cadence (major versions roughly yearly).
-- Chromatic is a third-party SaaS: snapshot counts are metered (the free plan covers 5,000 snapshots per month), and the repository depends on its availability for the visual gate.
+- Chromatic is a third-party SaaS: snapshot counts are metered, and the repository depends on its availability for the visual gate. On the Free plan, "Review and testing will be paused once you use all 5,000 included billed snapshots per month"; a full build captures one snapshot per story and theme-and-mode combination (128 on 2026-10-02). Because the visual review is a required check, a paused account blocks every merge. TurboSnap bills "each copied snapshot at 1/5th the cost of a captured snapshot" and is included in the Free plan ("Equivalent to 25k turbosnaps").
 - Story maintenance is ongoing work for every component change.
 
 ### Operational
@@ -100,5 +100,6 @@ Implements STD-GLB-FE-008 sections 3.5 and 3.6 and the visual-regression rules o
 - Storybook Vitest addon: <https://storybook.js.org/docs/writing-tests/integrations/vitest-addon>
 - Storybook accessibility testing: <https://storybook.js.org/docs/writing-tests/accessibility-testing>
 - Chromatic GitHub Actions: <https://www.chromatic.com/docs/github-actions/>
+- Chromatic billing and TurboSnap (retrieved 2026-10-02): <https://www.chromatic.com/docs/billing/>, <https://www.chromatic.com/docs/turbosnap/>, <https://www.chromatic.com/pricing>
 - Production precedent: IBM Carbon React (<https://react.carbondesignsystem.com/>) and Microsoft Fluent UI React (<https://storybooks.fluentui.dev/react/>) publish their component documentation as Storybook.
 - npm registry, 2026-10-01: `storybook` and `@storybook/react-vite` 10.6.1, MIT license, React peer range including `^19.0.0`.
