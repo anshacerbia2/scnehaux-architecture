@@ -4,7 +4,7 @@ doc_meta:
   title: tsdown Replaces tsup as the UI Platform Package Builder
   adr_type: foundational
   owner: Principal UI/UX Architect
-  status: proposed
+  status: accepted
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
@@ -26,9 +26,12 @@ Replace tsup, which its maintainer no longer maintains, with tsdown as the build
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------ | ------------------------------------------------ |
-| 2026-10-03 | proposed | foundational | Pending principal review | Pending Architecture Review Board (Ansha Cerbia) |
+| Date       | Status   | ADR Type     | Reviewers                 | Approver                                         |
+| ---------- | -------- | ------------ | ------------------------- | ------------------------------------------------ |
+| 2026-10-03 | proposed | foundational | Pending principal review  | Pending Architecture Review Board (Ansha Cerbia) |
+| 2026-10-03 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board)         |
+
+Acceptance, stated by Ansha Cerbia on 2026-10-03: "Saya, sebagai ARB, menerima ADR-UIP-BLD-002 per 2026-10-03." ("As ARB, I accept ADR-UIP-BLD-002 as of 2026-10-03.") The decision was merged in `scnehaux-architecture` #50 (`28cc396`); its implementation, `ui-platform` #51, passed CI, Chromatic, and the P0 evidence workflow on `main` (`e42a9cf`).
 
 ## 3. Context
 
@@ -74,7 +77,7 @@ Two candidates were compared, as D2 required: tsdown and Vite library mode. ADR-
 
 ## 7. Compliance Impact
 
-Completes Stage 1 of the GDC-004 section 2.2 sunset for `tsup`. Uses the library exception of ADR-GLB-FE-011 section 5 item 2; SAD-003 records `tsdown` as the core and system builder (revision pending ratification). Keeps ADR-UIP-BLD-001 (deferred minification): tsdown runs with `minify: false`. Adds `tsdown` to the Technology Radar at trial, pending ARB. No waiver is requested.
+Completes Stage 1 of the GDC-004 section 2.2 sunset for `tsup`. Uses the library exception of ADR-GLB-FE-011 section 5 item 2; SAD-003 records `tsdown` as the core and system builder (revision pending ratification). Keeps ADR-UIP-BLD-001 (deferred minification): tsdown runs with `minify: false`. Moves `tsdown` to the Technology Radar at trial, and names it with this ADR on the `tsup` hold entry. No waiver is requested.
 
 ## 8. Alternatives Considered
 

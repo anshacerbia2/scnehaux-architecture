@@ -37,7 +37,7 @@ doc_meta:
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
 > **Revision pending exact-commit ratification.** The builder change from
-> tsup to tsdown (proposed ADR-UIP-BLD-002) is pending under GDC-000 section
+> tsup to tsdown (ADR-UIP-BLD-002, accepted 2026-10-03) is pending under GDC-000 section
 > 2.6.7; the revision ratified on 2026-10-03 (`a98e9bc`) remains binding until
 > the authorized human authority approves the exact commit containing it.
 
@@ -89,7 +89,7 @@ runtime Product telemetry, application routing, and business authorization.
 The system fulfills approved PAD-PLT-003. Global frontend authority includes
 ADR-GLB-FE-010 and replacement decisions ADR-GLB-FE-011 through -013 according
 to their lifecycle. UI authority includes ADR-UIP-PLT-001, ADR-UIP-TKN-001
-through -003, ADR-UIP-BLD-001, ADR-UIP-WKS-001, ADR-UIP-SEC-001, STD-UIP-ENG-001, STD-UIP-PRM-001,
+through -003, ADR-UIP-BLD-001, ADR-UIP-BLD-002, ADR-UIP-WKS-001, ADR-UIP-SEC-001, STD-UIP-ENG-001, STD-UIP-PRM-001,
 STD-UIP-STY-001, STD-UIP-TKN-001, and STD-UIP-TKN-002. Component
 designs live in the UI repository with `parent_sad: SAD-003`.
 
