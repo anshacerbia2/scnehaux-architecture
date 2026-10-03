@@ -3,12 +3,12 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-22
+  last_reviewed: 2026-10-03
 ---
 
 # Enterprise Identity Security Standard (STD-IAM-001)
@@ -36,6 +36,10 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 
 - Passwords, passkeys, OTP secrets, recovery factors, and other authenticators MUST be stored and processed only by the approved identity kernel or an explicitly approved external identity provider
 - Scnehaux services MUST NOT create a parallel credential database or custom password-verification engine when the approved kernel already owns that responsibility
+- **Access to a privileged account MUST be multi-factor.** NIST SP 800-53 IA-2(1) says to "Implement
+  multi-factor authentication for access to privileged accounts" [R11]. On this platform that is
+  `acr` `aal2` (`STD-IAM-002 §3.2`, `ADR-IAM-004`) for every route a provider-scope authority serves,
+  reads included. Raising non-privileged access to `aal2` (IA-2(2)) is not required by this revision.
 - Credential policy MUST support modern password hashing, breached/weak credential controls where available, secure recovery, MFA, WebAuthn/passkeys, and step-up authentication according to assurance requirements [R9]
 - Plaintext credentials, recovery secrets, private keys, and bearer tokens MUST NOT be logged [R18]
 - Authentication endpoints MUST implement rate limiting, abuse detection, and bounded resource consumption [R9][R11]
@@ -157,7 +161,7 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 - **[R8]** IETF RFC 7009, _OAuth 2.0 Token Revocation_, August 2013. <https://www.rfc-editor.org/rfc/rfc7009>. §3 and §5: an access token already issued is not invalidated at once by a revocation.
 - **[R9]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63B-4>. Salted password hashing and blocklists, rate limiting, and a phishing-resistant option at AAL2.
 - **[R10]** NIST SP 800-63C-4, _Digital Identity Guidelines: Federation and Assertions_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63C-4>. Assertion validation, replay protection, and the federated identifier as subject plus issuer.
-- **[R11]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_ (release 5.2.0). <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. AC-7 unsuccessful logon attempts; IA-5(1) password-based authentication; IA-9 service identification and authentication; AU-2 and AU-3 audit events and their content.
+- **[R11]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_ (release 5.2.0). <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. AC-7 unsuccessful logon attempts; IA-2(1) multi-factor authentication to privileged accounts; IA-5(1) password-based authentication; IA-9 service identification and authentication; AU-2 and AU-3 audit events and their content.
 - **[R12]** IETF RFC 10017, _OAuth 2.0 for Browser-Based Applications_ (Best Current Practice), August 2026. <https://www.rfc-editor.org/rfc/rfc10017>. §6.1.3.2 `HttpOnly` and `Secure` BFF cookies; §8.5 browser storage readable by script.
 
 - **[R21]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §4: the validation a resource server performs. The operative profile is `STD-IAM-002`.
