@@ -73,7 +73,7 @@ Two candidates were compared, as D2 required: tsdown and Vite library mode. ADR-
 ### Operational
 
 - The `tsup` grace window ends 2027-03-31; the migration lands before the stable target (2026-12-04).
-- Node 22.18 or later is required for the native config loader; the pinned toolchain runs 22.22.1.
+- Node 22.18 or later is required for the native config loader; the pinned toolchain (`.node-version`) runs 24.11.1.
 
 ## 7. Compliance Impact
 
