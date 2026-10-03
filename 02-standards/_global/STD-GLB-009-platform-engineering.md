@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-009
   title: Enterprise Platform Engineering Standard
   owner: Principal Platform Architect
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -71,12 +71,17 @@ The shared development server runs every Scnehaux service the same way, so an op
 
 **Compose.**
 
-- Configuration comes from the environment, through `.env` [R1]. A required setting is `${NAME:?…}`, so a missing one stops `up` with its name. A setting that only a profiled task reads is `${NAME:-}`, and the task refuses it empty. Compose interpolates every service, profiled or not, so a required one would stop every `up`.
+- Configuration comes from the environment, through `.env` [R1]. A required setting is `${NAME:?…}`, so a missing one stops `up` with its name: compose resolves it to the "value of VAR if set and non-empty, otherwise exit with error" [R5]. A setting that only a profiled task reads is `${NAME:-}`, and the task refuses it empty. Compose interpolates every service, profiled or not, so a required one would stop every `up`.
 - Each service owns its database: its own `postgres`, on a network named `internal` that no other stack joins (EAD-003). Its data lives in a named volume. `docker compose down -v` destroys a service's authority data and is never part of a procedure.
 - `migrate` is a one-shot service (`restart: "no"`) that waits for `postgres` with `condition: service_healthy`. The service waits for it with `condition: service_completed_successfully`, which compose defines as "a dependency is expected to run to successful completion before starting a dependent service" [R3].
 - **One-off admin tasks are services behind a profile named after the task** (a ceremony, a first grant, a projection bootstrap). Compose enables a profiled service only on request: "Services without a `profiles` attribute are always enabled" [R2]. They "run against a release, using the same codebase and config as any process run against that release" [R4]. So a task declares no build of its own and uses the `migrate` service's image by name, and `docker compose up -d --build` rebuilds every task with the release. A task with its own build is rebuilt only when someone remembers to.
 - A service other stacks call is on a network named `scnehaux-<repository>-api` that carries it alone, created by its own stack. A stack that calls it joins that network as `external`. Stacks start in dependency order: identity-kernel, identity-control, organization-control.
 - A service publishes its port on `127.0.0.1` only. Public exposure goes through identity-kernel's proxy or tunnel.
+
+**Why these two rules, and what was rejected.**
+
+- _A task's own settings._ The application validates its configuration and refuses a missing value by name, so compose passes `${NAME:-}` and does not duplicate the check. Two alternatives were rejected. A per-task `env_file` with `required: false` keeps the setting out of interpolation ("When `required` is set to `false` and the `.env` file is missing, Compose silently ignores the entry" [R6]), but every task gains a file of its own. A separate compose file for tasks changes the command per task, which is what this road exists to prevent.
+- _One artifact per release._ Build and run are separate stages, and "every release should always have a unique release ID" [R7]. Every process of a release, the service, the migration and each task, runs the artifact built for it. On the development server that artifact is the image `docker compose up -d --build` builds from the checkout, tagged by name, and the tasks reuse it. This is a development shortcut. The production path builds each image once in CI, tags it with the commit that produced it, and every process and job of the release pulls that tag. A task can then never run an image older than its release, which a locally built image cannot guarantee if someone runs a task before `up`.
 
 **Commands.** The same in every repository, run in `deploy/dev`:
 
@@ -126,3 +131,6 @@ None. All platform engineering standards apply universally. Deviations require f
 - **[R2]** Docker, _Using profiles with Compose_, accessed 2026-10-03. <https://docs.docker.com/compose/how-tos/profiles/>. "Services without a `profiles` attribute are always enabled."
 - **[R3]** Docker, _Control startup order_, accessed 2026-10-03. <https://docs.docker.com/compose/how-tos/startup-order/>. `service_healthy`: "a dependency is expected to be "healthy", which is defined with `healthcheck`, before starting a dependent service"; `service_completed_successfully`: "a dependency is expected to run to successful completion before starting a dependent service."
 - **[R4]** The Twelve-Factor App, _XII. Admin processes_, accessed 2026-10-03. <https://12factor.net/admin-processes>. "Run admin/management tasks as one-off processes"; "One-off admin processes should be run in an identical environment as the regular long-running processes of the app. They run against a release, using the same codebase and config as any process run against that release."
+- **[R5]** Docker, _Interpolation_, accessed 2026-10-03. <https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/>. "${VAR:?error} -> value of VAR if set and non-empty, otherwise exit with error"; "${VAR:-default} -> value of VAR if set and non-empty, otherwise default."
+- **[R6]** Docker, _Set environment variables within your container's environment_, accessed 2026-10-03. <https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/>. "As of Docker Compose version 2.24.0, you can set your `.env` file, defined by the `env_file` attribute, to be optional by using the `required` field. When `required` is set to `false` and the `.env` file is missing, Compose silently ignores the entry."
+- **[R7]** The Twelve-Factor App, _V. Build, release, run_, accessed 2026-10-03. <https://12factor.net/build-release-run>. "Strictly separate build and run stages"; "Every release should always have a unique release ID, such as a timestamp of the release (such as `2011-04-06-20:32:17`) or an incrementing number (such as `v100`)."
