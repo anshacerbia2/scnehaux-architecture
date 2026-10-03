@@ -239,9 +239,9 @@ technology_radar:
       category: javascript-build-tool
       date_entered: "2026-10-02"
       owner: UI Platform Team
-      # Candidate successor to tsup (official Rolldown project, still 0.x),
-      # assessed against Vite library mode on the packaging gates. The successor
-      # decision record is due within 30 days of tsup's hold (GDC-004 2.2).
+      # Candidate successor to tsup (official Rolldown project, still 0.x).
+      # ADR-UIP-BLD-002 (proposed 2026-10-03) selects it over Vite library mode
+      # after every packaging gate passed; its trial transition is pending ARB.
 
   hold:
     # ARB decision 2026-10-02 (D2): tsup's README states "This project is not
