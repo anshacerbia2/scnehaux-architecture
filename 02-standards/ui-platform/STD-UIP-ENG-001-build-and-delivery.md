@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-ENG-001
   title: UI Platform Build & Delivery Standards
   owner: Principal UI/UX Architect
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: public
   governed_by: [PAD-PLT-003]
@@ -14,6 +14,12 @@ doc_meta:
 ---
 
 # UI Platform Build & Delivery Standards (STD-UIP-ENG-001)
+
+> **Revision 2.1.0 is pending exact-commit ratification.** It adds section 3.5,
+> the release contract (PLAN P1). Under GDC-000 section 2.6.7, revision 2.0.0
+> remains binding until the authorized human authority approves the exact
+> commit containing this revision. The existing `last_reviewed` is updated
+> only in the ratification commit or manifest.
 
 > **Implementation boundary:** this approved release contract does not establish that existing packages pass its CI and consumer gates.
 
@@ -68,6 +74,22 @@ Build both packages, create tarballs with the pinned `pnpm pack` command, and in
 - A stable release publishes a conformance report linking source-test results, packed-package tests, Component Accessibility Conformance Reports and known limits, contrast pairs, visual diffs, payload measurements, API changes, and supported consumer scenarios. Component reports are not labeled VPATs and do not certify a complete page.
 - A failed or missing required gate prevents promotion to the stable channel. Experimental components may be excluded from stable exports with their scope documented.
 
+### 3.5 Release contract
+
+1. **Public API.** The public API of each package is every subpath in its `exports` map, the TypeScript declarations those entries publish, and the documented CSS contract: custom properties, class and data-attribute hooks, cascade layer names, and token keys. Internal chunks and undocumented names are not public. The API is declared in the package documentation and checked against each release (SemVer 2.0.0 item 1 [1]; GOV.UK Frontend counts HTML, Sass, and JavaScript as its public API [3]).
+2. **Stability.** Every public entry is `candidate` or `stable` in the behavior inventory. The compatibility rules below bind `stable` entries only. A `candidate` entry may change in any release; release notes and the evidence packet label it, as Angular does for Developer Preview APIs, which "can change at any time, even in new patch versions" [4].
+3. **Versioning.** Both packages follow SemVer 2.0.0 and release together under one version. Before the first stable release, a published version is a pre-release of `1.0.0` (`1.0.0-beta.N`), which "indicates that the version is unstable" [1]; `1.0.0` is the first stable release. A published version is never modified or overwritten [1]. A breaking change to a stable entry is a major release; a new feature or a deprecation is a minor release; a patch release only fixes behavior [1]. Removing or renaming a token, selector, layer, or property is breaking; changing a token value or a component's appearance while keeping its names and structure is a minor change that the release records with its visual diffs [3].
+4. **Deprecation.** A stable feature is deprecated only in a minor release, never in a patch [1][3]. The release notes say why and what replaces it; the TypeScript declaration carries `@deprecated`, and a development build warns where the use can be detected [2]. A deprecated feature is removed only in a major release, after at least one minor release carried the deprecation [1] and no sooner than 180 days after that release, the grace window GDC-004 section 2.2 gives existing systems [5]. A feature still used by another platform entry is not deprecated [3].
+5. **Support matrix.** Each release declares and tests:
+   - React and React DOM: the shared peer range, proven at its lowest and highest version (section 3.4);
+   - browsers: the Baseline Widely available set on the release date, as the browserslist query `baseline widely available on <YYYY-MM-DD>` [6], tested in Chromium, Firefox, and WebKit;
+   - Node.js for server rendering: the lines in Active LTS or Maintenance LTS on the release date, since "Production applications should only use Active LTS or Maintenance LTS releases" [7];
+   - TypeScript for consumers' type checking: the releases less than two years old on the release date, the window DefinitelyTyped tests [8].
+
+   The matrix narrows only in a major release, except that a version reaching its upstream end of life (for example, a Node.js line) may leave it in a minor release.
+
+6. **Release record.** Every release's evidence records its version, the support matrix, the stability of every entry, the public-API difference from the previous release, its deprecations, and its rollback target (the previous immutable package pair). A stable release additionally requires a rehearsed install and rollback in a packed consumer.
+
 ## 4. Exceptions
 
 Exceptions name the affected contract, consumer impact, expiry, and reviewer. They cannot convert an untested claim into a guarantee.
@@ -75,3 +97,16 @@ Exceptions name the affected contract, consumer impact, expiry, and reviewer. Th
 ## 5. Enforcement Mechanism
 
 The CI pipeline executes the source gate and packed-package gate, stores their evidence, and blocks stable publication on failures. The initial P0 implementation of these gates is tracked in the UI Platform roadmap; this draft does not claim that the current repository already satisfies them.
+
+## 6. References
+
+Retrieved 2026-10-03.
+
+1. Semantic Versioning 2.0.0, `semver.md` at commit `f99d5485190a47c0863949e7da810a5553e0ed4d`: <https://github.com/semver/semver/blob/f99d5485190a47c0863949e7da810a5553e0ed4d/semver.md>. Item 1: "Software using Semantic Versioning MUST declare a public API"; item 3: "Once a versioned package has been released, the contents of that version MUST NOT be modified"; item 7: a minor version "MUST be incremented if any public API functionality is marked as deprecated"; item 9: a pre-release "indicates that the version is unstable"; FAQ: "Before you completely remove the functionality in a new major release there should be at least one minor release that contains the deprecation".
+2. React, Versioning policy, at react.dev commit `8c68ae8d2410abe59f351195780c6f8ea9f50904`: <https://github.com/reactjs/react.dev/blob/8c68ae8d2410abe59f351195780c6f8ea9f50904/src/content/community/versioning-policy.md>. "Whenever possible, we add warnings in preparation for future breaking changes. That way, if your app has no warnings on the latest release, it will be compatible with the next major release."
+3. GOV.UK Frontend, `docs/contributing/versioning.md` and `docs/contributing/managing-change.md` at commit `283cc58ead97f3e3379199976709713914e00b05`: <https://github.com/alphagov/govuk-frontend/tree/283cc58ead97f3e3379199976709713914e00b05/docs/contributing>. "We follow Semantic Versioning but a UI library often has subjective changes such as visual spacing changes"; its public API includes HTML, Sass, and JavaScript; "Wherever possible, deprecate features as part of a minor release, before removing them in the next major release"; "Deprecations should not be made in patch releases"; "Features should not be deprecated while they are relied on by other parts of GOV.UK Frontend."
+4. Angular, Releases, at commit `c0dc8c4bbeea70879aef54e9fcc7888359dfd1a5`: <https://github.com/angular/angular/blob/c0dc8c4bbeea70879aef54e9fcc7888359dfd1a5/adev/src/content/reference/releases.md>. Developer Preview APIs "can change at any time, even in new patch versions of the framework"; a deprecated API "is still present in at least the next major release (period of at least 12 months)".
+5. GDC-004, Technology Lifecycle and Standards Governance, section 2.2: "a grace window of maximum `180 days`".
+6. Browserslist, README at commit `8219dd79df0315feaabba302077a66e236822a3a`: <https://github.com/browserslist/browserslist/blob/8219dd79df0315feaabba302077a66e236822a3a/README.md>. "`baseline widely available on YYYY-MM-DD`: selects browser versions that supported the Widely available feature set on the specified date"; Widely available features "have been interoperable in the Baseline core browser set for at least 30 months".
+7. Node.js, Previous releases, at nodejs.org commit `4ffcf0386a1c09e7656c29efe6f66dd9ec153a35`: <https://github.com/nodejs/nodejs.org/blob/4ffcf0386a1c09e7656c29efe6f66dd9ec153a35/apps/site/pages/en/about/previous-releases.mdx>. "Production applications should only use _Active LTS_ or _Maintenance LTS_ releases."
+8. DefinitelyTyped, README at commit `ac3977d854a671215b8d3e2d5e4ced9c345bf00b`, "Support Window": "Definitely Typed only tests packages on versions of TypeScript that are less than 2 years old."
