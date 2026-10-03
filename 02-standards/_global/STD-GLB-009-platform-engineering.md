@@ -71,7 +71,7 @@ The shared development server runs every Scnehaux service the same way, so an op
 
 **Compose.**
 
-- Configuration comes from the environment, through `.env` [R1]. A required setting is `${NAME:?…}`, so a missing one stops `up` with its name.
+- Configuration comes from the environment, through `.env` [R1]. A required setting is `${NAME:?…}`, so a missing one stops `up` with its name. A setting that only a profiled task reads is `${NAME:-}`, and the task refuses it empty. Compose interpolates every service, profiled or not, so a required one would stop every `up`.
 - Each service owns its database: its own `postgres`, on a network named `internal` that no other stack joins (EAD-003). Its data lives in a named volume. `docker compose down -v` destroys a service's authority data and is never part of a procedure.
 - `migrate` is a one-shot service (`restart: "no"`) that waits for `postgres` with `condition: service_healthy`. The service waits for it with `condition: service_completed_successfully`, which compose defines as "a dependency is expected to run to successful completion before starting a dependent service" [R3].
 - **One-off admin tasks are services behind a profile named after the task** (a ceremony, a first grant, a projection bootstrap). Compose enables a profiled service only on request: "Services without a `profiles` attribute are always enabled" [R2]. They "run against a release, using the same codebase and config as any process run against that release" [R4]. So a task declares no build of its own and uses the `migrate` service's image by name, and `docker compose up -d --build` rebuilds every task with the release. A task with its own build is rebuilt only when someone remembers to.
