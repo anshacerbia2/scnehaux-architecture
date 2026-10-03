@@ -3,13 +3,13 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.4.0
+  version: 1.5.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-08-11
-  last_reviewed: 2026-10-02
+  last_reviewed: 2026-10-03
 ---
 
 # Enterprise Token and Verification Profile (STD-IAM-002)
@@ -191,6 +191,13 @@ carrying no such claim.
   `provider_scope` and `workload_owner` are this platform's private claims, which RFC 9068
   §2.2.2 allows within a private subsystem [R6]. `acr` and `auth_time` are OpenID Connect's
   [R7], and keep their meaning across a refresh [R9].
+- **`acr` takes one of the levels `ADR-IAM-004 §5.1` names:** `aal1` (one factor), `aal2` (two
+  distinct factors, NIST SP 800-63B-4 AAL2 [R23]), and `phr` (phishing-resistant, reserved). They are
+  ordered `aal1` < `aal2` < `phr`.
+  - A resource that requires a level accepts that level or a higher one.
+  - It counts any other value as below `aal1`, the kernel's unmapped `0` and `1` included.
+  - It answers an insufficient token with RFC 9470's challenge, naming the level in `acr_values`
+    [R9].
 - **Three claims are written by the kernel itself, and are admitted.** The pinned kernel writes
   `azp`, `sid` and a payload `typ` into the access tokens it issues from its token code, not
   through a mapper, so none can be removed without a kernel extension (`ADR-IAM-001 §5.7`).
@@ -448,6 +455,7 @@ the long-lived connection rules are this platform's own and cite no external sou
 - **[R9]** IETF RFC 9470, _OAuth 2.0 Step Up Authentication Challenge Protocol_, September 2023. <https://www.rfc-editor.org/rfc/rfc9470>. §6.1: `acr` and `auth_time` do not change on renewal.
 - **[R10]** NIST SP 800-57 Part 1 Rev. 5, _Recommendation for Key Management: Part 1 – General_, May 2020. <https://doi.org/10.6028/NIST.SP.800-57pt1r5>. Table 2: RSA 2048 bits gives 112-bit and 3072 bits 128-bit security strength.
 
+- **[R23]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025. <https://pages.nist.gov/800-63-4/sp800-63b.html>. §2.1–§2.3: AAL1, AAL2 ("two distinct authentication factors") and AAL3.
 - **[R18]** OpenID Foundation, _OpenID Connect Back-Channel Logout 1.0 incorporating errata set 1_, December 2023. <https://openid.net/specs/openid-connect-backchannel-1_0.html>. §2.4 the `sid` claim in a logout token, matching the session an ID token's `sid` named.
 
 ### Informative
