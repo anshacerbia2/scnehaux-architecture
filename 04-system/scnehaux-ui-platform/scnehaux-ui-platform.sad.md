@@ -36,11 +36,6 @@ doc_meta:
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
-> **Revision pending exact-commit ratification.** The builder change from
-> tsup to tsdown (ADR-UIP-BLD-002, accepted 2026-10-03) is pending under GDC-000 section
-> 2.6.7; the revision ratified on 2026-10-03 (`a98e9bc`) remains binding until
-> the authorized human authority approves the exact commit containing it.
-
 > **Approved design baseline.** Approval establishes the architecture contract,
 > not implementation conformance or production release authority.
 
