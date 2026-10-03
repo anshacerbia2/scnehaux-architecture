@@ -109,6 +109,34 @@ after the password, through the kernel's own configuration page. This is the onl
 that enrolls one. `TDD-identity-control-005` slice 4 brings enrollment through the Identity Control
 API.
 
+### 5.5 A Development Server's Operator Automation
+
+On a development server, the agent that operates the server acts as its bootstrap provider. That
+agent needs `aal2` tokens, and a person's TOTP code, valid for 30 seconds, cannot reasonably be
+relayed to it. The provider therefore holds a second TOTP authenticator on that server:
+
+- **It is bound at `aal2`.** The account already has the person's own TOTP, and NIST requires that
+  "binding … requires authentication at either the maximum AAL currently available in the
+  subscriber account or the maximum AAL at which the new authenticator will be used, whichever is
+  lower" [R6]. Binding a second authenticator is permitted: "CSPs SHALL permit the binding of
+  multiple authenticators to a subscriber account" [R6].
+  - The enrollment script signs in at `aal2` with one code the person reads from their own
+    authenticator, once.
+  - It then asks the kernel to set up another TOTP, through the supported application-initiated
+    action `kc_action=CONFIGURE_TOTP`.
+- **Its secret never leaves the server.** It is written to the deployment's `keys/`, mode 0600, and
+  is never printed. The scripts compute codes from it.
+- **Only on a development server.** On a development server the server holds both factors of that
+  account, the password the scripts already read and this TOTP, so for that account the two factors
+  are one place. That is acceptable only where nothing real is protected. A production estate's
+  operators authenticate as themselves, and automation acts as a workload.
+- **The person can end it.** Revoking the server's authenticator through containment (slice 2) ends
+  it without touching the person's own.
+
+The NIST requirement to notify the subscriber of a new authenticator "via a mechanism independent of
+the transaction binding the new authenticator" [R6] is not met yet: the realm sends no mail. It is a
+gap to close before production, together with recovery.
+
 ## 6. Consequences
 
 ### Positive
@@ -207,6 +235,15 @@ a takeover wants.
 - **[R3]** IETF RFC 9470, _OAuth 2.0 Step Up Authentication Challenge Protocol_, September 2023,
   <https://www.rfc-editor.org/rfc/rfc9470>. §3 `insufficient_user_authentication`, `acr_values`,
   `max_age`; §4 the client uses them in its authorization request.
+
+- **[R6]** NIST SP 800-63B-4, §4.1.2.1 Binding an Additional Authenticator,
+  <https://pages.nist.gov/800-63-4/sp800-63b.html>, accessed 2026-10-03. "CSPs SHALL permit the
+  binding of multiple authenticators to a subscriber account. When any new authenticator is bound to
+  a subscriber account, the CSP SHALL ensure that the process requires authentication at either the
+  maximum AAL currently available in the subscriber account or the maximum AAL at which the new
+  authenticator will be used, whichever is lower"; "When an authenticator is added, the CSP SHALL
+  notify the subscriber via a mechanism independent of the transaction binding the new
+  authenticator".
 
 ### Informative
 
