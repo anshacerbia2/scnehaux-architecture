@@ -124,7 +124,7 @@
             },
             "migration_guide": {
               "type": ["string", "null"],
-              "description": "STD ID for the migration guide, or null if pending."
+              "description": "ID of the companion migration guide or successor standard (GDC-004 section 2.2), or null if pending."
             }
           }
         }
