@@ -20,7 +20,7 @@ doc_meta:
       type: css-preprocessor
     - name: panda-css
       type: css-generator
-    - name: tsup
+    - name: tsdown
       type: build-tool
     - name: vitest
       type: test-runner
@@ -35,6 +35,11 @@ doc_meta:
 ---
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
+
+> **Revision pending exact-commit ratification.** The builder change from
+> tsup to tsdown (proposed ADR-UIP-BLD-002) is pending under GDC-000 section
+> 2.6.7; the revision ratified on 2026-10-03 (`a98e9bc`) remains binding until
+> the authorized human authority approves the exact commit containing it.
 
 > **Approved design baseline.** Approval establishes the architecture contract,
 > not implementation conformance or production release authority.
@@ -184,9 +189,9 @@ graph TB
 | Physical component     | Technology                         | Responsibility                                         | Persistent output                  |
 | :--------------------- | :--------------------------------- | :----------------------------------------------------- | :--------------------------------- |
 | Workspace orchestrator | pnpm 10.x                          | Dependency graph and deterministic commands            | Lockfile                           |
-| Core builder           | TypeScript + tsup                  | ESM/CJS and declaration artifacts for headless entries | `@scnx/core-ui` tarball            |
+| Core builder           | TypeScript + tsdown                | ESM/CJS and declaration artifacts for headless entries | `@scnx/core-ui` tarball            |
 | Token pipeline         | Sass + Panda build-time generation | Validate and generate theme/token contracts            | CSS, JSON, Sass, generated recipes |
-| System builder         | TypeScript + tsup + Sass           | Styled entries and static assets                       | `@scnx/system` tarball             |
+| System builder         | TypeScript + tsdown + Sass         | Styled entries and static assets                       | `@scnx/system` tarball             |
 | Test harness           | Vitest + browser/consumer fixtures | Prove source and external-consumer behavior            | Reports and traces                 |
 | Component workshop     | Storybook 10 + Vitest browser mode | Operable stories, story tests, a11y, visual review     | Static Storybook CI artifact       |
 | Release assembler      | CI scripts + `pnpm pack`           | Inventory, checksum, SBOM, provenance, evidence        | Release record                     |
