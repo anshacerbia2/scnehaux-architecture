@@ -3,13 +3,13 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.5.0
+  version: 1.6.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-08-11
-  last_reviewed: 2026-10-03
+  last_reviewed: 2026-10-04
 ---
 
 # Enterprise Token and Verification Profile (STD-IAM-002)
@@ -90,7 +90,7 @@ conflating them made the class unimplementable. A token MUST declare exactly one
 
 | Form              | Meaning                                                                                                                                               | Context claim                                                                                               |
 | :---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------- |
-| `tenant-scoped`   | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant                                     | `tenant_id` MUST, with both version claims                                                                  |
+| `tenant-scoped`   | A privileged operation performed inside one Tenant — suspending a Workspace, revoking a Membership in that Tenant                                     | `tenant_id` MUST                                                                                            |
 | `provider-scope`  | A provider operation that is cross-tenant or has no Tenant at all — minting a Principal, registering a protected resource, cross-tenant investigation | `provider_scope` MUST, except at a resource that holds the grant or its projection; `tenant_id` MUST NOT    |
 | `resource-scoped` | An operation on records the resource itself holds grants over — an owner managing the client registrations they own                                   | `tenant_id` MUST NOT; the authority is the grant the resource records for the `principal_id` and the target |
 
@@ -138,27 +138,29 @@ and it is the operation from which every later Membership is derived.
 
 ### 3.2 Claim Set
 
-| Claim                     | `internal`                    | `privileged`                                                                                      | `workload`                    | `external`     |
-| :------------------------ | :---------------------------- | :------------------------------------------------------------------------------------------------ | :---------------------------- | :------------- |
-| `iss`                     | MUST                          | MUST                                                                                              | MUST                          | MUST           |
-| `sub`                     | MUST                          | MUST                                                                                              | MUST                          | MUST, pairwise |
-| `aud`                     | MUST                          | MUST                                                                                              | MUST                          | MUST           |
-| `iat`, `exp`              | MUST                          | MUST                                                                                              | MUST                          | MUST           |
-| `jti`, `client_id`        | MUST                          | MUST                                                                                              | MUST                          | MUST           |
-| `scope`                   | SHOULD                        | SHOULD                                                                                            | SHOULD                        | SHOULD         |
-| `principal_id`            | MUST                          | MUST                                                                                              | MUST                          | MUST NOT       |
-| `subject_type`            | MUST                          | MUST                                                                                              | MUST                          | MUST NOT       |
-| `tenant_id`               | MUST                          | MUST when `tenant-scoped`; MUST NOT when `provider-scope`                                         | MUST when tenant-scoped       | MUST NOT       |
-| `workspace_id`            | MAY                           | MAY                                                                                               | MAY                           | MUST NOT       |
-| `membership_version`      | MUST when `tenant_id` present | MUST when `tenant_id` present                                                                     | MUST when `tenant_id` present | MUST NOT       |
-| `tenant_security_version` | MUST when `tenant_id` present | MUST when `tenant_id` present                                                                     | MUST when `tenant_id` present | MUST NOT       |
-| `provider_scope`          | MUST NOT                      | MUST when `provider-scope`, except at a holder of the grant or its projection; MUST NOT otherwise | MUST NOT                      | MUST NOT       |
-| `acr`, `auth_time`        | MAY                           | MUST                                                                                              | MUST NOT                      | MAY            |
-| `workload_owner`          | MUST NOT                      | MUST NOT                                                                                          | MUST                          | MUST NOT       |
+| Claim              | `internal` | `privileged`                                                                                      | `workload`              | `external`     |
+| :----------------- | :--------- | :------------------------------------------------------------------------------------------------ | :---------------------- | :------------- |
+| `iss`              | MUST       | MUST                                                                                              | MUST                    | MUST           |
+| `sub`              | MUST       | MUST                                                                                              | MUST                    | MUST, pairwise |
+| `aud`              | MUST       | MUST                                                                                              | MUST                    | MUST           |
+| `iat`, `exp`       | MUST       | MUST                                                                                              | MUST                    | MUST           |
+| `jti`, `client_id` | MUST       | MUST                                                                                              | MUST                    | MUST           |
+| `scope`            | SHOULD     | SHOULD                                                                                            | SHOULD                  | SHOULD         |
+| `principal_id`     | MUST       | MUST                                                                                              | MUST                    | MUST NOT       |
+| `subject_type`     | MUST       | MUST                                                                                              | MUST                    | MUST NOT       |
+| `tenant_id`        | MUST       | MUST when `tenant-scoped`; MUST NOT when `provider-scope`                                         | MUST when tenant-scoped | MUST NOT       |
+| `workspace_id`     | MAY        | MAY                                                                                               | MAY                     | MUST NOT       |
+| `provider_scope`   | MUST NOT   | MUST when `provider-scope`, except at a holder of the grant or its projection; MUST NOT otherwise | MUST NOT                | MUST NOT       |
+| `acr`, `auth_time` | MAY        | MUST                                                                                              | MUST NOT                | MAY            |
+| `workload_owner`   | MUST NOT   | MUST NOT                                                                                          | MUST                    | MUST NOT       |
 
-The two version claims are conditional on `tenant_id` in every class, including `privileged`.
-An earlier revision made them unconditional there, which was unsatisfiable for a
-provider-scope token: it required a Membership version for a Principal acting in no Tenant.
+**`tenant_id` is the Tenant the token was issued for, chosen by the client per sign-in (1.6.0).** A
+client asks for one Tenant with the kernel's `organization:<tenant_id>` scope, and the kernel issues
+the claim only for a member of that Tenant (`ADR-IAM-006`). A refresh keeps it; another Tenant is
+another sign-in. Before 1.6.0 the token also carried `membership_version` and
+`tenant_security_version`. They are removed: the kernel has no supported place to keep a version per
+Membership, and the resource's check of current state in §3.5 step 8 refuses a revoked context
+without them.
 
 A workload is a Principal. PAD-PLT-001 defines a Principal as a stable human, service,
 workload, or governed-agent security subject, and Membership binds a `principal_id`
@@ -187,8 +189,8 @@ carrying no such claim.
   requires. `scope` carries the scopes granted, when any were requested.
 - A claim not defined here, by RFC 9068 §2.2, or by an approved audience profile MUST NOT
   be added to a token.
-- The claims `principal_id`, `subject_type`, `tenant_id`, `workspace_id`, the version claims,
-  `provider_scope` and `workload_owner` are this platform's private claims, which RFC 9068
+- The claims `principal_id`, `subject_type`, `tenant_id`, `workspace_id`, `provider_scope` and
+  `workload_owner` are this platform's private claims, which RFC 9068
   §2.2.2 allows within a private subsystem [R6]. `acr` and `auth_time` are OpenID Connect's
   [R7], and keep their meaning across a refresh [R9].
 - **`acr` takes one of the levels `ADR-IAM-004 §5.1` names:** `aal1` (one factor), `aal2` (two
@@ -215,18 +217,21 @@ carrying no such claim.
 The identity kernel MUST realize the table above through audience-specific client
 scopes rather than realm-wide default mappers:
 
-| Client scope          | Required projected claims                                                                                                |
-| :-------------------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `scnehaux-internal`   | `principal_id`, `subject_type`, and active context/version claims                                                        |
-| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` with both version claims                               |
-| `scnehaux-provider`   | `principal_id`, `subject_type`, `acr`, `auth_time`; `provider_scope`, `tenant_id` and version claims prohibited (§3.1.1) |
-| `scnehaux-workload`   | `principal_id`, `subject_type=workload`, `workload_owner`, and active context/version claims when tenant-scoped          |
-| `scnehaux-external`   | Pairwise `sub`; enterprise and context claims prohibited                                                                 |
-| `scnehaux-profile`    | `name` and `preferred_username` in the ID token only, never in an access token; requested by a first-party BFF           |
+| Client scope          | Required projected claims                                                                                                  |
+| :-------------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| `scnehaux-internal`   | `principal_id`, `subject_type`; `tenant_id` through the `organization` scope when a Tenant is asked for                    |
+| `scnehaux-privileged` | Internal claims plus mandatory `acr` and `auth_time`; `tenant_id` through the `organization` scope when tenant-scoped      |
+| `scnehaux-provider`   | `principal_id`, `subject_type`, `acr`, `auth_time`; `provider_scope` and `tenant_id` prohibited (§3.1.1)                   |
+| `scnehaux-workload`   | `principal_id`, `subject_type=workload`, `workload_owner`; `tenant_id` through the `organization` scope when tenant-scoped |
+| `scnehaux-external`   | Pairwise `sub`; enterprise and context claims prohibited                                                                   |
+| `scnehaux-profile`    | `name` and `preferred_username` in the ID token only, never in an access token; requested by a first-party BFF             |
 
 The client registration authority MUST attach exactly one of the five audience profile scopes.
 `scnehaux-profile` is not an audience profile: a first-party BFF requests it at sign-in for the
-name it shows. A mapper carrying `principal_id` or context claims MUST NOT be a realm default
+name it shows. **`tenant_id` reaches a token only through the kernel's `organization` scope (1.6.0).**
+The registration authority attaches it, optional, only to a client whose profile may carry
+`tenant_id`, and it is neither a realm default nor a realm default optional scope (`ADR-IAM-006
+§5.3`). A mapper carrying `principal_id` or context claims MUST NOT be a realm default
 because that would disclose enterprise correlation identifiers to external clients.
 
 **The realm's default client scopes are `basic` and `acr` only.** `basic` gives `sub` and
@@ -337,12 +342,13 @@ fail closed on any failure:
    60-second cap is stricter than the "few minutes" RFC 7519 allows.
 7. Reject an `internal`, `privileged`, or `workload` token whose `principal_id` is
    absent, and reject a `workload` token whose `workload_owner` is absent.
-8. Where `tenant_id` is present, compare `membership_version` and
-   `tenant_security_version` against the local projection, and reject a token whose
-   version is lower than the locally known version. Where `tenant_id` is present and
-   either version claim is absent, reject the token: a context asserted without a
-   version cannot be compared against a revocation, so accepting it would make the
-   revocation contract unenforceable while every check appeared to pass.
+8. Where `tenant_id` is present, reject the token unless the local projection holds the
+   Principal's Membership in that Tenant as active and the Tenant as active (1.6.0,
+   `ADR-IAM-006 §5.4`). The check is of current state, not of the token: a revoked
+   Membership or a suspended Tenant is refused as soon as the resource has applied the
+   event, however recently the token was issued. A resource holding no projection of that
+   Tenant's Memberships cannot make the check and rejects the token. Before 1.6.0 this
+   step compared version claims the token carried.
 9. Reject a `privileged` token that carries neither `tenant_id` nor a provider authority,
    at a resource with no `resource-scoped` grant for it, and reject one that carries both
    `tenant_id` and a provider authority. A privileged token whose scope form cannot be
@@ -369,8 +375,7 @@ fail closed on any failure:
 
 - An `external` profile MUST be identified by audience and validated against its
   declared profile rather than against the internal rules.
-- An `external` token MUST NOT carry `principal_id`, `tenant_id`, or any version
-  claim.
+- An `external` token MUST NOT carry `principal_id` or `tenant_id`.
 - Pairwise subjects MUST be used where cross-relying-party correlation is not
   justified [R7][R14].
 - Attribute release to an external relying party MUST be minimised by purpose and
@@ -421,12 +426,12 @@ discovered afterwards.
 - Token contract tests asserting that an access token carries no claim outside §3.2, RFC 9068
   §2.2 and the three kernel-written claims, and no personal data.
 - Negative token tests proving external clients never receive `principal_id`,
-  `subject_type`, Tenant, Workspace, or version claims.
+  `subject_type`, Tenant, or Workspace claims.
 - Algorithm tests proving `PS256` issuance and verification and rejecting `none`,
   symmetric algorithms, header-selected algorithms, and unregistered `RS256`.
 - Reference verifier conformance tests covering each rule in §3.5, including negative
-  cases for absent `principal_id`, wrong `aud`, unknown `kid`, and a stale version
-  claim.
+  cases for absent `principal_id`, wrong `aud`, unknown `kid`, and a `tenant_id` whose
+  Membership or Tenant is not active in the projection.
 - Client registration validation rejecting a protected resource without an assigned
   lifetime class.
 - Configuration assertion that no client carries a token lifetime exceeding its class.
@@ -439,8 +444,10 @@ discovered afterwards.
 ## 6. References
 
 The external sources the rules above rest on, cited as `[Rn]`. A rule stricter than its source,
-or departing from it, says so where it is stated. The lifetime classes, the version claims, and
-the long-lived connection rules are this platform's own and cite no external source.
+or departing from it, says so where it is stated. The lifetime classes and the long-lived
+connection rules are this platform's own and cite no external source. The Tenant selection and the
+current-state check follow `ADR-IAM-006`, whose sources are the platforms and OWASP guidance it
+quotes.
 
 ### Normative
 
