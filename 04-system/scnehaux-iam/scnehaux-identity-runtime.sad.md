@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-001
   title: Scnehaux Identity Runtime
   owner: Identity Platform Team
-  version: 2.2.0
+  version: 2.3.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-09-09
+  last_reviewed: 2026-10-04
   parent_pad: PAD-PLT-001
 ---
 
@@ -366,12 +366,12 @@ sequenceDiagram
 
     ORG-->>CTRL: Membership revoked + authoritative version
     CTRL->>CTRL: persist cursor/version + containment intent
-    CTRL->>KC: remove projected context / contain affected sessions
+    CTRL->>KC: remove the member from the Tenant's Organization (ADR-IAM-006 §5.5)
     KC-->>CTRL: enforcement result
     CTRL->>CTRL: persist canonical revocation outbox
     CTRL-->>BUS: context version / revocation fact
     BUS-->>PROD: priority projection update
-    PROD->>PROD: reject tokens below current membership_version
+    PROD->>PROD: reject tokens whose Membership is no longer active
     BUS-->>CONN: Principal/Tenant revocation fact
     CONN->>CONN: terminate or force revalidation
 ```
@@ -696,7 +696,7 @@ The propagation budget is 60 seconds as the planning figure, against an operatio
 
 **Ordering inside the Principal and Membership classes is load-bearing.** The projected context is removed before the kernel sessions. Reversed, a refresh landing between the two steps can mint a fresh token asserting the context that was just revoked and the new token outlives the revocation by a full lifetime class.
 
-**Contextual Membership can enforce earlier than the formula.** `STD-IAM-002 §3.5` rule 8 makes a consumer reject a token whose `membership_version` is below the version its local projection holds. A consumer that has already applied the priority event therefore rejects the outstanding token immediately rather than at expiry. The 10-minute figure is the ceiling for a consumer that has not yet applied it, not the expected case.
+**Contextual Membership can enforce earlier than the formula.** `STD-IAM-002 §3.5` rule 8 makes a consumer reject a token whose `tenant_id` names a Membership or Tenant its local projection no longer holds as active (`ADR-IAM-006 §5.4`). A consumer that has already applied the priority event therefore rejects the outstanding token immediately rather than at expiry. The kernel, for its part, refuses the next refresh for that Tenant (`ADR-IAM-006 §5.5`). The 10-minute figure is the ceiling for a consumer that has not yet applied it, not the expected case.
 
 **Acknowledgement is not enforcement.** Per `STD-IAM-001 §3.4`, accepting a revocation means the change is durable and queued. The platform MUST NOT report it as enforced until the mechanisms above have applied, and the security dashboard measures acceptance-to-enforcement separately from acceptance.
 

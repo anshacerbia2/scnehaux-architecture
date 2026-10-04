@@ -39,6 +39,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-IAM-003](identity-access-platform/ADR-IAM-003-client-registration-ownership.md) | Client Registration Ownership and the Developer Console's Authority | foundational | accepted | 2026-10-01 | N/A |
 | [ADR-IAM-004](identity-access-platform/ADR-IAM-004-authentication-assurance-and-step-up.md) | Authentication Assurance Levels and Step-Up | foundational | accepted | 2026-10-03 | N/A |
 | [ADR-IAM-005](identity-access-platform/ADR-IAM-005-account-recovery-and-guessing-limits.md) | Account Recovery and Guessing Limits | foundational | accepted | 2026-10-04 | N/A |
+| [ADR-IAM-006](identity-access-platform/ADR-IAM-006-tenant-context-in-tokens.md) | Tenant Context in Tokens, Selected per Sign-In | foundational | accepted | 2026-10-04 | N/A |
 | [ADR-ORG-001](organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) | Separate Organization Authority from Identity and Use Keycloak as a Projection Target | foundational | accepted | 2026-08-06 | N/A |
 | [ADR-ORG-002](organization-tenancy-platform/ADR-ORG-002-eligible-provider-authority.md) | Eligible Provider Authority, Activated for a Bounded Time and Approved by Another Provider | foundational | accepted | 2026-10-02 | N/A |
 | [ADR-SCH-002](scheduling-platform/ADR-SCH-002-postgresql-profiled-durable-dispatch.md) | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch | implementation | accepted | 2026-08-24 | N/A |
