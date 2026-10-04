@@ -42,6 +42,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-IAM-006](identity-access-platform/ADR-IAM-006-tenant-context-in-tokens.md) | Tenant Context in Tokens, Selected per Sign-In | foundational | accepted | 2026-10-04 | N/A |
 | [ADR-ORG-001](organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) | Separate Organization Authority from Identity and Use Keycloak as a Projection Target | foundational | accepted | 2026-08-06 | N/A |
 | [ADR-ORG-002](organization-tenancy-platform/ADR-ORG-002-eligible-provider-authority.md) | Eligible Provider Authority, Activated for a Bounded Time and Approved by Another Provider | foundational | accepted | 2026-10-02 | N/A |
+| [ADR-ORG-003](organization-tenancy-platform/ADR-ORG-003-tenant-administration-grant.md) | Tenant Administration Is a Recorded Grant, Checked with Current Membership | foundational | accepted | 2026-10-04 | N/A |
 | [ADR-SCH-002](scheduling-platform/ADR-SCH-002-postgresql-profiled-durable-dispatch.md) | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch | implementation | accepted | 2026-08-24 | N/A |
 | [ADR-UIP-BLD-001](ui-platform/ADR-UIP-BLD-001-deferred-minification.md) | Deferred Minification | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-BLD-002](ui-platform/ADR-UIP-BLD-002-tsdown-package-build.md) | tsdown Replaces tsup as the UI Platform Package Builder | foundational | accepted | 2026-10-03 | N/A |
