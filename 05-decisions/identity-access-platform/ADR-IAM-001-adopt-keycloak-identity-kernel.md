@@ -181,6 +181,15 @@ Preferred mechanisms:
 - a minimal event-listener extension where required [R22];
 - external Scnehaux Control Service.
 
+**Identity events leave the kernel through its native store first (2026-10-05).** Keycloak's own
+event store, read through the supported Admin REST API, is the durable record of user and admin
+events, and the event-listener extension is the fast path built when a consumer needs events sooner
+than one reconciliation interval (`TDD-identity-kernel-003`). Keycloak keeps no user events unless a
+realm saves them: "By default, Keycloak does not store or display events in the Admin Console. Only
+the error events are logged to the Admin Console and the server's log file" [R42]. So the realm
+saves user and admin events, and the kernel's definition refuses one that does not, or that keeps
+them for less than the reconciliation floor.
+
 Restricted mechanisms requiring explicit decision and compatibility tests:
 
 - custom authenticators;
@@ -509,3 +518,4 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R39]** Auth0, _APIs_, accessed 2026-10-02. <https://auth0.com/docs/get-started/apis>. "Before you register any APIs in the Auth0 Dashboard, one API will already exist: the Auth0 Management API."
 - **[R40]** Kubernetes, _Server-Side Apply_, accessed 2026-10-05. <https://kubernetes.io/docs/reference/using-api/server-side-apply/>. "When using Server-Side Apply, trying to change a field that is controlled by a different manager results in a rejected request unless the client forces an override"; a conflict "prevents an applier from unintentionally overwriting the value set by another user."
 - **[R41]** HashiCorp, Terraform, _Import a single resource_, accessed 2026-10-05. <https://developer.hashicorp.com/terraform/language/import/single-resource>. "Run `terraform plan` and review the proposed plan. If Terraform proposes any unexpected changes to the resource, update its configuration until it matches your intended settings."
+- **[R42]** Keycloak, _Server Administration Guide_, "Auditing user events", accessed 2026-10-05. <https://github.com/keycloak/keycloak/blob/main/docs/documentation/server_admin/topics/events/login.adoc>. "By default, {project_name} does not store or display events in the Admin Console. Only the error events are logged to the Admin Console and the server's log file"; "Toggle _Save events_ to _ON_"; "Specify the length of time to store events in the _Expiration_ field."
