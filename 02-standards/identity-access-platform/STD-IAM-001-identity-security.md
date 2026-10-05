@@ -3,12 +3,12 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.2.0
+  version: 2.3.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-03
+  last_reviewed: 2026-10-05
 ---
 
 # Enterprise Identity Security Standard (STD-IAM-001)
@@ -119,6 +119,7 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - Authentication, federation, recovery, factor change, session lifecycle, token/client administration, privileged identity administration, and security-relevant configuration changes MUST emit governed security/audit events
 - Identity Runtime MAY keep operational logs, but enterprise evidence authority remains with the designated Audit & Evidence capability
 - Audit evidence MUST preserve actor, subject, action, outcome, time, source, correlation, and relevant assurance/context metadata [R11]
+- Identity Runtime MUST keep a durable record of every kernel user and admin event, read from the kernel's native event store, until Audit & Evidence has received it (2.3.0). The kernel's own store is bounded (`TDD-identity-kernel-003`, 7 days) and is the reconciliation source, not that record. AU-11 asks to "Retain audit records for [an organization-defined time period] to provide support for after-the-fact investigations of incidents" [R11]; the time period is Audit & Evidence's to define, and until it receives an event the record cannot be released without losing it. EAD-002 §8 asks the same of every producer: "Durable producers retain/replay accepted work". The record holds no password, token, key, or other credential value, whatever the kernel's representation carried [R18]
 
 ### 3.9 Browser Security
 
@@ -161,7 +162,7 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 - **[R8]** IETF RFC 7009, _OAuth 2.0 Token Revocation_, August 2013. <https://www.rfc-editor.org/rfc/rfc7009>. §3 and §5: an access token already issued is not invalidated at once by a revocation.
 - **[R9]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63B-4>. Salted password hashing and blocklists, rate limiting, and a phishing-resistant option at AAL2.
 - **[R10]** NIST SP 800-63C-4, _Digital Identity Guidelines: Federation and Assertions_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63C-4>. Assertion validation, replay protection, and the federated identifier as subject plus issuer.
-- **[R11]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_ (release 5.2.0). <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. AC-7 unsuccessful logon attempts; IA-2(1) multi-factor authentication to privileged accounts; IA-5(1) password-based authentication; IA-9 service identification and authentication; AU-2 and AU-3 audit events and their content.
+- **[R11]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_ (release 5.2.0). <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. AC-7 unsuccessful logon attempts; IA-2(1) multi-factor authentication to privileged accounts; IA-5(1) password-based authentication; IA-9 service identification and authentication; AU-2 and AU-3 audit events and their content; AU-11 audit record retention, "Retain audit records for [Assignment: organization-defined time period consistent with records retention policy] to provide support for after-the-fact investigations of incidents and to meet regulatory and organizational information retention requirements."
 - **[R12]** IETF RFC 10017, _OAuth 2.0 for Browser-Based Applications_ (Best Current Practice), August 2026. <https://www.rfc-editor.org/rfc/rfc10017>. §6.1.3.2 `HttpOnly` and `Secure` BFF cookies; §8.5 browser storage readable by script.
 
 - **[R21]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §4: the validation a resource server performs. The operative profile is `STD-IAM-002`.
