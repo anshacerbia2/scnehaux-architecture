@@ -3,12 +3,12 @@ doc_meta:
   id: STD-GLB-009
   title: Enterprise Platform Engineering Standard
   owner: Principal Platform Architect
-  version: 1.2.0
+  version: 1.3.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-03
+  last_reviewed: 2026-10-05
 ---
 
 # Enterprise Platform Engineering Standard (STD-GLB-009)
@@ -93,6 +93,12 @@ The shared development server runs every Scnehaux service the same way, so an op
 
 A service whose browser half runs on a developer's machine (identity-experience's BFF) registers its client on the server with a script in `deploy/dev` and runs no stack there.
 
+**A procedure step is a script, and CI runs it (1.3.0).** A step that changes a server's state, such as an adoption, a registration, a ceremony or a move between versions, MUST be a script in the repository, and the repository's `deploy-dev` job MUST run it against the stack it stands up. `deploy/dev/README.md` names the script and what it checks. It does not carry a request body for an operator to retype.
+
+- _Why._ A step done by hand is not done the same way twice: "any action performed by a human or humans hundreds of times won't be performed the same way each time", and "This inevitable lack of consistency leads to mistakes, oversights, issues with data quality, and, yes, reliability problems" [R8]. A step that only a reader runs also goes stale unseen. Go keeps its documentation true by running it: examples "are compiled (and optionally executed) as part of a package's test suite", and "Having executable documentation for a package guarantees that the information will not go out of date as the API changes" [R9].
+- _What it found._ identity-control's README declared the BFF's adoption with the wrong audience class. Nothing ran it, so the error stayed until the declaration was turned into a script (2026-10-05).
+- _Tradeoff._ A script needs a stack in CI that can stand in for the server, and some state, such as a person's second factor, is only on the server. A step CI cannot reach is stated as such in the README, with the reason.
+
 ---
 
 ### Internal Developer Platform (IDP) Interfaces
@@ -134,3 +140,5 @@ None. All platform engineering standards apply universally. Deviations require f
 - **[R5]** Docker, _Interpolation_, accessed 2026-10-03. <https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/>. "${VAR:?error} -> value of VAR if set and non-empty, otherwise exit with error"; "${VAR:-default} -> value of VAR if set and non-empty, otherwise default."
 - **[R6]** Docker, _Set environment variables within your container's environment_, accessed 2026-10-03. <https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/>. "As of Docker Compose version 2.24.0, you can set your `.env` file, defined by the `env_file` attribute, to be optional by using the `required` field. When `required` is set to `false` and the `.env` file is missing, Compose silently ignores the entry."
 - **[R7]** The Twelve-Factor App, _V. Build, release, run_, accessed 2026-10-03. <https://12factor.net/build-release-run>. "Strictly separate build and run stages"; "Every release should always have a unique release ID, such as a timestamp of the release (such as `2011-04-06-20:32:17`) or an incrementing number (such as `v100`)."
+- **[R8]** Google, _Site Reliability Engineering_, ch. 7, "The Evolution of Automation at Google", accessed 2026-10-05. <https://sre.google/sre-book/automation-at-google/>. "any action performed by a human or humans hundreds of times won't be performed the same way each time"; "This inevitable lack of consistency leads to mistakes, oversights, issues with data quality, and, yes, reliability problems."
+- **[R9]** The Go Blog, _Testable Examples in Go_, accessed 2026-10-05. <https://go.dev/blog/examples>. "Examples are compiled (and optionally executed) as part of a package's test suite"; "Having executable documentation for a package guarantees that the information will not go out of date as the API changes."
