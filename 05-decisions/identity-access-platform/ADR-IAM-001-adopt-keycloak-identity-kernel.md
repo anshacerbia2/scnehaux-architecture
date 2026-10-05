@@ -190,6 +190,29 @@ the error events are logged to the Admin Console and the server's log file" [R42
 saves user and admin events, and the kernel's definition refuses one that does not, or that keeps
 them for less than the reconciliation floor.
 
+**The kernel renders every authentication page, and its login theme styles rather than overrides
+(2026-10-05).** Sign-in, second factors, recovery and required actions stay on the kernel's pages;
+everything after sign-in, sessions, authenticators, events and administration, is the Identity
+Experience's, through the Identity Control API (SAD-002).
+
+- _Why the pages stay the kernel's._ An application that renders the credential form holds the
+  credential. The password grant "MUST NOT be used" because it "insecurely exposes the credentials of
+  the resource owner to the client" [R14]. An application hosting the login form "can record every
+  keystroke entered in the login form to capture usernames and passwords … and copy session
+  cookies" [R44]. The established platforms keep sign-in on their own pages: "Okta recommends the
+  Okta-hosted widget for most integrations", which helps "Minimize XSS (cross-site scripting)
+  attacks on your app so they don't affect the sign-in experience" [R45]; Auth0's Universal Login "is
+  the default for primary sign-in, sign-up, and password reset" [R46]. A passkey "can only be
+  accessed by origins belonging to that Relying Party" [R13], so the pages that register and use one
+  stay on the kernel's origin.
+- _How the theme is built._ It names `keycloak.v2` as its parent and replaces stylesheets, assets and
+  message bundles only: "When extending a theme you can override individual resources (templates,
+  stylesheets, etc.)" [R33]. A template, which Keycloak renders with "Apache Freemarker templates"
+  [R33], is copied only when a test shows the stock template cannot meet a requirement, and each
+  copy is listed with its reason (`TDD-identity-kernel-004`), because a copied template no longer
+  receives the kernel's changes. The theme ships in an image built from the pinned upstream digest
+  (`TDD-identity-kernel-005`).
+
 Restricted mechanisms requiring explicit decision and compatibility tests:
 
 - custom authenticators;
@@ -327,6 +350,15 @@ Every stop names its reason and the calling Principal, and is recorded (`STD-IAM
 - Avoids duplicate Principal authority.
 - Retains Go for the differentiated control, reconciliation, integration, and migration layer.
 - Provides a broad ecosystem, documented administration APIs, and established operational guidance.
+- Is broadly adopted and commercially supported. The project's public references, from organizations
+  that agreed to be named in its community survey, include Accenture, Capgemini, CERN,
+  Hewlett-Packard Enterprise, Hitachi, UnitedHealthcare, Wayfair, Storebrand and Germany's
+  Bundesagentur für Arbeit [R47]. The list is self-reported and says nothing of how each uses it. CERN
+  states its own: its Single Sign-On is "based on Keycloak, providing federated and social authentication
+  and supporting SAML and OIDC protocols" [R50]. CNCF
+  publishes deployments of "12000+ active users" and "2M+ users across unified application
+  ecosystem" [R48]. Red Hat sells it as "Red Hat build of Keycloak", which "replaces any planned
+  future releases of Red Hat Single Sign-On" [R49].
 - Improves interoperability and conformance potential. The last OpenID certification Keycloak lists is for 18.0.0 [R16], so the pinned release's conformance is asserted by the kernel's own compatibility suite, not by a certification.
 
 ### Negative
@@ -480,7 +512,7 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R10]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023. <https://openid.net/specs/openid-connect-core-1_0.html>.
 - **[R11]** OASIS, _Assertions and Protocols for the OASIS Security Assertion Markup Language (SAML) V2.0_, March 2005. <https://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf>.
 - **[R12]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §4: a resource server validates the token itself; §2.2.3: every scope in an access token must mean something to the resources its `aud` names.
-- **[R13]** W3C, _Web Authentication: An API for accessing Public Key Credentials, Level 3_, Recommendation, accessed 2026-09-30. <https://www.w3.org/TR/webauthn-3/>.
+- **[R13]** W3C, _Web Authentication: An API for accessing Public Key Credentials, Level 3_, Recommendation, accessed 2026-09-30. <https://www.w3.org/TR/webauthn-3/>. A public key credential "can only be accessed by origins belonging to that Relying Party".
 - **[R14]** IETF RFC 9700 (BCP 240), _Best Current Practice for OAuth 2.0 Security_, January 2025. <https://www.rfc-editor.org/rfc/rfc9700>. §2.5: with asymmetric client authentication the server holds no symmetric key.
 - **[R15]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_ (release 5.2.0). <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. AC-6 least privilege; AC-2(2) removing or disabling temporary and emergency accounts after a set period.
 
@@ -509,7 +541,7 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R30]** ZITADEL, _Organizations_ and _Projects_, accessed 2026-09-30. <https://zitadel.com/docs/guides/manage/console/organizations-overview>, <https://zitadel.com/docs/concepts/structure/projects>. An organization is comparable to a tenant; granted organizations manage role assignments.
 - **[R31]** ZITADEL, _Principles_ and _Software Architecture_, accessed 2026-09-30. <https://zitadel.com/docs/concepts/principles>, <https://zitadel.com/docs/concepts/architecture/software>. API-first; stateless.
 - **[R32]** Microsoft, _Manage emergency access admin accounts in Microsoft Entra ID_, updated June 2026. <https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/security-emergency-access>.
-- **[R33]** Keycloak, _Working with themes_, accessed 2026-09-30. <https://www.keycloak.org/ui-customization/themes>.
+- **[R33]** Keycloak, _Working with themes_, accessed 2026-09-30. <https://www.keycloak.org/ui-customization/themes>. "Keycloak uses Apache Freemarker templates to generate HTML and render pages"; "When extending a theme you can override individual resources (templates, stylesheets, etc.)."
 - **[R34]** Google Cloud, _IAM overview_, accessed 2026-10-01. <https://docs.cloud.google.com/iam/docs/overview>. An allow policy is attached to a resource, and IAM checks the resource's allow policy when an authenticated principal accesses it.
 - **[R35]** Kubernetes, _Authorization_, accessed 2026-10-01. <https://kubernetes.io/docs/reference/access-authn-authz/authorization/>. Authorization takes place in the API server, against the user and groups authentication established; access is denied by default.
 - **[R36]** IETF RFC 8707, _Resource Indicators for OAuth 2.0_, February 2020. <https://www.rfc-editor.org/rfc/rfc8707>. §2.2: the authorization server should downscope a token to what the resource is able to process and needs to know.
@@ -520,3 +552,10 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R41]** HashiCorp, Terraform, _Import a single resource_, accessed 2026-10-05. <https://developer.hashicorp.com/terraform/language/import/single-resource>. "Run `terraform plan` and review the proposed plan. If Terraform proposes any unexpected changes to the resource, update its configuration until it matches your intended settings."
 - **[R42]** Keycloak, _Server Administration Guide_, "Auditing user events", accessed 2026-10-05. <https://github.com/keycloak/keycloak/blob/main/docs/documentation/server_admin/topics/events/login.adoc>. "By default, {project_name} does not store or display events in the Admin Console. Only the error events are logged to the Admin Console and the server's log file"; "Toggle _Save events_ to _ON_"; "Specify the length of time to store events in the _Expiration_ field."
 - **[R43]** Keycloak, _Server Administration Guide_, "First login flow", accessed 2026-10-05. <https://github.com/keycloak/keycloak/blob/main/docs/documentation/server_admin/topics/identity-broker/first-login-flow.adoc>. "By default, the `First Login Flow` option points to the `first broker login` flow, but you can use your flow or different flows for different identity providers"; `Create User If Unique` "creates a new local {project_name} account and links it with the identity provider".
+- **[R44]** IETF RFC 8252 (BCP 212), _OAuth 2.0 for Native Apps_, October 2017. <https://www.rfc-editor.org/rfc/rfc8252>. §8.12: "The host application can record every keystroke entered in the login form to capture usernames and passwords, automatically submit forms to bypass user consent, and copy session cookies."
+- **[R45]** Okta, _Okta deployment models — redirect vs. embedded_, accessed 2026-10-05. <https://developer.okta.com/docs/concepts/redirect-vs-embedded/>. "Okta recommends the Okta-hosted widget for most integrations"; redirect authentication helps "Minimize XSS (cross-site scripting) attacks on your app so they don't affect the sign-in experience."
+- **[R46]** Auth0, _Universal Login vs. Embedded Login_, accessed 2026-10-05. <https://auth0.com/docs/authenticate/login/universal-vs-embedded-login>. "Auth0 manages the login surface and is the default for primary sign-in, sign-up, and password reset"; "Auth0 delivers security updates to the login experience transparently."
+- **[R47]** Keycloak, `ADOPTERS.md`, accessed 2026-10-05. <https://github.com/keycloak/keycloak/blob/main/ADOPTERS.md>. "List of organization names below is based on information collected using Keycloak Community Survey. It contains company names from participants who agreed to serve as public reference."
+- **[R48]** CNCF, _Keycloak_ project page, case studies, accessed 2026-10-05. <https://www.cncf.io/projects/keycloak/>. "Keycloak was accepted to CNCF on April 10, 2023 at the Incubating maturity level"; IFTM, "12000+ active users benefiting from unified login across platforms"; an Infosys client, "2M+ users across unified application ecosystem".
+- **[R49]** Red Hat, _Red Hat build of Keycloak_, accessed 2026-10-05. <https://access.redhat.com/products/red-hat-build-keycloak/>. "Red Hat build of Keycloak is a cloud-native Identity Access Management solution based on the popular open source Keycloak project"; it "replaces any planned future releases of Red Hat Single Sign-On."
+- **[R50]** CERN, _Authentication and Authorization Services_ documentation, accessed 2026-10-05. <https://auth.docs.cern.ch/>. "A Single Sign-On service, based on Keycloak, providing federated and social authentication and supporting SAML and OIDC protocols."
