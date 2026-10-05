@@ -353,7 +353,9 @@ Every stop names its reason and the calling Principal, and is recorded (`STD-IAM
 - Is broadly adopted and commercially supported. The project's public references, from organizations
   that agreed to be named in its community survey, include Accenture, Capgemini, CERN,
   Hewlett-Packard Enterprise, Hitachi, UnitedHealthcare, Wayfair, Storebrand and Germany's
-  Bundesagentur für Arbeit [R47]. The list is self-reported and says nothing of how each uses it. CNCF
+  Bundesagentur für Arbeit [R47]. The list is self-reported and says nothing of how each uses it. CERN
+  states its own: its Single Sign-On is "based on Keycloak, providing federated and social authentication
+  and supporting SAML and OIDC protocols" [R50]. CNCF
   publishes deployments of "12000+ active users" and "2M+ users across unified application
   ecosystem" [R48]. Red Hat sells it as "Red Hat build of Keycloak", which "replaces any planned
   future releases of Red Hat Single Sign-On" [R49].
@@ -556,3 +558,4 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R47]** Keycloak, `ADOPTERS.md`, accessed 2026-10-05. <https://github.com/keycloak/keycloak/blob/main/ADOPTERS.md>. "List of organization names below is based on information collected using Keycloak Community Survey. It contains company names from participants who agreed to serve as public reference."
 - **[R48]** CNCF, _Keycloak_ project page, case studies, accessed 2026-10-05. <https://www.cncf.io/projects/keycloak/>. "Keycloak was accepted to CNCF on April 10, 2023 at the Incubating maturity level"; IFTM, "12000+ active users benefiting from unified login across platforms"; an Infosys client, "2M+ users across unified application ecosystem".
 - **[R49]** Red Hat, _Red Hat build of Keycloak_, accessed 2026-10-05. <https://access.redhat.com/products/red-hat-build-keycloak/>. "Red Hat build of Keycloak is a cloud-native Identity Access Management solution based on the popular open source Keycloak project"; it "replaces any planned future releases of Red Hat Single Sign-On."
+- **[R50]** CERN, _Authentication and Authorization Services_ documentation, accessed 2026-10-05. <https://auth.docs.cern.ch/>. "A Single Sign-On service, based on Keycloak, providing federated and social authentication and supporting SAML and OIDC protocols."
