@@ -239,6 +239,38 @@ Prohibited by default:
 - Database, key continuity, backup, restore, upgrade, vulnerability response, conformance, and disaster-recovery behavior are owned by the Identity Platform Team.
 - Products validate approved tokens locally [R12].
 
+**The kernel's operational surfaces (2026-10-05).** One image, and two ports with different audiences.
+
+- _The image is optimized._ Keycloak's container guide: "For the best start up of your Keycloak container,
+  build an image by running the `build` step during the container build", with `ENV KC_HEALTH_ENABLED=true`,
+  `ENV KC_METRICS_ENABLED=true` and `RUN /opt/keycloak/bin/kc.sh build`, started with `--optimized` [R51].
+  Health and metrics are build-time options, so they are decided in the image, which is promoted unchanged
+  (`TDD-identity-kernel-005`), and not per deployment.
+- _Health is three probes, each with one job._ Keycloak serves `/health/started`, "Startup probe used for initial
+  startup of Keycloak before the liveness probe takes over"; `/health/live`, "Check if Keycloak is running";
+  and `/health/ready`, "Checks if Keycloak is ready to process requests or not" [R52]. Keycloak's own operator
+  binds them to the startup, liveness and readiness probes, on the management port [R53]. Liveness checks
+  no dependency: "Incorrect implementation of liveness probes can lead to cascading failures", among them
+  "Restarting of container under high load" [R54]. A database outage makes the kernel unready, which takes
+  it out of rotation, and does not restart it, which would repair nothing.
+- _Metrics are on._ They are "based on the Prometheus (OpenMetrics) text format" [R55], and they deepen
+  readiness: "When metrics are enabled, checks include database connection pool status, cluster health,
+  graceful shutdown readiness, and server initialization completion" [R52].
+- _The management port is internal._ Its purpose is "to hide endpoints like `/metrics` or `/health` from the
+  outside world and, therefore, hardens the security" [R56]. Only the orchestrator and the monitoring system
+  reach it.
+- _Administration is internal, in every environment._ The public entrance serves the realm's protocol paths
+  and refuses `/admin` and `/realms/master`: Keycloak recommends `/admin/` be exposed "Only internally",
+  because "Exposed admin paths lead to an unnecessary attack vector" [R57], and enforcing it is the proxy's
+  job: "If you want to restrict access to the Administration REST API, you need to do it on the reverse proxy
+  level" [R58]. The Identity Control Service, `realm-apply` and break-glass use the internal path.
+- _The Admin Console is not an operating surface._ Administration is the Identity Experience's, through the
+  Identity Control Service (§5.10), and configuration is the realm definition's. The console stays in the
+  image, reachable only internally, for break-glass and inspection: an entry that does not depend on the
+  control plane it may have to repair, signed in through the `master` realm, whose flows the realm
+  definition does not manage. It is not disabled in production, because the feature is a build-time option
+  [R51] and the image is the same in every environment, and disabling it would remove no capability: the Admin REST API stays, because the control plane needs it internally.
+
 ### 5.9 Legacy Go IAM
 
 The existing Go IAM SHALL enter containment and migration mode:
@@ -559,3 +591,11 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R48]** CNCF, _Keycloak_ project page, case studies, accessed 2026-10-05. <https://www.cncf.io/projects/keycloak/>. "Keycloak was accepted to CNCF on April 10, 2023 at the Incubating maturity level"; IFTM, "12000+ active users benefiting from unified login across platforms"; an Infosys client, "2M+ users across unified application ecosystem".
 - **[R49]** Red Hat, _Red Hat build of Keycloak_, accessed 2026-10-05. <https://access.redhat.com/products/red-hat-build-keycloak/>. "Red Hat build of Keycloak is a cloud-native Identity Access Management solution based on the popular open source Keycloak project"; it "replaces any planned future releases of Red Hat Single Sign-On."
 - **[R50]** CERN, _Authentication and Authorization Services_ documentation, accessed 2026-10-05. <https://auth.docs.cern.ch/>. "A Single Sign-On service, based on Keycloak, providing federated and social authentication and supporting SAML and OIDC protocols."
+- **[R51]** Keycloak, _Running Keycloak in a container_, accessed 2026-10-05. <https://www.keycloak.org/server/containers>. "For the best start up of your Keycloak container, build an image by running the `build` step during the container build"; `ENV KC_HEALTH_ENABLED=true`, `ENV KC_METRICS_ENABLED=true`, `RUN /opt/keycloak/bin/kc.sh build`; `start --optimized`.
+- **[R52]** Keycloak, _Tracking instance status with health checks_, accessed 2026-10-05. <https://www.keycloak.org/observability/health>. `/health/started`, "Startup probe used for initial startup of Keycloak before the liveness probe takes over"; `/health/live`, "Check if Keycloak is running"; `/health/ready`, "Checks if Keycloak is ready to process requests or not"; "When metrics are enabled, checks include database connection pool status, cluster health, graceful shutdown readiness, and server initialization completion."
+- **[R53]** Keycloak Operator, `KeycloakDeploymentDependentResource.java`, tag 26.7.5. <https://github.com/keycloak/keycloak/blob/26.7.5/operator/src/main/java/org/keycloak/operator/controllers/KeycloakDeploymentDependentResource.java>. Readiness on `health/ready` and liveness on `health/live`, every 10 seconds with a failure threshold of 3; startup on `health/started`, every second with a failure threshold of 600; all on the management port.
+- **[R54]** Kubernetes, _Liveness, Readiness, and Startup Probes_, accessed 2026-10-05. <https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/>. "Incorrect implementation of liveness probes can lead to cascading failures"; "Restarting of container under high load".
+- **[R55]** Keycloak, _Gaining insights with metrics_, accessed 2026-10-05. <https://www.keycloak.org/observability/configuration-metrics>. Metrics at `/metrics` on the management interface, "based on the Prometheus (OpenMetrics) text format".
+- **[R56]** Keycloak, _Configuring the Management Interface_, accessed 2026-10-05. <https://www.keycloak.org/server/management-interface>. "The management interface allows accessing management endpoints via a different HTTP server than the primary one"; "It provides the possibility to hide endpoints like `/metrics` or `/health` from the outside world and, therefore, hardens the security."
+- **[R57]** Keycloak, _Configuring a reverse proxy_, Exposed path recommendations, accessed 2026-10-05. <https://www.keycloak.org/server/reverseproxy>. `/admin/`: "Only internally", "Exposed admin paths lead to an unnecessary attack vector."
+- **[R58]** Keycloak, _Configuring the hostname_, accessed 2026-10-05. <https://www.keycloak.org/server/hostname>. "Using the `hostname-admin` option does not prevent accessing the Administration REST API endpoints via the frontend URL"; "If you want to restrict access to the Administration REST API, you need to do it on the reverse proxy level."
