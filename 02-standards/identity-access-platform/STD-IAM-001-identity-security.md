@@ -3,7 +3,7 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.4.0
+  version: 2.5.0
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -43,6 +43,11 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - Credential policy MUST support modern password hashing, breached/weak credential controls where available, secure recovery, MFA, WebAuthn/passkeys, and step-up authentication according to assurance requirements [R9]
 - Plaintext credentials, recovery secrets, private keys, and bearer tokens MUST NOT be logged [R18]
 - Authentication endpoints MUST implement rate limiting, abuse detection, and bounded resource consumption [R9][R11]
+- **A failed sign-in MUST NOT tell by its time whether the account exists or what state it is in (2.5.0).** An unknown identifier, a wrong password and a disabled account answer in times a test cannot separate, as they already answer with one message and one status. OWASP warns that "the processing time can be significantly different according to the case ... allowing an attacker to mount a time-based attack", and gives the remedy: hash the password whether or not the user exists [R30]. The pinned kernel does that, hashing a dummy password for an unknown identifier [R32]. The compatibility suite measures it by dudect's method: the classes interleaved in a random order, Welch's t-test on every measurement and on the fastest share, and dudect's threshold of 10 [R31]. Against 26.7.5 the three classes stand at 44.2, 44.1 and 43.5 ms, with no pair above 1.6.
+- **Two kernel paths answer an existing account about one hash sooner, and are recorded gaps (2.5.0).**
+  - _An empty password._ The kernel returns before hashing for an existing account and still hashes for an unknown one, so an empty password is answered in 16.4 ms against 42.1 ms (|t| 137). This is reported upstream as keycloak#51887, open, marked important [R32].
+  - _An account under a brute-force lockout._ The lockout is checked before the password, so the answer comes in 16.0 ms (|t| 126). A guesser who has caused the lockout learns from the time that the account exists, though the message is the same.
+  - No realm setting closes either gap. Closing one here would take a custom authenticator, a restricted mechanism (`ADR-IAM-001 §5.7`), against a fix the kernel's maintainers are already making. Both stay measured on every compatibility run, so the release that closes them shows it, and the rate limits above bound how fast either can be asked.
 
 ### 3.2 OAuth 2.0 / OpenID Connect Security Profile
 
@@ -151,6 +156,7 @@ Deviation from this standard requires formal exception approval under GDC-000 wi
 - compatibility test, against the pinned kernel release, that two registered client keys overlap, a removed key is refused on the next request, and a replayed assertion is refused
 - compatibility test, against the pinned kernel release, that a stopped client gets no new token and no refresh, that the refresh tokens a stop ended stay refused after a re-enable, and that a deleted client's `clientId` can be registered again
 - compatibility test, against the pinned kernel release, that the hosted login page carries the §3.9 header set, that its policy names no other origin and no `form-action`, and that a definition weakening the anti-framing directives is refused
+- compatibility test, against the pinned kernel release, that an unknown identifier, a wrong password and a disabled account are not separable by time, with the §3.1 recorded gaps measured alongside
 
 ## 6. References
 
@@ -191,3 +197,6 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 - **[R26]** Keycloak 26.7.5, the release the kernel pins. Server Administration Guide, _Clickjacking_: "By default, Keycloak only sets up a _same-origin_ policy for iframes", <https://www.keycloak.org/docs/26.7.5/server_admin/index.html#clickjacking>. Source at tag `26.7.5`, <https://github.com/keycloak/keycloak/tree/26.7.5>: `BrowserSecurityHeaders` and `ContentSecurityPolicyBuilder` (the default policy, `frame-src 'self'; frame-ancestors 'self'; object-src 'none'`), and the `keycloak.v2` login templates, where `template.ftl` and `login-otp.ftl` carry inline `<script>` and `onclick`, `login.ftl` an inline `onsubmit`, and `webauthn-authenticate.ftl` an inline module script holding `challenge : ${challenge?c}`. Issue #16277, _Hardened Content Security Policy (CSP)_, open since 2023-01-05: "The default Content Security Policy (CSP) used by Keycloak is not locked down enough", <https://github.com/keycloak/keycloak/issues/16277>; pull request #49879, _Generate CSP nonce for Freemarker_, open, <https://github.com/keycloak/keycloak/pull/49879>.
 - **[R27]** W3C WebAppSec, issue #8, _CSP: form-action and redirects_, open since 2015-10-07, accessed 2026-10-06. <https://github.com/w3c/webappsec-csp/issues/8>.
 - **[R28]** GitLab, merge request 90082, _Allowlist OAuth application redirect URI in CSP_, merged 2022-06-17. <https://gitlab.com/gitlab-org/gitlab/-/merge_requests/90082>. An OAuth authorization page "immediately redirects to the OAuth application's `redirect_uri` and Chrome takes the redirection target into account when evaluating CSP violations."
+- **[R30]** OWASP, _Authentication Cheat Sheet_, accessed 2026-10-06. <https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html>. Authentication and error messages: "the processing time can be significantly different according to the case (success vs failure) allowing an attacker to mount a time-based attack"; the remedy computes the password hash whether or not the user exists.
+- **[R31]** Oscar Reparaz, Josep Balasch and Ingrid Verbauwhede, _Dude, is my code constant time?_, DATE 2017. <https://eprint.iacr.org/2016/1123.pdf>; reference implementation <https://github.com/oreparaz/dudect>. Measurements of two input classes compared by "a Welch's t-test to determine if the function runs in constant time"; the long tail is dropped by keeping "the x% percent fastest timings" alongside the uncropped test; the implementation's `t_threshold_moderate` is 10 ("Pankaj likes 4.5 but let's be more lenient", the TVLA threshold).
+- **[R32]** Keycloak 26.7.5 source, `AuthenticatorUtils.dummyHash`: "simulate hashing of some "dummy" password. The purpose is to make the user enumeration harder, so the authentication request with non-existing username also need to simulate the password hashing overhead", and `AbstractUsernameFormAuthenticator.validatePassword`, which returns for an empty password and for a brute-force lockout before the password is hashed, <https://github.com/keycloak/keycloak/tree/26.7.5/services/src/main/java/org/keycloak/authentication/authenticators>. Issue #51887, _Username enumeration via empty-password timing_, open, `priority/important`, <https://github.com/keycloak/keycloak/issues/51887>.
