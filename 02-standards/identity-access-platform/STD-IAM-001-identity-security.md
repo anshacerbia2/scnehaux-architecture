@@ -3,7 +3,7 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.5.0
+  version: 2.6.0
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -43,6 +43,7 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - Credential policy MUST support modern password hashing, breached/weak credential controls where available, secure recovery, MFA, WebAuthn/passkeys, and step-up authentication according to assurance requirements [R9]
 - Plaintext credentials, recovery secrets, private keys, and bearer tokens MUST NOT be logged [R18]
 - Authentication endpoints MUST implement rate limiting, abuse detection, and bounded resource consumption [R9][R11]
+- **Binding, replacing or removing an authenticator, issuing recovery codes, and account recovery MUST each notify every notification address of the Principal, and a Principal MUST be able to hold at least two (2.6.0).** NIST SP 800-63B-4 §4.6 asks that "Events that require notification SHALL cause a notification to be sent to the notification addresses stored in the subscriber account" and that "CSPs SHALL support at least two notification addresses per subscriber account" [R9]. The notification says how to repudiate the event and whom to contact. An address is added only at `aal2` and after proof of control, and the change is itself notified. The Identity Control API decides each notification and the Notification Platform delivers it (`ADR-IAM-007`). The kernel sends no mail. Not met until both are in production, which is a production gate
 - **A failed sign-in MUST NOT tell by its time whether the account exists or what state it is in (2.5.0).** An unknown identifier, a wrong password and a disabled account answer in times a test cannot separate, as they already answer with one message and one status. OWASP warns that "the processing time can be significantly different according to the case ... allowing an attacker to mount a time-based attack", and gives the remedy: hash the password whether or not the user exists [R30]. The pinned kernel does that, hashing a dummy password for an unknown identifier [R32]. The compatibility suite measures it by dudect's method: the classes interleaved in a random order, Welch's t-test on every measurement and on the fastest share, and dudect's threshold of 10 [R31]. Against 26.7.5 the three classes stand at 44.2, 44.1 and 43.5 ms, with no pair above 1.6.
 - **Two kernel paths answer an existing account about one hash sooner, and are recorded gaps (2.5.0).**
   - _An empty password._ The kernel returns before hashing for an existing account and still hashes for an unknown one, so an empty password is answered in 16.4 ms against 42.1 ms (|t| 137). This is reported upstream as keycloak#51887, open, marked important [R32].
@@ -157,6 +158,7 @@ Deviation from this standard requires formal exception approval under GDC-000 wi
 - compatibility test, against the pinned kernel release, that a stopped client gets no new token and no refresh, that the refresh tokens a stop ended stay refused after a re-enable, and that a deleted client's `clientId` can be registered again
 - compatibility test, against the pinned kernel release, that the hosted login page carries the §3.9 header set, that its policy names no other origin and no `form-action`, and that a definition weakening the anti-framing directives is refused
 - compatibility test, against the pinned kernel release, that an unknown identifier, a wrong password and a disabled account are not separable by time, with the §3.1 recorded gaps measured alongside
+- realm definition assertion that the kernel holds no SMTP server and no `email` event listener (`ADR-IAM-007 §5.4`)
 
 ## 6. References
 
@@ -172,7 +174,7 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 - **[R6]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023. <https://openid.net/specs/openid-connect-core-1_0.html>. §5.7 `iss` and `sub` as the stable identifier; §9 `private_key_jwt`, with `jti` REQUIRED and single use; §10.1.1 retaining decommissioned keys.
 - **[R7]** IETF RFC 7517, _JSON Web Key (JWK)_, May 2015. <https://www.rfc-editor.org/rfc/rfc7517>. §4.5: `kid` values within a key set SHOULD be distinct.
 - **[R8]** IETF RFC 7009, _OAuth 2.0 Token Revocation_, August 2013. <https://www.rfc-editor.org/rfc/rfc7009>. §3 and §5: an access token already issued is not invalidated at once by a revocation.
-- **[R9]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63B-4>. Salted password hashing and blocklists, rate limiting, and a phishing-resistant option at AAL2.
+- **[R9]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63B-4>. Salted password hashing and blocklists, rate limiting, and a phishing-resistant option at AAL2. §4.6 Account Notifications: "Events that require notification SHALL cause a notification to be sent to the notification addresses stored in the subscriber account"; "CSPs SHALL support at least two notification addresses per subscriber account"; "The notification SHALL provide clear instructions, including contact information, in case the recipient repudiates the event associated with the notification."
 - **[R10]** NIST SP 800-63C-4, _Digital Identity Guidelines: Federation and Assertions_, August 2025. <https://doi.org/10.6028/NIST.SP.800-63C-4>. Assertion validation, replay protection, and the federated identifier as subject plus issuer.
 - **[R11]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_ (release 5.2.0). <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. AC-7 unsuccessful logon attempts; IA-2(1) multi-factor authentication to privileged accounts; IA-5(1) password-based authentication; IA-9 service identification and authentication; AU-2 and AU-3 audit events and their content; AU-11 audit record retention, "Retain audit records for [Assignment: organization-defined time period consistent with records retention policy] to provide support for after-the-fact investigations of incidents and to meet regulatory and organizational information retention requirements."
 - **[R12]** IETF RFC 10017, _OAuth 2.0 for Browser-Based Applications_ (Best Current Practice), August 2026. <https://www.rfc-editor.org/rfc/rfc10017>. §6.1.3.2 `HttpOnly` and `Secure` BFF cookies; §8.5 browser storage readable by script.

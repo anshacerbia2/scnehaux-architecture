@@ -136,6 +136,9 @@ relayed to it. The provider therefore holds a second TOTP authenticator on that 
 The NIST requirement to notify the subscriber of a new authenticator "via a mechanism independent of
 the transaction binding the new authenticator" [R6] is not met yet: the realm sends no mail. It is a
 gap to close before production, together with recovery.
+`ADR-IAM-007` (2026-10-06) decides how it closes. Identity Control requests the notification from the
+Notification Platform, sends it to every notification address of the Principal, and records it as
+evidence. The kernel keeps sending no mail.
 
 ## 6. Consequences
 
