@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.0.0
+  version: 2.0.1
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-08-06
+  last_reviewed: 2026-10-06
   parent_pad: PAD-PLT-002
 ---
 
@@ -216,9 +216,13 @@ POST   /v1/memberships/{membership_id}:revoke
 POST   /v1/memberships/{membership_id}:restore
 GET    /v1/principals/{principal_id}/contexts
 GET    /v1/context/{tenant_id}/{principal_id}:verify
-GET    /v1/projections/organization/snapshot
-POST   /v1/projections/organization:reconcile
+POST   /v1/projections/snapshot
+POST   /v1/projections/reconcile
 ```
+
+The projection routes are the served ones (2026-10-06). This list named them under
+`/v1/projections/organization/`, which was never served, and a consumer built from it was answered
+404; the three-stack `deploy-dev` in `organization-control` found it.
 
 Exact schemas are defined by the API contract and versioned independently. Sensitive administrative commands require idempotency keys, optimistic version, reason, and authenticated actor context.
 
