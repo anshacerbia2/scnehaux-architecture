@@ -3,12 +3,12 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.3.0
+  version: 2.4.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-05
+  last_reviewed: 2026-10-06
 ---
 
 # Enterprise Identity Security Standard (STD-IAM-001)
@@ -127,6 +127,11 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - Privileged/admin experiences SHOULD prefer secure `HttpOnly`, `Secure`, appropriately scoped cookies backed by server-side/BFF session control [R12]
 - Direct browser-token applications require an approved public-client profile, PKCE, bounded token lifetime, XSS controls, and no client secret
 - UI authorization is defense-in-depth and user-experience control only; backend/domain authorization remains authoritative
+- The kernel's hosted login pages MUST NOT be framed by any origin: their `Content-Security-Policy` carries `frame-ancestors 'none'`, and `X-Frame-Options: DENY` is sent for browsers that predate it (2.4.0). CSP Level 3 says `frame-ancestors` "is meant to replace the `X-Frame-Options` header" [R23], and OWASP recommends `'none'` and `DENY` "unless a specific need has been identified for framing" [R24]. Keycloak's default is weaker, "only ... a _same-origin_ policy for iframes" [R26], so the realm sets its own. No client of this estate frames a kernel page: a browser application signs in through its BFF [R12], so the OpenID Connect session-status iframe and sign-in inside an iframe are not offered
+- Their policy MUST load nothing from another origin: `default-src 'self'`, images also from `data:` (the one-time-code enrolment page renders its QR code as one), `object-src 'none'` and `base-uri 'none'`, the directives OWASP's strict policy sets alongside its script rule [R25] (2.4.0)
+- Inline script is permitted on those pages, as `'unsafe-inline'` in `script-src` and `style-src`, until the kernel can mark its own inline scripts with a nonce (2.4.0). This is a recorded gap against the strict policy OWASP recommends, a nonce or hash `script-src` with `'strict-dynamic'` [R25]. The pinned kernel's stock templates run inline scripts and inline event handlers on the sign-in, one-time-code and passkey pages, and the passkey page writes the request's challenge into its inline script, so no hash can name it [R26]. Copying the templates to remove the inline code would fork sixteen of the 33, and a copied template "no longer receives the kernel's changes" (`ADR-IAM-001 §5.7`), security fixes included. Nonces for the kernel's templates are proposed upstream and not released [R26]. Until then the policy still refuses every script from another origin, and CSP remains a "second layer", not "the only defensive mechanism against XSS" [R25]. The gap closes with the kernel release that ships nonces, and `TDD-identity-kernel-004` tracks it
+- The policy MUST NOT set `form-action` while the kernel's pages submit a form whose answer redirects to a client (2.4.0). Whether `form-action` governs the redirect that follows a submission is an open question in the CSP specification [R27], and Chrome "takes the redirection target into account" [R28], so `form-action 'self'` would block the return to the client after sign-in, and every `form_post` response
+- Those pages MUST also send `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer` (2.4.0). A browser ignores the first over plain HTTP, "the UA MUST ignore any present STS header field(s)" [R29], so it takes effect behind the production load balancer's TLS and is harmless on a development server
 
 ## 4. Exceptions
 
@@ -145,6 +150,7 @@ Deviation from this standard requires formal exception approval under GDC-000 wi
 - client-registration assertion that every confidential or workload client in a shared environment authenticates with `private_key_jwt` and holds no client secret
 - compatibility test, against the pinned kernel release, that two registered client keys overlap, a removed key is refused on the next request, and a replayed assertion is refused
 - compatibility test, against the pinned kernel release, that a stopped client gets no new token and no refresh, that the refresh tokens a stop ended stay refused after a re-enable, and that a deleted client's `clientId` can be registered again
+- compatibility test, against the pinned kernel release, that the hosted login page carries the §3.9 header set, that its policy names no other origin and no `form-action`, and that a definition weakening the anti-framing directives is refused
 
 ## 6. References
 
@@ -167,6 +173,8 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 
 - **[R21]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §4: the validation a resource server performs. The operative profile is `STD-IAM-002`.
 - **[R22]** IETF RFC 8725 (BCP 225), _JSON Web Token Best Current Practices_, February 2020. <https://www.rfc-editor.org/rfc/rfc8725>. §3.1 algorithm allowlists; §3.8 to §3.11 issuer, audience, and explicit typing.
+- **[R23]** W3C, _Content Security Policy Level 3_, Working Draft, accessed 2026-10-06. <https://www.w3.org/TR/CSP3/>. §6.4.2 `frame-ancestors` "restricts the origins which may embed the protected resource in a frame"; §6.4.2.2: "The `frame-ancestors` directive is meant to replace the `X-Frame-Options` header. User agents that support CSP should prefer `frame-ancestors` over `X-Frame-Options` when both are present." §6.4.1 `form-action` "restricts the URLs to which a form can be submitted."
+- **[R29]** IETF RFC 6797, _HTTP Strict Transport Security (HSTS)_, November 2012. <https://www.rfc-editor.org/rfc/rfc6797>. §8.1: "If an HTTP response is received over insecure transport, the UA MUST ignore any present STS header field(s)."
 
 ### Informative
 
@@ -178,3 +186,8 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 - **[R18]** OWASP, _Logging Cheat Sheet_, accessed 2026-09-30. <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html>. Access tokens, passwords, and keys are data to exclude from logs.
 - **[R19]** Center for Internet Security, _CIS Controls v8.1_, accessed 2026-09-30. <https://www.cisecurity.org/controls/v8-1>. 5.5 inventory of service accounts; 6.2 disabling accounts rather than deleting them may preserve audit trails.
 - **[R20]** NIST SP 800-61 Rev. 3, _Incident Response Recommendations and Considerations for Cybersecurity Risk Management_, April 2025. <https://csrc.nist.gov/pubs/sp/800/61/r3/final>. RS.MI-01 and RS.MI-02: containment, and eradication of persistence mechanisms and entry points.
+- **[R24]** OWASP, _Clickjacking Defense Cheat Sheet_, accessed 2026-10-06. <https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html>. `frame-ancestors 'none'`: "This setting is recommended unless a specific need has been identified for framing"; `X-Frame-Options`: "The 'DENY' setting is recommended unless a specific need has been identified for framing", and the header "has been obsoleted in favor of the frame-ancestors directive".
+- **[R25]** OWASP, _Content Security Policy Cheat Sheet_, accessed 2026-10-06. <https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html>. The strict policy: "script-src 'nonce-{RANDOM}' 'strict-dynamic'; object-src 'none'; base-uri 'none';", or the same with a hash; "a strong CSP provides an effective second layer of protection" and "CSP should not be relied upon as the only defensive mechanism against XSS".
+- **[R26]** Keycloak 26.7.5, the release the kernel pins. Server Administration Guide, _Clickjacking_: "By default, Keycloak only sets up a _same-origin_ policy for iframes", <https://www.keycloak.org/docs/26.7.5/server_admin/index.html#clickjacking>. Source at tag `26.7.5`, <https://github.com/keycloak/keycloak/tree/26.7.5>: `BrowserSecurityHeaders` and `ContentSecurityPolicyBuilder` (the default policy, `frame-src 'self'; frame-ancestors 'self'; object-src 'none'`), and the `keycloak.v2` login templates, where `template.ftl` and `login-otp.ftl` carry inline `<script>` and `onclick`, `login.ftl` an inline `onsubmit`, and `webauthn-authenticate.ftl` an inline module script holding `challenge : ${challenge?c}`. Issue #16277, _Hardened Content Security Policy (CSP)_, open since 2023-01-05: "The default Content Security Policy (CSP) used by Keycloak is not locked down enough", <https://github.com/keycloak/keycloak/issues/16277>; pull request #49879, _Generate CSP nonce for Freemarker_, open, <https://github.com/keycloak/keycloak/pull/49879>.
+- **[R27]** W3C WebAppSec, issue #8, _CSP: form-action and redirects_, open since 2015-10-07, accessed 2026-10-06. <https://github.com/w3c/webappsec-csp/issues/8>.
+- **[R28]** GitLab, merge request 90082, _Allowlist OAuth application redirect URI in CSP_, merged 2022-06-17. <https://gitlab.com/gitlab-org/gitlab/-/merge_requests/90082>. An OAuth authorization page "immediately redirects to the OAuth application's `redirect_uri` and Chrome takes the redirection target into account when evaluating CSP violations."
