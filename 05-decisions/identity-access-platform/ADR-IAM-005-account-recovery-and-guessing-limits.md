@@ -170,6 +170,9 @@ designee" (§4.2.3) [R1].
 - **Not met yet.** The realm sends no mail, as `ADR-IAM-004 §5.5` already records for binding.
 - **Production gate.** A notification channel is a prerequisite for production. It is the same
   channel that would make issued recovery codes possible.
+- **Decided (2026-10-06).** `ADR-IAM-007` covers recovery, a used recovery code, issued or replaced
+  codes, and assisted recovery. Identity Control requests each notification from the Notification
+  Platform for every notification address. It remains a production gate until it is built.
 
 ## 6. Consequences
 
