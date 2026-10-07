@@ -3,12 +3,21 @@
 import importlib.util
 import os
 
+import pytest
+
 SCRIPT = os.path.join(
     os.path.dirname(__file__), "..", "..", "scripts", "deploy-dev-skeleton-check.py"
 )
 spec = importlib.util.spec_from_file_location("deploy_dev_skeleton_check", SCRIPT)
 check = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(check)
+
+
+@pytest.fixture(autouse=True)
+def plain_output(monkeypatch):
+    """Print failures as plain lines, as outside Actions, even when the tests run in CI."""
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+
 
 README = "# Development server\n\n" + "".join(
     f"## {heading}\n\nDoes not apply.\n\n" for heading in check.HEADINGS

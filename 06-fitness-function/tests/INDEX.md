@@ -357,6 +357,7 @@ This index documents the test suite utilities and fixtures.
 
 | Function | Description |
 | :--- | :--- |
+| **plain_output** | Print failures as plain lines, as outside Actions, even when the tests run in CI. |
 | **make_repo** | Write a conforming service repository under tmp_path, with the given files. |
 | **run** | Run the check on a repository as the reusable workflow does, returning its exit status. |
 | **test_a_conforming_service_passes** | A service whose deploy/dev follows every rule passes. |
