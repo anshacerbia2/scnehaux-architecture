@@ -115,6 +115,10 @@ token.
   `provider` or `external` client cannot ask for it. The realm definition already holds both sets
   closed (`TDD-identity-kernel-001`).
 
+`ADR-IAM-008` (2026-10-07) adds one holder: a `privileged` client registered for the `per-sign-in`
+form. It asks for `organization:<tenant_id>` only together with `scnehaux-privileged`, so each of its
+tokens still declares one form.
+
 ### 5.4 Version Claims Leave the Token; the Resource Checks Current State
 
 `membership_version` and `tenant_security_version` are no longer token claims. Two reasons:
