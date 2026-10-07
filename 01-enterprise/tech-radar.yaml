@@ -1,7 +1,7 @@
 # tech-radar.yaml — Enterprise Technology Radar
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
-# Last updated: 2026-10-02
+# Last updated: 2026-10-07
 #
 # Ring changes are ARB decisions (GDC-004 section 3.2). Entries marked
 # "pending ARB" were proposed with the UI Platform ratification package on
@@ -95,6 +95,17 @@ technology_radar:
       rationale_adr: ADR-GLB-FE-007
 
   trial:
+    # Proposed 2026-10-07 with STD-GLB-009 1.4.0 §Container Images; pending ARB.
+    # The image vulnerability scanner every repository runs in CI, pinned by
+    # digest. Sources: STD-GLB-009 [R10]-[R15] (NIST SP 800-190 §4.1.1-4.1.2,
+    # GitHub secure use, GHSA-69fq-xp46-6x23, Grype documentation).
+    - name: grype
+      category: vulnerability-scanner
+      date_entered: "2026-10-07"
+      owner: Platform Engineering
+      rationale_std: STD-GLB-009
+      trial_end_date: "2027-01-31"
+
     - name: rust
       category: systems-language
       date_entered: "2026-03-01"
