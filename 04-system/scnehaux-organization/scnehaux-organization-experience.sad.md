@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-012
   title: Scnehaux Organization Experience
   owner: Core Platform Team
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-08-06
+  last_reviewed: 2026-10-07
   parent_pad: PAD-PLT-002
 ---
 
@@ -43,8 +43,8 @@ The experience must make administrative scope explicit, prevent accidental cross
 
 ### Constraint
 
-- TypeScript and Next.js are the application stack.
-- Scnehaux UI Platform packages are the design-system dependency.
+- TypeScript is the application language. The browser application is a React single-page application built with Vite, and a BFF on Node.js (Fastify) holds the session and calls the Control API, conforming to `TDD-identity-experience-001` (1.1.0; §11 Amendment 1.1.0).
+- Scnehaux UI Platform packages become the design-system dependency once UI Platform ships its primitives. Until then the application uses its own component package, as identity-experience does (1.1.0).
 - Keycloak is used for sign-in and administrative session assurance.
 - The browser never calls the Keycloak Admin API or Tenancy database.
 - Product roles and Product permissions are not administered here.
@@ -56,7 +56,7 @@ The experience must make administrative scope explicit, prevent accidental cross
 
 - Identity Runtime provides OIDC, step-up, logout, and session capabilities.
 - Organization Control exposes versioned protected APIs.
-- UI Platform packages and localization infrastructure are available.
+- Localization infrastructure is available. UI Platform packages are not assumed until they ship (1.1.0).
 - Notification delivery is asynchronous and external.
 
 ### Out of Scope
@@ -93,10 +93,10 @@ It inherits:
 graph LR
     ADMIN[Provider / Tenant Administrators]
     BROWSER[Web Browser]
-    APP[Next.js Tenancy Experience]
+    APP[Organization Experience: React SPA + BFF]
     KEYCLOAK[Keycloak Identity Kernel]
     CONTROL[Organization Control API]
-    UI[Scnehaux UI Platform]
+    UI[Scnehaux UI Platform, once shipped]
     OBS[Observability]
 
     ADMIN --> BROWSER
@@ -113,7 +113,7 @@ External dependencies:
 
 - Keycloak Identity Runtime;
 - Organization Control API;
-- Scnehaux UI Platform packages;
+- Scnehaux UI Platform packages, once shipped (1.1.0);
 - Notification and Audit capabilities through backend workflows;
 - observability and deployment platform.
 
@@ -121,11 +121,11 @@ External dependencies:
 
 The application contains:
 
-1. **Next.js Web Application** — server-rendered administrative pages and BFF endpoints.
+1. **Web Application and BFF** — a React single-page application built with Vite, served with the BFF endpoints by a Fastify server on Node.js (1.1.0).
 2. **Server Session Layer** — encrypted HttpOnly session cookie and server-side token handling.
 3. **Tenancy API Client** — typed server-side client for SAD-004.
 4. **Scope Guard** — provider/Tenant/Workspace context validation before rendering or mutation.
-5. **UI Composition Layer** — forms, tables, status timelines, bulk-operation previews, and evidence views using UI Platform assets.
+5. **UI Composition Layer** — forms, tables, status timelines, bulk-operation previews, and evidence views, on the application's own components until UI Platform assets ship (1.1.0).
 
 ## 4. Architecture Model
 
@@ -134,10 +134,10 @@ The application contains:
 ```mermaid
 graph TB
     EDGE[Managed Edge / Ingress]
-    WEB[Next.js Organization Experience]
+    WEB[Organization Experience: React SPA + Fastify BFF]
     KC[Keycloak]
     API[Go Organization Control]
-    UIP[UI Platform Packages]
+    UIP[UI Platform Packages, once shipped]
     OBS[OpenTelemetry / Frontend Monitoring]
     SECRET[Secret Management]
 
@@ -361,6 +361,8 @@ All queries and commands use the versioned protected API. The BFF passes:
 
 UI Platform is a build-time dependency for tokens, headless primitives, components, accessibility behavior, and interaction standards. The deployed application does not require a runtime UI Platform service.
 
+Until UI Platform ships its primitives, the application uses its own component package, as identity-experience does (1.1.0). Moving to UI Platform packages is a planned migration, not a redesign. Accessibility obligations do not wait for it: §9's WCAG 2.2 AA requirement applies to the application's own components.
+
 ### 7.4 Observability
 
 Frontend and server telemetry use common correlation identifiers with backend operations. Sensitive Tenant/Membership details are minimized and masked.
@@ -501,7 +503,7 @@ Tokens, invitation proof, unrestricted PII, and secret data are excluded.
 
 ### 10.1 Runtime Profile
 
-- Next.js application built as an immutable OCI image;
+- the BFF and the built application in one immutable OCI image (1.1.0), as STD-GLB-009 §Container Images requires of every image;
 - deployed to approved managed container runtime;
 - minimum two replicas across availability zones;
 - managed ingress and TLS;
@@ -554,6 +556,7 @@ Governed by:
 - ADR-ORG-001 — Separate Tenancy Authority and Keycloak Projection.
 - ADR-IAM-001 — Adopt Keycloak Identity Kernel.
 - approved UI Platform ADRs and standards.
+- ADR-GLB-FE-001, ADR-GLB-FE-003 and ADR-GLB-FE-011 — React, the meta-framework boundary, and the build toolchain (1.1.0).
 
 ### Governing
 
@@ -576,6 +579,17 @@ Additional decisions may cover:
 - provider-scope visual and authorization pattern;
 - localization and branding;
 - customer self-administration exposure.
+
+### Amendment 1.1.0 (2026-10-07): the application stack
+
+1.0.0 named Next.js. This administrative experience is an internal tool without search-engine requirements, and the enterprise decisions place it on Vite:
+
+- ADR-GLB-FE-003 §5: Next.js "is strictly reserved for B2C applications or dashboards where SEO and initial load performance are critical. For isolated, highly interactive B2B internal tools without SEO requirements, teams must default to Rsbuild/Vite ... to avoid unnecessary Node.js server overhead."
+- ADR-GLB-FE-011 §5.2: "Non-federated single-page applications, internal tools, and libraries. Vite or an Rspack-based toolchain is permitted."
+
+The BFF stays as §4.4 and §8 require. It is the pattern identity-experience already builds and proves in CI (`TDD-identity-experience-001`): a Fastify server that holds the tokens server-side behind an opaque `__Host-` cookie, with three forgery defences and server-side refresh. One pattern for both experiences means one security posture to maintain, which is what this repository's design required from the start ("A divergence in this repository is a defect, not a local decision").
+
+UI Platform packages are deferred by the owner's decision (2026-10-01: keep the applications' own components until UI Platform resumes). §7.3 records the interim.
 
 ## 12. Compatibility Strategy
 
@@ -618,4 +632,4 @@ Rejected because high-risk Tenant lifecycle, cross-tenant scope, and offboarding
 
 ### Selected Trade-off
 
-A dedicated Next.js BFF application adds one operational component but provides stronger session security, context safety, accessibility, and vendor abstraction than exposing Keycloak or backend APIs directly to the browser.
+A dedicated BFF application adds one operational component but provides stronger session security, context safety, accessibility, and vendor abstraction than exposing Keycloak or backend APIs directly to the browser.
