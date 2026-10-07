@@ -53,6 +53,7 @@ networks:
 def make_repo(
     tmp_path, compose=COMPOSE, readme=README, env="DEMO_PASSWORD=\nDEMO_PORT=8084\n"
 ):
+    """Write a conforming service repository under tmp_path, with the given files."""
     deploy = tmp_path / "deploy" / "dev"
     deploy.mkdir(parents=True)
     (tmp_path / "Dockerfile").write_text(
@@ -69,17 +70,20 @@ def make_repo(
 
 
 def run(repo, kind="service", *extra):
+    """Run the check on a repository as the reusable workflow does, returning its exit status."""
     return check.main(
         ["--kind", kind, "--repo-root", str(repo), "--repo-name", "demo", *extra]
     )
 
 
 def test_a_conforming_service_passes(tmp_path, capsys):
+    """A service whose deploy/dev follows every rule passes."""
     assert run(make_repo(tmp_path)) == 0
     assert "follows the service skeleton" in capsys.readouterr().out
 
 
 def test_an_application_needs_only_the_readme(tmp_path):
+    """An application needs only README.md with the ten headings."""
     deploy = tmp_path / "deploy" / "dev"
     deploy.mkdir(parents=True)
     (deploy / "README.md").write_text(README)
@@ -87,10 +91,12 @@ def test_an_application_needs_only_the_readme(tmp_path):
 
 
 def test_missing_deploy_dir_fails(tmp_path):
+    """A repository without deploy/dev fails."""
     assert run(tmp_path, "application") == 1
 
 
 def test_missing_out_of_order_and_empty_headings_fail(tmp_path, capsys):
+    """Missing and empty headings fail; a heading inside a code fence does not count."""
     readme = README.replace("## Backups\n\nDoes not apply.\n\n", "")
     readme = readme.replace("## Keys\n\nDoes not apply.\n\n", "## Keys\n\n")
     readme = readme.replace(
@@ -104,6 +110,7 @@ def test_missing_out_of_order_and_empty_headings_fail(tmp_path, capsys):
 
 
 def test_a_heading_only_out_of_order_is_reported_so(tmp_path, capsys):
+    """A heading present in the wrong place is reported as out of order."""
     readme = README.replace("## Keys\n\nDoes not apply.\n\n", "")
     readme = readme.replace("## Updating\n\n", "## Keys\n\nx\n\n## Updating\n\n", 1)
     assert run(make_repo(tmp_path, readme=readme)) == 1
@@ -111,6 +118,7 @@ def test_a_heading_only_out_of_order_is_reported_so(tmp_path, capsys):
 
 
 def test_compose_rules_fail(tmp_path, capsys):
+    """Each compose rule fails on its own violation."""
     compose = (
         COMPOSE.replace("scnehaux-demo-dev\n", "demo\n", 1)
         .replace('"127.0.0.1:${DEMO_PORT:-8084}:8080"', '"8084:8080"')
@@ -149,6 +157,7 @@ def test_compose_rules_fail(tmp_path, capsys):
 
 
 def test_overrides_must_be_stated_and_public_ports_allowed(tmp_path, capsys):
+    """A name override must be stated in the README; listed public ports pass."""
     compose = COMPOSE.replace(
         '"127.0.0.1:${DEMO_PORT:-8084}:8080"',
         '"443:443/udp"\n      - target: 80\n        published: "80"',
@@ -186,6 +195,7 @@ def test_overrides_must_be_stated_and_public_ports_allowed(tmp_path, capsys):
 
 
 def test_missing_service_files_and_bad_yaml_fail(tmp_path, capsys):
+    """A missing required file and an unparsable compose file fail."""
     repo = make_repo(tmp_path)
     (repo / "deploy" / "dev" / "compose.override.example.yaml").unlink()
     (repo / "deploy" / "dev" / "compose.ci.yaml").write_text("services: [\n")
@@ -196,6 +206,7 @@ def test_missing_service_files_and_bad_yaml_fail(tmp_path, capsys):
 
 
 def test_host_binding_forms():
+    """Short, bracketed IPv6, bare and long port syntaxes are read."""
     assert check.host_binding("127.0.0.1:8080:80") == ("127.0.0.1", "8080")
     assert check.host_binding("[::1]:8080:80") == ("[::1]", "8080")
     assert check.host_binding("8080") == (None, "")
@@ -206,6 +217,7 @@ def test_host_binding_forms():
 
 
 def test_annotations_in_actions(tmp_path, capsys, monkeypatch):
+    """In GitHub Actions a failure is printed as an error annotation."""
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     deploy = tmp_path / "deploy" / "dev"
     deploy.mkdir(parents=True)
@@ -214,6 +226,7 @@ def test_annotations_in_actions(tmp_path, capsys, monkeypatch):
 
 
 def test_deploy_holds_only_environment_directories(tmp_path, capsys):
+    """Any entry under deploy/ other than dev, staging or prod fails."""
     repo = make_repo(tmp_path)
     (repo / "deploy" / "alerts").mkdir()
     (repo / "deploy" / "notes.md").write_text("x")
