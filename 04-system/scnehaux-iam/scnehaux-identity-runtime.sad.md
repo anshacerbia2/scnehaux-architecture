@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-001
   title: Scnehaux Identity Runtime
   owner: Identity Platform Team
-  version: 2.3.0
+  version: 2.3.1
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-04
+  last_reviewed: 2026-10-07
   parent_pad: PAD-PLT-001
 ---
 
@@ -702,17 +702,29 @@ The propagation budget is 60 seconds as the planning figure, against an operatio
 
 **Long-lived connections are outside the token term.** A connection authenticated once and held open receives no further request to reject, so `STD-IAM-002 §3.4` requires each to be registered against the Principal and Tenant context that authorized it or use an equivalent bounded revalidation mechanism. A connection that cannot be matched to revocable context cannot claim the bounded revocation guarantee.
 
-#### 7.7.1 What Is Not Yet Enforced
+#### 7.7.1 What Is Built and What Is Not
 
-Three mechanisms above are declared and not yet realized, and the resulting delay is **unbounded** rather than merely longer:
+State on 2026-10-07. Until 2.3.1 this table named three missing mechanisms. identity-control has since built projected context removal, so the kernel no longer issues a token for a revoked context. Two remain. Without the consumer update, a revoked Membership's token stops only at expiry, the formula's ceiling. A held connection's delay is **unbounded**.
 
-| Mechanism                         | Blocked on                                                       | Consequence today                                                                  |
-| :-------------------------------- | :--------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| Consumer projection update        | the event broker and `SAD-004`                                   | a Membership revocation reaches no consumer; only token expiry limits it           |
-| Long-lived connection termination | a connection registry or equivalent revalidation in the consumer | a held connection survives the declared bounded revocation path                    |
-| Projected context removal         | the Keycloak projection path in `TDD-identity-control-002`       | Principal and Membership revocation currently rely on kernel session removal alone |
+**Not yet built:**
 
-Until each lands, the Identity Runtime MUST NOT report a maximum enforcement delay for the Contextual Membership class, and the production gate MUST include measured acceptance-to-enforcement evidence for every class in the table above.
+| Mechanism                         | Blocked on                                                                                                                                                                                                                       | Consequence today                                                                                    |
+| :-------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| Consumer projection update        | a resource service that registers as a consumer and applies the current-state check (`STD-IAM-002 §3.5` step 8). Delivery itself is built: Organization Control delivers each event to every registered consumer (`ADR-GLB-018`) | no resource refuses a token already issued for a revoked Membership; it lives out its lifetime class |
+| Long-lived connection termination | a connection registry or equivalent revalidation in the consumer                                                                                                                                                                 | a held connection survives the declared bounded revocation path                                      |
+
+**Built in identity-control:**
+
+| Mechanism                 | Design                                           | What it does                                                                                                                                                                                                                                                      |
+| :------------------------ | :----------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Projected context removal | `TDD-identity-control-002` 2.0.0 and later       | A Membership suspended or revoked removes the Principal from the Tenant's Keycloak Organization; a Tenant suspended or entering offboarding disables it (`ADR-IAM-006 §5.5`). The kernel then refuses that Tenant's refresh. No session is removed                |
+| Principal containment     | `TDD-identity-control-005` §Containment as Built | `:suspend` disables the kernel user and ends every session                                                                                                                                                                                                        |
+| Principal sweep           | `TDD-identity-control-001` 1.13.0                | Finds kernel users that are unmapped, orphaned or duplicated. An unmapped or orphan user is disabled when `IDENTITY_UNMAPPED_USERS=disable`, the production default. A duplicate disables both users and quarantines an active or suspended mapping               |
+| Workload lifecycle        | `TDD-identity-control-004` 1.5.0                 | A workload whose owner's mapping is retired, quarantined or suspended is orphaned, and suspended automatically after 30 days. 90 days without an authentication records it unused. An overdue owner review raises an alert. `:rebuild` recreates a deleted client |
+
+The Principal sweep and the workload lifecycle are in identity-control PR #101.
+
+Until each remaining mechanism lands, the Identity Runtime MUST NOT report a maximum enforcement delay for the Contextual Membership class, and the production gate MUST include measured acceptance-to-enforcement evidence for every class in the §7.7 table.
 
 #### 7.7.2 Revocation Enforcement View
 
