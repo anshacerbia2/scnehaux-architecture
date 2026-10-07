@@ -112,7 +112,10 @@ commits the preview:
   continues and keeps its correlation identifier.
 
 **Synchronous, within a bound.** The batch is bounded at 500 items, as SCIM requires a declared
-maximum [R1]. The execute request returns when every item has an outcome. AIP-234 would make a
+maximum [R1]. A preview naming more is refused with `413 Payload Too Large`, and the refusal names the
+limit, as SCIM requires of an exceeded maximum [R1] and RFC 9110 defines the status [R6]
+(2026-10-07; until foundation-platform v0.4.1 the problem registry had no 413 type, and the
+refusal was a `400`). The execute request returns when every item has an outcome. AIP-234 would make a
 synchronous batch atomic [R4]. Here the per-item outcome is carried in the body, as SCIM and
 Graph do [R1][R7], and the HTTP status of the execute request reports only the request.
 
@@ -247,8 +250,13 @@ None.
     ... The status attribute MUST include the code attribute that holds the HTTP response code
     that would have been returned if a single HTTP request would have been used."
   - §3.7.4: "The service provider MUST define the maximum number of operations and maximum
-    payload size a client may send in a single request."
+    payload size a client may send in a single request." / "If either limit is exceeded, the
+    service provider MUST return HTTP response code 413 (Payload Too Large). The returned response
+    MUST specify the limit exceeded in the body of the error response."
 - **[R6]** IETF RFC 9110, _HTTP Semantics_, June 2022. <https://www.rfc-editor.org/rfc/rfc9110>.
+  - §15.5.14: the 413 (Content Too Large) status code "indicates that the server is refusing to
+    process a request because the request content is larger than the server is willing or able to
+    process."
   - §13.1.1: "An origin server that evaluates an If-Match condition MUST NOT perform the
     requested method if the condition evaluates to false."
   - §15.3.3: "the request has been accepted for processing, but the processing has not been
