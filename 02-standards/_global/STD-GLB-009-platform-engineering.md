@@ -3,12 +3,12 @@ doc_meta:
   id: STD-GLB-009
   title: Enterprise Platform Engineering Standard
   owner: Principal Platform Architect
-  version: 1.3.0
+  version: 1.4.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-05
+  last_reviewed: 2026-10-07
 ---
 
 # Enterprise Platform Engineering Standard (STD-GLB-009)
@@ -99,6 +99,29 @@ A service whose browser half runs on a developer's machine (identity-experience'
 - _What it found._ identity-control's README declared the BFF's adoption with the wrong audience class. Nothing ran it, so the error stayed until the declaration was turned into a script (2026-10-05).
 - _Tradeoff._ A script needs a stack in CI that can stand in for the server, and some state, such as a person's second factor, is only on the server. A step CI cannot reach is stated as such in the README, with the reason.
 
+### Container Images (1.4.0)
+
+Every Scnehaux service ships as an OCI image, and an image carries every vulnerability of every layer in it. These rules apply to each image a repository builds (each `Dockerfile` target), and to each image it runs without building, such as an upstream image it pins or a database a `deploy/dev/compose.yaml` names.
+
+**Rules.**
+
+1. **Pinned by digest.** An image a repository builds from or runs MUST be referenced by digest, with the tag it was resolved from beside it as a comment. A tag can be moved to other bytes. A digest names the bytes.
+2. **Minimal and unprivileged.** A service image MUST run as a non-root user and SHOULD be distroless. NIST: "images should be configured to run as non-privileged users", and base layers should come "from minimalistic technologies ... to reduce attack surface areas" [R11].
+3. **Scanned in CI, on every change and every day.** Every image in scope MUST be scanned for known vulnerabilities in the repository's CI on every pull request and push to `main`, and on a daily schedule. NIST asks for scanning "from the beginning of the build process, to whatever registries the organization is using, to runtime", covering "all layers of the image, not just the base layer" [R10]. The daily run exists because a new advisory changes an unchanged image's findings.
+4. **A gate on what can be fixed.** The scan MUST fail the build on any vulnerability of severity High or Critical that has a fixed version. This is NIST's quality gate: "a rule in the build process to prevent the progression of images that include vulnerabilities with Common Vulnerability Scoring System (CVSS) [18] ratings above a selected threshold" [R10]. The scan reports every other finding without failing, because nothing in the repository can act on a vulnerability that has no fix. A finding in an upstream image, such as the identity kernel's Keycloak, is fixed by moving the pin to a release that fixes it.
+5. **Exceptions are written down and expire.** A finding the gate fails on, and that cannot be fixed now, MAY be ignored by a rule in the repository's `.grype.yaml`. The rule MUST name the vulnerability and the package. Its `reason` MUST begin with `review-by YYYY-MM-DD:`, at most 90 days ahead, and say why the finding does not apply or what it waits for. CI MUST fail when a rule's review date has passed. An ignored finding is then either fixed or decided again.
+6. **The scanner is pinned too.** The scanner MUST run from an image pinned by digest, or from an action pinned by its full commit SHA. Never from a tag, and never from a script fetched at run time. GitHub: "Pinning an action to a full-length commit SHA is currently the only way to use an action as an immutable release" [R12]. On 2026-03-19, an attacker "force-pushed 76 of 77 version tags in aquasecurity/trivy-action and all 7 tags in aquasecurity/setup-trivy", and later published malicious images of the scanner itself (CVE-2026-33634). A pipeline that named a tag ran the attacker's code with its CI secrets. The advisory's own mitigation is to "Pin GitHub Actions to full, immutable commit SHA hashes, don't use mutable version tags" [R13].
+
+**The scanner.** Grype, run from `anchore/grype` pinned by digest:
+
+- `--fail-on high` exits non-zero "if it found vulnerabilities at or above the specified severity" [R14].
+- `--only-fixed` "filters out vulnerabilities with these fix states: `not-fixed`, `wont-fix`, `unknown`" [R14]. The gate runs with it, and a second, report-only pass runs without it.
+- Ignore rules live in `.grype.yaml` and carry a `reason` field [R14] [R15].
+
+Trivy meets the same rules. One scanner is chosen so every repository has one ignore format and one gate. Trivy's distribution was the one compromised in March 2026 [R13], but what protects a pipeline is rule 6, pinning, not the choice of vendor. A Go repository keeps `govulncheck` as well. It reads the source, and reports only vulnerable code the program can reach, which an image scan cannot.
+
+**Why not a gate on Medium, or on unfixed findings.** A gate that fails on what nobody can fix gets ignored as a whole, and the 90-day exceptions would become permanent. NIST leaves the threshold to the organization ("a selected threshold") [R10]. High with a fix is the line every repository here can always meet, by upgrading.
+
 ---
 
 ### Internal Developer Platform (IDP) Interfaces
@@ -130,6 +153,7 @@ None. All platform engineering standards apply universally. Deviations require f
 1. **Catalog Verification checks**: CI pipelines must run validation checks against the service's `catalog-info.yaml` file on every branch merge. Builds without valid ownership or lifecycle indicators must be blocked.
 2. **Infrastructure Audits**: Automated monitors must continuously verify active cloud resources against the GitOps declaration repository. Undeclared resources must be flagged, quarantined, and terminated within `48 hours`.
 3. **Exception Waivers**: Deviations from the platform architecture or deployment paths require an approved ADR signed by both the Platform Architect and the Enterprise Security Board.
+4. **Image scanning (1.4.0)**: Each repository's CI runs the §Container Images scan on every change and daily, fails on a fixable High or Critical vulnerability, and fails on an expired ignore rule.
 
 ## 6. References
 
@@ -142,3 +166,9 @@ None. All platform engineering standards apply universally. Deviations require f
 - **[R7]** The Twelve-Factor App, _V. Build, release, run_, accessed 2026-10-03. <https://12factor.net/build-release-run>. "Strictly separate build and run stages"; "Every release should always have a unique release ID, such as a timestamp of the release (such as `2011-04-06-20:32:17`) or an incrementing number (such as `v100`)."
 - **[R8]** Google, _Site Reliability Engineering_, ch. 7, "The Evolution of Automation at Google", accessed 2026-10-05. <https://sre.google/sre-book/automation-at-google/>. "any action performed by a human or humans hundreds of times won't be performed the same way each time"; "This inevitable lack of consistency leads to mistakes, oversights, issues with data quality, and, yes, reliability problems."
 - **[R9]** The Go Blog, _Testable Examples in Go_, accessed 2026-10-05. <https://go.dev/blog/examples>. "Examples are compiled (and optionally executed) as part of a package's test suite"; "Having executable documentation for a package guarantees that the information will not go out of date as the API changes."
+- **[R10]** NIST, _SP 800-190, Application Container Security Guide_, §4.1.1 "Image vulnerabilities", 2017, accessed 2026-10-07. <https://doi.org/10.6028/NIST.SP.800-190>. "Integration with the entire lifecycle of images, from the beginning of the build process, to whatever registries the organization is using, to runtime"; "Visibility into vulnerabilities at all layers of the image, not just the base layer of the image but also application frameworks and custom software"; "organizations should be able to configure a rule in the build process to prevent the progression of images that include vulnerabilities with Common Vulnerability Scoring System (CVSS) [18] ratings above a selected threshold."
+- **[R11]** NIST, _SP 800-190_, §4.1.2 "Image configuration defects", accessed 2026-10-07. <https://doi.org/10.6028/NIST.SP.800-190>. "For example, images should be configured to run as non-privileged users"; "Use of base layers from trusted sources only, frequent updates of base layers, and selection of base layers from minimalistic technologies like Alpine Linux and Windows Nano Server to reduce attack surface areas."
+- **[R12]** GitHub, _Secure use reference_, accessed 2026-10-07. <https://docs.github.com/en/actions/reference/security/secure-use>. "Pinning an action to a full-length commit SHA is currently the only way to use an action as an immutable release. Pinning to a particular SHA helps mitigate the risk of a bad actor adding a backdoor to the action's repository, as they would need to generate a SHA-1 collision for a valid Git object payload."
+- **[R13]** Aqua Security, _Trivy ecosystem supply chain temporarily compromised_, GHSA-69fq-xp46-6x23 / CVE-2026-33634, accessed 2026-10-07. <https://github.com/aquasecurity/trivy/security/advisories/GHSA-69fq-xp46-6x23>. Compromised: "trivy-action" "Any tags prior except 0.35.0 (0.0.1 – 0.34.2)", "setup-trivy" "All 7 existing tags (v0.2.0 – v0.2.6)", and "trivy container images v0.69.5 and v0.69.6 distributed via Docker Hub"; mitigation: "Pin GitHub Actions to full, immutable commit SHA hashes, don't use mutable version tags." Microsoft, _Guidance for detecting, investigating, and defending against the Trivy supply chain compromise_, 2026-03-24. <https://www.microsoft.com/en-us/security/blog/2026/03/24/detecting-investigating-defending-against-trivy-supply-chain-compromise/>. "the attacker force-pushed 76 of 77 version tags in aquasecurity/trivy-action and all 7 tags in aquasecurity/setup-trivy"; "Pin GitHub Actions to commit SHA rather than version tags (e.g., @v1), as tags can be force-modified by attackers."
+- **[R14]** Anchore, _Grype: Filter results_, accessed 2026-10-07. <https://oss.anchore.com/docs/guides/vulnerability/filter-results/>. "When scanning completes, Grype exits with code 2 if it found vulnerabilities at or above the specified severity"; `--only-fixed` "filters out vulnerabilities with these fix states: `not-fixed`, `wont-fix`, `unknown`"; ignore rules in `.grype.yaml` match on `vulnerability`, `package` and `fix-state`, and "When you combine multiple criteria in a rule, all criteria must match for the rule to apply."
+- **[R15]** Anchore, Grype v0.120.1 source, `grype/match/ignore.go`, accessed 2026-10-07. <https://github.com/anchore/grype/blob/v0.120.1/grype/match/ignore.go>. The `IgnoreRule` struct carries a `Reason` field, read from the key `reason`.
