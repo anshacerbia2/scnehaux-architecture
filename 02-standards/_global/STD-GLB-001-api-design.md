@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-001
   title: Enterprise API Design Standard
   owner: Architecture Review Board
-  version: 1.3.0
+  version: 1.3.1
   status: approved
   classification: public
   governed_by: [EAD-004]
@@ -32,7 +32,7 @@ This standard defines the mandatory design principles and HTTP protocol usage fo
 - Responses SHOULD NOT use custom envelopes for standard data (return direct arrays/objects) to minimize payload bloat. A paginated list is the exception, because the continuation must travel with the page (§Pagination).
 - Error responses MUST conform to **RFC 9457 (Problem Details for HTTP APIs)**, which obsoletes RFC 7807.
 
-  The two are wire-compatible: RFC 9457 keeps every member 7807 defined and adds the optional `errors` array for reporting several problems in one response. A conforming 7807 document is therefore a conforming 9457 document, so no existing implementation breaks. The citation is corrected because `EAD-004 §5.3` mandates 9457, and a standard naming the obsoleted RFC sends implementers to a document that no longer defines the registry.
+  The two are wire-compatible: RFC 9457 keeps every member 7807 defined and adds the optional `errors` array for reporting several problems in one response. A conforming 7807 document is therefore a conforming 9457 document, so no existing implementation breaks. The citation is corrected because RFC 9457 states "This document obsoletes RFC 7807" [R9], and a standard naming the obsoleted RFC sends implementers to a document that no longer defines the registry. Until 1.3.1 this sentence attributed the requirement to `EAD-004 §5.3`. That section is the AI Provider Contract and says nothing of problem details, so the attribution is withdrawn: the rule rests on RFC 9457 itself.
 
 ### Versioning
 
@@ -96,3 +96,4 @@ API schema validation via the API Gateway and CI/CD spectral linters.
 - **[R6]** Stripe, _API Reference: Pagination_, accessed 2026-10-07. <https://docs.stripe.com/api/pagination>. "Stripe's list API methods use cursor-based pagination through the starting_after and ending_before parameters. Both parameters accept an existing object ID value"; `limit` "ranging between 1 and 100"; the list response carries `data` and `has_more`.
 - **[R7]** GitHub, _Using pagination in the REST API_, accessed 2026-10-07. <https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api>. "each paginated endpoint will use the `page`, `before`/`after`, or `since` query parameters"; "If you specify a value greater than the maximum, GitHub does not return an error. Instead, the value is automatically reduced to the maximum."
 - **[R8]** PostgreSQL Global Development Group, _PostgreSQL 18 Documentation_, §7.6 LIMIT and OFFSET, accessed 2026-10-07. <https://www.postgresql.org/docs/current/queries-limit.html>. "using different LIMIT / OFFSET values to select different subsets of a query result will give inconsistent results unless you enforce a predictable result ordering with ORDER BY"; "a large OFFSET might be inefficient."
+- **[R9]** IETF RFC 9457, _Problem Details for HTTP APIs_, July 2023. <https://www.rfc-editor.org/rfc/rfc9457>. Abstract: it "defines a "problem detail" to carry machine-readable details of errors in HTTP response content to avoid the need to define new error response formats for HTTP APIs"; "This document obsoletes RFC 7807."
