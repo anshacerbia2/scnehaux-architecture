@@ -1,0 +1,85 @@
+name: "Scnehaux deploy/dev Skeleton (Reusable)"
+
+# STD-GLB-009 §Development Server Deployment (1.5.0): every service and application repository's
+# deploy/dev follows one skeleton. A repository calls this workflow from its own:
+#
+#   jobs:
+#     deploy-dev-skeleton:
+#       uses: anshacerbia2/scnehaux-architecture/.github/workflows/deploy-dev-skeleton.yml@main
+#       with:
+#         kind: service        # or application
+#
+# What the check covers is listed at the top of 06-fitness-function/scripts/deploy-dev-skeleton-check.py.
+
+on:
+  workflow_call:
+    inputs:
+      kind:
+        description: "service (deployed on the server with its own compose stack) or application (runs on a developer's machine)."
+        required: true
+        type: string
+      deploy_dir:
+        description: "The deploy directory in the calling repository."
+        required: false
+        default: "deploy/dev"
+        type: string
+      project_name:
+        description: "Compose project name, when it is not scnehaux-<repository>-dev. README.md must state it."
+        required: false
+        default: ""
+        type: string
+      api_network:
+        description: "The network other stacks join, when it is not scnehaux-<repository>-api. README.md must state it."
+        required: false
+        default: ""
+        type: string
+      public_ports:
+        description: "Space-separated host ports allowed on every interface (identity-kernel's DNS-name proxy only)."
+        required: false
+        default: ""
+        type: string
+      governance_ref:
+        description: "The ref (branch, tag, sha) of the governance repository to check against."
+        required: false
+        default: "main"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-dev-skeleton:
+    name: "deploy/dev skeleton"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Downstream Repository
+        uses: actions/checkout@v4
+
+      - name: Checkout Architecture Governance Repository
+        uses: actions/checkout@v4
+        with:
+          repository: anshacerbia2/scnehaux-architecture
+          ref: ${{ inputs.governance_ref }}
+          path: .scnehaux-governance
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # The governance package's own pin (pyproject.toml); the check needs nothing else.
+      - name: Install PyYAML
+        run: pip install "PyYAML==6.0.3"
+
+      - name: Check deploy/dev against the skeleton
+        env:
+          KIND: ${{ inputs.kind }}
+          DEPLOY_DIR: ${{ inputs.deploy_dir }}
+          PROJECT_NAME: ${{ inputs.project_name }}
+          API_NETWORK: ${{ inputs.api_network }}
+          PUBLIC_PORTS: ${{ inputs.public_ports }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: >-
+          python .scnehaux-governance/06-fitness-function/scripts/deploy-dev-skeleton-check.py
+          --kind "$KIND" --repo-root . --repo-name "$REPO_NAME" --deploy-dir "$DEPLOY_DIR"
+          --project-name "$PROJECT_NAME" --api-network "$API_NETWORK" --public-ports "$PUBLIC_PORTS"

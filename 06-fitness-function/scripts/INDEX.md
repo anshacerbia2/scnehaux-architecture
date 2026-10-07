@@ -18,6 +18,25 @@ This index documents the internal functions and classes of the CI/CD scripts.
 | **resolve_path** | Check if a CODEOWNERS path pattern resolves to an existing file or<br>directory. Strips the leading slash (CODEOWNERS paths are repo-relative). |
 | **main** | *(No docstring provided)* |
 
+### `scripts/deploy-dev-skeleton-check.py`
+
+| Function | Description |
+| :--- | :--- |
+| **_construct_tagged** | Build a tagged node as its plain value: the tag only changes how compose merges it. |
+| **Report.fail** | Record one failed check against a file, relative to the repository root. |
+| **readme_headings** | Return the README's level-2 headings outside fenced code blocks, in order, each with whether<br>its section has any non-blank line before the next heading of level 1 or 2. |
+| **check_deploy_tree** | Check 0: deploy/ holds one directory per environment and nothing else. |
+| **check_readme** | Checks 1 to 3: the README exists and carries the ten headings, in order, each with a body. |
+| **load_compose** | Parse one compose file, recording a failure when it is not valid YAML. |
+| **resolve** | Replace each ${NAME:-default} by its default and every other ${...} by nothing. |
+| **host_binding** | Return (host_ip or None, published port) for one entry of a service's `ports`. |
+| **check_ports** | Check 6: every published port binds to loopback unless the caller lists it as public. |
+| **check_networks** | Check 7: a named network is the stack's api network, or an external scnehaux-*-api. |
+| **check_services** | Checks 8 to 10: the migrate gate, profiled tasks without builds, and GOPROXY build args. |
+| **check_env_example** | Check 11: every variable .env.example names is read by compose or by a script. |
+| **check_ignored** | Check 12: in a git checkout, .env and keys/ under deploy/dev are ignored. |
+| **main** | Parse the arguments, run every check for the kind, and print a summary. |
+
 ### `scripts/install-hooks.py`
 
 | Function | Description |

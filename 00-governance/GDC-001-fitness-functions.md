@@ -132,6 +132,7 @@ scnehaux-architecture/
 │       │   └── INDEX.md
 │       ├── scripts/             # (Git hooks and manual CI/CD utilities)
 │       │   ├── codeowners-validator.py
+│       │   ├── deploy-dev-skeleton-check.py
 │       │   ├── INDEX.md
 │       │   ├── install-hooks.py
 │       │   └── waiver-expiry-check.py
@@ -170,7 +171,9 @@ scnehaux-architecture/
 │           │       └── test_structure_rules.py
 │           ├── generators/      # (Dynamic docs and topography autobuilders)
 │           │   └── test_generator_determinism.py
-│           └── INDEX.md
+│           ├── INDEX.md
+│           └── scripts/         # (Git hooks and manual CI/CD utilities)
+│               └── test_deploy_dev_skeleton_check.py
 ```
 
 <!-- END_ENGINE_TOPOGRAPHY -->

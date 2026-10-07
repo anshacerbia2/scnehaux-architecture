@@ -353,4 +353,23 @@ This index documents the test suite utilities and fixtures.
 | **test_topography_render_is_independent_of_path_order** | *(No docstring provided)* |
 | **test_topography_uses_git_tracked_inputs_not_ambient_workspace** | *(No docstring provided)* |
 
+### `tests/scripts/test_deploy_dev_skeleton_check.py`
+
+| Function | Description |
+| :--- | :--- |
+| **plain_output** | Print failures as plain lines, as outside Actions, even when the tests run in CI. |
+| **make_repo** | Write a conforming service repository under tmp_path, with the given files. |
+| **run** | Run the check on a repository as the reusable workflow does, returning its exit status. |
+| **test_a_conforming_service_passes** | A service whose deploy/dev follows every rule passes. |
+| **test_an_application_needs_only_the_readme** | An application needs only README.md with the ten headings. |
+| **test_missing_deploy_dir_fails** | A repository without deploy/dev fails. |
+| **test_missing_out_of_order_and_empty_headings_fail** | Missing and empty headings fail; a heading inside a code fence does not count. |
+| **test_a_heading_only_out_of_order_is_reported_so** | A heading present in the wrong place is reported as out of order. |
+| **test_compose_rules_fail** | Each compose rule fails on its own violation. |
+| **test_overrides_must_be_stated_and_public_ports_allowed** | A name override must be stated in the README; listed public ports pass. |
+| **test_missing_service_files_and_bad_yaml_fail** | A missing required file and an unparsable compose file fail. |
+| **test_host_binding_forms** | Short, bracketed IPv6, bare and long port syntaxes are read. |
+| **test_annotations_in_actions** | In GitHub Actions a failure is printed as an error annotation. |
+| **test_deploy_holds_only_environment_directories** | Any entry under deploy/ other than dev, staging or prod fails. |
+
 <!-- AUTO-GENERATED-FUNCTIONS:END -->
