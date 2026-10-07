@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-012
   title: Scnehaux Organization Experience
   owner: Core Platform Team
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -372,6 +372,7 @@ Frontend and server telemetry use common correlation identifiers with backend op
 ### 8.1 Authentication
 
 - Authorization Code + PKCE through Keycloak, the BFF authenticating as a confidential client with `private_key_jwt` (`STD-IAM-001 §3.2`);
+- one client registered for the `per-sign-in` privileged form, each sign-in naming one form: one Tenant, or provider administration after a fresh `aal2` authentication (`ADR-IAM-008`, 1.2.0);
 - server-side callback and session creation;
 - step-up for provider cross-tenant, Tenant suspension, admin delegation, bulk grant, export, and offboarding finalization;
 - session termination on logout, security version change, or backend rejection.
@@ -557,6 +558,7 @@ Governed by:
 - ADR-IAM-001 — Adopt Keycloak Identity Kernel.
 - approved UI Platform ADRs and standards.
 - ADR-GLB-FE-001, ADR-GLB-FE-003 and ADR-GLB-FE-011 — React, the meta-framework boundary, and the build toolchain (1.1.0).
+- ADR-IAM-008 — the privileged form selected per sign-in (1.2.0).
 
 ### Governing
 
@@ -590,6 +592,10 @@ Additional decisions may cover:
 The BFF stays as §4.4 and §8 require. It is the pattern identity-experience already builds and proves in CI (`TDD-identity-experience-001`): a Fastify server that holds the tokens server-side behind an opaque `__Host-` cookie, with three forgery defences and server-side refresh. One pattern for both experiences means one security posture to maintain, which is what this repository's design required from the start ("A divergence in this repository is a defect, not a local decision").
 
 UI Platform packages are deferred by the owner's decision (2026-10-01: keep the applications' own components until UI Platform resumes). §7.3 records the interim.
+
+### Amendment 1.2.0 (2026-10-07): one client, the form chosen per sign-in
+
+Tenant administration needs a token carrying the Tenant and provider administration one carrying none, and `STD-IAM-002 §3.1.1` lets a token declare one form. `ADR-IAM-008` decides how one application obtains both. Its BFF is registered for the `per-sign-in` form, and each sign-in names one form: `organization:<tenant_id>` for a Tenant, or the provider form after a fresh `aal2` authentication. Switching is a new sign-in, which replaces the session, so the operator holds one scope at a time, as §8.4 shows them. Provider authority stays an activation the Organization Control API records (`ADR-ORG-002`).
 
 ## 12. Compatibility Strategy
 

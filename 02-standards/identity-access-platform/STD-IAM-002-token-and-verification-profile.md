@@ -3,13 +3,13 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.6.0
+  version: 1.7.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-08-11
-  last_reviewed: 2026-10-04
+  last_reviewed: 2026-10-07
 ---
 
 # Enterprise Token and Verification Profile (STD-IAM-002)
@@ -129,6 +129,17 @@ a provider, and is not narrowed to this form. The resource separates the forms b
 Organization would need two scopes in one claim, sent to both resources, which is the claim RFC
 9068 and RFC 8707 rule out. That case is not supported, and no registered scope needs it today:
 `provider:identity-control` is the only scope a resource outside Organization checks.
+
+**A client may obtain both the tenant-scoped and the provider-scope form only when its registration
+says `per-sign-in` (1.7.0, `ADR-IAM-008`).** Such a client is `confidential`. No form scope is among
+its defaults, and each authorization request names exactly one form:
+`scnehaux-privileged organization:<tenant_id>` for one Tenant, or `scnehaux-provider` with no
+`organization` scope. OAuth puts scope in the request, and a refresh cannot widen it [R24]. On the
+callback the client refuses a Tenant sign-in whose ID token `tenant_id` differs from the Tenant asked
+for, and a provider sign-in whose ID token carries one, as Auth0 asks a client to validate `org_id`
+[R25]. Entering the provider form asks for `aal2` with `max_age=0`. Changing form or Tenant is a new
+sign-in, never a refresh. Every other `privileged` registration names one form, and its client holds
+that form's scope as a default.
 
 A provider-scope token MUST take lifetime class `L0`, MUST carry `acr` and `auth_time`, and its
 issuance MUST be evidenced with the actor, the scope, and the reason. At the resource that holds
@@ -464,6 +475,7 @@ quotes.
 
 - **[R23]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025. <https://pages.nist.gov/800-63-4/sp800-63b.html>. §2.1–§2.3: AAL1, AAL2 ("two distinct authentication factors") and AAL3.
 - **[R18]** OpenID Foundation, _OpenID Connect Back-Channel Logout 1.0 incorporating errata set 1_, December 2023. <https://openid.net/specs/openid-connect-backchannel-1_0.html>. §2.4 the `sid` claim in a logout token, matching the session an ID token's `sid` named.
+- **[R24]** IETF RFC 6749, _The OAuth 2.0 Authorization Framework_, October 2012. <https://www.rfc-editor.org/rfc/rfc6749>. §3.3: "The authorization and token endpoints allow the client to specify the scope of the access request using the "scope" request parameter"; §6: "The requested scope MUST NOT include any scope not originally granted by the resource owner".
 
 ### Informative
 
@@ -478,3 +490,4 @@ quotes.
 - **[R20]** Kubernetes, _Authorization_, accessed 2026-10-01. <https://kubernetes.io/docs/reference/access-authn-authz/authorization/>. Authorization takes place in the API server, against the user and groups authentication established; access is denied by default.
 - **[R21]** Microsoft, _Access tokens in the Microsoft identity platform_, §Token ownership and §Validate tokens, accessed 2026-10-02. <https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens>. "An access token request involves two parties: the client, who requests the token, and the resource (Web API) that accepts the token"; Web APIs "must only accept tokens containing one of their AppId URIs as the `aud` claim".
 - **[R22]** Keycloak, _Configuring and using token exchange_, §Standard token exchange, accessed 2026-10-02. <https://www.keycloak.org/securing-apps/token-exchange>. "The `subject_token` sent to the token exchange endpoint must have the requester client set as an audience in the `aud` claim"; only confidential clients may send a token exchange request.
+- **[R25]** Auth0, _Custom development_ for Organizations, accessed 2026-10-07. <https://auth0.com/docs/manage-users/organizations/custom-development>. "on callback, ensure that the organization returned in the ID token is the same one that was sent in the /authorize request by validating the org_id claim in the same way that other claims like exp and nonce are validated." The per-request choice on one client is `ADR-IAM-008`'s, with its Keycloak, Auth0 and Microsoft sources.
