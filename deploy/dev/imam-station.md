@@ -53,13 +53,13 @@ Ours, pinned in the local override files below so Docker's address pools never l
 
 All on `127.0.0.1`:
 
-| Port | Serves                               |
-| :--- | :----------------------------------- |
-| 8080 | Caddy: the public issuer             |
-| 8081 | Keycloak directly: the Admin Console |
-| 8082 | identity-control                     |
-| 5433 | identity-control's Postgres          |
-| 8083 | organization-control                 |
+| Port | Serves                                                                               |
+| :--- | :----------------------------------------------------------------------------------- |
+| 8080 | Caddy: the public issuer                                                             |
+| 8081 | Keycloak directly: the Admin Console                                                 |
+| 8082 | identity-control                                                                     |
+| 5433 | identity-control's Postgres                                                          |
+| 8083 | organization-control, planned: not deployed yet, and the tunnel has no port 8083 yet |
 
 ## Dev tunnel
 

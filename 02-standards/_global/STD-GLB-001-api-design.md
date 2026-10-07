@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-001
   title: Enterprise API Design Standard
   owner: Architecture Review Board
-  version: 1.3.1
+  version: 1.4.0
   status: approved
   classification: public
   governed_by: [EAD-004]
@@ -70,6 +70,20 @@ This standard defines the mandatory design principles and HTTP protocol usage fo
 - A service SHOULD refuse, with `400`, a value outside that range rather than store it. RFC 9110 has a recipient "treat other allowed octets in field content as opaque data" [R1], so they carry no encoding the service could rely on. Bytes stored as text are then whatever the client's library chose. In one case a Latin-1 `§` (`0xA7`) reached PostgreSQL as invalid UTF-8, and the request failed as an unexplained `503`.
 - Free text that needs other characters SHOULD travel in the request body, whose media type states its encoding.
 
+### Commands Require an `Idempotency-Key` (1.4.0)
+
+A client that sends a `POST` and loses the response cannot tell whether it was applied. Retried without a key, it is applied twice: a second Workspace, a second grant. The IETF draft for the header states the problem: "Repeating the request multiple times can result in duplication or incorrect updates" [R10].
+
+- **A command MUST require an `Idempotency-Key`.** A command is a `POST` that a person or an operator sends to change authoritative state.
+- **A command without the header, or with a blank one, is refused `400`** with a problem that names the header. The draft gives this answer: "the resource SHOULD reply with an HTTP 400 status code" [R10]. The check runs after the caller's authority, so a caller the route does not admit is told `403`, not about a header.
+- **Any other `POST` MAY honour a key without requiring one**, when a repeat cannot act twice:
+  - a read carried in a body;
+  - a report the receiver applies monotonically, such as a consumer's position that only moves forward;
+  - a sweep or a comparison, whose repeat finds nothing left to do or the same findings;
+  - a report identified by a correlation identifier it already carries.
+- **Each service publishes which routes require the key, and the reason each other `POST` does not.** The draft requires it: "Resources MUST publish a idempotency related specification" [R10]. organization-control does this in `TDD-organization-control-003` 1.10.0 §The `Idempotency-Key` Is Required on Commands. identity-control already requires the key on its Principal, workload, registration and security commands.
+- **The draft is work in progress.** Revision -07 expired on 18 April 2026 and is cited as such. The rule rests on what a lost response does to a retried command; the draft supplies the status code.
+
 ### Rate Limiting
 
 All public-facing APIs MUST return standard rate-limit headers:
@@ -97,3 +111,7 @@ API schema validation via the API Gateway and CI/CD spectral linters.
 - **[R7]** GitHub, _Using pagination in the REST API_, accessed 2026-10-07. <https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api>. "each paginated endpoint will use the `page`, `before`/`after`, or `since` query parameters"; "If you specify a value greater than the maximum, GitHub does not return an error. Instead, the value is automatically reduced to the maximum."
 - **[R8]** PostgreSQL Global Development Group, _PostgreSQL 18 Documentation_, §7.6 LIMIT and OFFSET, accessed 2026-10-07. <https://www.postgresql.org/docs/current/queries-limit.html>. "using different LIMIT / OFFSET values to select different subsets of a query result will give inconsistent results unless you enforce a predictable result ordering with ORDER BY"; "a large OFFSET might be inefficient."
 - **[R9]** IETF RFC 9457, _Problem Details for HTTP APIs_, July 2023. <https://www.rfc-editor.org/rfc/rfc9457>. Abstract: it "defines a "problem detail" to carry machine-readable details of errors in HTTP response content to avoid the need to define new error response formats for HTTP APIs"; "This document obsoletes RFC 7807."
+- **[R10]** IETF HTTPAPI Working Group, J. Jena and S. Dalal, _The Idempotency-Key HTTP Header Field_, Internet-Draft draft-ietf-httpapi-idempotency-key-header-07, 15 October 2025 (expired 18 April 2026; work in progress), accessed 2026-10-07. <https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/07/>.
+  - §1: "Repeating the request multiple times can result in duplication or incorrect updates. Consider a scenario where the client sent a POST request to the server, but the request timed out."
+  - §2.5.2: "Resources MUST publish a idempotency related specification."
+  - §2.7: "If the Idempotency-Key request header is missing for a documented idempotent operation requiring this header, the resource SHOULD reply with an HTTP 400 status code with body containing a link pointing to relevant documentation."

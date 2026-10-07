@@ -94,8 +94,8 @@ identifiers, with the reason the action requires (a revocation always requires o
 | Totals     | The count that would change and the count that would not                                                                |
 | Record     | The batch is stored with each item's version, and expires after a bounded time                                          |
 
-**The execution.** `POST /v1/membership-batches/{id}/execute`, with an `Idempotency-Key`,
-commits the preview:
+**The execution.** `POST /v1/membership-batches/{id}/execute`, with an `Idempotency-Key`, which
+it requires as every command does (`STD-GLB-001` 1.4.0), commits the preview:
 
 - **Each item is its own transaction**, held to the version the preview read. An item changed
   since then fails with the single command's `409 version-conflict` and is not applied
@@ -155,6 +155,71 @@ A Membership transition's state is derived from recorded evidence, never from th
 - **`over_budget` carries an escalation path** in the administrative experience, as RFC 9110 asks
   a status monitor to estimate when a request will be fulfilled [R6].
 
+### 5.3 An Interrupted Execution Is Resumed Under a Lease
+
+The execution runs inside its HTTP request. A request that ends mid-batch, by a crash or by the
+request timeout, leaves the batch `executing`: some items have an outcome and the rest have none.
+Without a resume, the batch stays that way for ever, and every retry is refused as in progress.
+
+**The lease.**
+
+- The transaction that starts the execution gives the request a lease: a fresh `lease_id` and a
+  `heartbeat_at`.
+- Every item's transaction begins by renewing it, and only where the row still holds this
+  request's `lease_id`.
+- The lease lasts 30 seconds. A request's timeout must be shorter, and the service refuses to
+  start otherwise. A heartbeat 30 seconds old therefore belongs to a request that has ended.
+- Gray and Cheriton define a lease as "a contract that gives its holder specified rights over
+  property for a limited period of time" [R13]. They add that
+  "Non-Byzantine failures affect performance, not correctness" [R13]. A dead request delays the
+  batch by one lease, and never blocks it.
+
+**The resume.** An execute on an `executing` batch:
+
+- with a live lease is refused `409`, and writes nothing. The first request may still be running;
+- with a stale lease takes it over, in one transaction under the batch's row lock, and records
+  who resumed it and when. It then runs only the items without an outcome, each still held to the
+  version its preview read. The error allowance is the one fixed when execution began;
+- may carry the key of the request that began the execution. That key's claim was committed and
+  never completed, so the resume adopts it. A new key resumes the batch too.
+
+**The fence.** The `lease_id` is a fencing token.
+
+- A request whose lease was taken over finds no row to renew, rolls back the item it was on, and
+  stops. The final transaction that marks the batch `executed` is fenced the same way.
+- Each item's transition and its outcome commit together. An item with an outcome is skipped, so
+  no item is applied twice.
+- Kleppmann: "the storage server remembers that it has already processed a write with a higher
+  token number (34), and so it rejects the request with token 33" [R14]. He warns that a check of
+  the lease "just before writing back to storage" does not fix the problem [R14]. Here the fence
+  is the first statement of the write's own transaction, and its row lock is held until the item
+  commits, so a takeover waits for that item to finish.
+- **The token is compared for equality, not order.** Kleppmann's storage compares each write's
+  token with the highest it has seen, so his tokens must strictly increase [R14]. Here the lease
+  is held on the row the fence updates, so the row knows the one current lease, and any other
+  token is stale.
+
+### 5.4 An Expired Preview Is Purged
+
+- A batch still `previewed` whose `expires_at` passed more than 24 hours ago is deleted, with
+  its items, in one transaction. The day lets an operator who left the screen open read the
+  preview as `expired` rather than as absent.
+- A batch that began executing is never purged. It is the record of what a bulk action did.
+- **The purge runs as the migration role, under row security.**
+  - No runtime role holds `DELETE` on either table. The daily maintenance stage, which already
+    runs retention, runs the purge.
+  - Both tables are under `FORCE ROW LEVEL SECURITY` (`ADR-GLB-002`). PostgreSQL says "Table
+    owners normally bypass row security as well, though a table owner can choose to be subject to
+    row security with ALTER TABLE ... FORCE ROW LEVEL SECURITY" [R15]. The migration role, the
+    tables' owner, is bound by their policies too.
+  - Each table has one policy for that role, `FOR ALL`, `USING` an expired preview and
+    `WITH CHECK (false)`.
+  - `USING` admits the delete and the read it needs: "the appropriate SELECT or ALL policies will
+    be applied in addition to the DELETE policies" [R15].
+  - `WITH CHECK (false)` refuses every insert and update: "An error will be thrown if the
+    expression evaluates to false or null" [R15]. The role can delete an expired preview and
+    rewrite no batch.
+
 ## 6. Consequences
 
 ### Positive
@@ -174,10 +239,15 @@ A Membership transition's state is derived from recorded evidence, never from th
 - **"Enforced" depends on every consumer recording `consumer_applied`.** A consumer that records
   only `transport_accepted` keeps its revocations propagating until it does.
 - **A synchronous batch of 500 items holds one request open** for the time 500 transactions take.
+- **A resume waits out the lease.** After a request ends, the batch cannot continue for up to 30
+  seconds.
 
 ### Operational
 
-- Batches past their expiry are refused at execution and purged.
+- Batches past their expiry are refused at execution, and purged a day later by the maintenance
+  stage (§5.4).
+- A batch left `executing` is finished by the next execute past its lease (§5.3). Its view names
+  who resumed it and when.
 - Over-budget revocations already alert through the dead-letter and frontier signals. The
   per-Membership read adds no new signal.
 
@@ -187,9 +257,14 @@ A Membership transition's state is derived from recorded evidence, never from th
 
 - `SAD-004 §8.3`: per-item validation and outcome, realized.
 - `STD-GLB-001` 1.3.0: the batch's items are bounded and the resource is versioned under `/v1/`.
+- `STD-GLB-001` 1.4.0: the preview and the execution are commands, and require an
+  `Idempotency-Key`.
+- [ADR-GLB-002](../_global/ADR-GLB-002-postgresql-rls.md): `FORCE ROW LEVEL SECURITY`, which
+  binds the purge to its policy.
 - [ADR-IAM-006](../identity-access-platform/ADR-IAM-006-tenant-context-in-tokens.md) §5.4: the
   current-state check that makes `consumer_applied` enforcement.
 - `TDD-organization-control-002`, `TDD-organization-experience-001` change to implement it.
+  `TDD-organization-control-002` 1.13.0 implements §5.3 and §5.4.
 
 ### Compliance Status
 
@@ -236,6 +311,16 @@ None.
 
 **Rejected because:** acceptance is not enforcement in this design or in any source above
 [R6][R8][R9][R10]. It is the failure `TDD-organization-experience-001` exists to prevent.
+
+### Alternative E — Leave an Interrupted Batch `executing`
+
+**Rejected because:** the items without an outcome could never be attempted, and the operator
+could not resubmit them as failed. A lease bounds the wait to 30 seconds [R13].
+
+### Alternative F — Resume Without a Fence
+
+**Rejected because:** a request that was only slow, not dead, would keep writing after the takeover,
+and two requests would apply the same items. Expiry alone does not stop it [R14].
 
 ## 9. References
 
@@ -304,3 +389,30 @@ None.
 - **[R12]** OpenID Foundation, _OpenID Shared Signals Framework 1.0_, Final, §8.1.4.
   <https://openid.net/specs/openid-sharedsignals-framework-1_0-final.html>. "The acknowledgment of
   a Verification Event also confirms to the Event Transmitter that end-to-end delivery is working".
+- **[R13]** C. G. Gray and D. R. Cheriton, _Leases: An Efficient Fault-Tolerant Mechanism for
+  Distributed File Cache Consistency_, SOSP '89, ACM, 1989, accessed 2026-10-07.
+  <https://doi.org/10.1145/74850.74870>; text read at
+  <https://pages.cs.wisc.edu/~remzi/Classes/739/Fall2015/Papers/leases89.pdf>.
+  - §2: "A lease is a contract that gives its holder specified rights over property for a limited
+    period of time."
+  - Abstract: "Non-Byzantine failures affect performance, not correctness, with their effect
+    minimized by short leases."
+- **[R14]** M. Kleppmann, _How to do distributed locking_, 8 February 2016, accessed 2026-10-07.
+  <https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html>.
+  - "You cannot fix this problem by inserting a check on the lock expiry just before writing back
+    to storage."
+  - "you need to include a fencing token with every write request to the storage service"; "the
+    storage server remembers that it has already processed a write with a higher token number
+    (34), and so it rejects the request with token 33."
+  - "provided that the lock service generates strictly monotonically increasing tokens, this makes
+    the lock safe."
+- **[R15]** PostgreSQL Global Development Group, _PostgreSQL 17 Documentation_, accessed
+  2026-10-07.
+  - §5.9 Row Security Policies, <https://www.postgresql.org/docs/17/ddl-rowsecurity.html>: "Table
+    owners normally bypass row security as well, though a table owner can choose to be subject to
+    row security with ALTER TABLE ... FORCE ROW LEVEL SECURITY."
+  - CREATE POLICY, <https://www.postgresql.org/docs/17/sql-createpolicy.html>: for `DELETE`, "the
+    appropriate SELECT or ALL policies will be applied in addition to the DELETE policies"; of the
+    `WITH CHECK` expression, "Only rows for which the expression evaluates to true will be
+    allowed. An error will be thrown if the expression evaluates to false or null for any of the
+    records inserted or any of the records that result from the update."
