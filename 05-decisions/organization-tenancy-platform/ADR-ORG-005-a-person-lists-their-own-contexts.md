@@ -92,6 +92,31 @@ An entry selects; it does not grant.
   Tenant and the administration grant on every request (`ADR-ORG-003`), whatever the list said
   ([R5][R6]).
 
+### 5.4 The Self Read Is Held to the Person by the Database (2026-10-07)
+
+A self read spans Tenants for one person, so neither existing runtime role fits it:
+
+- the Tenant role is confined to one Tenant;
+- the provider role reaches every Tenant and records each read as a provider access.
+
+**A third, narrower role.** `organization_self_rt` has no login and no connection of its own.
+
+- **Reach.** It reads named columns of the Membership, Tenant and Tenant administration tables,
+  under row policies keyed to the Principal bound for the request, and writes nothing.
+- **How the Tenant role uses it.** The Tenant role is a member `WITH INHERIT FALSE, SET TRUE`, and
+  enters it with `SET LOCAL ROLE` inside a read-only transaction. With `INHERIT FALSE` "the new
+  member does not inherit", and the `SET` option "allows the member to change to the granted role
+  using the `SET ROLE` command" [R7].
+- **What that means for permissions.** Once set, "permissions checking for SQL commands is carried
+  out as though the named role were the one that had logged in originally" [R8], and `LOCAL` ends
+  with the transaction. The Tenant role gains none of the self role's reach, and the self read
+  holds none of the Tenant role's.
+
+**Why no new login.** A new login would add a credential to every environment and to the system
+proof, while this adds none.
+
+**What it requires.** PostgreSQL 16 or later, which every environment runs.
+
 ## 6. Consequences
 
 ### Positive
@@ -149,6 +174,17 @@ stolen token that carries authority everywhere.
 Organizations, which are a projection of these Memberships. This route reads the authority itself.
 
 ## 9. References
+
+### Normative
+
+- **[R7]** PostgreSQL Global Development Group, _PostgreSQL 17 Documentation: GRANT_, accessed
+  2026-10-07. <https://www.postgresql.org/docs/17/sql-grant.html>. With `INHERIT FALSE`, "the new
+  member does not inherit"; the `SET` option "allows the member to change to the granted role using
+  the `SET ROLE` command".
+- **[R8]** PostgreSQL Global Development Group, _PostgreSQL 17 Documentation: SET ROLE_, accessed
+  2026-10-07. <https://www.postgresql.org/docs/17/sql-set-role.html>. After it, "permissions checking
+  for SQL commands is carried out as though the named role were the one that had logged in
+  originally".
 
 ### Informative
 
