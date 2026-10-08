@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.0.1
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-06
+  last_reviewed: 2026-10-08
   parent_pad: PAD-PLT-002
 ---
 
@@ -442,6 +442,11 @@ RLS is defense in depth. Application authorization remains mandatory.
 - restore testing includes Tenant, Membership, outbox, projection cursor, and offboarding state;
 - restore cannot silently roll back a security version without a reconciliation and containment plan;
 - quarterly restore evidence is required before external production commitment.
+
+**As built (2.1.0).** organization-control's `deploy-dev` runs the drill of `STD-GLB-002 §Restore Evidence` on every change and daily, after the wiring proof has filled the three stacks. Before the backup it begins an offboarding, so offboarding state exists to restore. It backs up with the development stack's `backup.sh`, deletes the database volume, and restores with `restore.sh`. It then compares schema, migration version, every table and sequence, and the roles. The outbox, its per-consumer delivery, the delivery receipts, the consumer registry with its snapshot and reported marks, Memberships, Tenants and offboardings must be non-empty and equal. It starts the service, reads the provider grants, Organizations and offboardings through the API, and times the recovery against the 15-minute RTO of `PAD-PLT-002 §6.2`. What it does not cover:
+
+- **Point-in-time recovery is not built.** The backup is a daily `pg_dump`, so a restore loses up to 24 hours, against the PAD's RPO of 1 minute. `pg_dump` cannot take part in continuous archiving, so the 1-minute RPO waits for WAL archiving on the managed PostgreSQL §6.1 names. Until then it is a recorded gap, and no drill is cited as meeting it.
+- **A restore to an older point is not reconciled.** The drill restores to the instant of its own backup. A real restore loses the events after the backup, so the restored security versions are lower than what identity-control already holds. A version reused after the restore would be discarded there as already seen. The reconciliation and containment plan this section requires is not built. organization-control's restore runbook says what an operator does until it is.
 
 ## 7. Integration Contracts
 

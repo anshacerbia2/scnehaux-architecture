@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-001
   title: Scnehaux Identity Runtime
   owner: Identity Platform Team
-  version: 2.3.1
+  version: 2.4.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-07
+  last_reviewed: 2026-10-08
   parent_pad: PAD-PLT-001
 ---
 
@@ -892,6 +892,11 @@ Key/recovery invariants:
 - previous verification keys remain available for the lifetime of all still-valid artifacts they signed plus cache/clock-skew margin;
 - recovery documentation explicitly distinguishes existing-token verification, new login, refresh, containment, and administration availability;
 - a C0 runtime claim is not made until restore, failover, key rotation, and key-recovery exercises provide measured evidence.
+
+**The Control Database's restore, as built (2.4.0).** identity-control's `deploy-dev` runs the drill of `STD-GLB-002 §Restore Evidence` on every change and on a schedule. It backs up with the development stack's `backup.sh`, deletes the database volume, restores with `restore.sh`, and compares schema, migration version, every table, every sequence and the roles. It then starts the service and reads the registrations through the API, and times the recovery against the 15-minute RTO of `PAD-PLT-001 §6.2`. That is restore evidence for the procedure. It is not a C0 claim, for two reasons:
+
+- **RPO is not met.** The backup is a daily `pg_dump`, so a restore loses up to 24 hours, against the PAD's 1 minute. A 1-minute RPO needs continuous WAL archiving with point-in-time recovery on the managed PostgreSQL this section names. `pg_dump` cannot be part of that, and no drill of it is cited as meeting the RPO. This stays a recorded gap until the production platform archives WAL.
+- **The duration is measured on CI data.** It shows how long the procedure takes, not how long a production-sized restore takes.
 
 Multi-region active-active remains a future architecture decision.
 

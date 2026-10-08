@@ -3,12 +3,12 @@ doc_meta:
   id: STD-GLB-009
   title: Enterprise Platform Engineering Standard
   owner: Principal Platform Architect
-  version: 1.5.0
+  version: 1.6.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-07
+  last_reviewed: 2026-10-08
 ---
 
 # Enterprise Platform Engineering Standard (STD-GLB-009)
@@ -106,6 +106,7 @@ Three documents carry it, each at its own level (1.5.0):
 9. **Backups.** A stack that owns a database MUST state in `## Backups` a daily backup to storage outside the Docker volume, made by `pg_dump` in the custom format, and how it is restored:
    - Each database is dumped with `pg_dump -Fc`. It "makes consistent backups even if the database is being used concurrently" [R26]. A custom-format dump "must be restored with pg_restore" [R27].
    - The cluster's roles are dumped with `pg_dumpall --globals-only`, because `pg_dump` "does not dump information about roles or tablespaces" [R27], and "Before restoring an SQL dump, all the users who own objects or were granted permissions on objects in the dumped database must already exist" [R27].
+   - The backup and the restore are scripts (1.6.0): `deploy/dev/backup.sh <directory>` writes the roles and the database dump, and `deploy/dev/restore.sh <roles file> <dump>` starts `postgres` alone on an empty volume, applies the roles, then runs `pg_restore --create --exit-on-error`. It refuses a cluster that already holds the database. The cron line runs `backup.sh`, and `deploy-dev` runs both scripts in its restore drill (STD-GLB-002 §Restore Evidence), as §A procedure step is a script requires. A restore that only a reader runs goes unchecked until the day it is needed.
    - `.env` and `keys/` are copied beside the dumps. The dumps hold role password hashes and the copies hold keys, so the backup is kept like `.env`: readable by the operator alone.
    - The README says, in `## Backups` and `## Never do`, that `docker compose down -v` deletes the database. The flag removes "named volumes declared in the "volumes" section of the Compose file" [R20]. A volume is a store whose "contents exist outside the lifecycle of a given container" [R28]. It is not outside the project's lifecycle, so a backup made into the volume is deleted with it.
 10. **The tunnel is persistent, opened port by port, and watched.** The server is reached through one persistent Microsoft dev tunnel. `devtunnel host` without a tunnel ID creates "a new temporary dev tunnel ... that is deleted once the connection is closed" [R29], and with it the issuer. Anonymous access is granted per port, and only on the public issuer's port. "Allowing anonymous access to a dev tunnel means anyone on the internet is able to connect to your local server" [R29]. The host process runs as a systemd user service with lingering enabled, so that "a user manager is spawned for the user at boot and kept around after logouts" [R30]. A timer runs a watchdog that requests the public discovery URL and restarts the host when it stops answering. `Restart=on-failure` restarts a process that "exits with a non-zero exit code" [R30]. The tunnel host has been seen to lose its relay while its process stays alive, which no exit status reports.

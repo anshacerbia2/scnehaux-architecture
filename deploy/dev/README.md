@@ -154,6 +154,8 @@ STD-GLB-009 rule 9 says what a backup holds, and each repository's §Backups giv
 3. Restore the roles from the `pg_dumpall --globals-only` file with `psql`, then each database from its `pg_dump -Fc` file with `pg_restore`. The roles come first, because the objects' owners must already exist.
 4. `docker compose up -d --build`. The migrate job applies anything newer than the backup, and the service starts once it has succeeded.
 
+identity-control and organization-control do steps 2 and 3 with one script, `./restore.sh <roles file> <dump>`, which refuses a stack that already holds the database. Their `deploy-dev` jobs run it on every change against a stack whose volume they have deleted (STD-GLB-002 §Restore Evidence). A stack without the script follows its §Backups by hand.
+
 Restore the stacks in dependency order, kernel first. A restored organization-control database brings its provider grants back, and with them the provider authority that identity-control projects from them.
 
 ## Known pitfalls
