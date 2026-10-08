@@ -107,7 +107,9 @@ A drill of a PostgreSQL store MUST:
    - for every table, its row count and an order-independent checksum of its rows;
    - every sequence's position;
    - the cluster's roles, with their attributes and memberships.
+
    The tables the store's design names as critical, such as an outbox, delivery receipts, a projection cursor or a consumer registry, MUST be non-empty in the source. Two empty tables are equal and prove nothing.
+
 5. **Start the service on the restored database and read known data.** The service starts with its usual migration job, reaches readiness, and serves known records through its API. The answer MUST equal the one read before the backup. CP-10 asks for "recovery and reconstitution of the system to a known state" [R3].
 6. **Measure the recovery against the RTO.** The time runs from the start of the restore into empty storage to the verified read. The drill fails above the store's declared RTO.
 7. **Leave a record.** The drill writes a machine-readable evidence file with every check, its result, the durations and the CI run, and CI keeps it as an artifact. The dump and the roles file are not kept as artifacts, because they hold role password hashes (STD-GLB-009 rule 9). CP-4 asks for a test, a review of "the contingency plan test results", and corrective action "if needed" [R1].
