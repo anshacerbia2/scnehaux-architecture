@@ -42,6 +42,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-IAM-006](identity-access-platform/ADR-IAM-006-tenant-context-in-tokens.md) | Tenant Context in Tokens, Selected per Sign-In | foundational | accepted | 2026-10-04 | N/A |
 | [ADR-IAM-007](identity-access-platform/ADR-IAM-007-account-security-notifications.md) | Account Security Notifications, Decided by Identity and Delivered by Notification | foundational | accepted | 2026-10-06 | N/A |
 | [ADR-IAM-008](identity-access-platform/ADR-IAM-008-privileged-form-selected-per-sign-in.md) | The Privileged Form Selected per Sign-In | foundational | accepted | 2026-10-07 | N/A |
+| [ADR-IAM-009](identity-access-platform/ADR-IAM-009-logout-by-the-back-channel.md) | Logout Reaches a Relying Party by the Back Channel | foundational | accepted | 2026-10-08 | N/A |
 | [ADR-ORG-001](organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) | Separate Organization Authority from Identity and Use Keycloak as a Projection Target | foundational | accepted | 2026-08-06 | N/A |
 | [ADR-ORG-002](organization-tenancy-platform/ADR-ORG-002-eligible-provider-authority.md) | Eligible Provider Authority, Activated for a Bounded Time and Approved by Another Provider | foundational | accepted | 2026-10-02 | N/A |
 | [ADR-ORG-003](organization-tenancy-platform/ADR-ORG-003-tenant-administration-grant.md) | Tenant Administration Is a Recorded Grant, Checked with Current Membership | foundational | accepted | 2026-10-04 | N/A |
