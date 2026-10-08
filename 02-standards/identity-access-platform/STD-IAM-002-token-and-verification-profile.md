@@ -3,13 +3,13 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.7.0
+  version: 1.8.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-08-11
-  last_reviewed: 2026-10-07
+  last_reviewed: 2026-10-08
 ---
 
 # Enterprise Token and Verification Profile (STD-IAM-002)
@@ -315,6 +315,13 @@ degraded propagation path does not silently invalidate the derived lifetime.
   configured per client.
 - Increasing a lifetime class MUST carry the increase into the stated maximum
   enforcement delay of every revocation class that affects the audience.
+- A resource's lifetime class MUST be changed only as a registration change (1.8.0): proposed
+  with a reason by an owner of the resource or a provider, naming one of the classes above, and
+  approved in production by a provider other than the proposer (`ADR-IAM-003 §5.9`). The change
+  states each class's access token lifetime and revocation target, and its apply moves the derived
+  lifespan of every client whose audience names the resource in the same transaction. Microsoft
+  states what the figure trades: "the amount of time that the client retains access after the user's
+  account is disabled" [R26].
 - Refresh token lifetime, rotation, and reuse detection remain with the identity
   kernel under STD-IAM-001 §3.2. A refresh MUST NOT extend an access token beyond its
   class.
@@ -446,6 +453,7 @@ discovered afterwards.
 - Client registration validation rejecting a protected resource without an assigned
   lifetime class.
 - Configuration assertion that no client carries a token lifetime exceeding its class.
+- Registration change tests proving a lifetime-class change moves the lifespan of every client whose audience names the resource, rolls back with the kernel, and is approved in production by a provider other than its proposer.
 - Connection registry tests proving a priority revocation closes matching long-lived
   connections within budget.
 - Secret and token scanning across logs, traces, events, and error responses.
@@ -455,8 +463,9 @@ discovered afterwards.
 ## 6. References
 
 The external sources the rules above rest on, cited as `[Rn]`. A rule stricter than its source,
-or departing from it, says so where it is stated. The lifetime classes and the long-lived
-connection rules are this platform's own and cite no external source. The Tenant selection and the
+or departing from it, says so where it is stated. The lifetime figures and the long-lived
+connection rules are this platform's own and cite no external source; who changes a class, and how,
+rests on `ADR-IAM-003 §5.9` and its sources. The Tenant selection and the
 current-state check follow `ADR-IAM-006`, whose sources are the platforms and OWASP guidance it
 quotes.
 
@@ -491,3 +500,4 @@ quotes.
 - **[R21]** Microsoft, _Access tokens in the Microsoft identity platform_, §Token ownership and §Validate tokens, accessed 2026-10-02. <https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens>. "An access token request involves two parties: the client, who requests the token, and the resource (Web API) that accepts the token"; Web APIs "must only accept tokens containing one of their AppId URIs as the `aud` claim".
 - **[R22]** Keycloak, _Configuring and using token exchange_, §Standard token exchange, accessed 2026-10-02. <https://www.keycloak.org/securing-apps/token-exchange>. "The `subject_token` sent to the token exchange endpoint must have the requester client set as an audience in the `aud` claim"; only confidential clients may send a token exchange request.
 - **[R25]** Auth0, _Custom development_ for Organizations, accessed 2026-10-07. <https://auth0.com/docs/manage-users/organizations/custom-development>. "on callback, ensure that the organization returned in the ID token is the same one that was sent in the /authorize request by validating the org_id claim in the same way that other claims like exp and nonce are validated." The per-request choice on one client is `ADR-IAM-008`'s, with its Keycloak, Auth0 and Microsoft sources.
+- **[R26]** Microsoft, _Configurable token lifetimes in the Microsoft identity platform_, accessed 2026-10-08. <https://learn.microsoft.com/en-us/entra/identity-platform/configurable-token-lifetimes>. "Adjusting the lifetime of an access token is a trade-off between improving system performance and increasing the amount of time that the client retains access after the user's account is disabled." The owner-and-administrator split this standard follows is `ADR-IAM-003` [R13], [R14], [R15].
