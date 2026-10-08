@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-012
   title: Scnehaux Organization Experience
   owner: Core Platform Team
-  version: 1.2.0
+  version: 1.3.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-07
+  last_reviewed: 2026-10-08
   parent_pad: PAD-PLT-002
 ---
 
@@ -536,6 +536,7 @@ Pipeline gates include:
 - accessibility automated checks;
 - CSP and dependency security checks;
 - browser compatibility tests;
+- browser journeys against the stack (1.3.0), in a stack-level proof (STD-GLB-009 §Stack-Level Proofs, STD-GLB-FE-008 §3.4): sign-in through the kernel's hosted login, provider mode entered with its step-up and reason and approved by a second provider, a Membership granted and revoked, and the revocation and the window's end reaching the browser;
 - API contract compatibility;
 - container and IaC scans;
 - immutable artifact promotion and canary/rollback.
