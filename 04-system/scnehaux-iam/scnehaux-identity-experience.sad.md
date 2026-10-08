@@ -209,7 +209,8 @@ Owns presentation for:
 - client authentication profile: `private_key_jwt` for a confidential or workload client (`STD-IAM-001 §3.2`);
 - public-key registration, rotation (the new key added before the old one is removed), and revocation. The team generates its key pair and submits only the public key. The console never issues, displays, or accepts a secret or a private key;
 - supported protocol documentation;
-- conformance and integration status.
+- conformance and integration status;
+- a workload's owner: the workloads a person owns, each with its last review and the date the next is due, and the owner's periodic review of one (`ADR-IAM-003 §5.8`).
 
 Application ownership and lifecycle originate in Software Catalog.
 
@@ -362,7 +363,7 @@ Experience events are interaction signals, not authoritative identity facts. Ide
 - BFF and Control Service enforce every administrative operation;
 - Tenant and Product administration are not inferred from Identity roles;
 - provider cross-Tenant administration is explicit, scoped, short-lived, and evidenced.
-- the Developer Console acts on a client registration as one of its owners, an authority the Identity Control Service records and checks for each request (`ADR-IAM-003`). An owner rotates and revokes its client's keys and suspends the client, and a change to a production client's redirect URIs, audience or lifetime class is approved by a provider other than its proposer. Until the console is built, a provider does this from the Admin Portal.
+- the Developer Console acts on a client registration as one of its owners, an authority the Identity Control Service records and checks for each request (`ADR-IAM-003`). An owner rotates and revokes its client's keys and suspends the client, and a change to a production client's redirect URIs, audience or lifetime class is approved by a provider other than its proposer. Until the console is built, a provider does this from the Admin Portal. A workload's owner lists and reads the workloads it owns and reviews them there; a workload it does not own is not found (`ADR-IAM-003 §5.8`).
 
 ### 7.3 Encryption and Secrets
 

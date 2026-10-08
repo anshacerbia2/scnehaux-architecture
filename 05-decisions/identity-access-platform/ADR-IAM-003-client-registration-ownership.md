@@ -97,6 +97,15 @@ Requiring a second provider to approve each of a provider's registrations is not
 
 So provider authority, not each registration, is where two-person control is added: a provider grant that is eligible rather than standing, activated for a bounded time with another provider's approval. That changes how Organization Control and the Identity Control Service hold provider authority (`ADR-ORG-001 §5.11`), and `ADR-ORG-002` decides it. A provider grant becomes eligible, and it is activated for a bounded time with another provider's approval. Until that is built, providers are few, every grant is recorded with its reason, and a provider's direct production registration is reported.
 
+### 5.8 A Workload's Owner Reads What It Reviews
+
+A workload names one accountable owner, an active human Principal, on the workload itself and in its token as `workload_owner` (`STD-IAM-001 §3.7`). That owner attests at least quarterly that the workload is still needed, that its purpose holds, and that its owner and team are right. NIST SP 800-53 AC-2(j) requires accounts to be reviewed at a defined frequency [R3]. The owner could make that attestation through the Identity Control API but could not read the workload: every workload read was a provider's. So an owner who was not a provider attested to a record it could not see, and the Developer Console offered no review. This section gives the Developer Console the workload owner's authority, by the rules §5.1 and §5.4 set for a registration's owners.
+
+- **The owner lists the workloads it owns and reads each one.** Each shows its state, purpose, team, last authentication, last review, and the date the next review is due. AC-2(j) leaves the frequency to the organization [R3]. Showing the due date lets an owner review on time, before the sweep reports the review overdue. Google Cloud advises managing a service account with "the same processes, same lifecycle, and same diligence" as the resource it belongs to, "and use the same tools to manage them" [R11]. So the Developer Console shows a person's workloads beside the registrations they own, and the owner reviews an active workload there.
+- **The owner is the workload's recorded owner, counted only while its mapping is an active human one**, as §5.1 counts a registration's owners. A retired, quarantined or suspended owner confers nothing from the next request, and the next workload sweep orphans the workload. No registration owner is granted on a workload's client. A second ownership record for one workload could name a different person from the one its token names.
+- **A workload the caller does not own is not found.** The route reads the owner of the workload its path names, never one the body names, and answers 404 for any other workload. That is the same answer as for a workload that does not exist. OWASP API1:2023 asks every endpoint that receives an object's identifier to "validate that the logged-in user has permissions to perform the requested action on the requested object" [R9]. RFC 9110 lets an origin server that "wishes to 'hide' the current existence of a forbidden target resource" answer 404 instead of 403 [R10]. A 403 would tell anyone holding an account which workload identifiers exist. Entra's application owners likewise "can manage only the enterprise applications they own" [R5]. Access is enforced at the resource, as AC-3 asks [R12], and no more than the review needs is granted, as AC-6 asks [R2].
+- **Everything else stays a provider's**, at `aal2` (`ADR-IAM-004`): reading a workload one does not own, reassigning, suspending, restoring, retiring and rebuilding. Each of these changes who answers for a running workload or stops it. An owner who finds that a workload is no longer needed, or that its owner or team is wrong, asks a provider, who acts with a reason. A provider who owns a workload sees it in the console's list like any owner. Opening one of its workloads is a provider read, so that provider steps up to `aal2` first.
+
 ## 6. Consequences
 
 ### Positive
@@ -104,6 +113,7 @@ So provider authority, not each registration, is where two-person control is add
 - An application team rotates, revokes and contains its own client without an operator.
 - Every production trust change has two people on record.
 - Ownership is a record with a history, ending with the person, rather than a role in a token or a permission in the kernel.
+- A workload's owner sees what it attests to, and when the next attestation is due, without an operator (§5.8).
 
 ### Negative
 
@@ -111,6 +121,8 @@ So provider authority, not each registration, is where two-person control is add
 - Owners and proposals are new tables, routes and review work.
 - Until the Software Catalog exists, ownership is granted registration by registration.
 - A single provider can register a production client alone, and Entra notes that an application administrator can add credentials to an application and use them to impersonate it [R4]. A compromised provider account is therefore a production client takeover until two-person control at activation (§5.7) exists. Reporting every direct production registration makes it visible, not prevented.
+- A workload's owner cannot contain its workload (§5.8). A registration's owner suspends a client whose key leaked, but a workload's owner can only ask a provider to suspend it, because the workload's client has no registration owners. Until a decision gives the workload owner containment, a leaked workload key stays usable until a provider acts.
+- A compromised owner account can read the owner's workloads and record a false review. Neither stops a workload or changes its access. The review is recorded with who gave it, and an owner whose account is retired, quarantined or suspended confers nothing from the next request.
 
 ### Operational
 
@@ -126,6 +138,7 @@ So provider authority, not each registration, is where two-person control is add
 - STD-IAM-002 §3.1.1 — the `resource-scoped` privileged form.
 - [ADR-ORG-001](../organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) §5.11 — a resource checks the grants it holds.
 - SAD-002 — the Developer Console.
+- STD-IAM-001 §3.7 — a workload's explicit owner.
 
 ### Compliance Status
 
@@ -167,18 +180,40 @@ None.
 
 **Rejected because:** it is not how the platforms the decision follows constrain their administrators. Entra's Application Administrator creates registrations directly [R4], and its two-person control is approval at role activation [R8]. Per-registration approval would also route every workload and every adoption through a second person, so a deployment that registers a client waits on one, and a lone operator during an incident cannot register a replacement client. §5.7 places the control at activation instead, where it constrains everything a provider does, not only registration.
 
+### Alternative F — The Review Stays Where Only a Provider Can Read (§5.8)
+
+**Benefits:** nothing to build. A provider who owns a workload already reviews it in the Admin Portal.
+
+**Rejected because:** an owner who is not a provider could not read what it attested to. The review would either not happen or become a provider's work. AC-2(j) asks for the review [R3], and CIS 5.5 asks the owner, the purpose and the review date to be kept for each service account (`STD-IAM-001` [R19]). An attestation made without the record is a signature, not a review.
+
+### Alternative G — Registration Owners on the Workload's Client (§5.8)
+
+**Benefits:** the owner routes of §5.2 would serve the workload's client unchanged, with key rotation and suspension included.
+
+**Rejected because:** a workload has one accountable owner, carried in its token as `workload_owner`. A second record, granted and revoked separately, could name someone else. A reassignment would then have to move both records, or leave the token naming one owner and the console another. The registration lifecycle also refuses a workload's client, which is stopped through its workload (`ADR-IAM-001 §5.13`).
+
+### Alternative H — Answer 403 for a Workload the Caller Does Not Own (§5.8)
+
+**Benefits:** a person who mistypes an identifier is told it is not theirs rather than that it does not exist.
+
+**Rejected because:** a 403 tells anyone with an account which workload identifiers exist, which is the disclosure OWASP API1:2023 describes [R9]. RFC 9110 lets a server answer 404 to hide that a resource exists [R10], and §5.4 already answers an owner 404 for a registration it does not own.
+
 ## 9. References
 
 ### Normative
 
 - **[R1]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_, AC-5 Separation of Duties. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. Divide functions among different individuals or roles to reduce the risk of abuse of authorized privilege: "Identify and document [organization-defined duties of individuals]" and "Define system access authorizations to support separation of duties".
-- **[R2]** NIST SP 800-53 Rev. 5, AC-6 Least Privilege. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>.
-- **[R3]** NIST SP 800-53 Rev. 5, AC-2 Account Management, (j) review at a defined frequency. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>.
+- **[R2]** NIST SP 800-53 Rev. 5, AC-6 Least Privilege. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. "Employ the principle of least privilege, allowing only authorized accesses for users (or processes acting on behalf of users) that are necessary to accomplish assigned organizational tasks." Quoted from NIST's OSCAL catalog, release 5.2.0, <https://github.com/usnistgov/oscal-content/blob/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json>, accessed 2026-10-08.
+- **[R3]** NIST SP 800-53 Rev. 5, AC-2 Account Management, (j) review at a defined frequency. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. "j. Review accounts for compliance with account management requirements [Assignment: organization-defined frequency]". Quoted from NIST's OSCAL catalog, release 5.2.0, accessed 2026-10-08.
+- **[R12]** NIST SP 800-53 Rev. 5, AC-3 Access Enforcement. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. "Enforce approved authorizations for logical access to information and system resources in accordance with applicable access control policies." Quoted from NIST's OSCAL catalog, release 5.2.0, accessed 2026-10-08.
 
 ### Informative
 
 - **[R4]** Microsoft, _Delegate application management administrator permissions_, accessed 2026-10-02. <https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/delegate-app-roles>. Owners manage a specific application; the Application Developer role grants creation once self-service is restricted; a custom role can be scoped to a single app registration or to all. "Application Administrator: Users in this role can create and manage all aspects of enterprise applications, application registrations, and application proxy settings", and "can add credentials to an application and use those credentials to impersonate the application's identity".
-- **[R5]** Microsoft, _Assign enterprise application owners_, accessed 2026-10-01. <https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/assign-app-owners>. Owners can manage only the applications they own.
+- **[R5]** Microsoft, _Assign enterprise application owners_, accessed 2026-10-08. <https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/assign-app-owners>. "Unlike other Application Administrators, owners can manage only the enterprise applications they own."
 - **[R6]** Okta, _Custom admin roles_ and _Create a resource set_, accessed 2026-10-01. <https://help.okta.com/en-us/content/topics/security/custom-admin-role/custom-admin-roles.htm>, <https://help.okta.com/en-us/content/topics/security/custom-admin-role/create-resource-set.htm>. An administrator role constrained to a set of applications.
 - **[R7]** Keycloak, _Server Administration Guide_ 26.7.5, fine-grained admin permissions. <https://www.keycloak.org/docs/26.7.5/server_admin/index.html>. Permissions over individual resources, such as a client.
 - **[R8]** Microsoft, _Configure Microsoft Entra role settings in PIM_, accessed 2026-10-02. <https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-how-to-change-default-settings>. "Require approval for activation of an eligible assignment … We recommend that you select at least two approvers."
+- **[R9]** OWASP, _API Security Top 10 2023_, API1:2023 Broken Object Level Authorization, accessed 2026-10-08. <https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/>. "Every API endpoint that receives an ID of an object, and performs any action on the object, should implement object-level authorization checks. The checks should validate that the logged-in user has permissions to perform the requested action on the requested object." Under How To Prevent: "Use the authorization mechanism to check if the logged-in user has access to perform the requested action on the record in every function that uses an input from the client to access a record in the database."
+- **[R10]** IETF RFC 9110, _HTTP Semantics_, June 2022, §15.5.4 and §15.5.5. <https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.4>. "An origin server that wishes to "hide" the current existence of a forbidden target resource MAY instead respond with a status code of 404 (Not Found)." The 404 status "indicates that the origin server did not find a current representation for the target resource or is not willing to disclose that one exists."
+- **[R11]** Google Cloud, _Best practices for managing service accounts_, accessed 2026-10-08. <https://docs.cloud.google.com/iam/docs/best-practices-service-accounts>. "Instead, consider them in the context of the resource they're associated with and manage the service account and its associated resource as one unit: Apply the same processes, same lifecycle, and same diligence to the service account and its associated resource, and use the same tools to manage them."
