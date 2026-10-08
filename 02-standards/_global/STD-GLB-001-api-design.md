@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-001
   title: Enterprise API Design Standard
   owner: Architecture Review Board
-  version: 1.4.0
+  version: 1.5.0
   status: approved
   classification: public
   governed_by: [EAD-004]
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_updated: 2026-10-07
-  last_reviewed: 2026-10-07
+  last_updated: 2026-10-08
+  last_reviewed: 2026-10-08
 ---
 
 # STD-GLB-001: Enterprise API Design Standard
@@ -57,6 +57,7 @@ This standard defines the mandatory design principles and HTTP protocol usage fo
   - **The end of a list is `next` = null, and nothing else.** Google calls the empty token "the _only_ way to communicate "end-of-collection" to users" [R2]. Azure: "**DO NOT** return the `nextLink` field at all when returning the last page" [R5]. A client never infers the end from a short page.
   - **The cursor is an object identifier and the order is its key.** This is Stripe's form ("Both parameters accept an existing object ID value") [R6] and GitHub's `before`/`after` [R7]. Microsoft Graph asks the server to sort by key "to ensure that items are always ordered consistently" and to "encode the record ID of the last read record" [R4]. PostgreSQL warns that offsets "give inconsistent results unless you enforce a predictable result ordering", and that "a large OFFSET might be inefficient" [R8]. This rule is stricter than Google's on one point: the identifier is not opaque [R2], because the key is a UUID the client already holds and parses as nothing.
   - **A filter holds for every page of a list.** "**DO** use the same filtering options and sort order for all pages of a paginated list operation response" [R5]. A changed filter starts again from the first page.
+  - **A time window is two filters, `from` and `to` (1.5.0).** Each is an RFC 3339 `date-time` with its offset, the form RFC 3339 gives as `date-time = full-date "T" full-time`, where a `full-time` ends in a `time-offset` [R11]. RFC 3339 adds that "all dates and times used in Internet protocols MUST be fully qualified" [R11], so an instant without an offset is refused. `from` is inclusive and `to` exclusive, so two adjacent windows share no item and leave none out. CloudTrail's lookup is the precedent for the filter, with "only events that occur after or at the specified time" for its start [R12]; it also includes its end ("before or at the specified time" [R12]), and this standard does not, so a review of one week and a review of the next cover each instant once. A `to` not after `from` is refused with `400`. The window is a filter like any other: it holds for every page, and the order is still the key.
   - **A `limit` outside 1 to 100 is refused with `400`, not coerced.** Google [R2][R3] and GitHub [R7] coerce down to the maximum. This standard departs from them: a refusal tells the client the bound at once, where a silent reduction hides it. A page shorter than asked is still never the end of the list.
 
 ### Security & Authentication
@@ -115,3 +116,5 @@ API schema validation via the API Gateway and CI/CD spectral linters.
   - §1: "Repeating the request multiple times can result in duplication or incorrect updates. Consider a scenario where the client sent a POST request to the server, but the request timed out."
   - §2.5.2: "Resources MUST publish a idempotency related specification."
   - §2.7: "If the Idempotency-Key request header is missing for a documented idempotent operation requiring this header, the resource SHOULD reply with an HTTP 400 status code with body containing a link pointing to relevant documentation."
+- **[R11]** IETF RFC 3339, _Date and Time on the Internet: Timestamps_, July 2002. <https://www.rfc-editor.org/rfc/rfc3339.txt>. §5.6: "date-time = full-date "T" full-time", "full-time = partial-time time-offset", "time-offset = "Z" / time-numoffset". §3: "all dates and times used in Internet protocols MUST be fully qualified."
+- **[R12]** Amazon Web Services, _LookupEvents_, AWS CloudTrail API Reference, accessed 2026-10-08. <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html>. StartTime: "Specifies that only events that occur after or at the specified time are returned." EndTime: "Specifies that only events that occur before or at the specified time are returned." NextToken: "This token must be passed in with the same parameters that were specified in the original call."
