@@ -127,6 +127,33 @@ already is.
 
 The grants are reviewable per Tenant, which is what AC-2(7)(b) asks [R7].
 
+### 5.5 A Provider Pauses Tenant Administration While a Restore Is Reconciled (2026-10-09)
+
+`SAD-004 §9.1.1` has a restore to an older point reconciled and contained "before normal
+operation". The containment is a pause of every Tenant administrator's commands, so authority does
+not change under the operator while security versions are reconciled (`SAD-004 §6.6`).
+
+- **A provider pauses and lifts it**, with a reason and an `Idempotency-Key`. Each decision is an
+  insert-only row naming the provider, the reason and the correlation identifier, and the latest row
+  is the state. No row means not paused.
+- **Commands are refused, reads continue.** Every request a Tenant administrator makes with a method
+  other than `GET`, `HEAD` or `OPTIONS` is refused before it reaches a handler. Those three are safe:
+  "Request methods are considered "safe" if their defined semantics are essentially read-only; i.e.,
+  the client does not request, and does not expect, any state change on the origin server" [R8].
+  `TRACE`, the fourth safe method [R8], is served by no route.
+- **The refusal is `503`, with a detail saying the same command can be sent again once the pause is
+  lifted.** `503` "indicates that the server is currently unable to handle the request due to a
+  temporary overload or scheduled maintenance, which will likely be alleviated after some delay"
+  [R8]. A `403` would tell the administrator its authority is gone, which it is not.
+- **It is read where the caller is admitted**, beside the grant of §5.3, for each request, so a
+  pause takes effect at the next command and so does its lifting. A pause that cannot be read
+  refuses the command: a command let through because the record was unreachable is the change the
+  pause exists to stop.
+- **Provider acts and consumers' protocol calls continue.** The operator's repairs are provider acts.
+- **It can start before the service serves.** The restore procedure may record the pause in the
+  restored database before the service starts, as a row naming no actor. Only a pause may name none,
+  so lifting one is always a provider's named decision.
+
 ## 6. Consequences
 
 ### Positive
@@ -144,6 +171,12 @@ The grants are reviewable per Tenant, which is what AC-2(7)(b) asks [R7].
 - **The reference system proof changes.** foundation-reference's proof acts as a Tenant
   administrator with a token alone. It must first grant itself a Membership and an administration
   grant through a provider, and present `aal2`.
+
+- **A paused Tenant administrator cannot re-apply a withdrawal the restore lost (§5.5).** No
+  provider route transitions one Membership inside a Tenant, so until the pause is lifted the
+  containment for such a Membership is a Tenant suspension. Whether a provider may suspend or revoke
+  one Membership inside a Tenant, with its reason recorded, is not decided here: it widens what a
+  provider does inside a Tenant, and is reopened by its own amendment.
 
 ### Operational
 
@@ -165,6 +198,8 @@ The grants are reviewable per Tenant, which is what AC-2(7)(b) asks [R7].
 - `ADR-IAM-006`: Tenant selection reaches this API only under this decision.
 - `TDD-organization-control-001` §Caller Authority, and foundation-reference's system proof, change
   to implement it.
+- `SAD-004 §6.6`, §9.1.1: the containment of a restore to an older point, which §5.5 is.
+  `TDD-organization-control-001` 1.22.0 §Pausing Tenant Administration implements it.
 
 ### Compliance Status
 
@@ -251,3 +286,12 @@ change an authority change, and every consumer of the projection would carry it.
     appropriate."
   - AC-6: "Employ the principle of least privilege, allowing only authorized accesses for users …
     that are necessary to accomplish assigned organizational tasks."
+- **[R8]** IETF RFC 9110, _HTTP Semantics_, June 2022. <https://www.rfc-editor.org/rfc/rfc9110>,
+  accessed 2026-10-09.
+  - §9.2.1: "Request methods are considered "safe" if their defined semantics are essentially
+    read-only; i.e., the client does not request, and does not expect, any state change on the origin
+    server as a result of applying a safe method to a target resource." "Of the request methods
+    defined by this specification, the GET, HEAD, OPTIONS, and TRACE methods are defined to be safe."
+  - §15.6.4: "The 503 (Service Unavailable) status code indicates that the server is currently unable
+    to handle the request due to a temporary overload or scheduled maintenance, which will likely be
+    alleviated after some delay."

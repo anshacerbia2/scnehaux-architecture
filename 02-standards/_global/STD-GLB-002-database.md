@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-002
   title: Enterprise Database & Persistence Standard
   owner: Architecture Review Board
-  version: 3.1.0
+  version: 3.2.0
   status: approved
   classification: internal
   governed_by: [GDC-000]
   authorized_by: [ADR-GLB-019]
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_reviewed: 2026-10-08
+  last_reviewed: 2026-10-09
 ---
 
 # STD-GLB-002: Enterprise Database & Persistence Standard
@@ -48,6 +48,16 @@ Define the default persistence and isolation rules for **Scnehaux-owned data sto
 - RLS is NOT mandatory for vendor-managed private schemas, external SaaS databases, immutable vendor stores, or data models where RLS would violate supported lifecycle or correctness
 - Keycloak private persistence MUST remain owned by Keycloak and MUST NOT be modified with Scnehaux tables, triggers, policies, or RLS unless explicitly supported and approved by the vendor integration contract
 - Pooled, bridge, silo, and regional data-isolation profiles MAY use different physical controls when risk, residency, scale, or contractual requirements justify them
+
+### Aggregate Reads Under Row-Level Security
+
+Added in 3.2.0. A metric that counts rows across Tenants, such as offboardings in progress or provisioning requests awaiting an outcome, is read on every collection (STD-GLB-003 §State Metrics). Reading it as a provider would record a privileged access per collection, and the review of that record would become a review of a timer. Reading it on an owning connection would bypass the isolation this section requires.
+
+- **It reads a view that returns counts and ages and names no row**: no Tenant, no person, no identifier.
+- **The view is owned by the migration role and declared `security_barrier`.** A view reads with its owner's privileges and, by default, under its owner's row-level security: "If any of the underlying base relations has row-level security enabled, then by default, the row-level security policies of the view owner are applied" [R10]. `security_barrier` "should be used if the view is intended to provide row-level security" [R10].
+- **The owner's own `SELECT` policies admit exactly the rows counted.** `FORCE ROW LEVEL SECURITY` binds the owner like every role, so each policy is declared by name in the service's posture check, which refuses a database with one missing or one more.
+- **The runtime role holds `SELECT` on the view and nothing new on the tables.**
+- **Not a `SECURITY DEFINER` function.** It would do the same with a second object to own and grant, and its safety rests on a pinned `search_path`: "For security, search_path should be set to exclude any schemas writable by untrusted users" [R11]. A view's references are resolved when it is created.
 
 ### Data Ownership & Access
 
@@ -164,3 +174,5 @@ Informative:
 - **[R7]** Google, _Site Reliability Engineering_, ch. 26, "Data Integrity: What You Read Is What You Wrote", accessed 2026-10-08. <https://sre.google/sre-book/data-integrity/>. "No one really wants to make backups; what people really want are restores"; "backups don't matter; what matters is recovery"; "Continuously test the recovery process as part of your normal operations"; "you only know that you can recover your recent state if you actually do so"; "If recovery tests are a manual, staged event, testing becomes an unwelcome bit of drudgery"; "Prove that data recovery works with regular exercise, or data recovery won't work." Supports the drill and its cadence.
 - **[R8]** PostgreSQL 17 Documentation, _25.3. Continuous Archiving and Point-in-Time Recovery (PITR)_, accessed 2026-10-08. <https://www.postgresql.org/docs/17/continuous-archiving.html>. "it is possible to restore the database to its state at any time since your base backup was taken"; "pg_dump and pg_dumpall do not produce file-system-level backups and cannot be used as part of a continuous-archiving solution. Such dumps are logical and do not contain enough information to be used by WAL replay"; "To put a limit on how old unarchived data can be, you can set archive_timeout to force the server to switch to a new WAL segment file at least that often"; "archive_timeout settings of a minute or so are usually reasonable." Supports §A drill does not prove an RPO.
 - **[R9]** GitHub, _Events that trigger workflows_, `schedule`, accessed 2026-10-08. <https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows>. "In a public repository, scheduled workflows are automatically disabled when no repository activity has occurred in 60 days"; "Scheduled workflows will only run on the default branch." Supports §Cadence.
+- **[R10]** PostgreSQL 17 Documentation, _CREATE VIEW_, accessed 2026-10-09. <https://www.postgresql.org/docs/17/sql-createview.html>. Notes: "By default, access to the underlying base relations referenced in the view is determined by the permissions of the view owner"; "If any of the underlying base relations has row-level security enabled, then by default, the row-level security policies of the view owner are applied, and access to any additional relations referred to by those policies is determined by the permissions of the view owner." `security_barrier`: "This should be used if the view is intended to provide row-level security." Supports §Aggregate Reads Under Row-Level Security.
+- **[R11]** PostgreSQL 17 Documentation, _CREATE FUNCTION_, "Writing SECURITY DEFINER Functions Safely", accessed 2026-10-09. <https://www.postgresql.org/docs/17/sql-createfunction.html>. "For security, search_path should be set to exclude any schemas writable by untrusted users." Supports §Aggregate Reads Under Row-Level Security.

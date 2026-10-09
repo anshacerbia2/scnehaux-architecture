@@ -169,6 +169,57 @@ The form decides which records the resource reads. It grants nothing:
 An application that leaves provider administration ends the activation, so authority never
 outlives the work it was opened for.
 
+### 5.6 A Tenant Sign-In on an Existing Session Is Answered by the Session (2026-10-09)
+
+§6 says "Within the SSO session a Tenant switch needs no credential". Against the pinned kernel it
+did not hold: a Tenant sign-in on the session of a provider sign-in got the kernel's error page,
+"Invalid username or password", while the same request in a new browser succeeded. Organization
+Experience's stack proof found it, and `compat/` in identity-kernel reproduced it on an `aal1`
+session made without `max_age` too. The cause is the `organization` scope on a session, not
+`max_age=0` and not the level.
+
+- **Why the kernel refused.** The kernel's _Cookie_ step does not finish a sign-in that names an
+  Organization. It attaches the session and leaves the Organization to a later step: "if
+  re-authenticating in the scope of an organization, an organization must be resolved prior to
+  authenticating the user" [R10]. Keycloak adds that step, _Organization Identity-First Login_, only
+  to the flows it creates for a realm: "When a realm is created, the authentication flows are
+  automatically updated", but "you also need to manually update your existing (custom)
+  authenticating flows" [R9]. The kernel's browser flow is its own and had no such step. Its forms
+  had nothing left to ask, so the flow ended without success, and Keycloak reports an unsuccessful
+  flow as invalid credentials [R10].
+- **The kernel's browser flow adds the organization step between the cookie and the forms.** On a
+  session, the step resolves the Organization the request names and completes the sign-in: "if
+  re-authenticating in the scope of an organization" it succeeds [R10]. It is a conditional
+  sub-flow that runs only when both conditions hold:
+  - the request asks for the `organization` scope;
+  - a person is already identified, by the session: the condition is the realm's default role,
+    which Keycloak assigns "when any user is newly created" [R9], and a role condition with no user
+    is false [R10].
+- **Not Keycloak's own condition.** Keycloak's procedure guards the step with _Condition - user
+  configured_ [R9], which is true for this step with no user. Every sign-in in a new browser would
+  then meet the identity-first page, since "The main change to the _browser_ flow is that it
+  defaults to an identity-first login so that users are identified before prompting for their
+  credentials" [R9]. The realm has no identity provider or domain routing to use that page for, so
+  the role condition keeps the step to a session.
+- **A step-up still asks.** Past `max_age`, or with `prompt=login`, the cookie does not answer the
+  sign-in, the organization step defers as well, and the forms ask for what the level needs. OpenID
+  Connect requires it: past `max_age`, "the OP MUST attempt to actively re-authenticate the
+  End-User", and with `prompt=login` "the Authorization Server MUST reauthenticate the End-User even
+  if the End-User is already authenticated" [R3]. A session is otherwise a way the provider may
+  authenticate: "The methods used by the Authorization Server to Authenticate the End-User (e.g.,
+  username and password, session cookies, etc.) are beyond the scope of this specification" [R3].
+  Entering the provider form (§5.4) is unchanged.
+- **A non-member is refused, as in a new browser.** `organization:<tenant_id>` resolves to nothing
+  for a person who is not a member, so the step does not run and the request "will be rejected"
+  [R4].
+- **Nothing changes in a consumer.** The BFFs already send §5.2's requests and need no
+  `prompt=login`.
+
+`compat/` in identity-kernel asserts it against the pinned kernel: a Tenant sign-in on a provider
+sign-in's session is answered without a page and carries the Tenant; a provider sign-in after it
+carries none; `max_age=0` asks for the password and the code; a non-member gets no token
+(`TDD-identity-kernel-001` 1.18.0 §Authentication Levels).
+
 ## 6. Consequences
 
 ### Positive
@@ -286,9 +337,16 @@ linked.
   <https://www.rfc-editor.org/rfc/rfc9700>. §2.3: "The privileges associated with an access token
   SHOULD be restricted to the minimum required for the particular application or use case."
 - **[R3]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023.
-  <https://openid.net/specs/openid-connect-core-1_0.html>. §3.1.2.1 `max_age`: "If the elapsed time
-  is greater than this value, the OP MUST attempt to actively re-authenticate the End-User"; "Note
-  that max_age=0 is equivalent to prompt=login."
+  <https://openid.net/specs/openid-connect-core-1_0.html>, accessed 2026-10-09.
+  - §3.1.2.1 `max_age`: "If the elapsed time is greater than this value, the OP MUST attempt to
+    actively re-authenticate the End-User"; "Note that max_age=0 is equivalent to prompt=login."
+    `prompt=login`: "The Authorization Server SHOULD prompt the End-User for reauthentication."
+  - §3.1.2.3: "the Authorization Server attempts to Authenticate the End-User or determines whether
+    the End-User is Authenticated, depending upon the request parameter values used. The methods
+    used by the Authorization Server to Authenticate the End-User (e.g., username and password,
+    session cookies, etc.) are beyond the scope of this specification." When "The Authentication
+    Request contains the prompt parameter with the value login. In this case, the Authorization
+    Server MUST reauthenticate the End-User even if the End-User is already authenticated."
 
 ### Informative
 
@@ -328,3 +386,34 @@ linked.
   "To enforce reauthentication on every role activation, configure the Conditional Access policy
   targeting your authentication context with sign-in frequency set to Every time under Session
   controls."
+- **[R9]** Keycloak 26.7.5, _Server Administration Guide_, _Authenticating members_, source
+  `docs/documentation/server_admin/topics/organizations/authenticating-members.adoc` at tag 26.7.5,
+  accessed 2026-10-09.
+  <https://github.com/keycloak/keycloak/blob/26.7.5/docs/documentation/server_admin/topics/organizations/authenticating-members.adoc>.
+  "When a realm is created, the authentication flows are automatically updated to enable specific
+  steps to authenticate and onboard organization members"; "The main change to the _browser_ flow is
+  that it defaults to an identity-first login so that users are identified before prompting for
+  their credentials"; for existing realms "you also need to manually update your existing (custom)
+  authenticating flows". The procedure adds a sub-flow "right after the _Identity Provider
+  Redirector_ execution step", with _Condition - user configured_ and the _Organization
+  Identity-First Login_ step. _Default roles_, source `topics/roles-groups/con-default-roles.adoc`:
+  "Default roles allow you to automatically assign user role mappings when any user is newly created
+  or imported through Identity Brokering."
+- **[R10]** Keycloak 26.7.5 source, <https://github.com/keycloak/keycloak/tree/26.7.5>, read
+  2026-10-09.
+  - `services/.../authentication/authenticators/browser/CookieAuthenticator.java`, `authenticate`:
+    "context.attachUserSession(authResult.session()); if (isOrganizationContext(context)) { // if
+    re-authenticating in the scope of an organization, an organization must be resolved prior to
+    authenticating the user context.attempted(); } else { context.success(); }".
+  - `services/.../organization/authentication/authenticators/browser/OrganizationAuthenticator.java`,
+    `action`: "if (isSSOAuthentication(authSession)) { // if re-authenticating in the scope of an
+    organization context.success(); } else { attempted(context, username); }".
+  - `services/.../authentication/AuthenticationProcessor.java`: an unsuccessful flow throws "new
+    AuthenticationFlowException(authenticationFlow.getFlowExceptions())", answered by
+    "event.error(Errors.INVALID_USER_CREDENTIALS)" and "ErrorPage.error(session,
+    authenticationSession, Response.Status.BAD_REQUEST, Messages.INVALID_USER)".
+  - `services/.../authentication/authenticators/conditional/ConditionalRoleAuthenticator.java`,
+    `matchCondition`: "if (user != null && authConfig!=null && authConfig.getConfig()!=null) { … return
+    negateOutput != user.hasRole(role); } return false;". `ConditionalUserConfiguredAuthenticator`:
+    "if (authenticator.requiresUser() && context.getUser() == null) { return false; } return
+    authenticator.configuredFor(context.getSession(), context.getRealm(), context.getUser());".

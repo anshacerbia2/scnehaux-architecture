@@ -54,16 +54,16 @@ The Identity Control Service records the owners of each registration: active hum
 
 ### 5.2 What an Owner May Do
 
-| Action                                                                         | Owner                                          | Provider                                       |
-| :----------------------------------------------------------------------------- | :--------------------------------------------- | :--------------------------------------------- |
-| Read the registration, its keys and its findings                               | yes                                            | yes                                            |
-| Rotate to a new public key; revoke a key                                       | yes                                            | yes                                            |
-| Suspend the client, which is reversible                                        | yes                                            | yes                                            |
-| Restore a suspended client                                                     | yes                                            | yes                                            |
-| Propose a redirect URI, audience or lifetime-class change                      | yes                                            | yes                                            |
-| Apply that change to a non-production registration                             | yes                                            | yes                                            |
-| Apply that change to a production registration                                 | approved by a provider other than the proposer | approved by a provider other than the proposer |
-| Change the profile or audience class; retire; adopt; grant or revoke ownership | no                                             | yes                                            |
+| Action                                                                                     | Owner                                          | Provider                                       |
+| :----------------------------------------------------------------------------------------- | :--------------------------------------------- | :--------------------------------------------- |
+| Read the registration, its keys and its findings                                           | yes                                            | yes                                            |
+| Rotate to a new public key; revoke a key                                                   | yes                                            | yes                                            |
+| Suspend the client, which is reversible                                                    | yes                                            | yes                                            |
+| Restore a suspended client                                                                 | yes                                            | yes                                            |
+| Propose a redirect URI, audience, lifetime-class or back-channel logout URI change (§5.10) | yes                                            | yes                                            |
+| Apply that change to a non-production registration                                         | yes                                            | yes                                            |
+| Apply that change to a production registration                                             | approved by a provider other than the proposer | approved by a provider other than the proposer |
+| Change the profile or audience class; retire; adopt; grant or revoke ownership             | no                                             | yes                                            |
 
 Key rotation needs no approval. It is the operation the console exists to make routine, it changes no trust relationship, and a rotation that waits for someone is a rotation that waits until the key expires. Suspension is offered to owners because a team that finds its key leaked contains the client first and asks afterwards. Retirement, which deletes the client, stays a provider's.
 
@@ -117,6 +117,16 @@ A workload names one accountable owner, an active human Principal, on the worklo
 
 The class bounds more than revocation. An access token outlives the session that issued it: NIST SP 800-63B-4 has a session terminated "When either timeout expires" [R16], and AC-12 terminates one after "[Assignment: organization-defined conditions or trigger events requiring session disconnect]" [R17], but a token already issued is accepted until it expires. RFC 9700 values a short lifetime because it reduces "the potential impact of access token leakage" [R18]. A longer class is therefore a security decision of the resource's, and is held to the second person a production trust change gets.
 
+### 5.10 A Confidential Client's Back-Channel Logout URI Changes as a Registration Change (2026-10-09)
+
+`ADR-IAM-009 §5.1` lets a `confidential` client register a `backchannel_logout_uri`. Until this amendment no change wrote it after registration, so a wrong or moved URI was corrected only by retiring the registration and registering the client again. It is now a fourth change kind beside the redirect URIs, the audience and the lifetime class, set, moved or removed.
+
+- **It is trust configuration, as a redirect URI is.** The URI is where the kernel sends a logout token, and the token names the person and, with "session required" on, the session: the registration parameter `backchannel_logout_session_required` asks "that a sid (session ID) Claim be included in the Logout Token to identify the RP session with the OP" [R19]. A URI moved to an endpoint the client's owners do not run sends that to someone else. A URI removed leaves every session removal to reach the client only at its next refresh (`ADR-IAM-009 §5.3`).
+- **It takes the route of the other changes.** An owner of the registration or a provider proposes the whole new value with a reason, against the version it read. Outside production it applies at once. In production a provider other than the proposer approves it [R1]. "Session required" is not part of the change: every client the Identity Control Service writes holds it on.
+- **It validates as registration does.** Only an active `confidential` client. The URI "MUST be an absolute URI" and "MUST NOT include a fragment component" [R19], has no credentials or wildcard, and is `https` in production (`ADR-IAM-009 §5.1`). Moving to the registered URI, or removing one that is not registered, is refused.
+- **The kernel is written before the commit, and the sweep confirms first.** The apply writes the URI under the registration's row lock, then the kernel client's back-channel logout URL with front-channel logout off, and rolls back on a kernel failure. The drift sweep reads a differing URI again under the registration's share lock before it repairs it, so a sweep between the kernel write and the commit does not put the old URI back.
+- **A logout already sent is not repeated.** The kernel "should not retransmit a Back-Channel Logout Request unless the OP suspects that previous transmissions may have failed due to potentially recoverable errors" [R19]. A session removed during the change is told to whichever URI the client held at that instant, and the next one goes to the new URI.
+
 ## 6. Consequences
 
 ### Positive
@@ -134,6 +144,7 @@ The class bounds more than revocation. An access token outlives the session that
 - A single provider can register a production client alone, and Entra notes that an application administrator can add credentials to an application and use them to impersonate it [R4]. A compromised provider account is therefore a production client takeover until two-person control at activation (§5.7) exists. Reporting every direct production registration makes it visible, not prevented.
 - A workload's owner cannot contain its workload (§5.8). A registration's owner suspends a client whose key leaked, but a workload's owner can only ask a provider to suspend it, because the workload's client has no registration owners. Until a decision gives the workload owner containment, a leaked workload key stays usable until a provider acts.
 - A compromised owner account can read the owner's workloads and record a false review. Neither stops a workload or changes its access. The review is recorded with who gave it, and an owner whose account is retired, quarantined or suspended confers nothing from the next request.
+- Outside production, a client's owner moves its back-channel logout URI alone (§5.10). A URI moved to the wrong endpoint sends that client's logout tokens there until it is corrected, and the change is recorded with who proposed it.
 - A lifetime-class change moves the token lifespan of callers whose owners did not propose it (§5.9). In production a provider approves it; outside production a resource's owner moves its callers alone. The approver sees the two classes and their revocation targets, not the list of callers, which no route lists yet.
 
 ### Operational
@@ -151,6 +162,7 @@ The class bounds more than revocation. An access token outlives the session that
 - [ADR-ORG-001](../organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) §5.11 — a resource checks the grants it holds.
 - SAD-002 — the Developer Console.
 - STD-IAM-001 §3.7 — a workload's explicit owner.
+- [ADR-IAM-009](ADR-IAM-009-logout-by-the-back-channel.md) §5.1, §5.3 — the back-channel logout URI that §5.10 changes. `TDD-identity-control-003` 1.38.0 implements §5.10.
 
 ### Compliance Status
 
@@ -228,6 +240,12 @@ None.
 
 **Rejected because:** `STD-IAM-002 §3.3` forbids configuring a lifetime per client. The derived lifespan already gives each caller the shortest class among its resources.
 
+### Alternative L — Correct a Back-Channel Logout URI by Retiring and Registering Again (§5.10)
+
+**Benefits:** nothing to build; the URI is fixed for the life of the registration.
+
+**Rejected because:** retirement deletes the kernel client, so a moved endpoint would cost the client its sessions, keys and audience for the time a new registration takes. A trust change of the same weight as a redirect URI already has a governed route, with a second person in production [R1].
+
 ## 9. References
 
 ### Normative
@@ -240,6 +258,7 @@ None.
 - **[R16]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025, §5.2 Reauthentication. <https://pages.nist.gov/800-63-4/sp800-63b.html>, accessed 2026-10-08. "An overall timeout limits the duration of an authenticated session to a specific period following authentication or a previous reauthentication. An inactivity timeout terminates a session without activity from the subscriber for a specific period"; "When either timeout expires, the session SHALL be terminated."
 - **[R17]** NIST SP 800-53 Rev. 5, AC-12 Session Termination. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. "Automatically terminate a user session after [Assignment: organization-defined conditions or trigger events requiring session disconnect]." The discussion names among those conditions "targeted responses to certain types of incidents". Quoted from NIST's OSCAL catalog, release 5.2.0, accessed 2026-10-08.
 - **[R18]** IETF RFC 9700 (BCP 240), _Best Current Practice for OAuth 2.0 Security_, January 2025, §4.14. <https://www.rfc-editor.org/rfc/rfc9700#section-4.14>. Refresh tokens "allow the authorization server to issue access tokens with a short lifetime and reduced scope, thus reducing the potential impact of access token leakage."
+- **[R19]** OpenID Foundation, _OpenID Connect Back-Channel Logout 1.0 incorporating errata set 1_, December 15, 2023. <https://openid.net/specs/openid-connect-backchannel-1_0.html>, accessed 2026-10-09. §2.2: "The back-channel logout URI MUST be an absolute URI as defined by Section 4.3 of [RFC3986]"; "The back-channel logout URI MUST NOT include a fragment component." `backchannel_logout_uri`: "RP URL that will cause the RP to log itself out when sent a Logout Token by the OP." `backchannel_logout_session_required`: "Boolean value specifying whether the RP requires that a sid (session ID) Claim be included in the Logout Token to identify the RP session with the OP when the backchannel_logout_uri is used." §2.5: "The OP should not retransmit a Back-Channel Logout Request unless the OP suspects that previous transmissions may have failed due to potentially recoverable errors (such as network outage or temporary service interruption at either the OP or RP)."
 
 ### Informative
 

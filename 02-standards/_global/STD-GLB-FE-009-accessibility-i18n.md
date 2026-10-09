@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-FE-009
   title: Enterprise Accessibility & Internationalization Standard
   owner: Principal Frontend Architect
-  version: 2.0.0
+  version: 2.0.1
   status: approved
   classification: restricted
   governed_by: [GDC-000]
   authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-29
+  last_reviewed: 2026-10-09
 ---
 
 # Enterprise Accessibility & Internationalization Standard (STD-GLB-FE-009)
@@ -67,7 +67,7 @@ Supported UI remains usable under text zoom, browser zoom, forced-colors mode, a
 
 Stable composite widgets receive manual checks with NVDA and VoiceOver for the supported browser matrix. The record includes component version, browser, operating system, assistive-technology version, scenario, expected announcement, actual result, and known limitation.
 
-Automated tools such as axe detect a subset of failures and cannot close manual behavior gates.
+Automated tools such as axe detect a subset of failures and cannot close manual behavior gates. Playwright: "automated testing cannot detect all types of WCAG violations" [R1]. A result axe cannot decide is recorded as needing review, never as a pass (STD-GLB-FE-008 §3.6).
 
 ### 3.6 Internationalization and localization
 
@@ -94,3 +94,7 @@ Canvas, virtualized, or specialized widgets without a native equivalent may use 
 - Product release review evaluates full-page WCAG 2.2 conformance and known limitations.
 
 A missing required scenario blocks stable promotion for the affected component or product flow.
+
+## 6. References
+
+- **[R1]** Playwright, _Accessibility testing_, accessed 2026-10-09. <https://playwright.dev/docs/accessibility-testing>. "Note that automated testing cannot detect all types of WCAG violations"; "many accessibility problems can only be discovered through manual testing"; "We recommend using a combination of automated testing, manual accessibility assessments, and inclusive user testing." Supports §3.5.

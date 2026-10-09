@@ -152,6 +152,18 @@ A Membership transition's state is derived from recorded evidence, never from th
 
   It is Tenant-scoped under the same row security as the Membership.
 
+- **A provider reads it too (2026-10-09)**, at
+  `GET /v1/tenants/{tenant_id}/memberships/{membership_id}/enforcement`, with
+  `X-Administrative-Reason`, and gets the same document. An operator answering an over-budget
+  revocation otherwise asks the Tenant or reads the tables.
+  - **The Tenant is in the path, not inferred from the Membership.** The read records the access
+    with the provider's reason and that Tenant before it reads, so the Tenant's administrator sees it
+    in the privileged-access record (`ADR-ORG-002 §5.6`). A route keyed on the Membership alone would
+    first read it across Tenants, and record no Tenant.
+  - **It reads under that Tenant's row security**, as the Tenant-scoped read does, with no new
+    grant. A Membership of another Tenant is `404` whatever the path carries: the server "did not
+    find a current representation for the target resource" [R6].
+
 - **`over_budget` carries an escalation path** in the administrative experience, as RFC 9110 asks
   a status monitor to estimate when a request will be fulfilled [R6].
 
@@ -248,8 +260,10 @@ Without a resume, the batch stays that way for ever, and every retry is refused 
   stage (§5.4).
 - A batch left `executing` is finished by the next execute past its lease (§5.3). Its view names
   who resumed it and when.
-- Over-budget revocations already alert through the dead-letter and frontier signals. The
-  per-Membership read adds no new signal.
+- Over-budget revocations alert through the dead-letter and frontier signals, and from 2026-10-09
+  through the age of each consumer's oldest unapplied priority-lane delivery
+  (`TDD-organization-control-002` 1.15.0 §Operational Notes). The per-Membership read adds no
+  signal.
 
 ## 7. Compliance Impact
 
@@ -344,6 +358,8 @@ and two requests would apply the same items. Expiry alone does not stop it [R14]
     process."
   - §13.1.1: "An origin server that evaluates an If-Match condition MUST NOT perform the
     requested method if the condition evaluates to false."
+  - §15.5.5: "The 404 (Not Found) status code indicates that the origin server did not find a
+    current representation for the target resource or is not willing to disclose that one exists."
   - §15.3.3: "the request has been accepted for processing, but the processing has not been
     completed. The request might or might not eventually be acted upon"; the representation
     "ought to describe the request's current status and point to (or embed) a status monitor
