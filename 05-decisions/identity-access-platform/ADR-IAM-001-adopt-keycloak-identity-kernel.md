@@ -271,6 +271,40 @@ Prohibited by default:
   definition does not manage. It is not disabled in production, because the feature is a build-time option
   [R51] and the image is the same in every environment, and disabling it would remove no capability: the Admin REST API stays, because the control plane needs it internally.
 
+**The session cache is off (2026-10-09).** Sessions are read from the database. The in-memory cache
+in front of them is turned off and persistent user sessions stay on. The kernel image sets
+`KC_SPI_USER_SESSIONS__INFINISPAN__USE_CACHES=false`, so every environment that runs the image has it
+(`TDD-identity-kernel-005` 1.7.0 §Session Store).
+
+- _Why._ With the cache on, the pinned 26.7.5 kernel kept refreshing sessions it had already removed.
+  Organization Experience's stack proof found it: identity-control removed a session through the Admin
+  API, the Admin API stopped listing it, and a refresh four minutes later was granted. The vendor
+  tracks it as keycloak#51127, "Persistent User Sessions: cache-miss unconditionally re-hydrates cache
+  from DB, resurrecting deleted sessions". The report notes that "the Admin UI/Admin REST API's "list
+  sessions" queries the database directly and correctly shows zero sessions" [R59].
+- _It is the vendor's workaround._ A Keycloak maintainer on that issue: "As a workaround, I recommend
+  to disable the cache, but keep persistent sessions enabled. Use the option
+  `spi-user-sessions--infinispan--use-caches` for that" [R59]. It is a provider option, not a preview
+  feature, and 26.7.5 reads it at startup ("Enable or disable caches") [R60].
+- _The vendor fix is partial and later._ keycloak#53250 writes "a short-lived tombstone marker" on
+  removal, and "Only the user session caches are protected (not client session caches, which are out
+  of scope for this minimal fix)" [R61]. It is in 26.8.0 and in no 26.7 release. Upgrading therefore
+  does not remove the setting. An upgrade goes through the kernel's compatibility suite, and the
+  setting stays until the suite shows it can go.
+- _It is measured._ identity-kernel's `compat/` removes sessions while other requests read them. With
+  the cache on, 801 of 1,800 removed sessions were refreshed after the removal answered. With it off,
+  none of 1,800 was. The suite also requires the server to report the cache off, so an image built
+  without the setting fails.
+- _What it costs._ Keycloak's caching guide: "When session caching is disabled, every session read
+  goes directly to the database. This may increase database connection usage and CPU load,
+  especially for workloads that rely heavily on token introspection or token exchange" [R62]. Products
+  validate tokens locally (above), so those reads come from sign-ins, refreshes, UserInfo and the
+  Admin API, not from API traffic, and the database is sized for them. The vendor's 26.8.0 upgrading
+  notes call "persistent sessions without caching a viable option" [R62].
+- _What remains._ A refresh that reads the session before the removal commits is granted, and its
+  access token lives out its lifetime. Its next refresh is refused, so this is bounded by the access
+  token lifetime (`STD-IAM-002 §3.3`).
+
 ### 5.9 Legacy Go IAM
 
 The existing Go IAM SHALL enter containment and migration mode:
@@ -410,6 +444,7 @@ Every stop names its reason and the calling Principal, and is recorded (`STD-IAM
 - Every upgrade requires compatibility, conformance, migration, and rollback evidence.
 - Restoring a suspended BFF signs its users out: they sign in again, because the suspension ended their refresh tokens (§5.13).
 - Retirement deletes the kernel client and cannot be undone there. The record stays in the Control Database.
+- Every session read goes to the kernel's database while the session cache is off (§5.8). Its connection pool and CPU are sized and monitored for sign-ins, refreshes, UserInfo and Admin API session reads.
 
 ## 7. Compliance Impact
 
@@ -599,3 +634,7 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R56]** Keycloak, _Configuring the Management Interface_, accessed 2026-10-05. <https://www.keycloak.org/server/management-interface>. "The management interface allows accessing management endpoints via a different HTTP server than the primary one"; "It provides the possibility to hide endpoints like `/metrics` or `/health` from the outside world and, therefore, hardens the security."
 - **[R57]** Keycloak, _Configuring a reverse proxy_, Exposed path recommendations, accessed 2026-10-05. <https://www.keycloak.org/server/reverseproxy>. `/admin/`: "Only internally", "Exposed admin paths lead to an unnecessary attack vector."
 - **[R58]** Keycloak, _Configuring the hostname_, accessed 2026-10-05. <https://www.keycloak.org/server/hostname>. "Using the `hostname-admin` option does not prevent accessing the Administration REST API endpoints via the frontend URL"; "If you want to restrict access to the Administration REST API, you need to do it on the reverse proxy level."
+- **[R59]** keycloak/keycloak#51127, _Persistent User Sessions: cache-miss unconditionally re-hydrates cache from DB, resurrecting deleted sessions_, opened 2026-07-24, closed 2026-09-30, labelled `release/26.8.0`, accessed 2026-10-09. <https://github.com/keycloak/keycloak/issues/51127>. The report: "Meanwhile, the Admin UI/Admin REST API's "list sessions" queries the database directly and correctly shows zero sessions — because the database genuinely has none." Alexander Schwartz (`ahus1`, listed in the repository's `MAINTAINERS.md`), 2026-09-22: "As a workaround, I recommend to disable the cache, but keep persistent sessions enabled. Use the option `spi-user-sessions--infinispan--use-caches` for that."
+- **[R60]** Keycloak 26.7.5 source, `model/infinispan/src/main/java/org/keycloak/models/sessions/infinispan/InfinispanUserSessionProviderFactory.java`, read 2026-10-09. <https://github.com/keycloak/keycloak/tree/26.7.5>. `init`: "useCaches = config.getBoolean(CONFIG_USE_CACHES, !Profile.isFeatureEnabled(Profile.Feature.STATELESS)) && InfinispanUtils.isEmbeddedInfinispan();". The option's help text: "Enable or disable caches."
+- **[R61]** keycloak/keycloak#53250, _Minimal tombstone implementation for user sessions_, merged 2026-09-30 as `a84a001`, accessed 2026-10-09. <https://github.com/keycloak/keycloak/pull/53250>. "This PR is a minimal, additive, backportable fix built around a short-lived tombstone marker written on removal, plus a cache listener that reacts to it"; "Only the user session caches are protected (not client session caches, which are out of scope for this minimal fix)". Tag 26.8.0, published 2026-10-01, contains the commit. Tags 26.7.0 to 26.7.5 do not.
+- **[R62]** Keycloak 26.8.0 documentation, accessed 2026-10-09. _Configuring distributed caches_, "Disabling session caching", <https://github.com/keycloak/keycloak/blob/26.8.0/docs/guides/server/caching.adoc>: "This setting is only available when persistent user sessions are enabled"; "When session caching is disabled, every session read goes directly to the database. This may increase database connection usage and CPU load, especially for workloads that rely heavily on token introspection or token exchange." _Upgrading Guide_, "Disabling caching of persistent user sessions", <https://github.com/keycloak/keycloak/blob/26.8.0/docs/documentation/upgrading/topics/changes/changes-26_8_0.adoc>: "Recent optimizations to the database layer, including async commits, improved indexes, and cheaper refresh-date updates, make persistent sessions without caching a viable option"; "To disable caching, set `--spi-user-sessions--infinispan--use-caches=false`."
