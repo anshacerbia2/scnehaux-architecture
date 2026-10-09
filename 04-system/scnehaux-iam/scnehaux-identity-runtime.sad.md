@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-001
   title: Scnehaux Identity Runtime
   owner: Identity Platform Team
-  version: 2.4.0
+  version: 2.5.0
   status: approved
   classification: restricted
   governed_by:
@@ -952,7 +952,7 @@ The pipeline must:
 4. run protocol and integration conformance tests;
 5. run federation-linking negative tests proving mutable attribute equality cannot auto-link an existing Principal;
 6. run delegation narrowing/attribution tests;
-7. run Membership/context revocation propagation and stale-token rejection tests;
+7. run Membership/context revocation propagation and stale-token rejection tests, and, end to end to a BFF session, measure a Membership revocation from Organization Control's acceptance to that session's end against §7.7's formula in a stack-level proof (STD-GLB-009 §Stack-Level Proofs, 2.5.0);
 8. run long-lived connection revocation contract tests against representative consumers before claiming the bounded profile;
 9. run migration and rollback tests;
 10. run cross-Tenant and privilege regression tests;

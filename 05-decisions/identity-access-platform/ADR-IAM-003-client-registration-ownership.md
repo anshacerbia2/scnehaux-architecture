@@ -106,6 +106,17 @@ A workload names one accountable owner, an active human Principal, on the worklo
 - **A workload the caller does not own is not found.** The route reads the owner of the workload its path names, never one the body names, and answers 404 for any other workload. That is the same answer as for a workload that does not exist. OWASP API1:2023 asks every endpoint that receives an object's identifier to "validate that the logged-in user has permissions to perform the requested action on the requested object" [R9]. RFC 9110 lets an origin server that "wishes to 'hide' the current existence of a forbidden target resource" answer 404 instead of 403 [R10]. A 403 would tell anyone holding an account which workload identifiers exist. Entra's application owners likewise "can manage only the enterprise applications they own" [R5]. Access is enforced at the resource, as AC-3 asks [R12], and no more than the review needs is granted, as AC-6 asks [R2].
 - **Everything else stays a provider's**, at `aal2` (`ADR-IAM-004`): reading a workload one does not own, reassigning, suspending, restoring, retiring and rebuilding. Each of these changes who answers for a running workload or stops it. An owner who finds that a workload is no longer needed, or that its owner or team is wrong, asks a provider, who acts with a reason. A provider who owns a workload sees it in the console's list like any owner. Opening one of its workloads is a provider read, so that provider steps up to `aal2` first.
 
+### 5.9 A Resource's Lifetime Class Changes as a Registration Change
+
+§5.2 lets an owner propose a lifetime-class change. The class is a resource's, and a client's access token lifespan is derived from the shortest class among the resources its audience names (`STD-IAM-002 §3.3`). So one change to a resource moves the lifespan of every client that calls it, and with it the delay before a revocation reaches that resource.
+
+- **It takes the route of the other changes.** An owner of the resource or a provider proposes the next class with a reason, against the version it read. Outside production it applies at once. In production a provider other than the proposer approves it, shortening and lengthening alike. A shorter class takes access away sooner and a longer one leaves it longer, and both change what every caller's tokens do.
+- **The proposal names a class, never a number.** The four classes and their figures are the standard's, and a lifetime "MUST NOT be configured per client" (`STD-IAM-002 §3.3`). Entra splits the same way: defining a token lifetime policy needs `Policy.ReadWrite.ApplicationConfiguration`, an administrator's permission, while assigning one to an application needs only `Application.ReadWrite.OwnedBy` and `Policy.Read.All` [R14]. Okta sets the lifetime per API, on its authorization server's access policy, and gives the reason: "an access token for a banking API may include a transactions:read scope with a multi-hour token lifetime. By contrast, the lifetime of an access token for transferring funds should be only a matter of minutes" [R15]. The resource's owners know which of those it is.
+- **The change states the delay it sets.** Each class shows its access token lifetime and its revocation target, so a proposer and an approver see the increase that `STD-IAM-002 §3.3` requires "into the stated maximum enforcement delay". Microsoft states the trade the number makes: "Adjusting the lifetime of an access token is a trade-off between improving system performance and increasing the amount of time that the client retains access after the user's account is disabled" [R13].
+- **The apply moves every caller with it.** The resource's class and version are written, then the lifespan of every client whose audience names the resource, under the clients' row locks, before the commit. A kernel that refuses rolls the change back and puts back the lifespans already written, as an audience change rolls back (`TDD-identity-control-003` §Registration Changes).
+
+The class bounds more than revocation. An access token outlives the session that issued it: NIST SP 800-63B-4 has a session terminated "When either timeout expires" [R16], and AC-12 terminates one after "[Assignment: organization-defined conditions or trigger events requiring session disconnect]" [R17], but a token already issued is accepted until it expires. RFC 9700 values a short lifetime because it reduces "the potential impact of access token leakage" [R18]. A longer class is therefore a security decision of the resource's, and is held to the second person a production trust change gets.
+
 ## 6. Consequences
 
 ### Positive
@@ -123,6 +134,7 @@ A workload names one accountable owner, an active human Principal, on the worklo
 - A single provider can register a production client alone, and Entra notes that an application administrator can add credentials to an application and use them to impersonate it [R4]. A compromised provider account is therefore a production client takeover until two-person control at activation (§5.7) exists. Reporting every direct production registration makes it visible, not prevented.
 - A workload's owner cannot contain its workload (§5.8). A registration's owner suspends a client whose key leaked, but a workload's owner can only ask a provider to suspend it, because the workload's client has no registration owners. Until a decision gives the workload owner containment, a leaked workload key stays usable until a provider acts.
 - A compromised owner account can read the owner's workloads and record a false review. Neither stops a workload or changes its access. The review is recorded with who gave it, and an owner whose account is retired, quarantined or suspended confers nothing from the next request.
+- A lifetime-class change moves the token lifespan of callers whose owners did not propose it (§5.9). In production a provider approves it; outside production a resource's owner moves its callers alone. The approver sees the two classes and their revocation targets, not the list of callers, which no route lists yet.
 
 ### Operational
 
@@ -198,6 +210,24 @@ None.
 
 **Rejected because:** a 403 tells anyone with an account which workload identifiers exist, which is the disclosure OWASP API1:2023 describes [R9]. RFC 9110 lets a server answer 404 to hide that a resource exists [R10], and §5.4 already answers an owner 404 for a registration it does not own.
 
+### Alternative I — The Lifetime Class Fixed at Registration (§5.9)
+
+**Benefits:** nothing to build; a class chosen once cannot be weakened later.
+
+**Rejected because:** the only way to change it would be to retire the resource and register it again. Retirement deletes the kernel client and takes the resource out of every caller's audience, so correcting a class chosen too long would be an outage for every caller, and the correction would wait.
+
+### Alternative J — A Provider's Change Only (§5.9)
+
+**Benefits:** a person outside the team decides every lifetime.
+
+**Rejected because:** the resource's owners know whether it moves funds or reads a catalogue [R15], and Entra lets an owner assign an administrator-defined lifetime policy [R14]. In production a provider already approves the change, so a provider-only change would add no second person, only take the proposal away from the team.
+
+### Alternative K — A Lifetime per Client (§5.9)
+
+**Benefits:** one caller could get a shorter lifetime without moving the others.
+
+**Rejected because:** `STD-IAM-002 §3.3` forbids configuring a lifetime per client. The derived lifespan already gives each caller the shortest class among its resources.
+
 ## 9. References
 
 ### Normative
@@ -206,6 +236,10 @@ None.
 - **[R2]** NIST SP 800-53 Rev. 5, AC-6 Least Privilege. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. "Employ the principle of least privilege, allowing only authorized accesses for users (or processes acting on behalf of users) that are necessary to accomplish assigned organizational tasks." Quoted from NIST's OSCAL catalog, release 5.2.0, <https://github.com/usnistgov/oscal-content/blob/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json>, accessed 2026-10-08.
 - **[R3]** NIST SP 800-53 Rev. 5, AC-2 Account Management, (j) review at a defined frequency. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. "j. Review accounts for compliance with account management requirements [Assignment: organization-defined frequency]". Quoted from NIST's OSCAL catalog, release 5.2.0, accessed 2026-10-08.
 - **[R12]** NIST SP 800-53 Rev. 5, AC-3 Access Enforcement. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. "Enforce approved authorizations for logical access to information and system resources in accordance with applicable access control policies." Quoted from NIST's OSCAL catalog, release 5.2.0, accessed 2026-10-08.
+
+- **[R16]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025, §5.2 Reauthentication. <https://pages.nist.gov/800-63-4/sp800-63b.html>, accessed 2026-10-08. "An overall timeout limits the duration of an authenticated session to a specific period following authentication or a previous reauthentication. An inactivity timeout terminates a session without activity from the subscriber for a specific period"; "When either timeout expires, the session SHALL be terminated."
+- **[R17]** NIST SP 800-53 Rev. 5, AC-12 Session Termination. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. "Automatically terminate a user session after [Assignment: organization-defined conditions or trigger events requiring session disconnect]." The discussion names among those conditions "targeted responses to certain types of incidents". Quoted from NIST's OSCAL catalog, release 5.2.0, accessed 2026-10-08.
+- **[R18]** IETF RFC 9700 (BCP 240), _Best Current Practice for OAuth 2.0 Security_, January 2025, §4.14. <https://www.rfc-editor.org/rfc/rfc9700#section-4.14>. Refresh tokens "allow the authorization server to issue access tokens with a short lifetime and reduced scope, thus reducing the potential impact of access token leakage."
 
 ### Informative
 
@@ -217,3 +251,6 @@ None.
 - **[R9]** OWASP, _API Security Top 10 2023_, API1:2023 Broken Object Level Authorization, accessed 2026-10-08. <https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/>. "Every API endpoint that receives an ID of an object, and performs any action on the object, should implement object-level authorization checks. The checks should validate that the logged-in user has permissions to perform the requested action on the requested object." Under How To Prevent: "Use the authorization mechanism to check if the logged-in user has access to perform the requested action on the record in every function that uses an input from the client to access a record in the database."
 - **[R10]** IETF RFC 9110, _HTTP Semantics_, June 2022, §15.5.4 and §15.5.5. <https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.4>. "An origin server that wishes to "hide" the current existence of a forbidden target resource MAY instead respond with a status code of 404 (Not Found)." The 404 status "indicates that the origin server did not find a current representation for the target resource or is not willing to disclose that one exists."
 - **[R11]** Google Cloud, _Best practices for managing service accounts_, accessed 2026-10-08. <https://docs.cloud.google.com/iam/docs/best-practices-service-accounts>. "Instead, consider them in the context of the resource they're associated with and manage the service account and its associated resource as one unit: Apply the same processes, same lifecycle, and same diligence to the service account and its associated resource, and use the same tools to manage them."
+- **[R13]** Microsoft, _Configurable token lifetimes in the Microsoft identity platform_, accessed 2026-10-08. <https://learn.microsoft.com/en-us/entra/identity-platform/configurable-token-lifetimes>. "Adjusting the lifetime of an access token is a trade-off between improving system performance and increasing the amount of time that the client retains access after the user's account is disabled"; a token lifetime policy "controls how long access, SAML, and ID tokens for this resource are considered valid"; the access token lifetime has a minimum of 10 minutes.
+- **[R14]** Microsoft, _Assign tokenLifetimePolicy_, Microsoft Graph v1.0, accessed 2026-10-08. <https://learn.microsoft.com/en-us/graph/api/application-post-tokenlifetimepolicies?view=graph-rest-1.0>. "Assign a tokenLifetimePolicy to an application"; least privileged application permissions "Application.ReadWrite.OwnedBy and Policy.Read.All". Creating a policy takes `Policy.ReadWrite.ApplicationConfiguration` (_Create tokenLifetimePolicy_, <https://learn.microsoft.com/en-us/graph/api/tokenlifetimepolicy-post-tokenlifetimepolicies?view=graph-rest-1.0>).
+- **[R15]** Okta, _Configure an access policy_, accessed 2026-10-08. <https://developer.okta.com/docs/guides/configure-access-policy/main/>. "Access policies help you secure your APIs by defining different access and refresh token lifetimes for a given combination of grant type, user, and scope"; "Access policies are specific to a particular authorization server"; "an access token for a banking API may include a transactions:read scope with a multi-hour token lifetime. By contrast, the lifetime of an access token for transferring funds should be only a matter of minutes."

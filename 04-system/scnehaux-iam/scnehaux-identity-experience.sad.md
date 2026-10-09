@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-002
   title: Scnehaux Identity Experience
   owner: Identity Experience Team
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-08-06
+  last_reviewed: 2026-10-08
   parent_pad: PAD-PLT-001
 ---
 
@@ -511,7 +511,8 @@ The pipeline must:
 7. test supported Keycloak-version compatibility for theme and account integration;
 8. build immutable signed artifacts;
 9. promote the same artifacts across environments;
-10. support immediate rollback of theme and portal releases.
+10. support immediate rollback of theme and portal releases;
+11. measure, in a stack-level proof (STD-GLB-009 §Stack-Level Proofs, 2.1.0), how long a BFF session outlives the access that backed it: a kernel session removed ends this experience's session within the remaining `L0` access token lifetime by the refresh path, and sooner by back-channel logout once its URL is registered; a revoked Membership ends a Tenant session of the same BFF pattern within its bound. A Membership revocation removes no kernel session (`ADR-IAM-006 §5.5`), so no back-channel logout is sent for it and the refresh path alone bounds it. The proof is organization-experience's `stack-proof` workflow, the one repository that consumes every stack the measurement needs.
 
 ### 9.4 Release Independence
 

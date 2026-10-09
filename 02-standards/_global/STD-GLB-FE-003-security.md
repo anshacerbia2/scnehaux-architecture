@@ -3,12 +3,12 @@ doc_meta:
   id: STD-GLB-FE-003
   title: Enterprise Frontend Security Standard
   owner: Enterprise Security Architect
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-08-10
+  last_reviewed: 2026-10-08
 ---
 
 # Enterprise Frontend Security Standard (STD-GLB-FE-003)
@@ -63,6 +63,10 @@ The browser is an untrusted execution environment. Frontend controls improve saf
 
 - Applications MUST deploy a restrictive, application-specific Content Security Policy
 - Clickjacking protection MUST use CSP `frame-ancestors` and/or equivalent approved controls
+- A BFF-served application keeps `form-action 'self'`, and a control that starts a sign-in is a navigation, a link or a script setting the location, never a form submitted to the BFF's sign-in route (2.1.0). That route answers with a redirect to the identity kernel, and Chrome checks the redirect's target against `form-action`: GitLab found that Chrome "takes the redirection target into account when evaluating CSP violations" [R3]. MDN: "Whether `form-action` should block redirects after a form submission is debated and browser implementations of this aspect are inconsistent (e.g., Firefox 57 doesn't block the redirects whereas Chrome 63 does)" [R1], and the question has been open in the specification since 2015 [R2]. A form there is refused in Chrome and works elsewhere.
+  - _Rejected: widening `form-action` to the kernel's origin._ The policy is the BFF pattern's, the same for every application, and the kernel's origin is each deployment's own. A form that may submit off the origin is what the directive exists to stop.
+  - _Found by_ organization-experience's stack-level proof, which signs in through Chromium (STD-GLB-FE-008 §3.4): its Tenant sign-in form was refused before it reached the kernel, and no test without a browser could see it.
+  - _Residual risk._ A form whose answer redirects off the origin still passes every test that runs no browser, and every browser but Chrome. Only a browser journey through the redirect finds one.
 - `X-Content-Type-Options: nosniff` and an approved `Referrer-Policy` are required for external web applications
 - Unsafe HTML insertion is prohibited unless content is sanitized by an approved boundary
 - Dependencies and build artifacts MUST pass software-supply-chain security checks
@@ -85,3 +89,9 @@ Deviations require formal exception approval under GDC-000 with threat model, co
 - security-header and CSP tests
 - browser OAuth/BFF profile conformance tests
 - backend authorization tests proving UI controls are non-authoritative
+
+## 6. References
+
+- **[R1]** MDN Web Docs, _Content-Security-Policy: form-action directive_, accessed 2026-10-08. <https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/form-action>. "The HTTP Content-Security-Policy (CSP) `form-action` directive restricts the URLs which can be used as the target of form submissions from a given context"; "Whether `form-action` should block redirects after a form submission is debated and browser implementations of this aspect are inconsistent (e.g., Firefox 57 doesn't block the redirects whereas Chrome 63 does)." Supports §3.5.
+- **[R2]** W3C WebAppSec, issue #8, _CSP: form-action and redirects_, open since 2015-10-07, accessed 2026-10-08. <https://github.com/w3c/webappsec-csp/issues/8>. "Perform some action by doing a `POST` to `self`"; "Based on request params/backend state, redirect the user to another site." W3C, _Content Security Policy Level 3_, §6.4.1: "The form-action directive restricts the URLs which can be used as the target of a form submissions from a given context", <https://www.w3.org/TR/CSP3/>. Supports §3.5.
+- **[R3]** GitLab, merge request 90082, _Allowlist OAuth application redirect URI in CSP_, merged 2022-06-17, accessed 2026-10-08. <https://gitlab.com/gitlab-org/gitlab/-/merge_requests/90082>. "our OAuth page submits the form to `/oauth/authorize` however the page immediately redirects to the OAuth application's `redirect_uri` and Chrome takes the redirection target into account when evaluating CSP violations." Supports §3.5.

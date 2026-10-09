@@ -108,7 +108,7 @@ Follow organization-control §Before you start, §First start, and §Wiring to o
 Follow organization-experience §Registering it (§The client lists every property).
 
 1. **On the laptop:** `node scripts/new-client-key.mjs`.
-2. **The operator** registers `organization-experience-bff` with `POST /v1/registrations`, as `privileged` in the `per-sign-in` form, with audience `organization-control-api` and redirect `http://127.0.0.1:8091/auth/callback`.
+2. **The operator** registers `organization-experience-bff` with organization-experience's `scripts/dev-register-bff.ps1`, which sends `POST /v1/registrations` as `privileged` in the `per-sign-in` form, with audience `organization-control-api` and redirect `http://127.0.0.1:8091/auth/callback`. organization-experience's `stack-proof` workflow runs the same script (STD-GLB-009 §A procedure step is a script, and CI runs it).
 3. **Port 8091,** because the identity BFF has 8090. The two still share one cookie, `__Host-ident_session`. A browser scopes cookies by host and not by port, so signing in to one BFF signs the browser out of the other. Use one BFF at a time, or two browser profiles (organization-experience §Before running both BFFs at once).
 
 ## 9. Updating

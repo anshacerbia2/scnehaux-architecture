@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -431,6 +431,7 @@ RLS is defense in depth. Application authorization remains mandatory.
 
 - active authority records follow domain lifecycle;
 - revoked Membership and privileged-administration facts are retained according to security/audit policy;
+- the privileged-access record and its reviews are not purged until a retention standard names a period: CIS asks for "a minimum of 90 days", and a row is needed at least until a review covers it (`ADR-ORG-002 §5.6`, 2.2.0);
 - invitation data expires and is minimized after completion;
 - offboarding records remain until all obligations and evidence retention requirements complete;
 - projections and reconciliation cursors retain only operationally required history;
@@ -577,7 +578,8 @@ Provider administration requires:
 - explicit Tenant/operation scope;
 - reason and external ticket/approval where required;
 - security event and enterprise evidence;
-- no implicit privilege from ordinary Tenant or Product roles.
+- no implicit privilege from ordinary Tenant or Product roles;
+- **a readable, reviewed record of every provider access (2.2.0, `ADR-ORG-002 §5.6`).** Each provider-scoped transaction records, before it runs, the actor, the authority it acted on (emergency, activation, eligible or consumer), the activation, the one Tenant it named, the operation, the correlation and the reason. A provider in force reads every row. A Tenant administrator reads the provider access that named its Tenant. No runtime role changes or deletes a row. A review covers one provider's access over a period, is recorded by a different provider with a statement and an outcome, and is never changed. A provider's access unreviewed for seven days is overdue and reported.
 
 ### 8.6 Threat Controls
 
@@ -663,17 +665,18 @@ Secrets, tokens, unrestricted PII, and invitation proof material are excluded.
 
 #### 9.3.2 SLIs and Alerts
 
-| SLI                                  | Initial Target / Alert                                        |
-| :----------------------------------- | :------------------------------------------------------------ |
-| Administrative API availability      | target 99.95% monthly after evidence                          |
-| Mutation p95 latency                 | ≤ 500 ms excluding downstream workflows                       |
-| Authoritative read p95               | ≤ 200 ms                                                      |
-| Outbox oldest unpublished age        | warning > 30 s; critical > 2 min for security-priority events |
-| Revocation publication delay         | warning/critical thresholds defined by security profile       |
-| Projection reconciliation age        | consumer-specific; critical when stale policy exceeded        |
-| Cross-tenant authorization denial    | monitored for anomaly and regression                          |
-| Database replication/failover health | critical on managed-service thresholds                        |
-| Offboarding overdue obligation       | warning before contract deadline; critical after deadline     |
+| SLI                                  | Initial Target / Alert                                            |
+| :----------------------------------- | :---------------------------------------------------------------- |
+| Administrative API availability      | target 99.95% monthly after evidence                              |
+| Mutation p95 latency                 | ≤ 500 ms excluding downstream workflows                           |
+| Authoritative read p95               | ≤ 200 ms                                                          |
+| Outbox oldest unpublished age        | warning > 30 s; critical > 2 min for security-priority events     |
+| Revocation publication delay         | warning/critical thresholds defined by security profile           |
+| Projection reconciliation age        | consumer-specific; critical when stale policy exceeded            |
+| Cross-tenant authorization denial    | monitored for anomaly and regression                              |
+| Database replication/failover health | critical on managed-service thresholds                            |
+| Offboarding overdue obligation       | warning before contract deadline; critical after deadline         |
+| Provider access unreviewed           | warning when any is more than seven days old (`ADR-ORG-002 §5.6`) |
 
 Current SLO is `not-yet-established` until production measurement begins.
 
@@ -687,6 +690,7 @@ Required runbooks:
 - projection rebuild and consumer reconciliation;
 - Keycloak projection drift repair;
 - provider-admin privilege incident;
+- provider-access review: the weekly review of what providers did, and the 90-day review of who holds provider authority (`ADR-ORG-002 §5.2`, `§5.6`);
 - PostgreSQL failover and restore;
 - Tenant activation/provisioning stuck state;
 - offboarding blocked obligation;

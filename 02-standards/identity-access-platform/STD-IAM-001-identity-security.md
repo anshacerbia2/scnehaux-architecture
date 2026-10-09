@@ -3,12 +3,12 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.6.0
+  version: 2.7.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-06
+  last_reviewed: 2026-10-08
 ---
 
 # Enterprise Identity Security Standard (STD-IAM-001)
@@ -94,6 +94,7 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - Stopping a client MUST end the refresh tokens and sessions issued to it before the stop, not only refuse its new requests. A stop that a later re-enable undoes for the earlier sessions is a pause, and MUST NOT be used or reported as a revocation
 - A client MUST be stopped reversibly before it is removed permanently. The permanent removal MUST be refused for a client that has not been stopped first; a protected resource, which holds no credential and is issued no token, is exempt
 - The two rules above are this standard's, not a protocol's. They rest on what the pinned kernel does to a stopped client (`ADR-IAM-001 §5.13`), on eradication removing the persistence mechanisms an incident left [R20], and on disabling an account before deleting it [R19]
+- **A relying party that holds server-side sessions and that the identity kernel can reach MUST receive logout by OpenID Connect Back-Channel Logout, and front-channel logout MUST NOT be used by any client (2.7.0).** The kernel tells a relying party of a session removed through its Admin API only by the back channel, and the pinned release skips the back channel for a client with front-channel logout on [R33]. A front-channel logout is a frame in the person's browser, which browsers now deny the relying party's cookies and storage [R34]. The registration authority records the back-channel logout URI and holds front-channel logout off (`ADR-IAM-009`). A relying party the kernel cannot reach, such as one on a developer's machine, registers none and is bounded by the enforcement delay above
 - Products MUST NOT require synchronous Identity calls for every request solely to check session state when local token validation plus bounded revocation/projection mechanisms satisfy the requirement
 - Privileged administrative sessions SHOULD use server-managed/BFF session patterns where the application architecture supports them
 
@@ -159,6 +160,7 @@ Deviation from this standard requires formal exception approval under GDC-000 wi
 - compatibility test, against the pinned kernel release, that the hosted login page carries the §3.9 header set, that its policy names no other origin and no `form-action`, and that a definition weakening the anti-framing directives is refused
 - compatibility test, against the pinned kernel release, that an unknown identifier, a wrong password and a disabled account are not separable by time, with the §3.1 recorded gaps measured alongside
 - realm definition assertion that the kernel holds no SMTP server and no `email` event listener (`ADR-IAM-007 §5.4`)
+- compatibility test, against the pinned kernel release, that removing a session through the Admin API posts a logout token naming its `sid` to a client's back-channel logout URL, and posts none to a client with front-channel logout on; and a drift sweep that repairs a changed back-channel URL or front-channel setting (`ADR-IAM-009`)
 
 ## 6. References
 
@@ -183,6 +185,8 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 - **[R22]** IETF RFC 8725 (BCP 225), _JSON Web Token Best Current Practices_, February 2020. <https://www.rfc-editor.org/rfc/rfc8725>. §3.1 algorithm allowlists; §3.8 to §3.11 issuer, audience, and explicit typing.
 - **[R23]** W3C, _Content Security Policy Level 3_, Working Draft, accessed 2026-10-06. <https://www.w3.org/TR/CSP3/>. §6.4.2 `frame-ancestors` "restricts the origins which may embed the protected resource in a frame"; §6.4.2.2: "The `frame-ancestors` directive is meant to replace the `X-Frame-Options` header. User agents that support CSP should prefer `frame-ancestors` over `X-Frame-Options` when both are present." §6.4.1 `form-action` "restricts the URLs to which a form can be submitted."
 - **[R29]** IETF RFC 6797, _HTTP Strict Transport Security (HSTS)_, November 2012. <https://www.rfc-editor.org/rfc/rfc6797>. §8.1: "If an HTTP response is received over insecure transport, the UA MUST ignore any present STS header field(s)."
+- **[R33]** OpenID Foundation, _OpenID Connect Back-Channel Logout 1.0 incorporating errata set 1_, December 2023. <https://openid.net/specs/openid-connect-backchannel-1_0.html>. §1: "An upside of back-channel communication is that it can be more reliable than communication through the User Agent, since in the front-channel, the RP's browser session must be active for the communication to succeed"; the URI "must be reachable from all the OPs used". Keycloak 26.7.5, _Server Administration Guide_, OIDC Logout: an administrator's removal "is not supported in case of Front-Channel logout because Keycloak can propagate logout to the client by front-channel just when the logout is triggered in the same browser session"; the back-channel URL "is applicable just if Front channel logout option is OFF". The quotations and the source evidence are `ADR-IAM-009` [R2], [R3], [R4].
+- **[R34]** OpenID Foundation, _OpenID Connect Front-Channel Logout 1.0_, September 2022. <https://openid.net/specs/openid-connect-frontchannel-1_0.html>. §4.1: "the frontchannel_logout_uri might not be able to access the RP's login state when rendered by the OP in an iframe because the iframe is in a different origin than the OP's page"; back-channel logout "is not known to be affected by these developments." Browser behaviour: `ADR-IAM-009` [R5], [R6], [R7].
 
 ### Informative
 
