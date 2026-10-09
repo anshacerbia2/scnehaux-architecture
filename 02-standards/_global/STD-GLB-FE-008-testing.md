@@ -3,12 +3,12 @@ doc_meta:
   id: STD-GLB-FE-008
   title: Enterprise Frontend Testing & Quality Assurance Standard
   owner: Principal Frontend Architect
-  version: 1.1.0
+  version: 1.2.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-08
+  last_reviewed: 2026-10-09
 ---
 
 # Enterprise Frontend Testing & Quality Assurance Standard (STD-GLB-FE-008)
@@ -76,6 +76,10 @@ Applications must implement a comprehensive testing strategy adhering to the ent
 ### 3.6 Accessibility & Performance Testing
 
 - **Automated A11y**: Unit and integration tests must run automated accessibility assertions (e.g., `jest-axe`).
+- **Automated A11y in a browser (1.2.0)**: Component tests run axe on a DOM without layout: jsdom does not implement "Layout: the ability to calculate where elements will be visually laid out as a result of CSS" [R5]. Each main page of an application is therefore also scanned in Chromium, served from its built bundle, with `@axe-core/playwright`, the integration Playwright's accessibility guide uses [R4], in CI.
+  - The scan fails on any violation of the WCAG 2.0, 2.1 and 2.2 A and AA rules axe implements.
+  - What axe cannot decide, such as a colour contrast over a gradient or a translucent panel, is recorded on the test as needing review, never counted as a pass.
+  - It is automated evidence only. Playwright: "Note that automated testing cannot detect all types of WCAG violations", and "many accessibility problems can only be discovered through manual testing" [R4]. Keyboard order, focus, zoom, colour contrast and a screen reader stay with the manual audit of STD-GLB-FE-009 §3.5.
 - **Performance Budgets**: E2E pipelines must incorporate performance audits (e.g., Lighthouse CI) to assert that Core Web Vitals remain within the budgets defined in [STD-GLB-FE-002 (Performance)](STD-GLB-FE-002-performance.md).
 
 ---
@@ -110,3 +114,5 @@ Exceptions are granted exclusively when strict compliance with a normative rule 
 - **[R1]** Playwright, _Continuous Integration_, accessed 2026-10-08. <https://playwright.dev/docs/ci>. "We recommend setting workers to "1" in CI environments to prioritize stability and reproducibility. Running tests sequentially ensures each test gets the full system resources, avoiding potential conflicts"; "Caching browser binaries is not recommended, since the amount of time it takes to restore the cache is comparable to the time it takes to download the binaries. Especially under Linux, operating system dependencies need to be installed, which are not cacheable." Supports §3.4, Browsers in CI.
 - **[R2]** Playwright, _Browsers_, "Install system dependencies", accessed 2026-10-08. <https://playwright.dev/docs/browsers>. "You can also install the dependencies for a single browser by passing it as an argument"; "It's also possible to combine `install-deps` with `install` so that the browsers and OS dependencies are installed with a single command": `npx playwright install --with-deps chromium`. Supports §3.4, Browsers in CI.
 - **[R3]** Chromium, _Linux Cert Management_, `docs/linux/cert_management.md`, accessed 2026-10-08. <https://chromium.googlesource.com/chromium/src/+/main/docs/linux/cert_management.md>. "On Linux, Chromium uses the NSS Shared DB"; "Since M146, Chromium defaults to $HOME/.local/share/pki/nssdb for the NSS Shared DB. If you still have an existing $HOME/.pki/nssdb database, Chromium will use that instead"; "to trust a root CA certificate for issuing SSL server certificates, use `certutil -d sql:$HOME/.local/share/pki/nssdb -A -t "C,," -n <certificate nickname> -i <certificate filename>`". Supports §3.4, the stack's certificate authority.
+- **[R4]** Playwright, _Accessibility testing_, accessed 2026-10-09. <https://playwright.dev/docs/accessibility-testing>. Its examples use the `@axe-core/playwright` package. "Note that automated testing cannot detect all types of WCAG violations"; "many accessibility problems can only be discovered through manual testing"; "We recommend using a combination of automated testing, manual accessibility assessments, and inclusive user testing." Supports §3.6.
+- **[R5]** jsdom, _README_, "Unimplemented parts of the web platform", accessed 2026-10-09. <https://github.com/jsdom/jsdom#unimplemented-parts-of-the-web-platform>. "**Layout**: the ability to calculate where elements will be visually laid out as a result of CSS, which impacts methods like `getBoundingClientRects()` or properties like `offsetTop`"; "jsdom has dummy behaviors for some aspects of these features, such as … returning zeros for many layout-related properties." Supports §3.6.

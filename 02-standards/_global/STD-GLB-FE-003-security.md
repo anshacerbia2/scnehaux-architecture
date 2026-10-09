@@ -3,12 +3,12 @@ doc_meta:
   id: STD-GLB-FE-003
   title: Enterprise Frontend Security Standard
   owner: Enterprise Security Architect
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-08
+  last_reviewed: 2026-10-09
 ---
 
 # Enterprise Frontend Security Standard (STD-GLB-FE-003)
@@ -33,6 +33,7 @@ The browser is an untrusted execution environment. Frontend controls improve saf
 
 - Privileged and administrative applications SHOULD use a BFF or server-managed session profile when practical
 - Server-managed session cookies MUST be `HttpOnly`, `Secure`, and use an appropriate `SameSite`, path, domain, and expiry policy
+- A BFF's `SameSite=Lax` session cookie is proven in a real browser, not only as the attribute it sets (2.2.0). The browser test signs in, then from a page on another site sends a form post to the BFF, a credentialed `fetch()` post to its API and a read inside an iframe, and asserts from the request the browser sent that none carried the session cookie and that the session outlived each. A same-site post and a cross-site top-level link carry it, so the cookie is held and the site alone withholds it. MDN: Lax sends a cookie cross-site only when "The request is a top-level navigation" and "The request uses a safe method: in particular, this excludes POST, PUT, and DELETE", which "would exclude, for example, requests made using the fetch() API, or requests for subresources from `<img>` or `<script>` elements, or navigations inside `<iframe>` elements" [R4]. A unit test without a browser can assert the attribute and the BFF's own refusals, never the browser's enforcement.
 - Direct browser OAuth clients MAY be used when justified but MUST use Authorization Code + PKCE `S256`, no client secret, and the approved public-client token profile
 - Refresh tokens or equivalent long-lived bearer secrets MUST NOT be stored in `localStorage`
 - Sensitive authentication/session material MUST NOT be logged, persisted in analytics payloads, or exposed through client error telemetry
@@ -95,3 +96,4 @@ Deviations require formal exception approval under GDC-000 with threat model, co
 - **[R1]** MDN Web Docs, _Content-Security-Policy: form-action directive_, accessed 2026-10-08. <https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/form-action>. "The HTTP Content-Security-Policy (CSP) `form-action` directive restricts the URLs which can be used as the target of form submissions from a given context"; "Whether `form-action` should block redirects after a form submission is debated and browser implementations of this aspect are inconsistent (e.g., Firefox 57 doesn't block the redirects whereas Chrome 63 does)." Supports §3.5.
 - **[R2]** W3C WebAppSec, issue #8, _CSP: form-action and redirects_, open since 2015-10-07, accessed 2026-10-08. <https://github.com/w3c/webappsec-csp/issues/8>. "Perform some action by doing a `POST` to `self`"; "Based on request params/backend state, redirect the user to another site." W3C, _Content Security Policy Level 3_, §6.4.1: "The form-action directive restricts the URLs which can be used as the target of a form submissions from a given context", <https://www.w3.org/TR/CSP3/>. Supports §3.5.
 - **[R3]** GitLab, merge request 90082, _Allowlist OAuth application redirect URI in CSP_, merged 2022-06-17, accessed 2026-10-08. <https://gitlab.com/gitlab-org/gitlab/-/merge_requests/90082>. "our OAuth page submits the form to `/oauth/authorize` however the page immediately redirects to the OAuth application's `redirect_uri` and Chrome takes the redirection target into account when evaluating CSP violations." Supports §3.5.
+- **[R4]** MDN Web Docs, _Set-Cookie_, `SameSite=Lax`, accessed 2026-10-09. <https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie>. "Send the cookie only for requests originating from the same site that set the cookie, and for cross-site requests that meet both of the following criteria: The request is a top-level navigation: this essentially means that the request causes the URL shown in the browser's address bar to change. This would exclude, for example, requests made using the fetch() API, or requests for subresources from `<img>` or `<script>` elements, or navigations inside `<iframe>` elements … The request uses a safe method: in particular, this excludes POST, PUT, and DELETE." Supports §3.1.
