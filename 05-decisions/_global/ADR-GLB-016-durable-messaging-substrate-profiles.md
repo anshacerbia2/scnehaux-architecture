@@ -20,9 +20,12 @@ Separate source-transaction publication correctness from durable delivery-substr
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                                                   | Approver               |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------------------------------ | :--------------------- |
-| 2026-08-24 | accepted | foundational | Architecture Authority, Platform Engineering, Product Engineering, Scheduling, Notification | Architecture Authority |
+| Date       | Status            | ADR Type     | Reviewers                                                                                   | Approver               |
+| :--------- | :---------------- | :----------- | :------------------------------------------------------------------------------------------ | :--------------------- |
+| 2026-08-24 | accepted          | foundational | Architecture Authority, Platform Engineering, Product Engineering, Scheduling, Notification | Architecture Authority |
+| 2026-10-15 | accepted, amended | foundational | Architecture Authority, Platform Engineering, Product Engineering, Scheduling, Notification | Architecture Authority |
+
+**Amended 2026-10-15**, on one point: the HTTP publisher of the first implementation (§5.4) is now `foundation-platform`'s `outbox/httpdelivery`, run by `organization-control`. The rules are unchanged. See the amendment under §5.4.
 
 ## 3. Context
 
@@ -175,6 +178,8 @@ Operator assertion, `transport_accepted`, and scalar progress marks such as high
 Debt SHOULD be attributed to the consumer that refused the message, so one consumer's parked message does not refuse another consumer's traffic. A message whose consumer is not recorded counts for every consumer.
 
 The first implementation of these rules is `foundation-platform`'s dispatcher with `foundation-reference`'s HTTP publisher, closed by `organization-control`'s resolver (`TDD-organization-control-005`). Delivery to several named consumers from one outbox, each with its own outcome, is `ADR-GLB-018`.
+
+**Amended 2026-10-15: the publisher moved.** `foundation-reference`'s HTTP publisher became `foundation-platform`'s `outbox/httpdelivery`, and `organization-control` runs it in its own process for every consumer it delivers to, `foundation-reference` included. `foundation-reference` no longer ships a publisher or a dispatcher (`ADR-GLB-018` Alternative G, amended 2026-10-15).
 
 A pure background Worker remains non-public under ADR-GLB-014. Direct delivery targets the owning application's governed acceptance boundary, not an arbitrary Worker URL.
 
