@@ -20,9 +20,12 @@ Deliver one outbox to several named consumers, each with its own subscription, d
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver               |
-| :--------- | :------- | :----------- | :------------------------ | :--------------------- |
-| 2026-10-02 | accepted | foundational | Architecture Review Board | Architecture Authority |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver               |
+| :--------- | :---------------- | :----------- | :------------------------ | :--------------------- |
+| 2026-10-02 | accepted          | foundational | Architecture Review Board | Architecture Authority |
+| 2026-10-15 | accepted, amended | foundational | Architecture Review Board | Architecture Authority |
+
+**Amended 2026-10-15**, on one point: the move Alternative G anticipated is done. Organization Control runs every consumer's dispatcher, `foundation-reference` included, and `foundation-reference` no longer ships a dispatcher of its own. The decision is unchanged. See the amendment under Alternative G.
 
 ## 3. Context
 
@@ -180,6 +183,14 @@ None.
 
 **Rejected because:** the consumer would hold a credential to the producer's database, which database-per-service rules out [R9]. A consumer whose dispatcher is misconfigured could also claim another consumer's deliveries. `foundation-reference`'s dispatcher moves into Organization Control when Organization Control runs its own.
 
+**Amended 2026-10-15: the move is done.** `foundation-reference`'s `cmd/foundation-reference-dispatcher` and `internal/dispatch` are deleted. Its publisher had already become `foundation-platform`'s `outbox/httpdelivery`, and Organization Control's in-process dispatcher (`TDD-organization-control-005`) now delivers to it as to the Identity Control Service, as §5.4 requires:
+
+- **No consumer holds the producer's database credential.** The reference consumer's system proof starts Organization Control with `foundation-reference` as a delivery target, and nothing in `foundation-reference` connects to Organization Control's database to deliver.
+- **No static bearer token authenticates a delivery.** The delivery carries Organization Control's workload access token. In development and in the system proof, Organization Control's dev issuer (built only under its `devissuer` tag) issues it through the client credentials grant: "The client can request an access token using only its client credentials" [R12]. The issuer authenticates the client by its signed assertion and validates it as RFC 7523 requires: the subject "MUST be the \"client_id\" of the OAuth client", the issuer "MUST reject any JWT that does not contain its own identity as the intended audience", and it "MUST reject JWTs with an invalid signature" [R13]. The same `clientauth` path obtains the token from the identity kernel in a deployment.
+- **The acceptance API admits that workload alone.** `foundation-reference` admits a delivery only from the workload `principal_id` it is configured with, as the Identity Control Service does.
+
+**Still open:** one Organization Control process obtains one workload token and presents it to every delivery target, so the token's audience has to cover each consumer. §5.4 configures each dispatcher with its consumer's credential. A token per target, requested for that target's audience, is the likely direction: a client "MAY indicate the protected resource … to which it is requesting access" with the `resource` parameter, which lets the authorization server apply "appropriate audience restrictions" [R14]. It is tracked in Organization Control's roadmap and `TDD-organization-control-005`.
+
 ### Alternative H — The Consumer Pulls: List, Then Watch
 
 **Benefits:** the producer makes no outbound call and shares no database. This is the Kubernetes pattern: a client lists, then watches from the returned `resourceVersion`, and when the history is gone it receives `410 Gone` and must start again by "clearing their local cache, performing a new get or list operation" [R11]. The producer's snapshot and high-water mark (`STD-GLB-004 §3.12`) already have that shape.
@@ -201,3 +212,6 @@ None.
 - **[R9]** Chris Richardson, _Pattern: Database per service_, accessed 2026-10-02. <https://microservices.io/patterns/data/database-per-service.html>. "Keep each microservice's persistent data private to that service and accessible only via its API"; "It cannot be accessed directly by other services."
 - **[R10]** `STD-IAM-001 §3`: confidential and workload clients authenticate with `private_key_jwt`, and "other long-lived static secrets are prohibited when a managed workload-identity mechanism is available".
 - **[R11]** Kubernetes, _Kubernetes API Concepts_, §Efficient detection of changes, accessed 2026-10-02. <https://kubernetes.io/docs/reference/using-api/api-concepts/>. "Clients can send a list or a get and then make a follow-up watch request"; on `410 Gone`, clients must handle it by "clearing their local cache, performing a new get or list operation, and starting the watch from the resourceVersion that was returned."
+- **[R12]** IETF, _RFC 6749: The OAuth 2.0 Authorization Framework_, §4.4 Client Credentials Grant, accessed 2026-10-15. <https://www.rfc-editor.org/rfc/rfc6749#section-4.4>. "The client can request an access token using only its client credentials (or other supported means of authentication) when the client is requesting access to the protected resources under its control"; "The client credentials grant type MUST only be used by confidential clients"; §4.4.2: "grant_type REQUIRED. Value MUST be set to \"client_credentials\"."
+- **[R13]** IETF, _RFC 7523: JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants_, §2.2 and §3, accessed 2026-10-15. <https://www.rfc-editor.org/rfc/rfc7523>. §2.2: "The value of the \"client_assertion_type\" is \"urn:ietf:params:oauth:client-assertion-type:jwt-bearer\""; "It MUST NOT contain more than one JWT." §3: "For client authentication, the subject MUST be the \"client_id\" of the OAuth client"; "The authorization server MUST reject any JWT that does not contain its own identity as the intended audience"; "The authorization server MUST reject any JWT with an expiration time that has passed, subject to allowable clock skew between systems"; "The authorization server MUST reject JWTs with an invalid signature or MAC."
+- **[R14]** IETF, _RFC 8707: Resource Indicators for OAuth 2.0_, §2, accessed 2026-10-15. <https://www.rfc-editor.org/rfc/rfc8707#section-2>. "In requests to the authorization server, a client MAY indicate the protected resource (a.k.a. resource server, application, API, etc.) to which it is requesting access"; "This enables the authorization server to apply policy as appropriate for the resource, such as determining the type and content of tokens to be issued, if and how tokens are encrypted, and applying appropriate audience restrictions."
