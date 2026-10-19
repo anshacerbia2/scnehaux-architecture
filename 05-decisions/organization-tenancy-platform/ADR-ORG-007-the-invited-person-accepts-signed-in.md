@@ -133,11 +133,29 @@ Organization Control asks the Identity Control API whether the caller holds the 
   `POST /v1/principals/{principal_id}/identifiers:match`, admits Organization Control's workload
   alone, as `POST /v1/deliveries` does (`TDD-identity-control-006`). It takes one address and
   answers `{"match": true}` or `{"match": false}`. It discloses no address.
-- **What matches.** An active notification address of an active Principal, compared without case
-  as `TDD-identity-control-008` compares them. An active address is either:
-  - the address a provider recorded at creation (`ADR-IAM-007 §5.2`), for a person the provider
-    verified before issuing the first credential (`ADR-IAM-010`); or
-  - an address the person proved with a one-time code.
+- **What matches: a proven address only (2026-10-19).** An address of an active Principal that is
+  `active` and has `verified_at` set (`TDD-identity-control-008` §Data Model), compared without
+  case as that design compares them. An address is proven when the person returned the one-time
+  code that was sent to it.
+  - **The creation address does not count until proven.** A provider records it
+    (`ADR-IAM-007 §5.2`), and nobody has shown the person reads it. The person proves it from the
+    account application with the same code, through a new command that sends a code to an
+    `active` address with no `verified_at`. ADR-IAM-011's enrolment proves it at creation.
+  - **Why.** Every product compared binds acceptance to an address the account has proven. GitHub
+    accepts "only … if the email address matches with a verified email address associated with the
+    invitee's personal account" [R2]. Auth0 requires the invited address, and "When a user accepts
+    an invitation, their email address will be marked as verified" [R4]. Keycloak forces "the same
+    email address used to send the invitation" [R6]. OpenID Connect defines a verified address as
+    one where the provider "took affirmative steps to ensure that this e-mail address was
+    controlled by the End-User" [R11].
+  - **How the code proves it.** NIST: "Confirmation codes are used to confirm that an applicant has
+    access to a postal address, email address, or phone number". They "SHALL include at least 6
+    decimal digits" and are valid "24 hours when sent to a validated email address" at most, and
+    "Upon its use, the CSP SHALL invalidate the confirmation code" [R12]. identity-control's code
+    has 8 digits and lasts 10 minutes and five attempts, inside those bounds.
+  - **The match is keyed to the Principal, not to the address.** The caller is its `principal_id`,
+    and the address is only checked against it. OpenID Connect: "The RP MUST NOT rely upon this
+    value being unique" [R11].
 - **Unknown is not no.** If identity-control cannot be reached, acceptance answers `503` and
   changes nothing.
 
@@ -195,21 +213,20 @@ Organization Experience serves the page, to any signed-in person.
 
 ### 5.7 An Invitee Without an Account
 
-A person with no Principal cannot accept. There is no self-registration (`registrationAllowed` is
-false, and identity-control is the only creation path, `TDD-identity-control-001`). A provider
-creates the Principal and issues the first credential (`ADR-IAM-010`), with the invited address as
-its creation address. The invitation's 7 days are the time that takes. Letting a Tenant
-administrator ask for the Principal is a separate decision.
+A person with no Principal enrols from the invitation, proving the invited address with a code,
+and then accepts as in §5.1 (`ADR-IAM-011`, proposed). There is still no open self-registration.
+Until ADR-IAM-011 is built, a provider creates the Principal and issues the first credential
+(`ADR-IAM-010`), and the person proves the creation address before accepting.
 
 ### 5.8 What Each Repository Changes
 
 | Repository              | Change                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | organization-control    | `TDD-organization-control-004`: acceptance as §5.1 to §5.4. The self caller on `accept`; the token-hash read (§5.2); the identity-control client (§5.3); `verify-identity`, `identity_verified` and its unique-index state removed; the lookup's constant `next` becomes `accept`; the issue command requests delivery (§5.5). `TDD-organization-control-001` lists the route under the self caller. SAD-004 §5.5's diagram is redrawn |
-| identity-control        | `TDD-identity-control-008` (or 001): `POST /v1/principals/{principal_id}/identifiers:match`, Organization Control's workload alone, a boolean answer, no address in a response or a log                                                                                                                                                                                                                                                |
+| identity-control        | `TDD-identity-control-008` (or 001): `POST /v1/principals/{principal_id}/identifiers:match`, Organization Control's workload alone, a boolean answer, counting only `active` addresses with `verified_at` set, no address in a response or a log. `TDD-identity-control-008`: a command that sends a proof code to an `active`, unproven address, so a creation address can be proven                                                  |
 | identity-kernel         | None. The claim set and the no-mail rule stay                                                                                                                                                                                                                                                                                                                                                                                          |
 | organization-experience | `TDD-organization-experience-002`: the link shown once on issue (§5.5); the acceptance page and its BFF route for a person with no Tenant (§5.6). The BFF guard's provider-only list loses `/v1/invitations/verify-identity`                                                                                                                                                                                                           |
-| identity-experience     | None                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| identity-experience     | `TDD-identity-experience-002`: the account application offers to prove an unproven creation address                                                                                                                                                                                                                                                                                                                                    |
 
 The route `verify-identity` has no caller outside organization-control's own tests and
 organization-experience's guard list, so removing it breaks no consumer.
@@ -227,10 +244,13 @@ organization-experience's guard list, so removing it breaks no consumer.
 
 - **Acceptance depends on identity-control at that moment.** If it is down, acceptance waits. The
   invitation's 7 days absorb an outage.
-- **The creation address is asserted, not proved.** A provider records it. A wrong address would
-  let its true holder be matched, if that person also obtained the token. In production the token
-  goes to that address, so obtaining it means reading that mailbox.
-- **An invitee with no Principal waits for a provider** (§5.7).
+- **A person must prove an address before accepting.** One more step for someone whose creation
+  address was never proven. The account application asks for it, and the acceptance page sends a
+  person who has no proven match there.
+- **Proving needs a delivered code.** On a development server the code reaches a mail catcher
+  (`ADR-IAM-007 §5.3`, 2026-10-19). In production it waits on the Notification Platform, as every
+  notification does.
+- **An invitee with no Principal waits for a provider** until ADR-IAM-011 is built (§5.7).
 - **On a development server the administrator handles the token.** It is development only, and is
   why delivery is a production gate.
 
@@ -342,6 +362,21 @@ which discloses people outside their Tenant.
   "Ensure the application returns consistent generic error messages in response to invalid account
   name, password or other user credentials entered during the log in process."
 
+- **[R11]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, §5.1 and §5.7,
+  accessed 2026-10-19. <https://openid.net/specs/openid-connect-core-1_0.html>. `email_verified`:
+  "True if the End-User's e-mail address has been verified; otherwise false. When this Claim Value
+  is true, this means that the OP took affirmative steps to ensure that this e-mail address was
+  controlled by the End-User at the time the verification was performed."; `email`: "The RP MUST
+  NOT rely upon this value being unique".
+- **[R12]** NIST SP 800-63A-4, _Digital Identity Guidelines: Identity Proofing and Enrollment_,
+  Requirements for Confirmation Codes, accessed 2026-10-19.
+  <https://pages.nist.gov/800-63-4/sp800-63a.html#ConfirmCodes>. "Confirmation codes are used to
+  confirm that an applicant has access to a postal address, email address, or phone number for the
+  purposes of future communications."; "Confirmation codes used for these purposes SHALL include at
+  least 6 decimal digits (or equivalent) from an approved random bit generator"; "Confirmation codes
+  SHALL be valid for at most: … 24 hours when sent to a validated email address Upon its use, the
+  CSP SHALL invalidate the confirmation code."
+
 ### Informative
 
 - **[R1]** GitHub, _REST API: Organization members_, Update an organization membership for the
@@ -364,7 +399,8 @@ which discloses people outside their Tenant.
   (Management API), accessed 2026-10-19.
   <https://auth0.com/docs/manage-users/organizations/configure-organizations/invite-members> and
   <https://auth0.com/docs/api/management/v2/organizations/post-invitations>. "Invited users must
-  log in or create an account with the email address to which the invitation was sent."; the
+  log in or create an account with the email address to which the invitation was sent."; "When a
+  user accepts an invitation, their email address will be marked as verified."; the
   invitation's `ttl_sec` "defaults to 604800 seconds (7 days)", "Max value: 2592000 seconds (30
   days)."
 - **[R5]** Google, _Use the transfer tool to migrate unmanaged personal accounts_, accessed

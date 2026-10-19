@@ -56,8 +56,9 @@ Facts that bound the choice:
   `TDD-identity-control-008` §The Adapter).
 - **Providers sign in at `aal2`** (`ADR-IAM-004`). A provider with no second factor enrolls a TOTP
   authenticator, then recovery codes, at that sign-in (`ADR-IAM-004 §5.4`, `ADR-IAM-005 §5.3`).
-- **Credentials belong to the kernel.** `STD-IAM-001 §3.1`: "Passwords … MUST be stored and
-  processed only by the approved identity kernel".
+- **Credentials belong to the kernel.** `STD-IAM-001 §3.1` before 2.8.0: "Passwords … MUST be
+  stored and processed only by the approved identity kernel". 2.8.0 names the one exception this
+  decision needs (§7).
 
 ## 4. Decision Drivers
 
@@ -119,8 +120,9 @@ POST /v1/principals/{principal_id}:issue-temporary-password
 ### 5.2 It Lapses, and Is Used Once
 
 - **It lapses.** Keycloak's temporary password, like Entra's, "never expires" [R4]. The Identity
-  Control API expires it instead. `IDENTITY_TEMPORARY_PASSWORD_TTL` is 24 hours by default, from 1
-  hour to 7 days. Entra's pass allows 10 minutes to 30 days [R5].
+  Control API expires it instead. `IDENTITY_TEMPORARY_PASSWORD_TTL` is 24 hours by default and at
+  most, and at least 1 hour (`STD-IAM-001` 2.8.0 §3.1). Entra's pass allows 10 minutes to 30 days
+  [R5]. NIST bounds a confirmation code sent to an email address at "24 hours" [R2].
 - **How it lapses.** A sweep finds an issuance past its expiry whose user still has
   `UPDATE_PASSWORD` outstanding. It removes the password with
   `DELETE /users/{id}/credentials/{credentialId}`. The authenticator guard's `last_authenticator`
@@ -150,7 +152,15 @@ POST /v1/principals/{principal_id}:issue-temporary-password
   does (`ADR-IAM-005 §5.5`).
 - **Then hands it over on a different channel from the username,** and never in a ticket, a chat
   log or an email that also carries the username.
-- **A development server.** The owner reads it from the Admin Portal and signs in as the person.
+- **A development server.** The owner, as the provider, reads it from the Admin Portal and gives it
+  to the person, or signs in as them.
+- **Until the command exists, a development server only** uses the kernel's Admin Console: the
+  bootstrap administrator sets the password with **Temporary** on, and adds **Configure OTP** to the
+  person's required actions, so the first sign-in sets a password and enrolls TOTP. Keycloak
+  documents both: "If Temporary is ON, the user must change the password at the first login", and
+  required actions "are required after the user provides credentials" [R9]. The runbook's step 10.1
+  is that procedure (`deploy/dev/README.md`); it is how a person such as `billy` becomes a Tenant's
+  first administrator today. Alternative F says why it is not the lasting path.
 
 ### 5.5 What Each Repository Changes
 
@@ -179,8 +189,8 @@ POST /v1/principals/{principal_id}:issue-temporary-password
   - the lapse after 24 hours;
   - the person, who finds the value refused and reports it.
 - **A credential value passes through two Scnehaux processes.** The Identity Control API generates
-  it and the BFF carries it once. `STD-IAM-001 §3.1` as written allows only the kernel to process a
-  password (§7).
+  it and the BFF carries it once. `STD-IAM-001` 2.8.0 §3.1 admits exactly that, under the conditions
+  it lists (§7).
 - **A lost password is still not recovered.** Once the person has set their own, this command is
   refused. A provider can only suspend (`TDD-identity-control-005`). A password reset is a separate
   decision.
@@ -194,10 +204,14 @@ POST /v1/principals/{principal_id}:issue-temporary-password
 
 ### Related Standards
 
-- `STD-IAM-001 §3.1`: on acceptance, gains one stated exception. A temporary password the Identity
-  Control API generates under this decision may be held in memory by that API and the issuing BFF
-  for one response. It is never stored or logged. Without it, this decision conflicts with
-  §3.1.
+- `STD-IAM-001` 2.8.0 §3.1: the one exception this decision needs. A temporary password the
+  Identity Control API generates may be held in memory by it and the issuing BFF for one response.
+  It is generated, never chosen; temporary in the kernel; shown once to a provider at `aal2`, over
+  TLS, with `no-store`; never logged, persisted or replayed; and gone within 24 hours. The
+  precedents are the same administrators' APIs: Microsoft Graph returns "a Microsoft-generated
+  password", Okta returns "A temporary password that the user can sign in with", and Google's
+  Directory API keeps it write-only, "never returned in the API's response body" (STD-IAM-001
+  [R37], [R38], [R40]).
 - [ADR-IAM-001](ADR-IAM-001-adopt-keycloak-identity-kernel.md) §5.7: supported kernel interfaces
   only.
 - [ADR-IAM-004](ADR-IAM-004-authentication-assurance-and-step-up.md): `aal2` for the issuing
@@ -212,11 +226,12 @@ POST /v1/principals/{principal_id}:issue-temporary-password
 ### Compliance Status
 
 - Meets ASVS 5.0 6.4.1 [R3] and NIST SP 800-63B-4 §3.1.1 [R1] once §5.1 and §5.2 are built.
-- Compliant with `STD-IAM-001 §3.1` only once it gains the exception above.
+- Compliant with `STD-IAM-001` 2.8.0 §3.1 once §5.1 and §5.2 hold every condition of its
+  exception.
 
 ### Required Waivers
 
-None, if `STD-IAM-001 §3.1` gains the exception when this decision is accepted.
+None. `STD-IAM-001` 2.8.0 states the exception, so no waiver is needed.
 
 ## 8. Alternatives Considered
 
