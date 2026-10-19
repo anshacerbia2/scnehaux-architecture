@@ -121,7 +121,29 @@ A Tenant is created `requested` and becomes `active` only after the provisioning
 
 **A request older than 30 minutes reads `unresolved`** ("outcome unknown, do not retry"): organization-control's sweep ages every request with no outcome, including one nobody dispatched. It is resolved by reporting its outcome, never by a retry (organization-control `TDD-organization-control-003` §Resolving an `unresolved` Request). Start provisioning is still allowed on a `requested` Tenant, and the script accepts an `unresolved` request. organization-control's `deploy-dev` runs the script on every change.
 
-## 10. Updating
+## 10. Creating a person who can sign in (pending ADR-IAM-010)
+
+**Not possible yet.** A person a provider creates in the Admin Portal is created with `UPDATE_PASSWORD` outstanding and no credential. The kernel offers no reset and sends no mail, so that person can never sign in. Only the bootstrap operator (identity-control's `bootstrap.sh`) and CI's people (organization-experience's `e2e/seed.ps1`) get a password, both through the kernel's administrator. Do not copy those scripts for a real person: they go around the Identity Control API and leave no evidence.
+
+The procedure below is the one [ADR-IAM-010](../../05-decisions/identity-access-platform/ADR-IAM-010-first-credential-for-an-administrator-created-person.md) proposes. It works once the ADR is accepted and identity-control, identity-kernel and identity-experience have built it:
+
+1. **In the Admin Portal, as a provider at `aal2`:** create the person with a username and an email. _Pending: the console then issues a temporary password and shows it once, with its expiry (24 hours by default)._
+2. **Give the value to the person** on a channel other than the one that carries the username. On a development server, the owner reads it and signs in as the person.
+3. **The person signs in** with the username and the temporary password. The kernel requires a new password. A sign-in to the Admin Portal then enrolls a TOTP authenticator and recovery codes.
+4. **A lost or lapsed value:** the person's row offers **Issue a new temporary password** while the person has set no password of their own.
+
+## 11. Inviting a member (pending ADR-ORG-007)
+
+**Not possible yet.** organization-experience issues an invitation, and it stays `pending` until the expiry sweep expires it. Nothing verifies the invitee, and `POST /v1/invitations/accept` needs a token for the Tenant, which the invitee is not a member of. Grant a Membership directly instead (organization-experience, in the Tenant, Memberships, **Grant membership**), for a person who exists and can sign in (step 10).
+
+The procedure below is the one [ADR-ORG-007](../../05-decisions/organization-tenancy-platform/ADR-ORG-007-the-invited-person-accepts-signed-in.md) proposes. It works once the ADR is accepted and organization-control, identity-control and organization-experience have built it:
+
+1. **The person exists and can sign in** (step 10), with the invited email as their creation address.
+2. **In organization-experience, in the Tenant, as its administrator:** invite the email. _Pending: the page shows the acceptance link once._ On a development server, nothing delivers it, so send it to the person yourself.
+3. **The person opens the link** and signs in without choosing a Tenant. The page accepts the invitation and then offers the new Tenant.
+4. **A lost link** is revoked and issued again.
+
+## 12. Updating
 
 Always in dependency order: **identity-kernel, then identity-control, then organization-control**. Each is updated with the same two commands, in its `deploy/dev`:
 
@@ -139,11 +161,11 @@ Then check each one before the next:
 
 A release that needs more than this says so in its README, in a section between the skeleton's own sections (for example identity-control [§Moving a server to `identity-control-api`]).
 
-## 11. Reset from zero
+## 13. Reset from zero
 
 A reset destroys the three databases. It is the one procedure that runs `docker compose down -v`, and only when the owner has decided on it.
 
-1. **Back up first** (step 12's forms): each database, the roles, `.env` and `keys/` of every stack.
+1. **Back up first** (step 14's forms): each database, the roles, `.env` and `keys/` of every stack.
 2. **Take the stacks down in reverse dependency order**, because each one joins the networks of the stacks before it: `docker compose down -v` in organization-control, then identity-control, then identity-kernel.
 3. **Remove `.env` and `keys/`** from each stack. The private keys belong to container users (65532, 65534) and are mode 0600, so removing them needs root.
 4. **Keep the local overrides** (`compose.override.yaml`, and the kernel's local file) **and keep the tunnel.** The issuer URL then stays the same, and nothing configured with it changes.
@@ -155,7 +177,7 @@ What the owner redoes afterwards:
 - **The BFFs' public JWKs:** the laptops keep their private keys. Each sends its public JWK again for steps 4 and 8.
 - **The laptop's session store:** the BFF's sessions name users, clients and tokens of the old realm. Clear the session store in the database `IDENTITY_EXPERIENCE_DEV_DATABASE_URL` names (identity-experience's `.env`), and the organization BFF's likewise.
 
-## 12. Restore from a backup
+## 14. Restore from a backup
 
 STD-GLB-009 rule 9 says what a backup holds, and each repository's §Backups gives its exact commands. The order is the same for every stack:
 
