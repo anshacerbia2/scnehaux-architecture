@@ -99,7 +99,7 @@ Follow organization-control §Before you start, §First start, and §Wiring to o
 
 1. Copy `.env.example` to `.env`. Fill in `KEYCLOAK_ISSUER` (the value identity-control's `.env` holds) and the six passwords. Then `docker compose up -d --build` and `curl -fsS http://127.0.0.1:8083/readyz`.
 2. The wiring is two scripts, the files CI runs. Export `IDENTITY_CALLER_PASSWORD`, `IDENTITY_CALLER_KEY_FILE` and `IDENTITY_OPERATOR_TOTP_FILE` alone, never by sourcing identity-control's `.env`. Then run `pwsh ./scripts/dev-wire.ps1 -IdentityRepo <identity-control checkout> -KernelDeployDir <kernel deploy/dev> -Operator "<you>" -State <state file>` and `pwsh ./scripts/dev-wiring-proof.ps1 -IdentityRepo <identity-control checkout> -State <state file>`. Keep the state file's directory outside every directory a container mounts. It receives a private key.
-3. Schedule the daily `maintenance` task (organization-control §One-off tasks). It exits 3 on a security incident open for more than 24 hours.
+3. Schedule the daily `maintenance` task in your crontab, with the line organization-control §One-off tasks gives. It exits 3 on a security incident open for more than 24 hours. **Check that it runs** (STD-GLB-009 rule 14), with that section's three checks: `crontab -l` shows the line; `systemctl status cron` reads `active (running)`; and the maintenance log in your home directory is from today, or `journalctl -u cron --since today` shows the run. cron reads a changed crontab by itself, so nothing is restarted after `crontab -e`.
 
 **Never run `docker compose down -v` in organization-control after this.** The wiring retires the ceremony's own grant in identity-control. From then on the operator is a provider through organization-control's database alone, and a new database revokes that grant everywhere.
 
@@ -143,11 +143,19 @@ The procedure below is the one [ADR-IAM-010](../../05-decisions/identity-access-
 5. **Details → Required user actions:** add **Configure OTP** beside **Update Password**, and save. The first sign-in then enrolls a TOTP authenticator whatever level it asks for. A sign-in at `aal2`, which a Tenant administrator's and a provider's both are (ADR-ORG-003 §5.3, ADR-IAM-004), would enroll it anyway.
 6. **Give the value to the person** on a channel other than the one that carries the username, and delete it from the password manager once they have signed in.
 7. **The person signs in** to organization-experience or the Admin Portal. The kernel asks for a new password, then shows the TOTP enrollment page, then the recovery codes (ADR-IAM-005 §5.3).
-8. **A provider makes them the Tenant's first administrator** (ADR-ORG-003 §5.2): `POST /v1/tenants/{tenant_id}/administrators` with their `principal_id` and `X-Administrative-Reason`, as organization-control's README §Who a caller is describes. The grant gives them a Tenant-wide Membership in the same transaction. **Gap:** organization-experience has no action for it and organization-control no script, so today only `dev-wiring-proof.ps1` makes this call, for the operator.
+8. **A provider makes them the Tenant's first administrator:** step 11.
 
-## 11. Inviting a member (pending ADR-ORG-007)
+## 11. The first Tenant administrator
 
-**Not possible yet.** organization-experience issues an invitation, and it stays `pending` until the expiry sweep expires it. Nothing verifies the invitee, and `POST /v1/invitations/accept` needs a token for the Tenant, which the invitee is not a member of. Grant a Membership directly instead (organization-experience, in the Tenant, Memberships, **Grant membership**), for a person who exists and can sign in (step 10).
+A Tenant is `active` after step 9, and nobody can sign in for it until a provider grants its first administrator (ADR-ORG-003 §5.2). The grant also gives that person a Tenant-wide Membership, in the same transaction.
+
+1. **The person can sign in.** Create them and give them a first credential first: step 10, and until identity-control serves ADR-IAM-010's command, the interim of step 10.1 (the path `billy` takes).
+2. **In organization-experience, in provider mode:** Tenants, **Administrators** on the Tenant's row, **Grant administrator**, with the person's `principal_id` from the Admin Portal and a reason. _Pending: this action ships in organization-experience #17, which is open._ Until it merges, the route is organization-control's `POST /v1/tenants/{tenant_id}/administrators` (organization-control README §Who a caller is), and only its `scripts/dev-wiring-proof.ps1` calls it, for the operator.
+3. **The person signs in for the Tenant** in organization-experience. A Tenant administrator's token is `aal2` (ADR-ORG-003 §5.3), so the first sign-in enrolls their TOTP if they have none.
+
+## 12. Inviting a member (pending ADR-ORG-007)
+
+**Not possible yet.** organization-experience issues an invitation, and it stays `pending` until the expiry sweep expires it. Nothing verifies the invitee, and `POST /v1/invitations/accept` needs a token for the Tenant, which the invitee is not a member of. Grant a Membership directly instead (organization-experience, in the Tenant, Memberships, **Grant membership**), for a person who exists and can sign in (step 10), or make them an administrator (step 11).
 
 The procedure below is the one [ADR-ORG-007](../../05-decisions/organization-tenancy-platform/ADR-ORG-007-the-invited-person-accepts-signed-in.md) proposes. It works once the ADR is accepted and organization-control, identity-control and organization-experience have built it:
 
@@ -157,7 +165,19 @@ The procedure below is the one [ADR-ORG-007](../../05-decisions/organization-ten
 3. **The person opens the link** and signs in without choosing a Tenant. The page accepts the invitation and then offers the new Tenant.
 4. **A lost link** is revoked and issued again.
 
-## 12. Updating
+## 13. Offboarding a Tenant on the development server
+
+An offboarding waits on two parties that do not run on a development server: the domains that own its obligations, which resolve them, and the provisioning system, which reports the outcome of the deprovisioning that release sends. You stand in for both with two organization-control scripts, through the routes those parties call (SAD-004 §7.5, 2.5.0; STD-GLB-009 rule 13). Follow organization-control §Offboarding a Tenant on the development server:
+
+1. **In organization-experience, in provider mode:** **Begin offboarding** on the Tenant's row, complete the freeze, and **Raise obligation** for each one the Tenant owes.
+2. **On the server**, from organization-control's checkout, with the wiring's variables exported (step 7.2): `pwsh ./scripts/dev-obligation.ps1` resolves one obligation as the domain it was raised against (`-Completed`, or `-Waived` or `-Failed` with `-Reason`). The console offers no such control, on purpose.
+3. **In organization-experience:** **Release**, once no obligation is open or failed and no legal hold is set. It is irreversible.
+4. **On the server:** `pwsh ./scripts/dev-deprovisioning.ps1 -OffboardingId <id> -Realized` reports the outcome (or `-Failed -Reason "<why>"`, then the console's **Send deprovisioning again**). It never retires and never resends.
+5. **In organization-experience:** **Retire**.
+
+Each script reads first and refuses, sending nothing, a transition the service would refuse, and says what to do instead. organization-control's `deploy-dev` runs both on every change.
+
+## 14. Updating
 
 Always in dependency order: **identity-kernel, then identity-control, then organization-control**. Each is updated with the same two commands, in its `deploy/dev`:
 
@@ -175,11 +195,11 @@ Then check each one before the next:
 
 A release that needs more than this says so in its README, in a section between the skeleton's own sections (for example identity-control [§Moving a server to `identity-control-api`]).
 
-## 13. Reset from zero
+## 15. Reset from zero
 
 A reset destroys the three databases. It is the one procedure that runs `docker compose down -v`, and only when the owner has decided on it.
 
-1. **Back up first** (step 14's forms): each database, the roles, `.env` and `keys/` of every stack.
+1. **Back up first** (step 16's forms): each database, the roles, `.env` and `keys/` of every stack.
 2. **Take the stacks down in reverse dependency order**, because each one joins the networks of the stacks before it: `docker compose down -v` in organization-control, then identity-control, then identity-kernel.
 3. **Remove `.env` and `keys/`** from each stack. The private keys belong to container users (65532, 65534) and are mode 0600, so removing them needs root.
 4. **Keep the local overrides** (`compose.override.yaml`, and the kernel's local file) **and keep the tunnel.** The issuer URL then stays the same, and nothing configured with it changes.
@@ -191,7 +211,7 @@ What the owner redoes afterwards:
 - **The BFFs' public JWKs:** the laptops keep their private keys. Each sends its public JWK again for steps 4 and 8.
 - **The laptop's session store:** the BFF's sessions name users, clients and tokens of the old realm. Clear the session store in the database `IDENTITY_EXPERIENCE_DEV_DATABASE_URL` names (identity-experience's `.env`), and the organization BFF's likewise.
 
-## 14. Restore from a backup
+## 16. Restore from a backup
 
 STD-GLB-009 rule 9 says what a backup holds, and each repository's §Backups gives its exact commands. The order is the same for every stack:
 
