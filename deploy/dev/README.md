@@ -21,7 +21,7 @@ A section name below in the form "identity-control §First start" means that hea
 On the server:
 
 - **Docker with Compose v2** (`docker compose`, not `docker-compose`), and your user in the `docker` group.
-- **PowerShell 7 (`pwsh`).** The procedure scripts are PowerShell, because CI runs the same files: identity-control's `scripts/dev-token.ps1`, `dev-smoke.ps1` and `dev-adopt-bff.ps1`, and organization-control's `scripts/dev-wire.ps1` and `dev-wiring-proof.ps1`. A server without `pwsh` cannot run steps 5 to 7 as written.
+- **PowerShell 7 (`pwsh`).** The procedure scripts are PowerShell, because CI runs the same files: identity-control's `scripts/dev-token.ps1`, `dev-smoke.ps1` and `dev-adopt-bff.ps1`, and organization-control's `scripts/dev-wire.ps1`, `dev-wiring-proof.ps1` and `dev-provisioning.ps1`. A server without `pwsh` cannot run steps 5 to 7 and 9 as written.
 - **The devtunnel CLI**, logged in with the account that will own the tunnel: `devtunnel user login -g -d` (GitHub, device code).
 - **Git checkouts** of identity-kernel, identity-control and organization-control.
 - **Somewhere outside Docker for backups**, such as a second disk (STD-GLB-009 rule 9).
@@ -111,7 +111,17 @@ Follow organization-experience §Registering it (§The client lists every proper
 2. **The operator** registers `organization-experience-bff` with organization-experience's `scripts/dev-register-bff.ps1`, which sends `POST /v1/registrations` as `privileged` in the `per-sign-in` form, with audience `organization-control-api` and redirect `http://127.0.0.1:8091/auth/callback`. organization-experience's `stack-proof` workflow runs the same script (STD-GLB-009 §A procedure step is a script, and CI runs it).
 3. **Port 8091,** because the identity BFF has 8090. The two still share one cookie, `__Host-ident_session`. A browser scopes cookies by host and not by port, so signing in to one BFF signs the browser out of the other. Use one BFF at a time, or two browser profiles (organization-experience §Before running both BFFs at once).
 
-## 9. Updating
+## 9. Provisioning a Tenant
+
+A Tenant is created `requested` and becomes `active` only after the provisioning system reports that its boundary exists (SAD-004 §5.1, §7.5). **No provisioning system runs on a development server.** The operator stands in for it with organization-control's `scripts/dev-provisioning.ps1`, which reports the outcome through the same routes the provisioning system calls. The decision is recorded in [SAD-004 §7.5](../../04-system/scnehaux-organization/scnehaux-organization-control.sad.md#75-provisioning) (2.4.0), with its sources and the options rejected, and detailed in organization-control's `TDD-organization-control-003` §The Provisioning System on a Development Server. Follow organization-control §Provisioning a Tenant on the development server. In order:
+
+1. **In organization-experience, in provider mode:** request the Tenant (Tenants, Request tenant), then **Start provisioning** on its row. The row shows the request's correlation identifier.
+2. **On the server**, from organization-control's checkout, with the wiring's variables exported (step 7.2): `pwsh ./scripts/dev-provisioning.ps1 -IdentityRepo <identity-control checkout> -State <state file> -TenantId <tenant_id> -Realized`. It refuses, sending nothing, a Tenant that is not `provisioning` or a request that already has an outcome. `-Failed -Reason "<why>"` tries the failure path; the row then offers **Retry provisioning**.
+3. **In organization-experience:** **Activate** on its row. The Tenant is `active`, and Memberships can be granted into it.
+
+**A request older than 30 minutes reads `unresolved`** ("outcome unknown, do not retry"): organization-control's sweep ages every request with no outcome, including one nobody dispatched. It is resolved by reporting its outcome, never by a retry (organization-control `TDD-organization-control-003` §Resolving an `unresolved` Request). Start provisioning is still allowed on a `requested` Tenant, and the script accepts an `unresolved` request. organization-control's `deploy-dev` runs the script on every change.
+
+## 10. Updating
 
 Always in dependency order: **identity-kernel, then identity-control, then organization-control**. Each is updated with the same two commands, in its `deploy/dev`:
 
@@ -129,11 +139,11 @@ Then check each one before the next:
 
 A release that needs more than this says so in its README, in a section between the skeleton's own sections (for example identity-control [§Moving a server to `identity-control-api`]).
 
-## 10. Reset from zero
+## 11. Reset from zero
 
 A reset destroys the three databases. It is the one procedure that runs `docker compose down -v`, and only when the owner has decided on it.
 
-1. **Back up first** (step 11's forms): each database, the roles, `.env` and `keys/` of every stack.
+1. **Back up first** (step 12's forms): each database, the roles, `.env` and `keys/` of every stack.
 2. **Take the stacks down in reverse dependency order**, because each one joins the networks of the stacks before it: `docker compose down -v` in organization-control, then identity-control, then identity-kernel.
 3. **Remove `.env` and `keys/`** from each stack. The private keys belong to container users (65532, 65534) and are mode 0600, so removing them needs root.
 4. **Keep the local overrides** (`compose.override.yaml`, and the kernel's local file) **and keep the tunnel.** The issuer URL then stays the same, and nothing configured with it changes.
@@ -145,7 +155,7 @@ What the owner redoes afterwards:
 - **The BFFs' public JWKs:** the laptops keep their private keys. Each sends its public JWK again for steps 4 and 8.
 - **The laptop's session store:** the BFF's sessions name users, clients and tokens of the old realm. Clear the session store in the database `IDENTITY_EXPERIENCE_DEV_DATABASE_URL` names (identity-experience's `.env`), and the organization BFF's likewise.
 
-## 11. Restore from a backup
+## 12. Restore from a backup
 
 STD-GLB-009 rule 9 says what a backup holds, and each repository's §Backups gives its exact commands. The order is the same for every stack:
 

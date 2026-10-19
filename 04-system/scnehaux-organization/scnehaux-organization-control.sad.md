@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.3.0
+  version: 2.4.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-09
+  last_reviewed: 2026-10-19
   parent_pad: PAD-PLT-002
 ---
 
@@ -480,6 +480,11 @@ Consumes bounded identifiers and lifecycle signals. These systems may request Me
 ### 7.5 Provisioning
 
 Publishes desired lifecycle and profile references and consumes realized status. Commands use idempotency, correlation, timeout, and reconciliation. Ambiguous provisioning outcome remains pending/failed, never inferred as success.
+
+- **An `unresolved` outcome is resolved by reporting it (2.4.0).** The provisioning system, or an operator with its answer, reports realized or failed against the request's correlation identifier. Nothing retries it and nothing resolves it automatically. Detail: `TDD-organization-control-003` 1.15.0 §Resolving an `unresolved` Request.
+- **On a development server an operator stands in for the provisioning system (2.4.0).** None runs there, so a requested Tenant otherwise never leaves `requested`. organization-control's `scripts/dev-provisioning.ps1` reports realized or failed through the same correlated routes, with the operator's provider authority. It refuses a Tenant not yet dispatched and a request that already has an outcome, and it never activates.
+  - _Why a script._ It is one-off admin code that ships with the service and runs against the deployed release, as STD-GLB-009 [R4] asks. organization-control's `deploy-dev` runs it on every change (STD-GLB-009 §A procedure step is a script, and CI runs it). The service gains no development-only path, so the rule above holds in every environment.
+  - _Rejected._ A development flag that makes the service realize every dispatch, because it infers success. A stub provisioning service, because it needs a consumer registration, a delivery target and a workload credential, and still decides outcomes nobody chose. Detail: `TDD-organization-control-003` 1.15.0 §The Provisioning System on a Development Server; procedure: the development server runbook, step 9.
 
 ### 7.6 Event Broker
 
