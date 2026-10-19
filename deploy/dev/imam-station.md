@@ -103,12 +103,12 @@ The spare disk `/mnt/imam-storage` (1.8 TB) is the backup target: outside every 
 | `/mnt/imam-storage/scnehaux-backups/identity-control`     | `globals-<date>.sql` and `identity_control-<date>.dump`     |
 | `/mnt/imam-storage/scnehaux-backups/organization-control` | `globals-<date>.sql` and `organization_control-<date>.dump` |
 
-`development`'s crontab, from each repository's §Backups and organization-control's §One-off tasks. The kernel's dump moves to 02:45, so it does not start with organization-control's:
+`development`'s crontab, from each repository's §Backups and organization-control's §One-off tasks. The kernel's dump moves to 02:45, so it does not start with organization-control's. Every `<date>` is the UTC date, as both `backup.sh` scripts write it (`date -u +%F`), so one night's dumps share a name: run at 02:15 to 02:45 WIB, that is the previous day's date.
 
 ```text
 15 2 * * * /home/development/apps/identity-control/deploy/dev/backup.sh /mnt/imam-storage/scnehaux-backups/identity-control >/dev/null
 30 2 * * * /home/development/apps/organization-control/deploy/dev/backup.sh /mnt/imam-storage/scnehaux-backups/organization-control >/dev/null
-45 2 * * * umask 077 && cd /home/development/apps/identity-kernel/deploy/dev && docker compose exec -T postgres pg_dump -U keycloak -d keycloak -Fc > /mnt/imam-storage/scnehaux-backups/identity-kernel/keycloak-$(date +\%F).dump
+45 2 * * * umask 077 && cd /home/development/apps/identity-kernel/deploy/dev && docker compose exec -T postgres pg_dump -U keycloak -d keycloak -Fc > /mnt/imam-storage/scnehaux-backups/identity-kernel/keycloak-$(date -u +\%F).dump
 15 3 * * * cd /home/development/apps/organization-control/deploy/dev && docker compose run --rm maintenance >> "$HOME/organization-control-maintenance.log" 2>&1
 ```
 
