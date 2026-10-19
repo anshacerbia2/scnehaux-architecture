@@ -17,9 +17,15 @@ Account Security Notifications, Decided by Identity and Delivered by Notificatio
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-10-06 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver             |
+| ---------- | ----------------- | ------------ | ------------------------- | -------------------- |
+| 2026-10-06 | accepted          | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-10-19 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
+
+**Amended 2026-10-19, in place,** on two points: §5.2 no longer promises a provider path for adding
+an address, and §5.3 gains a development-only exception for a mail catcher. It is edited in place
+because no system this decision governs is in production (GDC-010 §2.4.2): identity-control runs on
+development servers only, and the Notification Platform is not built (§5.6).
 
 ## 3. Context
 
@@ -110,8 +116,24 @@ not decided from the token or the browser.
   returns a one-time code that was sent to it.
 - **Changes need aal2 and are themselves notified.** An address is added or removed by the
   Principal at `aal2` through the Identity Experience, which follows NIST's "SHOULD allow
-  subscribers with authentication at AAL2 or higher". A provider can do it through assisted
-  recovery. Either change is notified to every address held before the change.
+  subscribers with authentication at AAL2 or higher". Either change is notified to every address
+  held before the change.
+- **No provider adds an address (amended 2026-10-19).** This decision once said "A provider can do
+  it through assisted recovery", and no design specified it. It is withdrawn. Assisted recovery
+  restores the person's sign-in (`ADR-IAM-005 §5.5`), and the person then adds and proves an
+  address at `aal2` themselves. A provider's only address is the creation address, and it counts as
+  proven only once its holder returns a code (`ADR-ORG-007 §5.3`). The reasons:
+  - NIST gives the change to the person: "The CSP SHOULD allow subscribers with authentication at
+    AAL2 or higher … to update their notification addresses" [R1].
+  - Where administrators may set a contact value, the platforms are moving to what the person
+    registers. Entra lets an administrator "manually set the authentication contact information for
+    anyone", and users "can immediately use those values", but "Starting Oct 5, 2026, SSPR will only
+    accept explicitly registered authentication methods" [R5]. Okta enrolls an administrator's
+    factor in `PENDING_ACTIVATION` unless `activate` skips it, and "Some factors (`call`, `email`,
+    `push`, `sms`, …) require activation to complete the enrollment process" [R6]. Auth0 sends "a
+    verification email" when `verify_email` is set [R7].
+  - An address a provider set would be the one place an attacker who deceives a provider could
+    receive every later notification.
 - **The minimum is two.** The Identity Experience asks for a second address until one is proven.
   A Principal with only one address still receives every notification there.
 
@@ -119,7 +141,33 @@ not decided from the token or the browser.
 
 - **Identity Control owns why and to whom.** It detects the event, takes the Principal's
   notification addresses at that instant as the recipients, and submits one intent per event to the
-  Notification Platform. It does not render or send anything itself.
+  Notification Platform. It does not render or send anything itself, with one development-only
+  exception below.
+- **Development-only exception: a mail catcher (2026-10-19).** On a development server, and never
+  in production, Identity Control's development adapter may render a plain message and hand it by
+  SMTP to a mail catcher in the development stack. That is the only way a proof code can reach a
+  reader there, as it will reach an inbox in production (`TDD-identity-control-008` 1.6.0 §Proving an
+  Address on a Development Server, option A). Its conditions:
+  - **A catcher that delivers nothing.** Mailpit "acts as an SMTP server, provides a modern web
+    interface to view & test captured emails, and includes an API for automated integration
+    testing"; relaying is opt-in, because "the configuration file (yaml syntax) must be provided to
+    Mailpit" [R8]. No relay is configured. Keycloak's own testsuite works the same way: "a standalone
+    mock mail server for testing email-related features such as email verification, password reset,
+    and other email notifications" [R9].
+  - **Refused in production at startup,** as `standin` is. ASVS 5.0 13.4.2: "debug modes are disabled
+    for all components in production environments" [R10].
+  - **No code or address in a log.** ASVS 5.0 16.2.5: "it may not be allowed to log certain data,
+    such as credentials" [R10]. The catcher's mailbox is the only place the code is readable.
+  - **On the stack's internal network,** and its web interface on `127.0.0.1` only, as every port is
+    (`STD-GLB-009`).
+  - **It renders nothing in production.** The rendering, templates and delivery remain the
+    Notification Platform's (§5.3 above, `PAD-PLT-005`).
+
+  Options B (a code in a file), C (a code in a response) and D (no proof on a development server)
+  are rejected: B leaves a secret at rest on the disk, C is the disclosure ASVS 13.4.2 guards
+  against, and D leaves the add path, and with it `ADR-ORG-007`'s proven-address match, unusable on
+  a development server.
+
 - **The intent says what happened.** It names a template family per event type and carries the
   bounded values the message needs: the event, its time, the authenticator's type and label, and
   whether a provider acted. It also carries the repudiation instruction and the contact that NIST
@@ -165,7 +213,8 @@ builds its side against that contract:
 - the addresses and their proof;
 - the intents and their evidence.
 
-On a development server, a stand-in records the intents it is sent. The gap of `ADR-IAM-004 §5.5`
+On a development server, a stand-in records the intents it is sent, and the mail catcher of §5.3
+(2026-10-19) receives the messages that carry a code. The gap of `ADR-IAM-004 §5.5`
 and `ADR-IAM-005 §5.7` closes when both sides are in production, and it remains a production gate
 until then.
 
@@ -277,6 +326,12 @@ already designed, if a tighter bound is required.
   - §4.5: "The CSP SHOULD notify the subscriber when an authenticator is invalidated, as described in
     Sec. 4.6."
 
+- **[R10]** OWASP, _Application Security Verification Standard 5.0.0_, V13 and V16, accessed
+  2026-10-19. <https://github.com/OWASP/ASVS/tree/v5.0.0/5.0/en>. 13.4.2: "Verify that debug modes
+  are disabled for all components in production environments to prevent exposure of debugging
+  features and information leakage."; 16.2.5: "For example, it may not be allowed to log certain
+  data, such as credentials or payment details."
+
 ### Informative
 
 - **[R2]** Okta, _Authenticator enrolled notification email for end users_,
@@ -295,3 +350,34 @@ includeRepresentation)` has an empty body; the send condition `user.getEmail() !
 user.isEmailVerified()`; a failure is `log.error("Failed to send type mail", e)`.
 - **[R4]** `PAD-PLT-005` Enterprise Notification Platform 2.4.1, §1 Purpose & Scope, §1.1 Out Of
   Scope, §3.6 Suppression Decision Order, §4.2 Integration Consumed.
+- **[R5]** Microsoft, _Prepopulate Contact Information for Self-Service Password Reset_ (Microsoft
+  Entra ID), accessed 2026-10-19.
+  <https://learn.microsoft.com/en-us/entra/identity/authentication/howto-sspr-authenticationdata>.
+  "users who are assigned at least the Privileged Authentication Administrator role can manually
+  set the authentication contact information for anyone."; "If you provided a value for Mobile
+  phone or Alternate email, users can immediately use those values to reset their passwords, even
+  if they haven't registered for the service."; "Starting Oct 5, 2026, SSPR will only accept
+  explicitly registered authentication methods."
+- **[R6]** Okta, _Okta API_ (OpenAPI specification in `okta-sdk-java`), Enroll a factor and Activate
+  a factor, accessed 2026-10-19.
+  <https://github.com/okta/okta-sdk-java/blob/master/src/swagger/api.yaml>. "All responses return
+  the enrolled factor with a status of either `PENDING_ACTIVATION` or `ACTIVE`."; `activate`: "If
+  `true`, the factor is immediately activated as part of the enrollment. An activation process isn't
+  required."; "Some factors (`call`, `email`, `push`, `sms`, `token:software:totp`, `u2f`, and
+  `webauthn`) require activation to complete the enrollment process."
+- **[R7]** Auth0, _Management API: Update a User_, accessed 2026-10-19.
+  <https://auth0.com/docs/api/management/v2/users/patch-users-by-id>. `email_verified`: "If set to
+  false the user will not receive a verification email unless verify_email is set to true.";
+  `verify_email`: "Whether this user will receive a verification email after creation (true) or no
+  email (false)."
+- **[R8]** Mailpit, _README_ and _SMTP relaying_, accessed 2026-10-19.
+  <https://github.com/axllent/mailpit/blob/develop/README.md> and
+  <https://mailpit.axllent.org/docs/configuration/smtp-relay/>. "It acts as an SMTP server, provides
+  a modern web interface to view & test captured emails, and includes an API for automated
+  integration testing."; "Configuring an SMTP relay enables the message “release” feature, which
+  allows you to relay the message via another pre-configured SMTP server."; "To enable SMTP
+  relaying, the configuration file (yaml syntax) must be provided to Mailpit".
+- **[R9]** Keycloak, _docs/tests.md_, Mail server, accessed 2026-10-19.
+  <https://github.com/keycloak/keycloak/blob/main/docs/tests.md>. "The Keycloak testsuite includes a
+  standalone mock mail server for testing email-related features such as email verification,
+  password reset, and other email notifications."

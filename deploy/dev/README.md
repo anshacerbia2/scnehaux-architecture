@@ -132,13 +132,27 @@ The procedure below is the one [ADR-IAM-010](../../05-decisions/identity-access-
 3. **The person signs in** with the username and the temporary password. The kernel requires a new password. A sign-in to the Admin Portal then enrolls a TOTP authenticator and recovery codes.
 4. **A lost or lapsed value:** the person's row offers **Issue a new temporary password** while the person has set no password of their own.
 
+### 10.1 Interim, until identity-control serves the route: the kernel's Admin Console
+
+**Development server only.** It is how a person such as `billy` gets a first password and a TOTP authenticator today, so that a provider can then make them a Tenant's first administrator. It stops being used when ADR-IAM-010's command exists. It uses the kernel's break-glass administrator, the role `TDD-identity-kernel-001` §Closing Unauthorized Creation Paths keeps the Admin Console for, and ADR-IAM-010 Alternative F says why it is not the lasting path. The kernel records the change as an admin event, and identity-control's kernel event record keeps it (`TDD-identity-control-007`). It carries no reason, and nothing notifies it.
+
+1. **The person exists as a Principal.** Create them in the Admin Portal first (step 10, item 1, with a username and an email). A user created in the Admin Console has no `principal_id`; the reconciler finds it unmapped and disables it.
+2. **Generate the value in a password manager**, at least 24 random characters. It is never typed into a file, a chat, a ticket, a shell command or this repository, and never pasted into an agent session.
+3. **Open the Admin Console** on port 8081 through its tunnel origin, never on `127.0.0.1:8081` (pitfalls 6 and 7). Sign in as the kernel's bootstrap administrator: the username and password are in identity-kernel's `deploy/dev/.env` on the server (`KC_BOOTSTRAP_ADMIN_USERNAME`, `KC_BOOTSTRAP_ADMIN_PASSWORD`). Read them there; do not copy them anywhere.
+4. **Realm `scnehaux` → Users → the person → Credentials → Set password.** Paste the value, leave **Temporary** on, and save. Keycloak: "If Temporary is ON, the user must change the password at the first login."
+5. **Details → Required user actions:** add **Configure OTP** beside **Update Password**, and save. The first sign-in then enrolls a TOTP authenticator whatever level it asks for. A sign-in at `aal2`, which a Tenant administrator's and a provider's both are (ADR-ORG-003 §5.3, ADR-IAM-004), would enroll it anyway.
+6. **Give the value to the person** on a channel other than the one that carries the username, and delete it from the password manager once they have signed in.
+7. **The person signs in** to organization-experience or the Admin Portal. The kernel asks for a new password, then shows the TOTP enrollment page, then the recovery codes (ADR-IAM-005 §5.3).
+8. **A provider makes them the Tenant's first administrator** (ADR-ORG-003 §5.2): `POST /v1/tenants/{tenant_id}/administrators` with their `principal_id` and `X-Administrative-Reason`, as organization-control's README §Who a caller is describes. The grant gives them a Tenant-wide Membership in the same transaction. **Gap:** organization-experience has no action for it and organization-control no script, so today only `dev-wiring-proof.ps1` makes this call, for the operator.
+
 ## 11. Inviting a member (pending ADR-ORG-007)
 
 **Not possible yet.** organization-experience issues an invitation, and it stays `pending` until the expiry sweep expires it. Nothing verifies the invitee, and `POST /v1/invitations/accept` needs a token for the Tenant, which the invitee is not a member of. Grant a Membership directly instead (organization-experience, in the Tenant, Memberships, **Grant membership**), for a person who exists and can sign in (step 10).
 
 The procedure below is the one [ADR-ORG-007](../../05-decisions/organization-tenancy-platform/ADR-ORG-007-the-invited-person-accepts-signed-in.md) proposes. It works once the ADR is accepted and organization-control, identity-control and organization-experience have built it:
 
-1. **The person exists and can sign in** (step 10), with the invited email as their creation address.
+1. **The person exists, can sign in** (step 10), **and has proven the invited email.** The address counts only once its holder has returned the code sent to it (ADR-ORG-007 §5.3). _Pending: on a development server the code reaches the development mail catcher (ADR-IAM-007 §5.3, 2026-10-19), where you read it._
+   - _A person with no account_ enrols from the invitation instead: the acceptance page offers **I do not have an account**, the code goes to the invited email, and the person receives a temporary password once ([ADR-IAM-011](../../05-decisions/identity-access-platform/ADR-IAM-011-an-invitee-without-an-account-enrols-at-redemption.md), pending).
 2. **In organization-experience, in the Tenant, as its administrator:** invite the email. _Pending: the page shows the acceptance link once._ On a development server, nothing delivers it, so send it to the person yourself.
 3. **The person opens the link** and signs in without choosing a Tenant. The page accepts the invitation and then offers the new Tenant.
 4. **A lost link** is revoked and issued again.
