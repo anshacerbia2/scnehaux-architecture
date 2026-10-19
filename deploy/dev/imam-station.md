@@ -85,7 +85,7 @@ The unit files exist on this server only, in the user's systemd directory. They 
 
 ## Local, uncommitted files
 
-Each is a server's own override (STD-GLB-009 rule 4). They survive `git pull`, and a reset from zero keeps them (runbook step 13).
+Each is a server's own override (STD-GLB-009 rule 4). They survive `git pull`, and a reset from zero keeps them (runbook step 15).
 
 | File                                                    | Holds                                                                                                                                            |
 | :------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -156,8 +156,18 @@ not decided from the token or the browser.
     and other email notifications" [R9].
   - **Refused in production at startup,** as `standin` is. ASVS 5.0 13.4.2: "debug modes are disabled
     for all components in production environments" [R10].
+  - **Its API serves the development proof.** Mailpit is an "email & SMTP testing tool with API for
+    developers", for "Integration testing using the REST API to view, read and process messages"
+    [R8], so `deploy-dev` can prove `:verify` end to end.
   - **No code or address in a log.** ASVS 5.0 16.2.5: "it may not be allowed to log certain data,
-    such as credentials" [R10]. The catcher's mailbox is the only place the code is readable.
+    such as credentials" [R10]; ASVS 4.0.3 7.1.1: "Verify that the application does not log
+    credentials or payment details" [R11]; the OWASP Logging Cheat Sheet's data to exclude includes
+    "Authentication passwords", "Access tokens" and "Encryption keys and other primary secrets"
+    [R12]. The catcher's mailbox is the only place the code is readable.
+  - **Why an inbox, and not a file or a response.** NIST's notification addresses "may be any means
+    by which the subscriber can be reliably contacted" [R1], and a code proves control of an address
+    only when it is read at that address. ASVS 4.0.3 14.3.2 asks that "debug modes are disabled in
+    production" [R11], which is what option C would have to rely on.
   - **On the stack's internal network,** and its web interface on `127.0.0.1` only, as every port is
     (`STD-GLB-009`).
   - **It renders nothing in production.** The rendering, templates and delivery remain the
@@ -314,7 +324,9 @@ already designed, if a tighter bound is required.
     two notification addresses per subscriber account"; "The CSP SHOULD allow subscribers with
     authentication at AAL2 or higher (or at AAL1 if that is the highest AAL available for the
     subscriber account) to update their notification addresses"; "Notifications SHALL be sent to all
-    notification addresses except postal addresses"; "The notification SHALL provide clear
+    notification addresses except postal addresses"; "Notification addresses may be any means by
+    which the subscriber can be reliably contacted" (accessed again 2026-10-19, through
+    <https://pages.nist.gov/800-63-4/sp800-63b/events/>); "The notification SHALL provide clear
     instructions, including contact information, in case the recipient repudiates the event
     associated with the notification."
   - §4.1.2.1: "When an authenticator is added, the CSP SHALL notify the subscriber via a mechanism
@@ -331,6 +343,18 @@ already designed, if a tighter bound is required.
   are disabled for all components in production environments to prevent exposure of debugging
   features and information leakage."; 16.2.5: "For example, it may not be allowed to log certain
   data, such as credentials or payment details."
+
+- **[R11]** OWASP, _Application Security Verification Standard 4.0.3_, V7 and V14, accessed
+  2026-10-19. <https://github.com/OWASP/ASVS/tree/v4.0.3/4.0/en>. 7.1.1: "Verify that the
+  application does not log credentials or payment details. Session tokens should only be stored in
+  logs in an irreversible, hashed form."; 14.3.2: "Verify that web or application server and
+  application framework debug modes are disabled in production to eliminate debug features,
+  developer consoles, and unintended security disclosures." The sources of
+  `TDD-identity-control-008` 1.6.0.
+- **[R12]** OWASP, _Logging Cheat Sheet_, Data to exclude, accessed 2026-10-19.
+  <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html>. "Session
+  identification values (consider replacing with a hashed value if needed to track session specific
+  events)"; "Access tokens"; "Authentication passwords"; "Encryption keys and other primary secrets".
 
 ### Informative
 
@@ -370,11 +394,12 @@ user.isEmailVerified()`; a failure is `log.error("Failed to send type mail", e)`
   false the user will not receive a verification email unless verify_email is set to true.";
   `verify_email`: "Whether this user will receive a verification email after creation (true) or no
   email (false)."
-- **[R8]** Mailpit, _README_ and _SMTP relaying_, accessed 2026-10-19.
-  <https://github.com/axllent/mailpit/blob/develop/README.md> and
+- **[R8]** Mailpit, home page, _README_ and _SMTP relaying_, accessed 2026-10-19.
+  <https://mailpit.axllent.org/>, <https://github.com/axllent/mailpit/blob/develop/README.md> and
   <https://mailpit.axllent.org/docs/configuration/smtp-relay/>. "It acts as an SMTP server, provides
   a modern web interface to view & test captured emails, and includes an API for automated
-  integration testing."; "Configuring an SMTP relay enables the message “release” feature, which
+  integration testing."; "Mailpit - email & SMTP testing tool with API for developers"; "Integration
+  testing using the REST API to view, read and process messages"; "Configuring an SMTP relay enables the message “release” feature, which
   allows you to relay the message via another pre-configured SMTP server."; "To enable SMTP
   relaying, the configuration file (yaml syntax) must be provided to Mailpit".
 - **[R9]** Keycloak, _docs/tests.md_, Mail server, accessed 2026-10-19.

@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.4.0
+  version: 2.5.0
   status: approved
   classification: restricted
   governed_by:
@@ -483,8 +483,12 @@ Publishes desired lifecycle and profile references and consumes realized status.
 
 - **An `unresolved` outcome is resolved by reporting it (2.4.0).** The provisioning system, or an operator with its answer, reports realized or failed against the request's correlation identifier. Nothing retries it and nothing resolves it automatically. Detail: `TDD-organization-control-003` 1.15.0 §Resolving an `unresolved` Request.
 - **On a development server an operator stands in for the provisioning system (2.4.0).** None runs there, so a requested Tenant otherwise never leaves `requested`. organization-control's `scripts/dev-provisioning.ps1` reports realized or failed through the same correlated routes, with the operator's provider authority. It refuses a Tenant not yet dispatched and a request that already has an outcome, and it never activates.
-  - _Why a script._ It is one-off admin code that ships with the service and runs against the deployed release, as STD-GLB-009 [R4] asks. organization-control's `deploy-dev` runs it on every change (STD-GLB-009 §A procedure step is a script, and CI runs it). The service gains no development-only path, so the rule above holds in every environment.
+  - _Why a script._ It is one-off admin code that ships with the service and runs against the deployed release, as STD-GLB-009 [R4] asks (STD-GLB-009 rule 13, 1.9.0). organization-control's `deploy-dev` runs it on every change (STD-GLB-009 §A procedure step is a script, and CI runs it). The service gains no development-only path, so the rule above holds in every environment.
   - _Rejected._ A development flag that makes the service realize every dispatch, because it infers success. A stub provisioning service, because it needs a consumer registration, a delivery target and a workload credential, and still decides outcomes nobody chose. Detail: `TDD-organization-control-003` 1.15.0 §The Provisioning System on a Development Server; procedure: the development server runbook, step 9.
+- **The same stand-in covers deprovisioning and obligations on a development server (2.5.0).** An offboarding waits on two more parties that do not run there: the provisioning system, which reports the outcome of the deprovisioning release sends, and the domains that own its obligations, which resolve them. Without them, release stays refused while an obligation is open, and a released offboarding's deprovisioning ages to `unresolved` and cannot be retired. organization-control's `scripts/dev-deprovisioning.ps1` reports realized or failed through `POST /v1/offboardings/{offboarding_id}/deprovisioning`, and `scripts/dev-obligation.ps1` resolves one obligation as its named domain through `POST /v1/obligations/{obligation_id}/resolve`.
+  - _Their rules._ Each reads first and refuses, sending nothing, a transition the service would refuse. The deprovisioning stand-in never retires and never resends. The obligation stand-in names the domain it acts for, and the API refuses another domain's obligation as it would refuse a real domain. Organization Experience offers neither control, because a console control would let an operator close another domain's obligation in production too.
+  - _Why._ The same reasons as the provisioning stand-in: admin code that ships with the service and runs against the release [R4], with no development-only path in the service, as dev/prod parity asks [R58] (STD-GLB-009 1.9.0 rule 13 and its References). An inferred completion is what §5.6 forbids.
+  - _Rejected._ A development flag that resolves obligations or realizes deprovisioning, resolve and waive controls on the obligation board, stub domain services, and `curl` lines in a README. Detail: `TDD-organization-control-004` 1.13.0 §Offboarding on a Development Server; procedure: the development server runbook, step 13.
 
 ### 7.6 Event Broker
 
