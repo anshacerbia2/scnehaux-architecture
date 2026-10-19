@@ -36,6 +36,12 @@ doc_meta:
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
 
+> **Revision pending exact-commit ratification.** The document-topology row
+> for generated public-API reports (section 2.1) is pending under GDC-000
+> section 2.6.7; the revision ratified on 2026-10-03 (`8f441b5`) remains
+> binding until the authorized human authority approves the exact commit
+> containing it.
+
 > **Approved design baseline.** Approval establishes the architecture contract,
 > not implementation conformance or production release authority.
 
@@ -96,14 +102,15 @@ contracts and the public compatibility surface declared by a release.
 The UI Platform uses one normative design hierarchy and one deliberately small
 project-repository execution set:
 
-| Location                    | Artifact                                                                  | Authority boundary                                                                            |
-| :-------------------------- | :------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------- |
-| `scnehaux-architecture`     | GDC, EAD, PAD, SAD, ADR, STD, and Technology Radar                        | Enterprise, capability, system, decision, and standard authority according to lifecycle state |
-| `ui-platform/docs/designs/` | Exactly the five TDDs attached to `SAD-003`                               | Component design and implementation contract                                                  |
-| `ui-platform/PLAN.md`       | Ordered work, accountable role, decision authority, and binary acceptance | Execution control only; cannot approve architecture or release                                |
-| `ui-platform/ROADMAP.md`    | Phase state, target date, dependency, and exit gate                       | Delivery milestone control only                                                               |
-| `ui-platform/docs/reviews/` | One non-normative record per review round or reviewed object              | Audit trail and finding disposition only                                                      |
-| `ui-platform/README.md`     | Links to the preceding authorities and developer entry points             | Navigation only                                                                               |
+| Location                              | Artifact                                                                                                                                          | Authority boundary                                                                                                                                                                                                                                                                                             |
+| :------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scnehaux-architecture`               | GDC, EAD, PAD, SAD, ADR, STD, and Technology Radar                                                                                                | Enterprise, capability, system, decision, and standard authority according to lifecycle state                                                                                                                                                                                                                  |
+| `ui-platform/docs/designs/`           | Exactly the five TDDs attached to `SAD-003`                                                                                                       | Component design and implementation contract                                                                                                                                                                                                                                                                   |
+| `ui-platform/PLAN.md`                 | Ordered work, accountable role, decision authority, and binary acceptance                                                                         | Execution control only; cannot approve architecture or release                                                                                                                                                                                                                                                 |
+| `ui-platform/ROADMAP.md`              | Phase state, target date, dependency, and exit gate                                                                                               | Delivery milestone control only                                                                                                                                                                                                                                                                                |
+| `ui-platform/docs/reviews/`           | One non-normative record per review round or reviewed object                                                                                      | Audit trail and finding disposition only                                                                                                                                                                                                                                                                       |
+| `ui-platform/README.md`               | Links to the preceding authorities and developer entry points                                                                                     | Navigation only                                                                                                                                                                                                                                                                                                |
+| `ui-platform/packages/<package>/api/` | Public-API reports that API Extractor generates from the packed declarations, and the generated CSS contract (STD-UIP-ENG-001 section 3.5 item 1) | Generated evidence, never edited by hand; CI fails when a report differs from the tarball. Not normative. API Extractor generates "a report to be used as the basis for an API review workflow" (api-extractor.com, `overview/intro.md`, rushstack-websites commit `31a9e7c1c9fa32f660e1b51b8aac012a6b76d149`) |
 
 The project repository must not introduce a second architecture source of truth,
 decision register, working-consensus document, ratification manifest, local
