@@ -28,9 +28,12 @@ Mandating PostgreSQL Row-Level Security (RLS) as the Primary Multi-Tenant Isolat
 **Amended 2026-10-20, in place,** in §6 Operational Impact, as the owner approved that day. It asked
 the schema tool to generate and test RLS policies, which the free Atlas distribution cannot do. It now
 states how policies are applied and verified until the tool models them. It is edited in place
-because no system this decision governs is in production (GDC-010 §2.4.2): the repositories that
-apply RLS, identity-control and organization-control, run only on the development server (`SAD-001`
-§9.1, `SAD-004` §10.3).
+because no system this decision governs is in production (GDC-010 §2.4.2): the repositories with a
+Control Database, identity-control and organization-control, run only on the development server
+(`SAD-001` §9.1, `SAD-004` §10.3). Of the two, only organization-control applies RLS policies.
+identity-control declares none, because its tables hold no Tenant's rows; its runtime role is
+`NOBYPASSRLS` all the same (identity-control ROADMAP, "RLS outside HCL (Pro only)"). This sentence
+once named both as applying RLS, which was wrong.
 
 ## 3. Context
 
