@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-STY-001
   title: Enterprise UI Platform Styled Components & Compilation Standard
   owner: Principal Frontend Architect
-  version: 2.0.0
+  version: 2.0.1
   status: approved
   classification: restricted
   governed_by: [PAD-PLT-003]
@@ -14,6 +14,13 @@ doc_meta:
 ---
 
 # Enterprise UI Platform Styled Components & Compilation Standard (STD-UIP-STY-001)
+
+> **Revision 2.0.1 is pending exact-commit ratification.** It adds the sources
+> for scoped theme roots and portal placement (section 2, item 4) in a new
+> section 6. Under GDC-000 section 2.6.7, revision 2.0.0 remains binding until
+> the authorized human authority approves the exact commit containing this
+> revision. The existing `last_reviewed` is updated only in the ratification
+> commit or manifest.
 
 > **Implementation boundary:** these rules define the approved target contract; the copied baseline does not yet satisfy it.
 
@@ -34,7 +41,7 @@ The styling and compilation engine adheres to four core principles to ensure ren
 1. **Static CSS output**: component and theme styling is compiled before publication; the consumer import contract determines which assets load.
 2. **Scoped selectors**: shared resets and themes do not target unrelated host or remote markup.
 3. **Verified colors**: OKLCH authoring is paired with an explicit browser support policy and contrast tests for declared semantic pairs.
-4. **Scoped theme state**: a theme applies to a named subtree root without mutating another brand's root. Document-wide mode is optional and is not multi-brand isolation; portaled UI receives an explicit themed container or equivalent propagation contract.
+4. **Scoped theme state**: a theme applies to a named subtree root without mutating another brand's root. Document-wide mode is optional and is not multi-brand isolation; portaled UI receives an explicit themed container or equivalent propagation contract. A portal moves only the DOM node [1], while custom properties and other inherited values follow the DOM tree [2][3], so content portaled outside the theme root loses its tokens and scoped styles. Radix Themes, which also renders its theme root as an element rather than on `<html>`, handles the same problem by re-applying the theme inside each portal [4][5].
 
 ## 3. Normative Rules
 
@@ -79,3 +86,13 @@ Exceptions identify the affected selector or theme contract, supported consumer 
 
 - **Source checks**: Static analysis checks token usage, selector scoping, and unintended runtime CSS injection.
 - **Packed-package checks**: A separate consumer verifies CSS exports, computed styling, two-root isolation, and override precedence in the supported browser matrix.
+
+## 6. References
+
+Retrieved 2026-10-20.
+
+1. React, `createPortal`, at react.dev commit `ae5e48074d4f73f1e349eda2a66841f9a959023e`: <https://github.com/reactjs/react.dev/blob/ae5e48074d4f73f1e349eda2a66841f9a959023e/src/content/reference/react-dom/createPortal.md>. "A portal only changes the physical placement of the DOM node. In every other way, the JSX you render into a portal acts as a child node of the React component that renders it. For example, the child can access the context provided by the parent tree, and events bubble up from children to parents according to the React tree."
+2. W3C, CSS Custom Properties for Cascading Variables Module Level 1, at csswg-drafts commit `160a00acff045d99796606f502812c9462e110e2`: <https://github.com/w3c/csswg-drafts/blob/160a00acff045d99796606f502812c9462e110e2/css-variables-1/Overview.bs>. "Custom properties are ordinary properties, so they can be declared on any element, are resolved with the normal inheritance and cascade rules"; the custom property definition table states "Inherited: yes".
+3. W3C, CSS Cascading and Inheritance Level 4, same commit: <https://github.com/w3c/csswg-drafts/blob/160a00acff045d99796606f502812c9462e110e2/css-cascade-4/Overview.bs>. "Inheritance propagates property values from parent elements to their children."
+4. Radix Themes, `packages/radix-ui-themes/src/components/theme.tsx` and `dialog.tsx` at commit `1faff10ac26ae17f09944d418c6949b93fc6b566`: <https://github.com/radix-ui/themes/tree/1faff10ac26ae17f09944d418c6949b93fc6b566/packages/radix-ui-themes/src/components>. The theme renders `asChild ? Slot.Root : 'div'` with its `data-*` attributes; dialog content renders `<DialogPrimitive.Portal container={container} forceMount={forceMount}>` followed by `<Theme asChild>`.
+5. Radix Primitives, `packages/react/portal/src/portal.tsx` at commit `eb3a2b7091293e27df8f9ba906632d8daa3d81a3`: <https://github.com/radix-ui/primitives/blob/eb3a2b7091293e27df8f9ba906632d8daa3d81a3/packages/react/portal/src/portal.tsx>. The default container is `document.body` (`containerProp || (mounted && globalThis?.document?.body)`); the `container` prop is "An optional container where the portaled content should be appended."
