@@ -1,6 +1,6 @@
 # imam-station
 
-The facts of one development server, imam-station, as recorded on 2026-10-07 and updated on 2026-10-16. The rules are in [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). The procedure is the [development server runbook](README.md). This page records only what is specific to this host. It holds no secret: no password, token or key appears here, and none may be added.
+The facts of one development server, imam-station, as recorded on 2026-10-07 and updated on 2026-10-16 and 2026-10-20. The rules are in [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). The procedure is the [development server runbook](README.md). This page records only what is specific to this host. It holds no secret: no password, token or key appears here, and none may be added.
 
 ## Host
 
@@ -53,13 +53,13 @@ Ours, pinned in the local override files below so Docker's address pools never l
 
 All on `127.0.0.1`:
 
-| Port | Serves                                                |
-| :--- | :---------------------------------------------------- |
-| 8080 | Caddy: the public issuer                              |
-| 8081 | Keycloak directly: the Admin Console                  |
-| 8082 | identity-control                                      |
-| 5433 | identity-control's Postgres                           |
-| 8083 | organization-control. The tunnel has no port 8083 yet |
+| Port | Serves                               |
+| :--- | :----------------------------------- |
+| 8080 | Caddy: the public issuer             |
+| 8081 | Keycloak directly: the Admin Console |
+| 8082 | identity-control                     |
+| 5433 | identity-control's Postgres          |
+| 8083 | organization-control                 |
 
 ## Dev tunnel
 
@@ -78,10 +78,21 @@ All on `127.0.0.1`:
 | 8081 | owner only                                           |
 | 8082 | owner only                                           |
 | 5433 | owner only                                           |
+| 8083 | owner only: organization-control, for a laptop's BFF |
 
 The Admin Console is at `/admin/master/console/` on the admin host. It loads only after the kernel's `tunnel-admin.sh` has set the master realm's frontend URL to that host.
 
 The unit files exist on this server only, in the user's systemd directory. They are in no repository.
+
+## What is registered here
+
+Recorded 2026-10-20, as the server's operator reported it. People are not named on this page: the repository is public, and a username is personal data.
+
+| Fact                               | Value                                                                                                                                     |
+| :--------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+| organization-experience BFF client | `organization-experience-bff`, registered through identity-control in the `per-sign-in` form, for a laptop BFF at `http://127.0.0.1:8091` |
+| First Tenant                       | `Scnehaux Dev`, `01a15393-acef-7000-9a70-24d78a5351d5`, `active` (provisioned through runbook step 9)                                     |
+| Its first administrator            | a named development account, granted through runbook step 11; who it is is recorded on the server, not here                               |
 
 ## Local, uncommitted files
 
