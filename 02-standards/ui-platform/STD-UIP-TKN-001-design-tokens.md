@@ -8,7 +8,7 @@ doc_meta:
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-01
+  last_reviewed: 2026-10-20
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   references:
@@ -16,13 +16,6 @@ doc_meta:
 ---
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
-
-> **Revision 2.2.0 is pending exact-commit ratification.** It makes the neutral
-> strong border the control boundary and tests it at 3:1 (section 3, Semantic
-> Usage Doctrine). Under GDC-000 section 2.6.7, revision 2.1.0 remains binding
-> until the authorized human authority approves the exact commit containing
-> this revision. The existing `last_reviewed` is updated only in the
-> ratification commit or manifest.
 
 > **Implementation boundary:** Sass maps are current. A DTCG 2025.10 source generating CSS, Sass, and Panda contracts remains a migration target, not an implemented guarantee.
 
