@@ -198,8 +198,8 @@ a consumer loses a change either way. By `tenant_security_version` alone, an act
 only `tenant_version`, is discarded when it follows a snapshot of the Tenant in provisioning. By
 `tenant_version` alone, a restored Tenant's withdrawal can be discarded when its `tenant_version` was
 not bumped past what the consumer holds. Every Tenant event and snapshot row therefore carries both
-versions. identity-control orders by the pair (identity-control #114), and foundation-reference #30, open on
-2026-10-20, makes foundation-reference do the same. The consumer contract changes only in requiring `tenant_version`, which
+versions. identity-control orders by the pair (identity-control #114), and so does foundation-reference
+(foundation-reference #30, merged 2026-10-20). The consumer contract changes only in requiring `tenant_version`, which
 Organization Control already publishes.
 
 ### 5.6 A Provider May Suspend or Revoke One Membership Inside a Tenant (2026-10-20)

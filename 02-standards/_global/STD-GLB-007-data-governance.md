@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-007
   title: Enterprise Data Classification, Governance & Retention Standard
   owner: Enterprise Security Architect
-  version: 1.2.0
+  version: 1.2.1
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -117,6 +117,7 @@ None. All data governance and ownership rules apply universally. Deviations requ
 2. **Access Control Audits**: Access to Tier 1 and Tier 2 production datastores must follow the Principle of Least Privilege, requiring formal, time-bound approvals.
 3. **Exception Waivers**: Deviations from these data governance rules require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.
 4. **Audit retention (1.1.0, 1.2.0)**: A service that holds audit records tests that its purge deletes only records older than 7 years, and that the tenant decommissioning purge leaves them. From 1.2.0 it also tests that a direct `DELETE` of a younger record and a `TRUNCATE` are refused, as the migration role and as a superuser.
+   - _Where it stands (1.2.1)._ organization-control implements the purge and the triggers, with these tests (organization-control #75, `TDD-organization-control-001` §Retention). identity-control does not yet: it keeps its audit tables without purging any record at any age, and its tests assert no runtime role can delete one and no trigger exists in its schema (`TestNoAuditRecordIsPurgedBeforeSevenYears`, `TestNoSourceDeletesAnAuditRecord`). Keeping a record longer than 7 years breaks the rule above, so identity-control builds the purge, the two triggers and these tests, tracked as an identity-control ROADMAP item. The rule stands as written.
 
 ## 6. References
 
