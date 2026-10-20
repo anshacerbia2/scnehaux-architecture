@@ -5,6 +5,7 @@ doc_meta:
   owner: Principal Platform Architect
   version: 2.0.0
   status: approved
+  governed_by: [GDC-000]
   authorized_by: [ADR-IAM-002]
   classification: restricted
   review_cycle_days: 180
