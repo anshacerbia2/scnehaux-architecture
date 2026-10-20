@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-002
   title: Enterprise Database & Persistence Standard
   owner: Architecture Review Board
-  version: 3.3.0
+  version: 3.3.1
   status: approved
   classification: internal
   governed_by: [GDC-000]
@@ -133,7 +133,7 @@ A drill of a PostgreSQL store MUST:
 **A restore to an older point (3.3.0).** A restore to an older point gives back a store that other systems have already moved past: a consumer holds versions the store no longer has, and a kernel holds users the store never recorded. A store whose records others hold MUST state how such a restore is reconciled, and its drill MUST prove that path, in a run that restores to a point older than records created after the backup. NIST asks for transaction recovery, and names "transaction rollback and transaction journaling" as its mechanisms [R12]. Two stores do so today:
 
 - **Identity Control.** A Principal created after the backup is an `orphan` after the restore. The drill proves that it is re-adopted through `:adopt`, lands `suspended`, is restored by an operator, and signs in, and that Organization's Membership under it resolves. A second case, with no creation event on record, proves that `:adopt` refuses (`ADR-IAM-001 §5.11`).
-- **Organization Control.** Before the service serves, the restore adds a margin to every Tenant security version and provider grant version, publishes the withdrawn ones, and makes every consumer reconcile. The drill proves that a consumer applies the bumped version and that no active row is published (`ADR-ORG-003 §5.5`).
+- **Organization Control.** Before the service serves, the restore adds a margin to every Tenant version, Tenant security version and provider grant version (3.3.1), publishes the withdrawn ones, and makes every consumer reconcile. The drill proves that a consumer applies the bumped version and that no active row is published (`ADR-ORG-003 §5.5`).
 
 **Why, and what was rejected.**
 
