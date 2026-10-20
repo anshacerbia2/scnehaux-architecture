@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.2.0
+  version: 2.3.0
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -16,6 +16,13 @@ doc_meta:
 ---
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
+
+> **Revision 2.3.0 is pending exact-commit ratification.** It adds the display
+> paths on which a color outside sRGB is tested, and the policy that declares no
+> fallback value for it (section 3, "Semantic Usage Doctrine"). Under GDC-000
+> section 2.6.7, revision 2.2.0 remains binding until the authorized human
+> authority approves the exact commit containing this revision. The existing
+> `last_reviewed` is updated only in the ratification commit or manifest.
 
 > **Implementation boundary:** Sass maps are current. A DTCG 2025.10 source generating CSS, Sass, and Panda contracts remains a migration target, not an implemented guarantee.
 
@@ -185,6 +192,8 @@ To ensure consistent design decisions across product teams, the `Emphasis` layer
 
 Every `contrast` token is tested against the `solid` surface of its scheme in each theme and state; every `text` and `icon` token at `subtle`, `default`, or `strong` is tested against the neutral surfaces it is declared for. The neutral `border` token at `strong` emphasis in its default state is the boundary of a control that has no other visual indicator, such as a text input, and is tested at 3:1 against every declared neutral surface in each theme and mode (WCAG 2.2 SC 1.4.11 [1]: "Where a text-input has an indicator such as a complete border […], that indicator must meet 3:1 contrast ratio" [2]). Scheme borders (`primary`, `danger`, and the others) mark states that text or another cue also carries, and are not tested for 3:1.
 
+A color outside the sRGB gamut is tested on every display path a supported browser can take, and the lowest ratio counts. CSS Color 4 requires a color to be gamut mapped when its destination is an RGB display or a unorm8 canvas, and specifies chroma-reducing mapping [3]; Chromium 153 and Firefox 155 were measured on 2026-10-20 to clip instead (UI repository, TDD tokens G2). The paths are therefore sRGB clipped, sRGB gamut mapped, Display P3 clipped, and Display P3 gamut mapped, each composited in its own space. Relative luminance is "the relative brightness of any point in a colorspace, normalized to 0 for darkest black and 1 for lightest white" [4], taken in each path's color space. No fallback value is declared for such a color: every supported browser parses `oklch()`, which is Baseline Widely available since 2025-11-09 [5], so the browser's own gamut handling is the fallback, and the paths above test it.
+
 #### Domain Semantic Layer (Logical Intent Mapping)
 
 To prevent global color roles from colliding with domain-specific logic in complex systems (HRIS, ERP, Finance), portals must implement a thin logical mapping layer on top of the global color schemes:
@@ -301,3 +310,6 @@ Retrieved 2026-10-20.
 
 1. W3C, WCAG 2.2, Success Criterion 1.4.11 Non-text Contrast: <https://www.w3.org/TR/WCAG22/>. "The visual presentation of the following have a contrast ratio of at least 3:1 against adjacent color(s): User Interface Components Visual information required to identify user interface components and states".
 2. W3C WAI, Understanding SC 1.4.11 Non-text Contrast: <https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html>. "Where a text-input has an indicator such as a complete border ( #767676 ), that indicator must meet 3:1 contrast ratio"; for adjacent colours, "if an input has a white internal background, dark border, and white external background the 'adjacent color' to the component would be the white external background".
+3. W3C, CSS Color Module Level 4, "Gamut Mapping" and "CSS Gamut Mapping to an RGB Destination", at csswg-drafts commit `160a00acff045d99796606f502812c9462e110e2`: <https://github.com/w3c/csswg-drafts/blob/160a00acff045d99796606f502812c9462e110e2/css-color-4/Overview.bs>. "if the destination is the display device (a screen, or a printer) then out of gamut values must be converted to an in-gamut color"; the CSS gamut mapping algorithms apply to colors out of gamut of "an RGB display" or "a canvas, with unorm8 backing store", and "Gamut mapping will produce a similar, but lower chroma, color"; on clipping, "clipping is commonly done on gamma-encoded values".
+4. W3C, WCAG 2.2, definition "relative luminance", at w3c/wcag commit `457cece22d8219be32d29c5c1313e71aa6b61eae`: <https://github.com/w3c/wcag/blob/457cece22d8219be32d29c5c1313e71aa6b61eae/guidelines/terms/20/relative-luminance.html>. "the relative brightness of any point in a colorspace, normalized to 0 for darkest black and 1 for lightest white"; "Unless it is known that another color space will be used to process and display the content, authors should evaluate using sRGB colorspace."
+5. web-features 3.43.0 (W3C WebDX Community Group), feature `oklab` "Oklab and OkLCh", at tag commit `3c7e5ff9ed136e4fcf76b4ee54fdffab7c31ab69`: <https://github.com/web-platform-dx/web-features/tree/3c7e5ff9ed136e4fcf76b4ee54fdffab7c31ab69>. Status `baseline: "high"`, `baseline_low_date` 2023-05-09, `baseline_high_date` 2025-11-09, covering `css.types.color.oklch`.
