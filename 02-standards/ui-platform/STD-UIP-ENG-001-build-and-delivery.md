@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-ENG-001
   title: UI Platform Build & Delivery Standards
   owner: Principal UI/UX Architect
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: public
   governed_by: [PAD-PLT-003]
@@ -14,6 +14,12 @@ doc_meta:
 ---
 
 # UI Platform Build & Delivery Standards (STD-UIP-ENG-001)
+
+> **Revision 2.2.0 is pending exact-commit ratification.** It adds the payload
+> and runtime measurement method to section 3.3 (PLAN P3). Under GDC-000
+> section 2.6.7, revision 2.1.0 remains binding until the authorized human
+> authority approves the exact commit containing this revision. The existing
+> `last_reviewed` is updated only in the ratification commit or manifest.
 
 > **Implementation boundary:** this approved release contract does not establish that existing packages pass its CI and consumer gates.
 
@@ -56,6 +62,12 @@ Build both packages, create tarballs with the pinned `pnpm pack` command, and in
 ### 3.3 Payload and runtime evidence
 
 - Publish raw, minified, gzip/Brotli, and parsed-size measurements for defined consumer import scenarios, including a single component, a layout, and a representative page. Identify the tool and incremental consumer cost, compare with an approved baseline, and record material regressions.
+- The measurement method:
+  1. A scenario is bundled from the packed tarballs by a named, pinned consumer bundler in production mode. React and React DOM are excluded and reported separately, so the scenario's bytes are its incremental cost to an application that already has React. Every public entry is also measured whole, which bounds what a consumer without tree shaking pays.
+  2. The parsed size is the minified output, the bytes the engine parses [9]. A compressed size names its encoding and level: gzip and Brotli, the two encodings in general use [10], each at a stated level, because the level trades speed for bytes [11].
+  3. Bytes alone do not describe the cost: download and execution time dominate the processing of scripts [12], and execution time is "a much more accurate and understandable metric" than bytes [13]. Each scenario's import (fetch, parse, compile, evaluate) and first render are therefore timed in every engine of the support matrix (section 3.5 (5)).
+  4. A time is an aggregate (the median) of repeated samples, never one sample [14], measured on a named runner whose hardware is recorded [14]. Samples alternate between scenarios, each in a fresh browser context.
+  5. A measurement is comparative evidence, not a budget. A budget is a limit on a named metric for a named scenario [15]; until one is approved for a scenario, no measured value passes or fails a release. The first release record holds the baseline later releases are compared against.
 - Capture interaction traces for dynamic-height transitions. A layout read is permitted when required for behavior, but claims about forced layout count, frame rate, and theme-switch latency require named scenarios and trace evidence.
 - Do not claim `0` reflows, fixed 60 FPS, a universal `<2 KB` or 12 KB budget, or sub-50 ms theme switching without the corresponding supported-scenario evidence.
 - Library minification remains deferred to the consumer build as decided in ADR-UIP-BLD-001; measure final consumer output, not only raw `dist` files.
@@ -94,7 +106,7 @@ The CI pipeline executes the source gate and packed-package gate, stores their e
 
 ## 6. References
 
-Retrieved 2026-10-03.
+References 1–8 retrieved 2026-10-03; 9–15 retrieved 2026-10-20.
 
 1. Semantic Versioning 2.0.0, `semver.md` at commit `f99d5485190a47c0863949e7da810a5553e0ed4d`: <https://github.com/semver/semver/blob/f99d5485190a47c0863949e7da810a5553e0ed4d/semver.md>. Item 1: "Software using Semantic Versioning MUST declare a public API"; item 3: "Once a versioned package has been released, the contents of that version MUST NOT be modified"; item 7: a minor version "MUST be incremented if any public API functionality is marked as deprecated"; item 9: a pre-release "indicates that the version is unstable"; FAQ: "Before you completely remove the functionality in a new major release there should be at least one minor release that contains the deprecation".
 2. React, Versioning policy, at react.dev commit `8c68ae8d2410abe59f351195780c6f8ea9f50904`: <https://github.com/reactjs/react.dev/blob/8c68ae8d2410abe59f351195780c6f8ea9f50904/src/content/community/versioning-policy.md>. "Whenever possible, we add warnings in preparation for future breaking changes. That way, if your app has no warnings on the latest release, it will be compatible with the next major release."
@@ -104,3 +116,10 @@ Retrieved 2026-10-03.
 6. Browserslist, README at commit `8219dd79df0315feaabba302077a66e236822a3a`: <https://github.com/browserslist/browserslist/blob/8219dd79df0315feaabba302077a66e236822a3a/README.md>. "`baseline widely available on YYYY-MM-DD`: selects browser versions that supported the Widely available feature set on the specified date"; Widely available features "have been interoperable in the Baseline core browser set for at least 30 months".
 7. Node.js, Previous releases, at nodejs.org commit `4ffcf0386a1c09e7656c29efe6f66dd9ec153a35`: <https://github.com/nodejs/nodejs.org/blob/4ffcf0386a1c09e7656c29efe6f66dd9ec153a35/apps/site/pages/en/about/previous-releases.mdx>. "Production applications should only use _Active LTS_ or _Maintenance LTS_ releases."
 8. DefinitelyTyped, README at commit `ac3977d854a671215b8d3e2d5e4ced9c345bf00b`, "Support Window": "Definitely Typed only tests packages on versions of TypeScript that are less than 2 years old."
+9. webpack-bundle-analyzer, README at commit `0ebe1e5e0625692251faf4505dad53a75c14e869`: <https://github.com/webpack/webpack-bundle-analyzer/blob/0ebe1e5e0625692251faf4505dad53a75c14e869/README.md>. "parsed": "This is the "output" size of your files. If you're using a Webpack plugin such as Uglify, then this value will reflect the minified size of your code"; "gzip": "This is the size of running the parsed bundles/modules through gzip compression."
+10. MDN, Compression in HTTP, at mdn/content commit `7b8a3c0a4ab5b4b0c605641e8b64c8da42d8dd51`: <https://github.com/mdn/content/blob/7b8a3c0a4ab5b4b0c605641e8b64c8da42d8dd51/files/en-us/web/http/guides/compression/index.md>. "Nowadays, only two are relevant: `gzip`, the most common one, and `br` the new challenger."
+11. Node.js 24, `zlib` documentation at commit `0d10bfe3cb961ef997490f5c060bd1466b5affea`: <https://github.com/nodejs/node/blob/0d10bfe3cb961ef997490f5c060bd1466b5affea/doc/api/zlib.md>. It refers to "the speed/memory/compression tradeoffs involved in `zlib` usage"; gzip levels run from `Z_BEST_SPEED` to `Z_BEST_COMPRESSION`, and Brotli quality "Ranges from `BROTLI_MIN_QUALITY` to `BROTLI_MAX_QUALITY`".
+12. V8, The cost of JavaScript in 2019, at v8.dev commit `031a6578036da033a0c3fb728ec58527345336b6`: <https://github.com/v8/v8.dev/blob/031a6578036da033a0c3fb728ec58527345336b6/src/blog/cost-of-javascript-2019.md>. "In 2019, the dominant costs of processing scripts are now download and CPU execution time"; "Post-download, script execution time is now a dominant cost."
+13. Size Limit, README at commit `3deb55962bb7f4ad4167bd2bb3e04f3f6549370e`: <https://github.com/ai/size-limit/blob/3deb55962bb7f4ad4167bd2bb3e04f3f6549370e/README.md>. It "Can calculate **the time** it would take a browser to download and **execute** your JS. Time is a much more accurate and understandable metric compared to the size in bytes"; its time plugin "runs headless Chrome [...] to track the time a browser takes to compile and execute your JS."
+14. Lighthouse, `docs/variability.md` at commit `8cbac2d085f0fc8f4da2089e7e8e822076179f9e`: <https://github.com/GoogleChrome/lighthouse/blob/8cbac2d085f0fc8f4da2089e7e8e822076179f9e/docs/variability.md>. "use aggregate values like the median, 90th percentile, or even min/max instead of single test results"; "The median Lighthouse score of 5 runs is twice as stable as 1 run"; on hardware, "Minimum 2 dedicated cores (4 recommended)".
+15. web.dev, Performance budgets 101: <https://web.dev/articles/performance-budgets-101> (retrieved 2026-10-20). "A performance budget is a set of limits imposed on metrics that affect site performance"; "You should have a budget in place for different types of pages on your site since the content will vary."
