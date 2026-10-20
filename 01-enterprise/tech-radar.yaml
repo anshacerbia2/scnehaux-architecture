@@ -1,7 +1,7 @@
 # tech-radar.yaml — Enterprise Technology Radar
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
-# Last updated: 2026-10-07
+# Last updated: 2026-10-20
 #
 # Ring changes are ARB decisions (GDC-004 section 3.2). Entries marked
 # "pending ARB" were proposed with the UI Platform ratification package on
@@ -38,6 +38,25 @@ technology_radar:
       date_adopted: "2025-01-15"
       owner: Architecture Authority
       rationale_adr: null
+
+    # ARB decision 2026-10-20 (the owner approved the recommendation in
+    # ADR-IAM-002 section 5.3): the managed secret store and key service of the
+    # adopted cloud. Production custody of the kernel's sealed signing keystore
+    # is a Secrets Manager secret under a customer-managed KMS key, one key and
+    # one secret per environment. Sources: ADR-IAM-002 [R15]-[R21] (AWS KMS
+    # overview, Secrets Manager encryption, best practices, quotas, ASCP CSI,
+    # CloudTrail). EAD-005 asks for "Managed KMS/HSM and secret management".
+    - name: aws-secrets-manager
+      category: secret-management
+      date_adopted: "2026-10-20"
+      owner: Platform Engineering
+      rationale_adr: ADR-IAM-002
+
+    - name: aws-kms
+      category: key-management
+      date_adopted: "2026-10-20"
+      owner: Platform Engineering
+      rationale_adr: ADR-IAM-002
 
     # The JVM/Quarkus runtime enters the portfolio with this entry and is scoped to
     # it. EAD-005 section 5.3 keeps it out of the general server-side options, so it

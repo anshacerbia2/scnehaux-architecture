@@ -3,12 +3,12 @@ doc_meta:
   id: STD-GLB-007
   title: Enterprise Data Classification, Governance & Retention Standard
   owner: Enterprise Security Architect
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-05-22
+  last_reviewed: 2026-10-20
 ---
 
 # Enterprise Data Classification, Governance & Retention Standard (STD-GLB-007)
@@ -51,7 +51,10 @@ Data must only reside in active storage for as long as is necessary to fulfill i
 - **Active Transactional Data**: Retained in primary databases indefinitely while the tenant account remains active.
 - **System and Application Logs**: Retained in active search storage for `30 days`, then archived to cold storage for `365 days`, after which they are permanently purged.
 - **Audit Logs**: Retained in immutable storage for `7 years` to meet compliance mandates.
+  - _What counts (1.1.0)._ Every audit record, privileged access included: a service's record of privileged access, its reviews and its emergency uses (for example organization-control's `audit.privileged_access`, `privileged_access_review` and `emergency_grant_use`) are audit logs. They are kept 7 years and purged after that by the owning service's own maintenance, through a policy that admits only that delete. A record younger than 7 years is never purged.
+  - _Why 7 years._ It is this estate's choice, and it is longer than every external minimum verified. NIST leaves the period to the organization: "Retain audit records for [Assignment: time period] to provide support for after-the-fact investigations of incidents and to meet regulatory and organizational information retention requirements" [R1]. OMB M-21-31 sets minimums, "12 Months Active Storage" and "18 Months Cold Data Storage", for privileged identity and credential management logs, and says "The retention periods prescribed below are minimum values; agencies may retain data for longer periods if appropriate" [R2]. CIS asks to "Retain audit logs across enterprise assets for a minimum of 90 days" [R3].
 - **Inactive Tenant Decommissioning**: Upon tenant subscription termination, all associated data across active databases must be flagged for deletion within `24 hours` and permanently purged (including database backups) within `30 days`.
+  - _Audit records are exempt (1.1.0)._ The decommissioning purge does not delete audit records, privileged access to the terminated Tenant included. They are kept for the full 7 years of the rule above. A provider's access to a retired Tenant is exactly what a later investigation needs, and AU-11 keeps audit records "to provide support for after-the-fact investigations of incidents" [R1].
 
 ---
 
@@ -112,3 +115,17 @@ None. All data governance and ownership rules apply universally. Deviations requ
 1. **Vulnerability Scans**: Automated build security checkers must parse database schemas for un-encrypted fields holding sensitive data keys.
 2. **Access Control Audits**: Access to Tier 1 and Tier 2 production datastores must follow the Principle of Least Privilege, requiring formal, time-bound approvals.
 3. **Exception Waivers**: Deviations from these data governance rules require an approved Architectural Decision Record (ADR) and approval by the Architecture Review Board.
+4. **Audit retention (1.1.0)**: A service that holds audit records tests that its purge deletes only records older than 7 years, and that the tenant decommissioning purge leaves them.
+
+## 6. References
+
+The external sources the audit retention rules rest on, cited as `[Rn]`. The other periods in this standard are this estate's own and cite no external source.
+
+### Normative
+
+- **[R1]** NIST SP 800-53 Rev. 5, AU-11 _Audit Record Retention_, accessed 2026-10-20. NIST OSCAL catalog, <https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json>. "Retain audit records for [Assignment: time period] to provide support for after-the-fact investigations of incidents and to meet regulatory and organizational information retention requirements."
+- **[R2]** OMB Memorandum M-21-31, _Improving the Federal Government's Investigative and Remediation Capabilities Related to Cybersecurity Incidents_, 2021-08-27, Appendix C, accessed 2026-10-20. <https://www.whitehouse.gov/wp-content/uploads/2021/08/M-21-31-Improving-the-Federal-Governments-Investigative-and-Remediation-Capabilities-Related-to-Cybersecurity-Incidents.pdf>. "The retention periods prescribed below are minimum values; agencies may retain data for longer periods if appropriate." Table 5, log category "Privileged Identity & Credential Management": "12 Months Active Storage", "18 Months Cold Data Storage" (table cells, quoted as extracted). It binds federal agencies, not this estate; it is cited as a published minimum.
+
+### Informative
+
+- **[R3]** CIS, _CIS Controls Assessment Specification v8.1_, Control 8, Safeguard 8.10, accessed 2026-10-20. <https://cas.docs.cisecurity.org/en/latest/source/Controls8/>. "Retain audit logs across enterprise assets for a minimum of 90 days."

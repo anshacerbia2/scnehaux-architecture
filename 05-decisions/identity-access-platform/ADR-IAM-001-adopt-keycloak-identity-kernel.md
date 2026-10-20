@@ -19,9 +19,18 @@ Adopt Keycloak as the Scnehaux Identity Protocol and Authentication Kernel.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                  | Approver               |
-| :--------- | :------- | :----------- | :----------------------------------------- | :--------------------- |
-| 2026-08-11 | accepted | foundational | Identity, Security, Platform, Architecture | Architecture Authority |
+| Date       | Status            | ADR Type     | Reviewers                                  | Approver               |
+| :--------- | :---------------- | :----------- | :----------------------------------------- | :--------------------- |
+| 2026-08-11 | accepted          | foundational | Identity, Security, Platform, Architecture | Architecture Authority |
+| 2026-10-20 | accepted, amended | foundational | Identity, Security, Platform, Architecture | Architecture Authority |
+
+**Amended 2026-10-20, in place,** on three points, each approved by the owner on 2026-10-20 as
+recommended: §5.11 requirement 3 records two people, an operator and a witness, and an independent
+review; §5.11 gains the one recorded path by which an identifier this authority issued re-enters the
+registry after a restore to an older point; and §5.12 states one active key per registration and one
+registration per device. It is edited in place because no system this decision governs is in
+production (GDC-010 §2.4.2): `SAD-001` §9.1 records that the only deployment is the development
+server.
 
 ## 3. Context
 
@@ -333,13 +342,26 @@ Every enterprise identity operation SHALL transit the Identity Control API rathe
 
 1. **It can succeed at most once per Control Database, enforced by the database.** The ceremony claims a row whose primary key admits exactly one value. Two concurrent ceremonies produce one Principal, and a second ceremony after the first is refused by a constraint rather than by a check the code could be rewritten to skip.
 2. **It refuses to run against a populated registry.** Emptiness of `principal_mapping` is asserted in the claiming transaction, so the ceremony cannot be used later to insert a Principal into a running estate.
-3. **It names the human who ran it and why, and that record is immutable.** The evidence row is insert-only: the runtime role holds no `UPDATE` and no `DELETE` on it. A retry reuses the recorded operator and reason rather than supplying new ones, so the second attempt cannot rewrite who is on record.
+3. **It names the two humans who ran it and why, and that record is immutable (amended 2026-10-20).** Two named people run it: an operator and a witness, never the same person, both recorded. The evidence row is insert-only: the runtime role holds no `UPDATE` and no `DELETE` on it. A retry reuses the recorded operator, witness and reason rather than supplying new ones, so the second attempt cannot rewrite who is on record. A third person, independent of both and of the first Principal's holder, reviews the record, and that review is recorded insert-only too (`STD-IAM-001 §3.10`).
+   - _Two people._ The ceremony creates the first provider and its emergency grant, the highest privilege in the estate. NIST: "Dual authorization, also known as two-person control, reduces risk related to insider threats. Dual authorization mechanisms require the approval of two authorized individuals to execute" [R63], and changes to selected components "cannot occur unless two qualified individuals approve and implement such changes" [R63]. The CA/Browser Forum requires "multiple person control and split knowledge" even for its lightest key ceremony, and that the CA "log its CA Key Pair generation activities" [R64]. The kernel's signing-key ceremony already requires two operators (`ADR-IAM-002 §5.3`), so one ceremony role serves both.
+   - _An independent reviewer._ AC-5 asks that "security personnel who administer access control functions do not also administer audit functions" [R63], and AU-6 asks for records to be reviewed and findings reported to named roles [R63]. IANA keeps the witnesses of its root key ceremonies structurally independent: "Persons considered directly affiliated with PTI, ICANN or VeriSign may not become a Trusted Community Representatives" [R65].
 4. **It creates the Principal through the ordinary path.** The ceremony calls the same provisioning sequence the API calls, under an idempotency key stored in the evidence row, so a crash mid-ceremony recovers rather than producing a second Principal, and the identifier is issued by the authority that owns it.
 5. **It registers the Identity Control API as a protected resource.** `STD-IAM-002 §3.1` admits a token only when its `aud` names a registered protected resource, a keyless `resource` registration and never a client that authenticates. The first call after the ceremony is to this API, so its resource registration, `identity-control-api`, must exist before any caller's token can name it, and registering it through the API would need such a token first. The ceremony registers it through the ordinary registration path, `privileged` at lifetime class `L0`, registered by the Principal it just created, under its own idempotency key, so a resumed ceremony completes it rather than registering twice. Kernels do the same for their own administration API: "Each realm has a built-in client called `realm-management`" [R38], and in Auth0 "before you register any APIs … one API will already exist: the Auth0 Management API" [R39].
 
 The ceremony holds no credential. It creates the kernel user with a mandatory credential-setting action, so the first human interaction establishes the credential and the ceremony never handles one.
 
 **This is an entry point, not an exception.** No standing capability is created, nothing is exempted from authorization afterwards, and the ordinary path is unchanged. An out-of-band `INSERT` into `principal_mapping` remains prohibited, and `ADR-ORG-001` is why: an identifier that entered the canonical registry without a recorded decision is indistinguishable from one an attacker placed there.
+
+**After a restore to an older point, an identifier this authority issued is re-adopted, never re-issued (amended 2026-10-20).** A Principal created after the backup still exists in the kernel, but the restored Control Database holds no mapping for it, so it is an `orphan`. Replacing that person with a new `principal_id` would break every reference the system of record itself made, Organization Control's Memberships first. The identifier keeps meaning that person: `sub` is "A locally unique and never reassigned identifier within the Issuer for the End-User" [R10], and identifier management prevents "the assignment of previously used individual, group, role, service, or device identifiers to different individuals" [R66]. Recovery expects transaction recovery, including "transaction rollback and transaction journaling" [R66], and the kernel's admin event store is the journal of every Principal creation.
+
+So one provider command, `POST /v1/principals/{principal_id}:adopt`, is the only recorded-decision path by which such an identifier re-enters `principal_mapping`. Its name mirrors `registrations:adopt`. It plans first (`dry_run`), and requires `X-Administrative-Reason` and an `Idempotency-Key`. It refuses unless all four checks hold:
+
+1. **An open `orphan` finding names the identifier.**
+2. **Exactly one kernel user carries it,** as `:release` requires.
+3. **It cannot have been in the backup.** It is a UUIDv7, whose "time-ordered value field derived from the widely implemented and well-known Unix Epoch timestamp source" [R67] is later than the newest mapping the restored database holds.
+4. **Its creation is on record.** A kernel admin event `CREATE` of that user, made by this service's own Admin API client, carries the identifier. The kernel's admin events include the representation sent: "The Include Representation switch includes JSON documents sent through the admin REST API so you can view the administrators actions" [R68]. It is read from the kernel's event store, or from Audit & Evidence once the kernel's retention has passed. Without that provenance the command refuses, and triage decides.
+
+On success the adoption is recorded insert-only, and the mapping lands `suspended`, as `:release` leaves it. An operator's `:restore` returns it to service. So it takes two recorded steps, and the restored user stays disabled until the second. The out-of-band `INSERT` stays prohibited.
 
 ### 5.12 Confidential and Workload Clients Authenticate with Registered Keys
 
@@ -362,6 +384,7 @@ The suite keeps asserting it on every upgrade.
 Its consequences:
 
 - **Rotation is add-then-remove.** The new public key is registered, the previous one becomes retiring, and it is removed at the end of a bounded overlap. The kernel accepts either key in between.
+- **One active key per registration, and one registration per device (amended 2026-10-20).** A registration holds one active key, and a second only while a rotation overlaps. Concurrent instances that do not share custody, such as two developer devices, are separate registrations, each with its own single active key. A key set holds several keys for rollover: `kid` is used "to choose among a set of keys within a JWK Set during key rollover" [R69]. OAuth treats each deployed instance as its own client: `client_id` "SHOULD vary between instances", and a client ID per instance "enables each client instance to have its own client secret" [R70]. A shared identity loses attribution: "If multiple applications share a service account, you might not be able to trace activity back to the correct application" [R71]. With a registration per device, each device has its own sessions and events in the kernel, and a lost laptop is suspended without touching the other. A production BFF is one deployment whose replicas load one key from custody, so it is one registration.
 - **Nothing secret is ever shown.** Registration and rotation carry a public key in and return no secret. There is no once-only display to lose, and a lost private key is replaced by registering a new one.
 - **A kernel breach exposes no client.** The kernel holds public keys only, where a client secret would be readable by its administrators and present in its database backups.
 
@@ -435,6 +458,9 @@ Every stop names its reason and the calling Principal, and is recorded (`STD-IAM
 - Keycloak's internal data model and APIs create migration and upgrade coupling; preview features and non-public APIs may change at any release [R25].
 - Organization or role features may tempt teams to violate authority boundaries.
 - High availability and multi-region operation are not free and require tested database/cache architecture [R20].
+- The bootstrap ceremony needs three named people: an operator, a witness and a reviewer (§5.11).
+- An orphan whose creation is not in the kernel's journal, or in Audit & Evidence once that retention passes, cannot be re-adopted. Triage decides, and Organization's Memberships under it stay unresolved until then (§5.11).
+- Two developer devices that sign in at once need two registrations, one per device (§5.12).
 
 ### Operational
 
@@ -444,6 +470,7 @@ Every stop names its reason and the calling Principal, and is recorded (`STD-IAM
 - Every upgrade requires compatibility, conformance, migration, and rollback evidence.
 - Restoring a suspended BFF signs its users out: they sign in again, because the suspension ended their refresh tokens (§5.13).
 - Retirement deletes the kernel client and cannot be undone there. The record stays in the Control Database.
+- A restore drill proves that an orphan is re-adopted and that one without provenance is refused (`STD-GLB-002` §Restore Evidence).
 - Every session read goes to the kernel's database while the session cache is off (§5.8). Its connection pool and CPU are sized and monitored for sign-ins, refreshes, UserInfo and Admin API session reads.
 
 ## 7. Compliance Impact
@@ -566,6 +593,32 @@ The Identity Control Service would register `identity-control-api` when it start
 - **Cons**: a registration made at startup has no human on record as its registrant and runs on every replica; one made by script is a kernel client no registration describes, which the reconciler reports as unmanaged, and a resource bypassing the registry is the creation path `TDD-identity-control-003` closes. Keeping the Admin API client as the audience instead is what `STD-IAM-002 §3.1` now prohibits, because a credentialed client in `aud` may exchange the tokens sent to it.
 - **Why Rejected**: the resource is a precondition of the first call exactly as the first Principal is, and the ceremony is already the evidenced, single-use entry point for that.
 
+### Alternative N — One Operator, Reviewed Later
+
+Keep the ceremony to one authorized operator, and review the record when someone has time.
+
+- **Pros**: one person can run it alone.
+- **Cons**: one person alone creates the highest privilege in the estate, and nothing says when the review happens.
+- **Why Rejected**: NIST asks for "two-person control" on privileged actions [R63], and the CA/Browser Forum asks for "multiple person control" even for its lightest ceremony [R64].
+
+### Alternative O — An External Auditor Witnesses the Ceremony, or a Video Records It
+
+- **Pros**: the strongest evidence. The CA/Browser Forum requires it for a publicly trusted root key: "have a Qualified Auditor witness the CA Key Pair generation process or record a video of the entire CA Key Pair generation process" [R64].
+- **Cons**: it is sized for a root key that the whole web trusts, not for creating one Principal once.
+- **Why Rejected**: disproportionate. Its cheap part stays: a written script, the runbook, and a logged run.
+
+### Alternative P — Replace an Orphan With a New `principal_id`
+
+- **Pros**: needs no new route. Triage creates the person again.
+- **Cons**: Organization Control's Memberships under the old identifier stop resolving, and every consumer keyed by `principal_id` loses that person's history. It reassigns what `sub` says is "never reassigned" [R10].
+- **Why Rejected**: the identifier was issued to one person and keeps meaning that person (§5.11).
+
+### Alternative Q — Two Active Keys per Registration, for Two Devices
+
+- **Pros**: one registration serves two devices. Google lets "multiple machines share a service account by associating each machine's key with a common service account" [R72], so the sources do not forbid it.
+- **Cons**: it gives up the proven one-active-plus-one-retiring invariant, the rule of one rotation overlap at a time, and per-device attribution [R71].
+- **Why Rejected**: it changes a proven invariant to serve a development-only case that one registration per device already serves.
+
 ## 9. References
 
 These are the external sources this decision rests on. In-repository evidence, such as a compatibility run, is cited inline where it is used. Keycloak pages are cited at 26.7.5, the pinned release, where a versioned page exists.
@@ -576,12 +629,18 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R2]** NIST SP 800-61 Rev. 3, _Incident Response Recommendations and Considerations for Cybersecurity Risk Management_, April 2025, RS.MI-01 and RS.MI-02. <https://csrc.nist.gov/pubs/sp/800/61/r3/final>. Containment prevents an incident's expansion; eradication eliminates persistence mechanisms and entry points, including by disabling breached accounts.
 
 - **[R9]** IETF RFC 6749, _The OAuth 2.0 Authorization Framework_, October 2012. <https://www.rfc-editor.org/rfc/rfc6749>.
-- **[R10]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023. <https://openid.net/specs/openid-connect-core-1_0.html>.
+- **[R10]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023. <https://openid.net/specs/openid-connect-core-1_0.html>. §2, `sub`, accessed 2026-10-20: "A locally unique and never reassigned identifier within the Issuer for the End-User, which is intended to be consumed by the Client".
 - **[R11]** OASIS, _Assertions and Protocols for the OASIS Security Assertion Markup Language (SAML) V2.0_, March 2005. <https://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf>.
 - **[R12]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §4: a resource server validates the token itself; §2.2.3: every scope in an access token must mean something to the resources its `aud` names.
 - **[R13]** W3C, _Web Authentication: An API for accessing Public Key Credentials, Level 3_, Recommendation, accessed 2026-09-30. <https://www.w3.org/TR/webauthn-3/>. A public key credential "can only be accessed by origins belonging to that Relying Party".
 - **[R14]** IETF RFC 9700 (BCP 240), _Best Current Practice for OAuth 2.0 Security_, January 2025. <https://www.rfc-editor.org/rfc/rfc9700>. §2.5: with asymmetric client authentication the server holds no symmetric key.
 - **[R15]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_ (release 5.2.0). <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final>. AC-6 least privilege; AC-2(2) removing or disabling temporary and emergency accounts after a set period.
+
+- **[R63]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_, accessed 2026-10-20. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final> (text from NIST's OSCAL catalog). AC-3(2) Dual Authorization: "Enforce dual authorization for [Assignment: organization-defined privileged commands and/or other actions]", and its discussion, "Dual authorization, also known as two-person control, reduces risk related to insider threats. Dual authorization mechanisms require the approval of two authorized individuals to execute". CM-5(4): "Organizations employ dual authorization to help ensure that any changes to selected system components and information cannot occur unless two qualified individuals approve and implement such changes." AC-5 discussion: "ensuring that security personnel who administer access control functions do not also administer audit functions". AU-6: "Review and analyze system audit records [Assignment: organization-defined frequency] for indications of [Assignment: organization-defined inappropriate or unusual activity] and the potential impact of the inappropriate or unusual activity; Report findings to [Assignment: organization-defined personnel or roles]".
+- **[R66]** NIST SP 800-53 Rev. 5, accessed 2026-10-20, same source. CP-10: "Provide for the recovery and reconstitution of the system to a known state within [Assignment: organization-defined time period consistent with recovery time and recovery point objectives] after a disruption, compromise, or failure." CP-10(2): "Implement transaction recovery for systems that are transaction-based", and "Mechanisms supporting transaction recovery include transaction rollback and transaction journaling." IA-4 discussion: "Preventing the reuse of identifiers implies preventing the assignment of previously used individual, group, role, service, or device identifiers to different individuals, groups, roles, services, or devices."
+- **[R67]** IETF RFC 9562, _Universally Unique IDentifiers (UUIDs)_, May 2024, §5.7 UUID Version 7, accessed 2026-10-20. <https://www.rfc-editor.org/rfc/rfc9562>. "UUIDv7 features a time-ordered value field derived from the widely implemented and well-known Unix Epoch timestamp source, the number of milliseconds since midnight 1 Jan 1970 UTC, leap seconds excluded."
+- **[R69]** IETF RFC 7517, _JSON Web Key (JWK)_, May 2015, §4.5, accessed 2026-10-20. <https://www.rfc-editor.org/rfc/rfc7517>. "The "kid" (key ID) parameter is used to match a specific key. This is used, for instance, to choose among a set of keys within a JWK Set during key rollover."
+- **[R70]** IETF RFC 7591, _OAuth 2.0 Dynamic Client Registration Protocol_, July 2015, accessed 2026-10-20. <https://www.rfc-editor.org/rfc/rfc7591>. §2, `software_id`: "Unlike "client_id", which is issued by the authorization server and SHOULD vary between instances, the "software_id" SHOULD remain the same for all instances of the client software." Appendix A.4.1: "each deployed instance of a piece of client software will dynamically register and obtain distinct client identifier values. This can be advantageous, for instance, if the code flow is being used, as it also enables each client instance to have its own client secret."
 
 ### Informative
 
@@ -638,3 +697,8 @@ These are the external sources this decision rests on. In-repository evidence, s
 - **[R60]** Keycloak 26.7.5 source, `model/infinispan/src/main/java/org/keycloak/models/sessions/infinispan/InfinispanUserSessionProviderFactory.java`, read 2026-10-09. <https://github.com/keycloak/keycloak/tree/26.7.5>. `init`: "useCaches = config.getBoolean(CONFIG_USE_CACHES, !Profile.isFeatureEnabled(Profile.Feature.STATELESS)) && InfinispanUtils.isEmbeddedInfinispan();". The option's help text: "Enable or disable caches."
 - **[R61]** keycloak/keycloak#53250, _Minimal tombstone implementation for user sessions_, merged 2026-09-30 as `a84a001`, accessed 2026-10-09. <https://github.com/keycloak/keycloak/pull/53250>. "This PR is a minimal, additive, backportable fix built around a short-lived tombstone marker written on removal, plus a cache listener that reacts to it"; "Only the user session caches are protected (not client session caches, which are out of scope for this minimal fix)". Tag 26.8.0, published 2026-10-01, contains the commit. Tags 26.7.0 to 26.7.5 do not.
 - **[R62]** Keycloak 26.8.0 documentation, accessed 2026-10-09. _Configuring distributed caches_, "Disabling session caching", <https://github.com/keycloak/keycloak/blob/26.8.0/docs/guides/server/caching.adoc>: "This setting is only available when persistent user sessions are enabled"; "When session caching is disabled, every session read goes directly to the database. This may increase database connection usage and CPU load, especially for workloads that rely heavily on token introspection or token exchange." _Upgrading Guide_, "Disabling caching of persistent user sessions", <https://github.com/keycloak/keycloak/blob/26.8.0/docs/documentation/upgrading/topics/changes/changes-26_8_0.adoc>: "Recent optimizations to the database layer, including async commits, improved indexes, and cheaper refresh-date updates, make persistent sessions without caching a viable option"; "To disable caching, set `--spi-user-sessions--infinispan--use-caches=false`."
+- **[R64]** CA/Browser Forum, _Baseline Requirements for the Issuance and Management of Publicly-Trusted TLS Server Certificates_ v2.3.1, §6.1.1.1 CA Key Pair Generation, accessed 2026-10-20. <https://github.com/cabforum/servercert/blob/main/docs/BR.md>. "In all cases, the CA SHALL: … generate the CA Key Pair using personnel in Trusted Roles under the principles of multiple person control and split knowledge; … log its CA Key Pair generation activities"; for a root key, "have a Qualified Auditor witness the CA Key Pair generation process or record a video of the entire CA Key Pair generation process".
+- **[R65]** IANA, _Trusted Community Representatives_, accessed 2026-10-20. <https://www.iana.org/dnssec/tcrs>. "a number of persons acting as trusted representatives of the Internet community participate in the root key generation and signing ceremonies"; "Persons considered directly affiliated with PTI, ICANN or VeriSign may not become a Trusted Community Representatives."
+- **[R68]** Keycloak, _Server Administration Guide_ 26.7.5, §Auditing and events, admin events, accessed 2026-10-20. <https://www.keycloak.org/docs/26.7.5/server_admin/index.html>. "The Include Representation switch includes JSON documents sent through the admin REST API so you can view the administrators actions."
+- **[R71]** Google Cloud, _Best practices for using service accounts securely_, §Create single-purpose service accounts, accessed 2026-10-20. <https://docs.cloud.google.com/iam/docs/best-practices-service-accounts>. "Cloud Audit Logs include the name of the service account that performed a change or accessed data, but they don't show the name of the application that used the service account. If multiple applications share a service account, you might not be able to trace activity back to the correct application."
+- **[R72]** Google Cloud, _Best practices for managing service account keys_, accessed 2026-10-20. <https://docs.cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys>. "Service account keys managed by a TPM are unique to a physical or virtual machine. You can still let multiple machines share a service account by associating each machine's key with a common service account." The counter-source for Alternative Q.

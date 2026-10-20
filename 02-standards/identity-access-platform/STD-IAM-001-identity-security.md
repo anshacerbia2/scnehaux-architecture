@@ -3,12 +3,12 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.8.0
+  version: 2.9.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-19
+  last_reviewed: 2026-10-20
 ---
 
 # Enterprise Identity Security Standard (STD-IAM-001)
@@ -148,6 +148,23 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - The policy MUST NOT set `form-action` while the kernel's pages submit a form whose answer redirects to a client (2.4.0). Whether `form-action` governs the redirect that follows a submission is an open question in the CSP specification [R27], and Chrome "takes the redirection target into account" [R28], so `form-action 'self'` would block the return to the client after sign-in, and every `form_post` response
 - Those pages MUST also send `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer` (2.4.0). A browser ignores the first over plain HTTP, "the UA MUST ignore any present STS header field(s)" [R29], so it takes effect behind the production load balancer's TLS and is harmless on a development server
 
+### 3.10 Ceremonies (2.9.0)
+
+Two ceremonies create what everything else trusts: the identity bootstrap ceremony, which creates the first Principal and its emergency grant (`ADR-IAM-001 §5.11`), and the signing-key ceremony, which generates a realm signing key (`ADR-IAM-002 §5.3`). Both follow these rules.
+
+- **Two named people run it: an operator and a witness.** Both are recorded in the ceremony's insert-only record, and they are never the same person. A command that takes both refuses a witness equal to the operator. NIST: "Dual authorization, also known as two-person control, reduces risk related to insider threats. Dual authorization mechanisms require the approval of two authorized individuals to execute" [R41]. The CA/Browser Forum requires "multiple person control and split knowledge" even for its lightest key ceremony [R42].
+- **Both hold one ceremony role.** It is held by named members of the Identity Platform Team with production deploy rights. A service account never holds it. One role serves both ceremonies, because the signing-key ceremony already requires two operators.
+- **A third person reviews the record, independently.** The reviewer is not the operator, not the witness, and not the holder of the first Principal, and is a named member of Security or of the Architecture Authority. AC-5 asks "that security personnel who administer access control functions do not also administer audit functions" [R41]. IANA keeps its root ceremony witnesses independent of the operators: "Persons considered directly affiliated with PTI, ICANN or VeriSign may not become a Trusted Community Representatives" [R43]. The review is recorded insert-only (reviewer, outcome, time), and the record refuses the operator or the witness as reviewer.
+- **The review comes before the realm serves anyone else.** The bootstrap review is complete before the realm serves anyone but the first Principal, and within the review deadline below. AU-6 leaves the frequency and the roles to the organization [R41], so the deadline is the owner's.
+- **The run follows a written script and is logged.** The runbook is the script. The CA/Browser Forum asks a CA to "log its CA Key Pair generation activities" [R42]. Its stronger form for a publicly trusted root, "have a Qualified Auditor witness the CA Key Pair generation process or record a video" [R42], is not required: it is sized for a key the whole web trusts.
+- **The output is kept with the change ticket** that the ceremony's reason names, and in Audit & Evidence once it is chartered. Never in chat.
+
+| Value the owner sets              | Value                                                                                                                                              |
+| :-------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Who holds the ceremony role       | `OWNER DECISION REQUIRED`. Named in identity-control's `docs/runbooks/bootstrap-ceremony.md` §Who performs it, not here: this repository is public |
+| Who reviews                       | `OWNER DECISION REQUIRED`. Named in the same runbook section                                                                                       |
+| Review deadline after a bootstrap | `OWNER DECISION REQUIRED`. Proposed: before the realm serves anyone but the first Principal, and at most two working days after the ceremony       |
+
 ## 4. Exceptions
 
 Deviation from this standard requires formal exception approval under GDC-000 with explicit threat model, compensating controls, owner, and review condition where appropriate.
@@ -168,6 +185,7 @@ Deviation from this standard requires formal exception approval under GDC-000 wi
 - compatibility test, against the pinned kernel release, that the hosted login page carries the §3.9 header set, that its policy names no other origin and no `form-action`, and that a definition weakening the anti-framing directives is refused
 - compatibility test, against the pinned kernel release, that an unknown identifier, a wrong password and a disabled account are not separable by time, with the §3.1 recorded gaps measured alongside
 - realm definition assertion that the kernel holds no SMTP server and no `email` event listener (`ADR-IAM-007 §5.4`)
+- ceremony record assertion that the operator and the witness differ, that both are stored insert-only, and that a review naming either of them is refused (§3.10, 2.9.0)
 - contract test that a temporary password (§3.1, 2.8.0) is answered once with `Cache-Control: no-store`, is absent from every log, row, event and idempotency record the command writes, is refused as the new password, and stops signing in once it lapses
 - compatibility test, against the pinned kernel release, that removing a session through the Admin API posts a logout token naming its `sid` to a client's back-channel logout URL, and posts none to a client with front-channel logout on; and a drift sweep that repairs a changed back-channel URL or front-channel setting (`ADR-IAM-009`)
 
@@ -199,6 +217,8 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 - **[R35]** OWASP, _Application Security Verification Standard 5.0.0_, accessed 2026-10-19. <https://github.com/OWASP/ASVS/tree/v5.0.0/5.0/en>. 6.4.1: "Verify that system generated initial passwords or activation codes are securely randomly generated, follow the existing password policy, and expire after a short period of time or after they are initially used. These initial secrets must not be permitted to become the long term password."; 12.2.1: "Verify that TLS is used for all connectivity between a client and external facing, HTTP-based services, and does not fall back to insecure or unencrypted communications."; 14.3.2: "Verify that the application sets sufficient anti-caching HTTP response header fields (i.e., Cache-Control: no-store) so that sensitive data is not cached in browsers."; 16.2.5: "Verify that when logging sensitive data, the application enforces logging based on the data's protection level. For example, it may not be allowed to log certain data, such as credentials or payment details."
 - **[R36]** IETF RFC 9111, _HTTP Caching_, June 2022. <https://www.rfc-editor.org/rfc/rfc9111>. §5.2.2.5: "The no-store response directive indicates that a cache MUST NOT store any part of either the immediate request or the response and MUST NOT use the response to satisfy any other request." It adds: "This directive is not a reliable or sufficient mechanism for ensuring privacy", which is why the value is also never stored or logged.
 
+- **[R41]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_, accessed 2026-10-20. <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final> (text from NIST's OSCAL catalog). AC-3(2) Dual Authorization: "Enforce dual authorization for [Assignment: organization-defined privileged commands and/or other actions]"; its discussion: "Dual authorization, also known as two-person control, reduces risk related to insider threats. Dual authorization mechanisms require the approval of two authorized individuals to execute." CM-5(4): "Organizations employ dual authorization to help ensure that any changes to selected system components and information cannot occur unless two qualified individuals approve and implement such changes." AC-5 discussion: "Separation of duties includes dividing mission or business functions and support functions among different individuals or roles, conducting system support functions with different individuals, and ensuring that security personnel who administer access control functions do not also administer audit functions." AU-6: "Review and analyze system audit records [Assignment: organization-defined frequency] for indications of [Assignment: organization-defined inappropriate or unusual activity] and the potential impact of the inappropriate or unusual activity; Report findings to [Assignment: organization-defined personnel or roles]". Supports §3.10.
+
 ### Informative
 
 - **[R13]** IETF draft-ietf-oauth-v2-1-16, _The OAuth 2.1 Authorization Framework_, Internet-Draft, accessed 2026-09-30. <https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/>. Omits the password grant, citing RFC 9700 §2.4. A draft, not a standard.
@@ -221,3 +241,5 @@ The external sources the rules above rest on, cited as `[Rn]`. A rule that is st
 - **[R38]** Okta, _Okta Admin Management API_ (OpenAPI specification 2026.41.0), Expire the password with a temporary password, accessed 2026-10-19. <https://github.com/okta/okta-management-openapi-spec/blob/master/dist/current/management-minimal.yaml>. "Expires the password and resets the user's password to a temporary password. This operation transitions the user status to `PASSWORD_EXPIRED` so that the user must change their password the next time that they sign in."; `tempPassword`: "A temporary password that the user can sign in with. This is only returned when expiring a password with a temporary password."
 - **[R39]** Keycloak, _Server Administration Guide_, Setting a password for a user, accessed 2026-10-19. <https://www.keycloak.org/docs/latest/server_admin/index.html#proc-setting-password-user_server_administration_guide>. "Type a new password in the Set Password section."; "If Temporary is ON, the user must change the password at the first login."
 - **[R40]** Google, _REST Resource: users_ (Admin SDK Directory API), accessed 2026-10-19. <https://developers.google.com/workspace/admin/directory/reference/rest/v1/users>. `password`: "The password value is never returned in the API's response body."; `changePasswordAtNextLogin`: "Indicates if the user is forced to change their password at next login."
+- **[R42]** CA/Browser Forum, _Baseline Requirements for the Issuance and Management of Publicly-Trusted TLS Server Certificates_ v2.3.1, §6.1.1.1 CA Key Pair Generation, accessed 2026-10-20. <https://github.com/cabforum/servercert/blob/main/docs/BR.md>. "In all cases, the CA SHALL: … generate the CA Key Pair using personnel in Trusted Roles under the principles of multiple person control and split knowledge; … log its CA Key Pair generation activities"; for a root key, "have a Qualified Auditor witness the CA Key Pair generation process or record a video of the entire CA Key Pair generation process". Supports §3.10.
+- **[R43]** IANA, _Trusted Community Representatives_, accessed 2026-10-20. <https://www.iana.org/dnssec/tcrs>. "a number of persons acting as trusted representatives of the Internet community participate in the root key generation and signing ceremonies"; "Persons considered directly affiliated with PTI, ICANN or VeriSign may not become a Trusted Community Representatives." Supports §3.10.

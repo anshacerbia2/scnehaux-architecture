@@ -17,9 +17,17 @@ Token Signing Algorithm and Key Lifecycle Management.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-08-18 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver             |
+| ---------- | ----------------- | ------------ | ------------------------- | -------------------- |
+| 2026-08-18 | accepted          | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-10-20 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
+
+**Amended 2026-10-20, in place,** in §5.3: it names the secret manager that holds the sealed keystore
+in each environment, how the keystore reaches the kernel, and that the development server never
+backs the keystore up. It also states that every environment is the first custody phase today. The
+owner approved the recommendation on 2026-10-20. It is edited in place because no system this
+decision governs is in production (GDC-010 §2.4.2): `SAD-001` §9.1 records that the only
+deployment is the development server.
 
 ## 3. Context
 
@@ -75,7 +83,18 @@ A signing key passes through the states below. Each maps to a state NIST SP 800-
 
 ### 5.3 Key Custody
 
-- **Shared environments.** A signing key is generated once, under a ceremony, sealed in the approved secret manager, and delivered identically to every replica as a keystore the kernel loads [R11]. No replica generates key material, and a replica that cannot reach custody refuses to start (`STD-IAM-001 §3.5`).
+- **Shared environments.** A signing key is generated once, under a ceremony, sealed in the approved secret manager, and delivered identically to every replica as a keystore the kernel loads [R11]. No replica generates key material, and a replica that cannot reach custody refuses to start (`STD-IAM-001 §3.5`). The ceremony follows `STD-IAM-001 §3.10`: two people, recorded, and an independent review.
+- **The secret manager is AWS Secrets Manager, under a customer-managed AWS KMS key (amended 2026-10-20).** AWS is the adopted cloud (`tech-radar.yaml`), and `EAD-005` asks for "Managed KMS/HSM and secret management". The secret holds the sealed keystore, PKCS#12 or BCFKS. A keystore with one RSA-3072 pair fits in a secret value of at most "65,536 Bytes" [R19].
+  - Secrets Manager "uses envelope encryption with AWS KMS keys and data keys to protect each secret value" [R16]. KMS keys "are protected by FIPS 140-3 Security Level 3 validated hardware security modules (HSM). They never leave AWS KMS unencrypted" [R15].
+  - **A customer-managed key, not the AWS-managed `aws/secretsmanager` key.** AWS: "To be able to access a secret from another account or to apply a key policy to the encryption key, use a customer managed key to encrypt the secret" [R17]. The key policy lets only the kernel pods' role decrypt, and keeps the key's administrators apart from its readers, the separation of duties NIST AC-5 asks for (`STD-IAM-001 §3.10`). `EAD-006 §6.9` already asks that secrets use managed custody. AWS also asks for "the principle of least privileged access" in every policy on the secret [R17].
+  - **One KMS key and one secret per environment and realm.** No environment shares key material with another, by construction.
+  - **Every read is recorded.** "AWS CloudTrail records all API calls for Secrets Manager as events" [R21]. That is the native source of the privileged-access event on every custody access.
+- **Delivery is a file the kernel loads.** The AWS Secrets and Configuration Provider (ASCP) mounts the secret into each kernel pod as a file: "To determine which secrets the ASCP mounts in Amazon EKS as files on the filesystem, you create a SecretProviderClass YAML file" [R20]. The kernel's `java-keystore` provider loads it: "To add a key pair and certificate stored in a Java Keystore file on the host select Providers and choose java-keystore from the dropdown", with "Keystore Type (JKS, PKCS12 or BCFKS)" [R11].
+  - **Both passwords are vault references,** `${vault.…}`, never literal realm configuration. The keystore password and the key password each "can refer a value from an external vault" [R11]. The kernel's file vault reads them from a mounted directory: "You can mount Kubernetes secrets into the Keycloak Container, and the data fields will be available in the mounted folder with a flat-file structure" [R18].
+- **Development server.** The keystore is a file in identity-kernel's `deploy/dev/keys/`, mode 0400, owned by the container's user, with its passwords in the file vault directory. Both are mounted read-only, and the kernel refuses to start when either is missing.
+  - **It is never copied to backup storage.** NIST SP 800-57 gives the backup of a private signature key as "No (in general); support for non-repudiation would be in question" [R6]. The development server is redeployed from zero, so a lost development keystore is replaced by a new ceremony and a new `kid`, never restored (`STD-GLB-009` rule 9).
+  - Its protection on a single host is access control and sealing. NIST permits keys "stored externally (provided that proper protection is afforded)", with confidentiality "by encryption at an appropriate security strength (see SP 800-152) or by controlling access to the secret key information via physical means" [R6].
+- **Every environment is the first custody phase today.** Keycloak 26.7.5 signs with a key pair it holds. Its documented key providers generate or load the pair inside the kernel [R11], and its vault serves passwords and secrets, not signing keys [R18]. So, in production too, the private key is in the kernel's memory while it is in use. SP 800-57 allows that: "Keys may be maintained within a cryptographic module while they are being actively used, or they may be stored externally (provided that proper protection is afforded) and recalled as needed" [R6]. NIST SC-12 leaves the key management requirements to the organization [R22]; this section is those requirements.
 - **Non-exportable custody is a later phase.** A KMS or HSM that never releases the private key is adopted when an audit or regulatory obligation requires it. The pinned kernel's key providers hold the key pair themselves [R11], so that phase needs a kernel integration the pinned release does not document, and it is decided in its own ADR.
 - **A throwaway kernel**, such as a test run's, may sign with a key it generated itself, because nothing outside that run verifies its tokens.
 
@@ -93,12 +112,15 @@ A signing key passes through the states below. Each maps to a state NIST SP 800-
 - The platform declares a departure from RFC 9068 §2.1 and OpenID Connect Core §15.1, which a conformance test would report.
 - Tokens are about 426 bytes larger than `ES256` tokens.
 - A key ceremony is an operation two people must be available for.
+- Every environment keeps the private key in the kernel's memory while it signs. Non-exportable custody waits for its own decision (§5.3).
+- A lost development keystore cannot be restored. It costs a new ceremony and a new `kid`, and every development token signed before it fails.
 
 ### Operational
 
 - The rotation schedule publishes the next key before activating it, and the retirement window is recomputed from the live token lifetime classes rather than read as a constant.
 - The identity kernel's compatibility suite proves `PS256` issuance and verification on every candidate release; a candidate that cannot issue `PS256` is not promoted.
 - The secret manager holds the only copy of an active or retiring private key; destroying it at retirement is part of the rotation, and is recorded.
+- Production manifests name the secret in a `SecretProviderClass`, and the realm declares the `java-keystore` provider with `${vault.…}` passwords. The kernel is built with the file vault enabled.
 
 ## 7. Compliance Impact
 
@@ -109,6 +131,9 @@ A signing key passes through the states below. Each maps to a state NIST SP 800-
 - [ADR-IAM-001 (Adopt the Keycloak Identity Kernel)](ADR-IAM-001-adopt-keycloak-identity-kernel.md) - The kernel holds the signing keys this lifecycle governs.
 - STD-IAM-001 §3.5 - kid immutability, identical material across replicas, and the publication window.
 - STD-IAM-002 §3.2.2 - the operative algorithm allowlist and the `RS256` exception.
+- STD-IAM-001 §3.10 - the ceremony that generates a key: two people, recorded, and an independent review.
+- STD-GLB-009 §Development Server Deployment, rule 9 - the development server never backs the signing keystore up.
+- `tech-radar.yaml` - `aws-secrets-manager` and `aws-kms`, adopted with this amendment.
 
 ### Compliance Status
 
@@ -150,6 +175,24 @@ None.
 - **Cons**: it is Alternative C's second key lifecycle and verifier branch again, for an algorithm without a security proof.
 - **Why Rejected**: the exception serves the relying parties that need `RS256`, and nothing else in the estate does.
 
+### Alternative F: A Non-Exportable KMS or HSM Key That Signs Tokens Now
+
+- **Pros**: the private key never leaves the hardware boundary [R15].
+- **Cons**: the pinned kernel cannot use one. Its key providers, `rsa-generated`, `rsa` and `java-keystore`, hold the key pair themselves [R11], so it needs a custom key-provider SPI that the pinned release does not document.
+- **Why Rejected**: not for now. It is the second custody phase of §5.3, decided in its own ADR when an audit or regulatory obligation requires it.
+
+### Alternative G: HashiCorp Vault, KV for the Keystore or Transit to Sign
+
+- **Pros**: one secret store across clouds; Transit keeps the key inside Vault.
+- **Cons**: Transit has Alternative F's blocker, because the kernel signs locally. KV works, but it adds a self-run secret-management cluster where the adopted cloud already offers a managed one, and `EAD-005` asks for managed custody.
+- **Why Rejected**: it is more to run and gains nothing the managed service lacks.
+
+### Alternative H: A Plain Kubernetes Secret as the Custody Store
+
+- **Pros**: no cloud dependency, and the kernel's file vault reads it directly [R18].
+- **Cons**: it is not the managed KMS or HSM capability `EAD-005` names, and its reads are not recorded the way CloudTrail records a secret's [R21].
+- **Why Rejected**: a Kubernetes Secret may carry the keystore into the pod, but it is never the custody.
+
 ## 9. References
 
 The external sources this decision rests on, cited as `[Rn]`. In-repository evidence is cited inline where it is used.
@@ -161,15 +204,23 @@ The external sources this decision rests on, cited as `[Rn]`. In-repository evid
 - **[R3]** IETF RFC 8725 (BCP 225), _JSON Web Token Best Current Practices_, February 2020. <https://www.rfc-editor.org/rfc/rfc8725>. §2.1 algorithm substitution attacks; §3.1 the caller specifies the permitted algorithms.
 - **[R4]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021. <https://www.rfc-editor.org/rfc/rfc9068>. §2.1: `RS256` mandatory to implement; `none` prohibited.
 - **[R5]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, December 2023. <https://openid.net/specs/openid-connect-core-1_0.html>. §10.1.1 refetching a key set on an unfamiliar `kid`; §15.1 `RS256` for ID tokens.
-- **[R6]** NIST SP 800-57 Part 1 Rev. 5, _Recommendation for Key Management: Part 1 – General_, May 2020. <https://doi.org/10.6028/NIST.SP.800-57pt1r5>. Table 2 security strength by key size; §5.3.6 a private signature key is destroyed at the end of its cryptoperiod; Table 9 private signature keys are not archived, public keys may be; §7 key states.
+- **[R6]** NIST SP 800-57 Part 1 Rev. 5, _Recommendation for Key Management: Part 1 – General_, May 2020. <https://doi.org/10.6028/NIST.SP.800-57pt1r5>. Table 2 security strength by key size; §5.3.6 a private signature key is destroyed at the end of its cryptoperiod; Table 9 private signature keys are not archived, public keys may be; §7 key states. Accessed 2026-10-20 for §6.1: "Keys may be maintained within a cryptographic module while they are being actively used, or they may be stored externally (provided that proper protection is afforded) and recalled as needed", and "When the secret or private key information is available outside of a cryptographic module, confidentiality protection shall be provided by encryption at an appropriate security strength (see SP 800-152) or by controlling access to the secret key information via physical means"; and for §8.2.2.1 Table 7, "Backup of keys": "Private signature key … No (in general); support for non-repudiation would be in question."
 - **[R7]** IETF RFC 7638, _JSON Web Key (JWK) Thumbprint_, September 2015. <https://www.rfc-editor.org/rfc/rfc7638>.
 - **[R8]** IETF RFC 8032, _Edwards-Curve Digital Signature Algorithm (EdDSA)_, January 2017, <https://www.rfc-editor.org/rfc/rfc8032>, §1 no per-signature random number; and IETF RFC 9864, _Fully-Specified Algorithms for JOSE and COSE_, October 2025, <https://www.rfc-editor.org/rfc/rfc9864>, which replaces the `EdDSA` identifier with `Ed25519`.
+- **[R22]** NIST SP 800-53 Rev. 5, _Security and Privacy Controls for Information Systems and Organizations_, SC-12 Cryptographic Key Establishment and Management, accessed 2026-10-20, <https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final> (text from NIST's OSCAL catalog). "Establish and manage cryptographic keys when cryptography is employed within the system in accordance with the following key management requirements: [Assignment: organization-defined requirements]."
 
 ### Informative
 
 - **[R9]** OpenID Foundation, _FAPI 2.0 Security Profile_, Final, February 2025. <https://openid.net/specs/fapi-security-profile-2_0-final.html>. §5.4.1: `PS256`, `ES256` or `Ed25519`.
 - **[R10]** OpenID Foundation, _Financial-grade API Security Profile 1.0 – Part 2: Advanced_, Final, March 2021. <https://openid.net/specs/openid-financial-api-part-2-1_0.html>. §8.6: `PS256` or `ES256`, and `RS256` should not be used.
-- **[R11]** Keycloak, _Server Administration Guide_ 26.7.5, realm keys. <https://www.keycloak.org/docs/26.7.5/server_admin/index.html>. Active and passive keys; the `rsa-generated`, `rsa` and `java-keystore` providers, each holding a key pair.
+- **[R11]** Keycloak, _Server Administration Guide_ 26.7.5, realm keys. <https://www.keycloak.org/docs/26.7.5/server_admin/index.html>. Active and passive keys; the `rsa-generated`, `rsa` and `java-keystore` providers, each holding a key pair. Accessed 2026-10-20, §Managing realm keys, "Loading keys from a Java Keystore": "To add a key pair and certificate stored in a Java Keystore file on the host select Providers and choose java-keystore from the dropdown"; step 9, "Enter the Keystore Password. The option can refer a value from an external vault"; step 10, "Enter a value for Keystore Type (JKS, PKCS12 or BCFKS)"; step 12, "Enter the Key Password. The option can refer a value from an external vault."
 - **[R12]** Keycloak, _Upgrading Guide_, "Migrating to 24.0.0", accessed 2026-09-30. <https://www.keycloak.org/docs/latest/upgrading/index.html>. Refresh tokens are signed with an internal HMAC algorithm, HS512.
 - **[R13]** OpenSSL 3.5.5 `speed`, one core, measured 2026-09-30 for this decision: RSA-3072 verify about 30,000 per second against ECDSA P-256 about 18,000; P-256 sign about 57,000 per second against RSA-3072 about 1,500. A measurement on one host, not a published result.
 - **[R14]** HashiCorp, _Vault Transit secrets engine API_, sign endpoint, `marshaling_algorithm`, accessed 2026-09-30. <https://developer.hashicorp.com/vault/api-docs/secret/transit>. ASN.1 DER is the default; the JWS form has to be requested.
+- **[R15]** AWS, _What is AWS Key Management Service?_, accessed 2026-10-20. <https://docs.aws.amazon.com/kms/latest/developerguide/overview.html>. "The AWS KMS keys that you create in AWS KMS are protected by FIPS 140-3 Security Level 3 validated hardware security modules (HSM). They never leave AWS KMS unencrypted."
+- **[R16]** AWS, _Secret encryption and decryption in AWS Secrets Manager_, accessed 2026-10-20. <https://docs.aws.amazon.com/secretsmanager/latest/userguide/security-encryption.html>. "Secrets Manager uses envelope encryption with AWS KMS keys and data keys to protect each secret value."
+- **[R17]** AWS, _AWS Secrets Manager best practices_, §Choose an encryption key for your secret, accessed 2026-10-20. <https://docs.aws.amazon.com/secretsmanager/latest/userguide/best-practices.html>. "To be able to access a secret from another account or to apply a key policy to the encryption key, use a customer managed key to encrypt the secret"; "In IAM policy statements that control access to your secrets, use the principle of least privileged access."
+- **[R18]** Keycloak, _Using a vault_, accessed 2026-10-20. <https://www.keycloak.org/server/vault>. "Keycloak provides two out-of-the-box implementations of the Vault SPI: a plain-text file-based vault and Java KeyStore-based vault"; "The file-based vault implementation is especially useful for Kubernetes/OpenShift secrets. You can mount Kubernetes secrets into the Keycloak Container, and the data fields will be available in the mounted folder with a flat-file structure."
+- **[R19]** AWS, _AWS Secrets Manager quotas_, accessed 2026-10-20. <https://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_limits.html>. Secret value size: "65,536 Bytes".
+- **[R20]** AWS, _Use AWS Secrets and Configuration Provider CSI with IAM Roles for Service Accounts (IRSA)_, §Identify which secrets to mount, accessed 2026-10-20. <https://docs.aws.amazon.com/secretsmanager/latest/userguide/integrating_csi_driver.html>. "To determine which secrets the ASCP mounts in Amazon EKS as files on the filesystem, you create a SecretProviderClass YAML file."
+- **[R21]** AWS, _Log AWS Secrets Manager events with AWS CloudTrail_, accessed 2026-10-20. <https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieve-ct-entries.html>. "AWS CloudTrail records all API calls for Secrets Manager as events".

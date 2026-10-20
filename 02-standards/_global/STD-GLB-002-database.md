@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-002
   title: Enterprise Database & Persistence Standard
   owner: Architecture Review Board
-  version: 3.2.0
+  version: 3.3.0
   status: approved
   classification: internal
   governed_by: [GDC-000]
   authorized_by: [ADR-GLB-019]
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_reviewed: 2026-10-09
+  last_reviewed: 2026-10-20
 ---
 
 # STD-GLB-002: Enterprise Database & Persistence Standard
@@ -130,6 +130,11 @@ A drill of a PostgreSQL store MUST:
 
 **Erasure.** A store that carries out right-to-erasure deletions keeps tombstones, and its restore re-applies them (STD-GLB-007 §GDPR Right-to-Erasure). Its drill MUST prove that a deletion made after the backup is applied again after the restore. A store with no erasure path has no tombstones, and its design says so.
 
+**A restore to an older point (3.3.0).** A restore to an older point gives back a store that other systems have already moved past: a consumer holds versions the store no longer has, and a kernel holds users the store never recorded. A store whose records others hold MUST state how such a restore is reconciled, and its drill MUST prove that path, in a run that restores to a point older than records created after the backup. NIST asks for transaction recovery, and names "transaction rollback and transaction journaling" as its mechanisms [R12]. Two stores do so today:
+
+- **Identity Control.** A Principal created after the backup is an `orphan` after the restore. The drill proves that it is re-adopted through `:adopt`, lands `suspended`, is restored by an operator, and signs in, and that Organization's Membership under it resolves. A second case, with no creation event on record, proves that `:adopt` refuses (`ADR-IAM-001 §5.11`).
+- **Organization Control.** Before the service serves, the restore adds a margin to every Tenant security version and provider grant version, publishes the withdrawn ones, and makes every consumer reconcile. The drill proves that a consumer applies the bumped version and that no active row is published (`ADR-ORG-003 §5.5`).
+
 **Why, and what was rejected.**
 
 - _Roles from the migration job, before a `pg_restore --clean` over the schema it built._ Rejected. The restored database would mix the release's objects with the dump's. A dump older than the release would bring back an older migration history over tables the newer release had already created, and the next migration would fail. Restoring the roles from the dump of globals lets the database be restored whole, as it was, and the migration job then upgrades it the way it upgrades any database.
@@ -143,7 +148,7 @@ A drill of a PostgreSQL store MUST:
 - CI holds little data, so the measured duration shows how long the procedure takes, not how long a production-sized restore takes. The production platform measures its own.
 - The drill restores the release that made the dump. Restoring an older dump under a newer release relies on the order above (roles, database, then the migration job) and is not drilled.
 - The drill deletes the volume only. A server's cron, its backup storage, and its copies of `.env` and `keys/` are not exercised.
-- A restore to an older point gives back versions that consumers have already seen superseded. A store that publishes versions states how such a restore is reconciled (SAD-004 §6.6), and the drill, which restores to the instant of its own backup, does not test that.
+- A restore to an older point is drilled only for the two stores named in §A restore to an older point. The others restore to the instant of their own backup.
 
 ## Exceptions
 
@@ -165,6 +170,7 @@ Normative:
 - **[R1]** NIST, _SP 800-53 Rev. 5_, CP-4 "Contingency Plan Testing", OSCAL catalog, accessed 2026-10-08. <https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json>. "Test the contingency plan for the system … to determine the effectiveness of the plan and the readiness to execute the plan"; "Review the contingency plan test results; and"; "Initiate corrective actions, if needed." Supports rule 7.
 - **[R2]** NIST, _SP 800-53 Rev. 5_, CP-9 "System Backup" and CP-9(1) "Testing for Reliability and Integrity", same catalog, accessed 2026-10-08. CP-9 d: "Protect the confidentiality, integrity, and availability of backup information." CP-9(1): "Test backup information … to verify media reliability and information integrity." Its guidance: "Organizations need assurance that backup information can be reliably retrieved." CP-9(2) "Test Restoration Using Sampling": "Use a sample of backup information in the restoration of selected system functions as part of contingency plan testing." Supports rules 4 and 5.
 - **[R3]** NIST, _SP 800-53 Rev. 5_, CP-10 "System Recovery and Reconstitution", same catalog, accessed 2026-10-08. "Provide for the recovery and reconstitution of the system to a known state within … after a disruption, compromise, or failure." Supports rules 5 and 6.
+- **[R12]** NIST, _SP 800-53 Rev. 5_, CP-10(2) "Transaction Recovery", same catalog, accessed 2026-10-20. "Implement transaction recovery for systems that are transaction-based." Discussion: "Transaction-based systems include database management systems and transaction processing systems. Mechanisms supporting transaction recovery include transaction rollback and transaction journaling." Supports §A restore to an older point.
 
 Informative:
 
