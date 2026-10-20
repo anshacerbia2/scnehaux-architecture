@@ -7,6 +7,7 @@ doc_meta:
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
+  authorizes: [STD-GLB-009]
 ---
 
 # ADR-IAM-002: Token Signing Algorithm and Key Lifecycle Management
@@ -29,7 +30,8 @@ owner approved the recommendation on 2026-10-20. It is edited in place because n
 decision governs is in production (GDC-010 §2.4.2): `SAD-001` §9.1 records that the only
 deployment is the development server. A second amendment the same day adds §5.4: the ingress closes
 the legacy realm endpoint, on which Keycloak 26.7.5 generates an RS256 key, and production does not
-go live until a test proves it. identity-kernel #71 built it for the development server first.
+go live until a test proves it. That gate is a new mandatory restriction, so this decision authorizes
+`STD-GLB-009` 2.0.0. identity-kernel #71 built it for the development server first.
 
 ## 3. Context
 
@@ -107,7 +109,7 @@ A signing key passes through the states below. Each maps to a state NIST SP 800-
 - **Every ingress that serves the realm answers `404` to `GET /realms/{realm}`**, the realm's root path and nothing below it, matched without regard to case, with repeated or trailing slashes, matrix parameters or percent-encoding, on the decoded path. Caddy's `path_regexp` "Runs against the URI-decoded/unescaped path" [R26]. identity-kernel's development proxy closes `(?i)^/+realms/+[^/]+/*$` on every listener (identity-kernel #71, TDD-identity-kernel-002 §The Published Key Set).
 - **No client loses anything.** Discovery, the key set and the token endpoint are below the realm's root, and stay served. Keycloak asks for only some paths to be exposed: "When using a reverse proxy, Keycloak only requires certain paths to be exposed", with `/realms/` exposed because "This path is needed to work correctly, for example, for OIDC endpoints" [R25]. Only the root of one realm is closed.
 - **The kernel refuses what gets past the proxy.** `realm-apply` refuses any enabled key whose public key is not the keystore's, so a `fallback-RS256` made by a caller on the internal network fails the next run. identity-kernel's compatibility suite records what the pinned image does on that endpoint, so a Keycloak upgrade that changes it is seen.
-- **It is a production gate** (`STD-GLB-009` §Security & Access Governance, 1.11.0). No production ingress exists yet. Its configuration closes the endpoint before the realm serves anyone, and a test against the public host proves the `404` for each spelling, as identity-kernel's `deploy-dev` proves it for the development server.
+- **It is a production gate** (`STD-GLB-009` §Security & Access Governance, 2.0.0, which this section authorizes). No production ingress exists yet. Its configuration closes the endpoint before the realm serves anyone, and a test against the public host proves the `404` for each spelling, as identity-kernel's `deploy-dev` proves it for the development server.
 
 ## 6. Consequences
 
@@ -145,7 +147,7 @@ A signing key passes through the states below. Each maps to a state NIST SP 800-
 - STD-IAM-002 §3.2.2 - the operative algorithm allowlist and the `RS256` exception.
 - STD-IAM-001 §3.10 - the ceremony that generates a key: two people, recorded, and an independent review.
 - STD-GLB-009 §Development Server Deployment, rule 9 - the development server never backs the signing keystore up.
-- STD-GLB-009 §Security & Access Governance (1.11.0) - the production gate on the legacy realm endpoint (§5.4).
+- STD-GLB-009 §Security & Access Governance (2.0.0) - the production gate on the legacy realm endpoint (§5.4). This decision authorizes that major revision: the Standard names it in `authorized_by`.
 - `tech-radar.yaml` - `aws-secrets-manager` and `aws-kms`, adopted with this amendment.
 
 ### Compliance Status
