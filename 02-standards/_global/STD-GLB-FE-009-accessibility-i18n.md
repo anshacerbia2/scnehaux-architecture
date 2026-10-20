@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-FE-009
   title: Enterprise Accessibility & Internationalization Standard
   owner: Principal Frontend Architect
-  version: 2.0.1
+  version: 2.0.2
   status: approved
   classification: restricted
   governed_by: [GDC-000]
   authorized_by: [ADR-GLB-FE-010]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-09
+  last_reviewed: 2026-10-20
 ---
 
 # Enterprise Accessibility & Internationalization Standard (STD-GLB-FE-009)
@@ -59,7 +59,7 @@ Tests use actual foreground/background pairs after alpha composition in each sup
 
 ### 3.4 Reflow, target size, and display preferences
 
-Content covered by WCAG 2.2 SC 1.4.10 reflows at 320 CSS px without two-dimensional scrolling, subject to the criterion's exceptions. Pointer targets satisfy SC 2.5.8 at 24 by 24 CSS px or one of its defined exceptions.
+Content covered by WCAG 2.2 SC 1.4.10 reflows at 320 CSS px without two-dimensional scrolling, subject to the criterion's exceptions. The sizing rules that keep it, and the browser layout test that enforces them, are in STD-GLB-FE-005 §3.10. Pointer targets satisfy SC 2.5.8 at 24 by 24 CSS px or one of its defined exceptions.
 
 Supported UI remains usable under text zoom, browser zoom, forced-colors mode, and `prefers-reduced-motion`. Reduced-motion behavior removes or substitutes non-essential motion while preserving state communication.
 

@@ -117,6 +117,36 @@ proof, while this adds none.
 
 **What it requires.** PostgreSQL 16 or later, which every environment runs.
 
+### 5.5 A Person Signs In First, Then Chooses (2026-10-20)
+
+Organization Experience asked for a Tenant identifier, a UUID, before the sign-in. From
+`TDD-organization-experience-001` 1.11.0 §The Sign-In Entry and `TDD-organization-experience-002`
+1.9.0 §The Picker After Sign-In, the person signs in first and chooses from this list.
+
+- **The sign-in names no Tenant.** It makes the provider-scope form, which "grants nothing"
+  (`ADR-IAM-008 §5.5`). That session reaches the self read of §5.1, and nothing else without an
+  activation.
+- **Several Tenants: a list to pick from after the sign-in.** The platforms choose the context
+  after the sign-in, not before it:
+  - Auth0: "Users in multiple Organizations are directed to the Organization Picker after the
+    login flow" [R4];
+  - Slack: "If you are a member of multiple workspaces, you can choose which one you want to open
+    after you sign in." [R9];
+  - the Azure portal: "To switch to a different directory, find the directory that you want to
+    work in, and then select the **Switch** button in its row." [R10];
+  - GitHub's "Switch dashboard context" menu "lists organizations linked to the personal account"
+    [R11].
+- **Choosing an entry is the Tenant sign-in of §5.3.** On the kernel session the first sign-in
+  made, the kernel answers it without a page or a credential (`ADR-IAM-008 §5.6`).
+- **One Tenant: listed, not entered by itself.** "Changes of context are initiated only by user
+  request or a mechanism is available to turn off such changes" [R12]. The person may have signed
+  in for an invitation or for provider work.
+- **No Tenant identifier field.** The list holds every Tenant a Tenant sign-in can serve (§5.2),
+  and the kernel issues `organization:<tenant_id>` only for a member (§5.3), so a typed identifier
+  gains nothing. A link that names its Tenant still signs in for it.
+- **Provider mode still takes identifiers.** Its targets are Tenants the provider is usually not a
+  member of, so they are not in the provider's list.
+
 ## 6. Consequences
 
 ### Positive
@@ -147,6 +177,8 @@ proof, while this adds none.
 - `ADR-ORG-003`: the administration flag, and the check at use.
 - `TDD-organization-control-001` (caller classes), `TDD-organization-control-002` (the route) and
   `TDD-organization-experience-002` (the context switcher) change to implement it.
+- `TDD-organization-experience-001` 1.11.0 (§The Sign-In Entry) and
+  `TDD-organization-experience-002` 1.9.0 (§The Picker After Sign-In) implement §5.5.
 
 ### Compliance Status
 
@@ -205,7 +237,7 @@ Organizations, which are a projection of these Memberships. This route reads the
 - **[R4]** Auth0, _Login Flows for Organizations_, accessed 2026-10-07.
   <https://auth0.com/docs/manage-users/organizations/login-flows-for-organizations>. "Users in
   multiple Organizations are directed to the Organization Picker after the login flow, which
-  displays the first 20 organizations they joined."
+  displays the first 20 organizations they joined." Re-verified 2026-10-20 for §5.5.
 - **[R5]** Auth0, _Use Organizations with tokens_, §Validate tokens, accessed 2026-10-07.
   <https://auth0.com/docs/manage-users/organizations/using-tokens>. "If an `org_id` claim is present
   in the access token, then your API should validate the claim … If the claim cannot be validated,
@@ -215,3 +247,24 @@ Organizations, which are a projection of these Memberships. This route reads the
   "Always check that the tid in a token matches the tenant ID used to store data with the
   application." / "Validation of the tenant is the first step, but the checks of the subject and
   actor described in this article are still necessary."
+- **[R9]** Slack Help Center, _Sign in to Slack_, accessed 2026-10-20.
+  <https://slack.com/help/articles/212681477-Sign-in-to-Slack>. "If you are a member of multiple
+  workspaces, you can choose which one you want to open after you sign in." Supports §5.5.
+- **[R10]** Microsoft, _Manage Azure portal settings and preferences_, §Switch and manage
+  directories, accessed 2026-10-20.
+  <https://learn.microsoft.com/en-us/azure/azure-portal/set-preferences>. "In the **Directories**
+  section, you see your **Current directory** (the directory, or Azure tenant, that you're
+  currently signed in to)."; "To see a full list of directories you can access, select **All
+  Directories**."; "To switch to a different directory, find the directory that you want to work
+  in, and then select the **Switch** button in its row." Supports §5.5.
+- **[R11]** GitHub Docs, _About your organization dashboard_, accessed 2026-10-20.
+  <https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/about-your-organization-dashboard>.
+  "To switch to your organization dashboard, in the upper-left corner of the page, select your
+  username"; the menu's image text: "Screenshot of the "Switch dashboard context" menu for a
+  personal account. The menu lists organizations linked to the personal account." Supports §5.5.
+- **[R12]** W3C, _Understanding Success Criterion 3.2.5: Change on Request_ (WCAG 2.2, Level AAA),
+  accessed 2026-10-20. <https://www.w3.org/WAI/WCAG22/Understanding/change-on-request.html>.
+  "Changes of context are initiated only by user request or a mechanism is available to turn off
+  such changes."; "This success criterion aims to eliminate potential confusion that may be caused
+  by unexpected changes of context". Supports §5.5. Level AAA is above the AA target of
+  `STD-GLB-FE-009 §3.1`; it is cited for the behavior, not as a conformance claim.
