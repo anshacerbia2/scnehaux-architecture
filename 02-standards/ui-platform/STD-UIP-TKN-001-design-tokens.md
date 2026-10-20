@@ -17,13 +17,6 @@ doc_meta:
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
 
-> **Revision 2.3.0 is pending exact-commit ratification.** It adds the display
-> paths on which a color outside sRGB is tested, and the policy that declares no
-> fallback value for it (section 3, "Semantic Usage Doctrine"). Under GDC-000
-> section 2.6.7, revision 2.2.0 remains binding until the authorized human
-> authority approves the exact commit containing this revision. The existing
-> `last_reviewed` is updated only in the ratification commit or manifest.
-
 > **Implementation boundary:** Sass maps are current. A DTCG 2025.10 source generating CSS, Sass, and Panda contracts remains a migration target, not an implemented guarantee.
 
 ---
