@@ -86,13 +86,13 @@ The unit files exist on this server only, in the user's systemd directory. They 
 
 ## What is registered here
 
-Recorded 2026-10-20, as the server's operator reported it.
+Recorded 2026-10-20, as the server's operator reported it. People are not named on this page: the repository is public, and a username is personal data.
 
 | Fact                               | Value                                                                                                                                     |
 | :--------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
 | organization-experience BFF client | `organization-experience-bff`, registered through identity-control in the `per-sign-in` form, for a laptop BFF at `http://127.0.0.1:8091` |
 | First Tenant                       | `Scnehaux Dev`, `01a15393-acef-7000-9a70-24d78a5351d5`, `active` (provisioned through runbook step 9)                                     |
-| Its first administrator            | `billy-andreas` (runbook step 11)                                                                                                         |
+| Its first administrator            | a named development account, granted through runbook step 11; who it is is recorded on the server, not here                               |
 
 ## Local, uncommitted files
 
