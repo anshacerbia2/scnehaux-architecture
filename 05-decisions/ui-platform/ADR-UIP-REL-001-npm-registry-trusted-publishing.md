@@ -36,7 +36,7 @@ SAD-003 section 3.2 names the Developer Platform as the supplier of "CI runners,
 
 Registry facts, 2026-10-20:
 
-- The npm scope `@scnx` already exists. Its organization lists `@scnx/core-ui`, `@scnx/design-system`, and `@scnx/ui`, all maintained by one npm account. `@scnx/core-ui@1.0.0` was published on 2025-11-28 and is its `latest`; `@scnx/design-system` and `@scnx/ui` have versions 1.0.0 to 1.0.2. `@scnx/system` is not published.
+- The npm scope `@scnx` already exists. Its organization lists `@scnx/core-ui`, `@scnx/design-system`, and `@scnx/ui`, all maintained by one npm account, a team member's personal account, which is also the organization's only owner. `@scnx/core-ui@1.0.0` was published on 2025-11-28 and is its `latest`; `@scnx/design-system` and `@scnx/ui` have versions 1.0.0 to 1.0.2. `@scnx/system` is not published.
 - npm never reuses a version: "Once `package@version` has been used, you can never use it again" [R3]. The UI release contract's first stable version, `1.0.0` (STD-UIP-ENG-001 section 3.5 (3)), therefore cannot be published for `@scnx/core-ui`.
 - A pre-release has "lower precedence than a normal version" [R5], so `1.0.0` satisfies `^1.0.0-beta.0`. The packed `@scnx/system` declares exactly that peer range on `@scnx/core-ui`; installed from npm, it would accept the 2025 package, which has a different API. The UI repository's semver check confirms that `^1.0.0-beta.0` resolves to `1.0.0` when both exist.
 - The GitHub account `scnx` belongs to an unrelated user (created 2015). GitHub Packages scopes npm packages to the owning account or organization [R6], so it cannot host `@scnx`.
@@ -52,7 +52,7 @@ Registry facts, 2026-10-20:
 
 ## 5. Decision
 
-1. **Registry:** the public npm registry, under the `@scnx` scope. Before the first publish, the Release Lead confirms that the `@scnx` organization and its maintainer account belong to Scnehaux and enables two-factor authentication for every member.
+1. **Registry:** the public npm registry, under the `@scnx` scope. The `@scnx` organization stays, but it stops depending on one personal account: before the first publish, its current owner adds a second Owner, an account the organization controls (Owners "manage organization members and billing", and the last owner cannot be removed [R8]), and requires two-factor authentication for every member [R9]. No personal credential publishes: only the trusted publisher of item 2 does.
 2. **Publishing identity:** npm trusted publishing [R1]. Each package on npmjs.com trusts exactly one publisher: the UI repository's release workflow on a GitHub-hosted runner. No npm token is created or stored. Every publish carries npm provenance, "signed by Sigstore public good servers and logged in a public transparency ledger" [R2].
 3. **Release workflow:** started by a person, it runs in a GitHub environment whose required reviewer is the Release Lead. It downloads the tarballs of one CI run on `main`, checks their digests against that run's evidence packet and attestations, and publishes those files unchanged. A failed check publishes nothing.
 4. **Channels:** a pre-release is published with `--tag beta`; `latest` moves only on a stable release. npm sets `latest` on every publish "unless the `--tag` option is used" [R4], so the workflow always passes `--tag`.
@@ -74,7 +74,7 @@ Registry facts, 2026-10-20:
 - Every published version is public and permanent, like the attestations of ADR-UIP-SEC-001; the UI repository is already public, so no new information is exposed.
 - A new major version for a package whose `2.0.0` is its first stable release can confuse readers; the release notes explain it.
 - Publishing depends on npm and Sigstore availability.
-- The decision relies on an npm account the UI Platform team does not administer as an organization; item 1 makes that explicit.
+- Until the second Owner exists, the `@scnx` organization depends on one personal account; item 1 makes that a precondition of the first publish.
 
 ### Operational
 
@@ -107,5 +107,7 @@ Informative:
 - [R5] Semantic Versioning 2.0.0, item 11, at commit `f99d5485190a47c0863949e7da810a5553e0ed4d` (STD-UIP-ENG-001 [1]): "When major, minor, and patch are equal, a pre-release version has lower precedence than a normal version: Example: 1.0.0-alpha < 1.0.0." Supports item 5.
 - [R6] GitHub Docs, Working with the npm registry, at github/docs commit `666463860bec200da6c8db9cb9334e7335d9b753`: <https://github.com/github/docs/blob/666463860bec200da6c8db9cb9334e7335d9b753/content/packages/working-with-a-github-packages-registry/working-with-the-npm-registry.md>. GitHub Packages "only supports scoped npm packages"; publishing to the "My-org" organization requires the name `@my-org/test`. Supports the first alternative.
 - [R7] GitHub Docs, reusables `package_registry/authenticate-packages` and `package_registry/packages-classic-pat-only`, same commit: "You need an access token to publish, install, and delete private, internal, and public packages"; GitHub Packages "only supports authentication using a personal access token (classic)". Supports the first alternative.
+- [R8] npm Docs, Organization roles and permissions, `content/organizations/managing-organization-members/organization-roles-and-permissions.mdx` at npm/documentation commit `4e8e03b978033529bf8f50d74305b29939eb022c`: <https://github.com/npm/documentation/blob/4e8e03b978033529bf8f50d74305b29939eb022c/content/organizations/managing-organization-members/organization-roles-and-permissions.mdx>. "**Owner:** Users who manage organization members and billing"; "On the public registry, you cannot remove the last owner from an organization." Supports item 1.
+- [R9] npm Docs, Requiring two-factor authentication in your organization, same commit: <https://github.com/npm/documentation/blob/4e8e03b978033529bf8f50d74305b29939eb022c/content/organizations/creating-and-managing-organizations/requiring-two-factor-authentication-in-your-organization.mdx>. "Organization owners can require organization members to enable two-factor authentication for their personal accounts, making it harder for malicious actors to access an organization's packages and settings." Supports item 1.
 
 In-repository and registry evidence (2026-10-20): the npm registry metadata of `@scnx/core-ui`, `@scnx/design-system`, and `@scnx/ui` and the `@scnx` organization's package list; the GitHub account `scnx` (user, created 2015-04-24); `@scnx/system`'s packed peer range `^1.0.0-beta.0` on `@scnx/core-ui`, which the `semver` package resolves to `1.0.0` when both exist.
