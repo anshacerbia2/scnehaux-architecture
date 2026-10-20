@@ -12,7 +12,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-GLB-007](_global/ADR-GLB-007-ddd-boundaries.md) | ADR-GLB-007 Standardizing Domain-Driven Design Boundaries and Data Ownership | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-008](_global/ADR-GLB-008-go-project-structure.md) | ADR-GLB-008 Go Project Structure and Layer Enforcement | foundational | accepted | 2026-08-11 | N/A |
 | [ADR-GLB-009](_global/ADR-GLB-009-repository-topology.md) | Repository Boundaries Follow Change, Release, Security, and Ownership Cohesion | foundational | accepted | 2026-08-12 | N/A |
-| [ADR-GLB-010](_global/ADR-GLB-010-application-mechanics-in-process.md) | Application Mechanics Stay In-Process; Network Mechanics Move to Infrastructure | foundational | proposed | 2026-08-12 | N/A |
+| [ADR-GLB-010](_global/ADR-GLB-010-application-mechanics-in-process.md) | Application Mechanics Stay In-Process; Network Mechanics Move to Infrastructure | foundational | accepted | 2026-08-12 | N/A |
 | [ADR-GLB-012](_global/ADR-GLB-012-separate-ai-knowledge-and-product-authority.md) | ADR-GLB-012 Separate Product, Knowledge, and AI Execution Authority | foundational | accepted | 2026-08-23 | N/A |
 | [ADR-GLB-013](_global/ADR-GLB-013-work-workflow-job-schedule-boundaries.md) | ADR-GLB-013 Separate Work, Workflow, Job, Schedule, Worker, and Queue Boundaries | foundational | accepted | 2026-08-23 | N/A |
 | [ADR-GLB-014](_global/ADR-GLB-014-background-worker-network-boundary.md) | ADR-GLB-014 Minimize Inbound Network Surface for Background Workers | foundational | accepted | 2026-08-23 | N/A |
@@ -44,7 +44,8 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-IAM-008](identity-access-platform/ADR-IAM-008-privileged-form-selected-per-sign-in.md) | The Privileged Form Selected per Sign-In | foundational | accepted | 2026-10-07 | N/A |
 | [ADR-IAM-009](identity-access-platform/ADR-IAM-009-logout-by-the-back-channel.md) | Logout Reaches a Relying Party by the Back Channel | foundational | accepted | 2026-10-08 | N/A |
 | [ADR-IAM-010](identity-access-platform/ADR-IAM-010-first-credential-for-an-administrator-created-person.md) | A Person Created by a Provider Receives a Temporary Password, Shown Once | foundational | accepted | 2026-10-19 | N/A |
-| [ADR-IAM-011](identity-access-platform/ADR-IAM-011-an-invitee-without-an-account-enrols-at-redemption.md) | An Invitee Without an Account Enrols at Redemption, After Proving the Address | foundational | proposed | 2026-10-19 | N/A |
+| [ADR-IAM-011](identity-access-platform/ADR-IAM-011-an-invitee-without-an-account-enrols-at-redemption.md) | An Invitee Without an Account Enrols at Redemption, After Proving the Address | foundational | accepted | 2026-10-19 | N/A |
+| [ADR-IAM-012](identity-access-platform/ADR-IAM-012-identity-experience-local-components-until-ui-platform.md) | Identity Experience Uses Local Components Until the UI Platform Ships Them | exception | accepted | 2026-10-20 | N/A |
 | [ADR-ORG-001](organization-tenancy-platform/ADR-ORG-001-separate-organization-authority-and-keycloak-projection.md) | Separate Organization Authority from Identity and Use Keycloak as a Projection Target | foundational | accepted | 2026-08-06 | N/A |
 | [ADR-ORG-002](organization-tenancy-platform/ADR-ORG-002-eligible-provider-authority.md) | Eligible Provider Authority, Activated for a Bounded Time and Approved by Another Provider | foundational | accepted | 2026-10-02 | N/A |
 | [ADR-ORG-003](organization-tenancy-platform/ADR-ORG-003-tenant-administration-grant.md) | Tenant Administration Is a Recorded Grant, Checked with Current Membership | foundational | accepted | 2026-10-04 | N/A |
@@ -52,6 +53,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-ORG-005](organization-tenancy-platform/ADR-ORG-005-a-person-lists-their-own-contexts.md) | A Person Lists Their Own Contexts | foundational | accepted | 2026-10-07 | N/A |
 | [ADR-ORG-006](organization-tenancy-platform/ADR-ORG-006-a-mistaken-offboarding-is-reversed-before-release.md) | A Mistaken Offboarding Is Reversed Before Release | foundational | accepted | 2026-10-07 | N/A |
 | [ADR-ORG-007](organization-tenancy-platform/ADR-ORG-007-the-invited-person-accepts-signed-in.md) | The Invited Person Accepts an Invitation, Signed In as Themselves | foundational | accepted | 2026-10-19 | N/A |
+| [ADR-ORG-008](organization-tenancy-platform/ADR-ORG-008-organization-experience-local-components-until-ui-platform.md) | Organization Experience Uses Local Components Until the UI Platform Ships Them | exception | accepted | 2026-10-20 | N/A |
 | [ADR-SCH-002](scheduling-platform/ADR-SCH-002-postgresql-profiled-durable-dispatch.md) | ADR-SCH-002 PostgreSQL Temporal Authority and Replaceable Durable Dispatch | implementation | accepted | 2026-08-24 | N/A |
 | [ADR-UIP-BLD-001](ui-platform/ADR-UIP-BLD-001-deferred-minification.md) | Deferred Minification | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-BLD-002](ui-platform/ADR-UIP-BLD-002-tsdown-package-build.md) | tsdown Replaces tsup as the UI Platform Package Builder | foundational | accepted | 2026-10-03 | N/A |

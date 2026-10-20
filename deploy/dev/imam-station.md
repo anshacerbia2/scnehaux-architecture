@@ -1,6 +1,6 @@
 # imam-station
 
-The facts of one development server, imam-station, as recorded on 2026-10-07 and updated on 2026-10-16 and 2026-10-20. The rules are in [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). The procedure is the [development server runbook](README.md). This page records only what is specific to this host. It holds no secret: no password, token or key appears here, and none may be added.
+The facts of one development server, imam-station, as recorded on 2026-10-07 and updated on 2026-10-16 and 2026-10-20 (twice). The rules are in [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). The procedure is the [development server runbook](README.md). This page records only what is specific to this host. It holds no secret: no password, token or key appears here, and none may be added.
 
 ## Host
 
@@ -88,11 +88,12 @@ The unit files exist on this server only, in the user's systemd directory. They 
 
 Recorded 2026-10-20, as the server's operator reported it. People are not named on this page: the repository is public, and a username is personal data.
 
-| Fact                               | Value                                                                                                                                     |
-| :--------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
-| organization-experience BFF client | `organization-experience-bff`, registered through identity-control in the `per-sign-in` form, for a laptop BFF at `http://127.0.0.1:8091` |
-| First Tenant                       | `Scnehaux Dev`, `01a15393-acef-7000-9a70-24d78a5351d5`, `active` (provisioned through runbook step 9)                                     |
-| Its first administrator            | a named development account, granted through runbook step 11; who it is is recorded on the server, not here                               |
+| Fact                               | Value                                                                                                                                                                          |
+| :--------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| organization-experience BFF client | `organization-experience-bff`, registered through identity-control in the `per-sign-in` form, for a laptop BFF at `http://127.0.0.1:8091`                                      |
+| Device clients                     | One registration per developer device (STD-GLB-009 rule 15). The client above serves one laptop. A second device gets its own client, added here as a row with its device name |
+| First Tenant                       | `Scnehaux Dev`, `01a15393-acef-7000-9a70-24d78a5351d5`, `active` (provisioned through runbook step 9)                                                                          |
+| Its first administrator            | a named development account, granted through runbook step 11; who it is is recorded on the server, not here                                                                    |
 
 ## Local, uncommitted files
 
@@ -108,11 +109,11 @@ Each is a server's own override (STD-GLB-009 rule 4). They survive `git pull`, a
 
 The spare disk `/mnt/imam-storage` (1.8 TB) is the backup target: outside every Docker volume, as STD-GLB-009 rule 9 requires. Other projects share the disk, and its root is mode `777`, so ours live under one directory of their own, mode `700` and owned by `development`:
 
-| Directory                                                 | Holds                                                       |
-| :-------------------------------------------------------- | :---------------------------------------------------------- |
-| `/mnt/imam-storage/scnehaux-backups/identity-kernel`      | `keycloak-<date>.dump`                                      |
-| `/mnt/imam-storage/scnehaux-backups/identity-control`     | `globals-<date>.sql` and `identity_control-<date>.dump`     |
-| `/mnt/imam-storage/scnehaux-backups/organization-control` | `globals-<date>.sql` and `organization_control-<date>.dump` |
+| Directory                                                 | Holds                                                                                                     |
+| :-------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------- |
+| `/mnt/imam-storage/scnehaux-backups/identity-kernel`      | `keycloak-<date>.dump` today; `globals-<date>.sql` and `keycloak-<date>.dump` once its `backup.sh` exists |
+| `/mnt/imam-storage/scnehaux-backups/identity-control`     | `globals-<date>.sql` and `identity_control-<date>.dump`                                                   |
+| `/mnt/imam-storage/scnehaux-backups/organization-control` | `globals-<date>.sql` and `organization_control-<date>.dump`                                               |
 
 `development`'s crontab, from each repository's §Backups and organization-control's §One-off tasks. The kernel's dump moves to 02:45, so it does not start with organization-control's. Every `<date>` is the UTC date, as both `backup.sh` scripts write it (`date -u +%F`), so one night's dumps share a name: run at 02:15 to 02:45 WIB, that is the previous day's date.
 
@@ -123,4 +124,10 @@ The spare disk `/mnt/imam-storage` (1.8 TB) is the backup target: outside every 
 15 3 * * * cd /home/development/apps/organization-control/deploy/dev && docker compose run --rm maintenance >> "$HOME/organization-control-maintenance.log" 2>&1
 ```
 
-These copy the databases alone. Each stack's `.env` and `keys/` are copied by hand when they change, with `sudo` for `keys/`, which belongs to the containers' users. Nothing rotates old dumps yet.
+These copy the databases alone. Each stack's `.env` and `keys/` are copied by hand when they change, with `sudo` for `keys/`, which belongs to the containers' users. **The kernel's signing keystore and its vault files are never copied** (STD-GLB-009 rule 9, `ADR-IAM-002 §5.3`): a lost one is replaced by a new key ceremony and a new `kid`.
+
+Gaps on this host, against STD-GLB-009 rule 9 (1.10.0):
+
+- **The kernel's line is a bare `pg_dump`.** It dumps no roles and writes straight to the final name, so a failed run leaves a truncated file that looks like a backup. identity-kernel has no `backup.sh`, `restore.sh` or restore drill yet. When they exist, its line becomes `45 2 * * * /home/development/apps/identity-kernel/deploy/dev/backup.sh /mnt/imam-storage/scnehaux-backups/identity-kernel >/dev/null`.
+- **Nothing rotates old dumps yet.** The rule is the newest 14 complete sets per stack, pruned by `backup.sh` only after a successful backup. Until each `backup.sh` does it, the operator deletes sets older than the newest 14 by hand, never with an age-based `find -delete`.
+- **No copy leaves the host.** `/mnt/imam-storage` is a disk in this machine, so the off-site copy of CISA's 3-2-1 rule is not met. This server is redeployed from zero, so the gap is accepted here; production must meet it.

@@ -74,7 +74,7 @@ The BFF runs on a laptop and signs in as its own confidential client, `identity-
 
 1. **On the laptop:** `node scripts/new-client-key.mjs`. The private key stays there, and only the public JWK leaves.
 2. **On the server:** a new server registers the client through identity-control's `POST /v1/registrations` as `privileged`, in the `provider-scope` form. `create-bff-client.sh` is superseded, and it refuses a client that exists. A server whose client the script already made adopts it in step 6.
-3. **More than one device.** The kernel's `set-client-key.sh` sets a client's whole key set at once, and takes one or two JWKs: `./set-client-key.sh scnehaux identity-experience-bff laptop-a.jwk.json laptop-b.jwk.json`. A third device replaces one of the two. Once the client is adopted, its keys belong to its registration. A key is then added through identity-control (`POST /v1/registrations/{registration_id}/keys`, as organization-experience §Rotating the key shows), not by `set-client-key.sh`. identity-control treats a key that its registration does not declare as a wrong declaration.
+3. **More than one device: one registration per device** (STD-GLB-009 rule 15, `ADR-IAM-001 §5.12`). Each device makes its own key and gets its own client, for example `identity-experience-bff-<device>`, registered through identity-control's `POST /v1/registrations` like step 2: `privileged`, in the `provider-scope` form, with the same redirect URI. The device sets `IDENTITY_EXPERIENCE_CLIENT_ID` to its own client. A registration holds one active key, and a second only while a rotation overlaps, so `set-client-key.sh` is never given two devices' keys. A key is rotated through identity-control (`POST /v1/registrations/{registration_id}/keys`, as organization-experience §Rotating the key shows). identity-control treats a key that its registration does not declare as a wrong declaration. Record each device's client on the server's environment page.
 
 The redirect URI is `http://127.0.0.1:8090/auth/callback`, on `127.0.0.1` and not `localhost:8080` (pitfall 7).
 
@@ -109,7 +109,8 @@ Follow organization-experience §Registering it (§The client lists every proper
 
 1. **On the laptop:** `node scripts/new-client-key.mjs`.
 2. **The operator** registers `organization-experience-bff` with organization-experience's `scripts/dev-register-bff.ps1`, which sends `POST /v1/registrations` as `privileged` in the `per-sign-in` form, with audience `organization-control-api` and redirect `http://127.0.0.1:8091/auth/callback`. organization-experience's `stack-proof` workflow runs the same script (STD-GLB-009 §A procedure step is a script, and CI runs it).
-3. **Port 8091,** because the identity BFF has 8090. The two still share one cookie, `__Host-ident_session`. A browser scopes cookies by host and not by port, so signing in to one BFF signs the browser out of the other. Use one BFF at a time, or two browser profiles (organization-experience §Before running both BFFs at once).
+3. **A second device registers its own client,** for example `organization-experience-bff-<device>`, with the same script, and sets `ORGANIZATION_EXPERIENCE_CLIENT_ID` to it (STD-GLB-009 rule 15).
+4. **Port 8091,** because the identity BFF has 8090. The two still share one cookie, `__Host-ident_session`. A browser scopes cookies by host and not by port, so signing in to one BFF signs the browser out of the other. Use one BFF at a time, or two browser profiles (organization-experience §Before running both BFFs at once).
 
 ## 9. Provisioning a Tenant
 
@@ -144,7 +145,7 @@ A Tenant is `active` after step 9, and nobody can sign in for it until a provide
 An invitation is accepted by the invited person, signed in as themselves, with an email they have proven ([ADR-ORG-007](../../05-decisions/organization-tenancy-platform/ADR-ORG-007-the-invited-person-accepts-signed-in.md)). Granting a Membership directly (the Tenant's Memberships, **Grant membership**) remains available for a person who exists.
 
 1. **The person exists, can sign in, and has proven the invited email** (step 10, items 1 to 5). An address counts only once its holder has returned the code sent to it (ADR-ORG-007 §5.3).
-   - _A person with no account_ would enrol from the invitation instead ([ADR-IAM-011](../../05-decisions/identity-access-platform/ADR-IAM-011-an-invitee-without-an-account-enrols-at-redemption.md), proposed, not built). Until it is accepted and built, create the person first (step 10).
+   - _A person with no account_ would enrol from the invitation instead ([ADR-IAM-011](../../05-decisions/identity-access-platform/ADR-IAM-011-an-invitee-without-an-account-enrols-at-redemption.md), accepted 2026-10-20, not built). Until it is accepted and built, create the person first (step 10).
 2. **In organization-experience, in the Tenant, as its administrator:** invite the email. The page shows the acceptance link once; the token travels only in its fragment. On a development server nothing delivers it, so give it to the person yourself.
 3. **The person opens the link** and signs in without choosing a Tenant. The page accepts the invitation for the signed-in person only, then offers to sign in to the new Tenant. Any refusal (unknown or expired link, an address not proven, a link meant for someone else) reads the same.
 4. **A lost link** is revoked and issued again.
@@ -183,7 +184,7 @@ A release that needs more than this says so in its README, in a section between 
 
 A reset destroys the three databases. It is the one procedure that runs `docker compose down -v`, and only when the owner has decided on it.
 
-1. **Back up first** (step 16's forms): each database, the roles, `.env` and `keys/` of every stack.
+1. **Back up first** (step 16's forms): each database, the roles, `.env` and `keys/` of every stack, except the kernel's signing keystore and its vault files, which are never copied (STD-GLB-009 rule 9).
 2. **Take the stacks down in reverse dependency order**, because each one joins the networks of the stacks before it: `docker compose down -v` in organization-control, then identity-control, then identity-kernel.
 3. **Remove `.env` and `keys/`** from each stack. The private keys belong to container users (65532, 65534) and are mode 0600, so removing them needs root.
 4. **Keep the local overrides** (`compose.override.yaml`, and the kernel's local file) **and keep the tunnel.** The issuer URL then stays the same, and nothing configured with it changes.
@@ -199,7 +200,7 @@ What the owner redoes afterwards:
 
 STD-GLB-009 rule 9 says what a backup holds, and each repository's §Backups gives its exact commands. The order is the same for every stack:
 
-1. Put `.env` and `keys/` back first. The migrate job sets the login roles' passwords from `.env`, so it and the restored roles must agree.
+1. Put `.env` and `keys/` back first. The migrate job sets the login roles' passwords from `.env`, so it and the restored roles must agree. The kernel's signing keystore is not in the backup: a kernel restored without it runs the key ceremony again, and its realm publishes a new `kid` (`ADR-IAM-002 §5.3`).
 2. Start the database alone: `docker compose up -d postgres`.
 3. Restore the roles from the `pg_dumpall --globals-only` file with `psql`, then each database from its `pg_dump -Fc` file with `pg_restore`. The roles come first, because the objects' owners must already exist.
 4. `docker compose up -d --build`. The migrate job applies anything newer than the backup, and the service starts once it has succeeded.

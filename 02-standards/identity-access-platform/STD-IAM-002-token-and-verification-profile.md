@@ -3,13 +3,13 @@ doc_meta:
   id: STD-IAM-002
   title: Enterprise Token and Verification Profile
   owner: Identity Platform Team
-  version: 1.8.0
+  version: 1.9.0
   status: approved
   classification: restricted
   governed_by: PAD-PLT-001
   review_cycle_days: 180
   created_date: 2026-08-11
-  last_reviewed: 2026-10-08
+  last_reviewed: 2026-10-20
 ---
 
 # Enterprise Token and Verification Profile (STD-IAM-002)
@@ -398,6 +398,30 @@ fail closed on any failure:
   justified [R7][R14].
 - Attribute release to an external relying party MUST be minimised by purpose and
   governed by an approved scope.
+- **Consent follows the audience class (1.9.0).** An `external` registration MUST require
+  consent, and every scope it releases MUST be shown on the consent screen. An `internal`,
+  `privileged` or `workload` registration MUST NOT require consent: its recorded registration
+  (`ADR-IAM-003`) is the administrative consent. The setting is derived from the audience class at
+  registration and adoption, and is never a field of its own.
+  - _Why consent for `external`._ OpenID Connect requires an authorization decision "before
+    releasing information to the Relying Party", given interactively or "via previous
+    administrative consent" [R27]. Auth0: "For third-party applications, user consent is always
+    required", and "Third-party applications always require consent and cannot skip the consent
+    dialog" [R28]. Okta: consent dialogs matter "especially for third-party apps" [R31].
+  - _Why the class, not who wrote the client._ "“Third-party” refers to operational control, not
+    authorship" [R29]. A partner-operated application that the platform registers is `external`,
+    and asks.
+  - _Why no consent for the platform's own clients._ Microsoft lets administrators "grant consent
+    for themselves or for the entire organization" [R30]. For the Account application, the Admin
+    Portal, the Developer Console, the BFFs and workloads, the provider's recorded registration is
+    that decision.
+  - _How the kernel does it._ Its client setting is "Consent required — If enabled, users have to
+    consent to client access", and a scope's text is shown only when "Display On Consent Screen is
+    enabled, and the scope is added to a client that requires consent" [R32]. So registration sets
+    the client's consent from its class, and the realm shows the scopes `external` releases.
+  - _Rejected._ Consent on every client, which adds a prompt to every staff sign-in and protects
+    nothing the registration does not already decide; and a free per-client choice, which would let
+    an `external` registration skip consent, as no source permits.
 
 ### 3.7 Evidence
 
@@ -443,6 +467,8 @@ discovered afterwards.
   the `at+jwt` header type, executed against the pinned identity kernel release.
 - Token contract tests asserting that an access token carries no claim outside §3.2, RFC 9068
   §2.2 and the three kernel-written claims, and no personal data.
+- Registration tests proving an `external` registration requires consent and shows every scope it
+  releases, and that no other class requires consent.
 - Negative token tests proving external clients never receive `principal_id`,
   `subject_type`, Tenant, or Workspace claims.
 - Algorithm tests proving `PS256` issuance and verification and rejecting `none`,
@@ -485,6 +511,7 @@ quotes.
 - **[R23]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, August 2025. <https://pages.nist.gov/800-63-4/sp800-63b.html>. §2.1–§2.3: AAL1, AAL2 ("two distinct authentication factors") and AAL3.
 - **[R18]** OpenID Foundation, _OpenID Connect Back-Channel Logout 1.0 incorporating errata set 1_, December 2023. <https://openid.net/specs/openid-connect-backchannel-1_0.html>. §2.4 the `sid` claim in a logout token, matching the session an ID token's `sid` named.
 - **[R24]** IETF RFC 6749, _The OAuth 2.0 Authorization Framework_, October 2012. <https://www.rfc-editor.org/rfc/rfc6749>. §3.3: "The authorization and token endpoints allow the client to specify the scope of the access request using the "scope" request parameter"; §6: "The requested scope MUST NOT include any scope not originally granted by the resource owner".
+- **[R27]** OpenID Foundation, _OpenID Connect Core 1.0 incorporating errata set 2_, §3.1.2.4 Authorization Server Obtains End-User Consent/Authorization, accessed 2026-10-20. <https://openid.net/specs/openid-connect-core-1_0.html>. "Once the End-User is authenticated, the Authorization Server MUST obtain an authorization decision before releasing information to the Relying Party. When permitted by the request parameters used, this MAY be done through an interactive dialogue with the End-User that makes it clear what is being consented to or by establishing consent via conditions for processing the request or other means (for example, via previous administrative consent)." Supports §3.6.
 
 ### Informative
 
@@ -501,3 +528,8 @@ quotes.
 - **[R22]** Keycloak, _Configuring and using token exchange_, §Standard token exchange, accessed 2026-10-02. <https://www.keycloak.org/securing-apps/token-exchange>. "The `subject_token` sent to the token exchange endpoint must have the requester client set as an audience in the `aud` claim"; only confidential clients may send a token exchange request.
 - **[R25]** Auth0, _Custom development_ for Organizations, accessed 2026-10-07. <https://auth0.com/docs/manage-users/organizations/custom-development>. "on callback, ensure that the organization returned in the ID token is the same one that was sent in the /authorize request by validating the org_id claim in the same way that other claims like exp and nonce are validated." The per-request choice on one client is `ADR-IAM-008`'s, with its Keycloak, Auth0 and Microsoft sources.
 - **[R26]** Microsoft, _Configurable token lifetimes in the Microsoft identity platform_, accessed 2026-10-08. <https://learn.microsoft.com/en-us/entra/identity-platform/configurable-token-lifetimes>. "Adjusting the lifetime of an access token is a trade-off between improving system performance and increasing the amount of time that the client retains access after the user's account is disabled." The owner-and-administrator split this standard follows is `ADR-IAM-003` [R13], [R14], [R15].
+- **[R28]** Auth0, _User Consent and Third-Party Applications_, accessed 2026-10-20. <https://auth0.com/docs/get-started/applications/confidential-and-public-applications/user-consent-and-third-party-applications>. "For third-party applications, user consent is always required. The user must approve every authorization request. For first-party applications, consent can be skipped when configured, because you control the application and trust it to act appropriately"; §Skip consent for first-party applications: "Third-party applications always require consent and cannot skip the consent dialog."
+- **[R29]** Auth0, _First-Party and Third-Party Applications_, accessed 2026-10-20. <https://auth0.com/docs/get-started/applications/confidential-and-public-applications/first-party-and-third-party-applications>. "“Third-party” refers to operational control, not authorship"; "All applications created through Dynamic Client Registration are third-party applications."
+- **[R30]** Microsoft, _Overview of permissions and consent in the Microsoft identity platform_, §Consent, accessed 2026-10-20. <https://learn.microsoft.com/en-us/entra/identity-platform/permissions-consent-overview>. "If no previous record of user or admin consent for the required permissions exists, the user is shown a consent prompt"; "Administrators can grant consent for themselves or for the entire organization."
+- **[R31]** Okta, _Request user consent_, §The value of consent, accessed 2026-10-20. <https://developer.okta.com/docs/guides/request-user-consent/main/>. "User consent dialogs are important when an app requests access to user data, especially for third-party apps."
+- **[R32]** Keycloak, _Server Administration Guide_ 26.7.5, client settings and §Client scopes, accessed 2026-10-20. <https://www.keycloak.org/docs/26.7.5/server_admin/index.html>. "Consent required — If enabled, users have to consent to client access"; "If Display On Consent Screen is enabled, and the scope is added to a client that requires consent, the text specified in Consent Screen Text will be displayed on the consent screen."

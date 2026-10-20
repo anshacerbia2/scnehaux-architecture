@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-IAM-011
   title: An Invitee Without an Account Enrols at Redemption, After Proving the Address
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-10-19
   created_date: 2026-10-19
   created_by: Identity Platform Team
@@ -21,6 +21,7 @@ An Invitee Without an Account Enrols at Redemption, After Proving the Address.
 | Date       | Status   | ADR Type     | Reviewers                 | Approver                       |
 | ---------- | -------- | ------------ | ------------------------- | ------------------------------ |
 | 2026-10-19 | proposed | foundational | Architecture Review Board | Enterprise Architect — pending |
+| 2026-10-20 | accepted | foundational | Architecture Review Board | Enterprise Architect           |
 
 ## 3. Context
 

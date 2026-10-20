@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-012
   title: Scnehaux Organization Experience
   owner: Core Platform Team
-  version: 1.3.0
+  version: 1.4.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-08
+  last_reviewed: 2026-10-20
   parent_pad: PAD-PLT-002
 ---
 
@@ -44,7 +44,7 @@ The experience must make administrative scope explicit, prevent accidental cross
 ### Constraint
 
 - TypeScript is the application language. The browser application is a React single-page application built with Vite, and a BFF on Node.js (Fastify) holds the session and calls the Control API, conforming to `TDD-identity-experience-001` (1.1.0; §11 Amendment 1.1.0).
-- Scnehaux UI Platform packages become the design-system dependency once UI Platform ships its primitives. Until then the application uses its own component package, as identity-experience does (1.1.0).
+- Scnehaux UI Platform packages become the design-system dependency once UI Platform ships its primitives. Until then, and at most until 2027-04-20, the application uses its own component package, as identity-experience does, by the exception `ADR-ORG-008` (1.1.0, 1.4.0).
 - Keycloak is used for sign-in and administrative session assurance.
 - The browser never calls the Keycloak Admin API or Tenancy database.
 - Product roles and Product permissions are not administered here.
@@ -361,7 +361,7 @@ All queries and commands use the versioned protected API. The BFF passes:
 
 UI Platform is a build-time dependency for tokens, headless primitives, components, accessibility behavior, and interaction standards. The deployed application does not require a runtime UI Platform service.
 
-Until UI Platform ships its primitives, the application uses its own component package, as identity-experience does (1.1.0). Moving to UI Platform packages is a planned migration, not a redesign. Accessibility obligations do not wait for it: §9's WCAG 2.2 AA requirement applies to the application's own components.
+Until UI Platform ships its primitives, the application uses its own component package, as identity-experience does (1.1.0). That is a recorded, time-boxed exception, not an open-ended allowance: `ADR-ORG-008` permits it until 2027-04-20, names the rules it bypasses, and sets the exit, a re-export of the platform packages from one entry point (1.4.0). Moving to UI Platform packages is a planned migration, not a redesign. Accessibility obligations do not wait for it: §9's WCAG 2.2 AA requirement applies to the application's own components.
 
 ### 7.4 Observability
 
@@ -411,6 +411,8 @@ Every privileged page shows:
 - required reason and approval.
 
 Cross-tenant bulk selection is prohibited unless the provider role and operation explicitly allow it.
+
+The scope is always in view (1.4.0). Its kind, the Tenant when there is one, and the time left stay in view at every width, compacted to one sticky line on a small viewport. The full scope banner, with any long text, is in the page flow. Nothing else is required to stay in view: the environment, the session controls and the navigation become static there (`STD-GLB-FE-005 §3.10`).
 
 ### 8.5 Error Handling
 
@@ -551,6 +553,8 @@ Pipeline gates include:
 
 No production customer data or credentials are copied to lower environments.
 
+**Production status (1.4.0).** As of 2026-10-20, no system this SAD governs has reached production. The only deployment is a laptop BFF against the development server (`deploy/dev/imam-station.md`). Until this statement changes, the ADRs governing these systems are changed in place (`GDC-010 §2.4.2`).
+
 ## 11. Architecture Decisions
 
 Governed by:
@@ -560,6 +564,7 @@ Governed by:
 - approved UI Platform ADRs and standards.
 - ADR-GLB-FE-001, ADR-GLB-FE-003 and ADR-GLB-FE-011 — React, the meta-framework boundary, and the build toolchain (1.1.0).
 - ADR-IAM-008 — the privileged form selected per sign-in (1.2.0).
+- ADR-ORG-008 — the exception for local components until UI Platform ships them, expiring 2027-04-20 (1.4.0).
 
 ### Governing
 
@@ -592,7 +597,7 @@ Additional decisions may cover:
 
 The BFF stays as §4.4 and §8 require. It is the pattern identity-experience already builds and proves in CI (`TDD-identity-experience-001`): a Fastify server that holds the tokens server-side behind an opaque `__Host-` cookie, with three forgery defences and server-side refresh. One pattern for both experiences means one security posture to maintain, which is what this repository's design required from the start ("A divergence in this repository is a defect, not a local decision").
 
-UI Platform packages are deferred by the owner's decision (2026-10-01: keep the applications' own components until UI Platform resumes). §7.3 records the interim.
+UI Platform packages are deferred by the owner's decision (2026-10-01: keep the applications' own components until UI Platform resumes). §7.3 records the interim, and since 1.4.0 `ADR-ORG-008` bounds it.
 
 ### Amendment 1.2.0 (2026-10-07): one client, the form chosen per sign-in
 

@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-002
   title: Scnehaux Identity Experience
   owner: Identity Experience Team
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-IAM-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-08
+  last_reviewed: 2026-10-20
   parent_pad: PAD-PLT-001
 ---
 
@@ -259,7 +259,7 @@ sequenceDiagram
 ### 4.5 UI Platform Integration
 
 - UI Platform is a build-time dependency, not a runtime identity dependency.
-- Identity Experience uses approved design tokens, primitives, accessibility helpers, and theming contracts.
+- Identity Experience uses approved design tokens, primitives, accessibility helpers, and theming contracts. Until the UI Platform releases them, and at most until 2027-04-20, a local package with the same APIs and token names stands in, by the exception `ADR-IAM-012` (2.2.0).
 - Identity-specific security messages, form states, recovery flows, and consent semantics remain in this system.
 - A UI Platform outage cannot break already deployed identity experiences.
 
@@ -463,7 +463,7 @@ Runbooks cover:
 - safe copy for recovery, consent, session, and destructive actions;
 - no color-only security meaning;
 - localization-ready messages;
-- current administration scope is always visible.
+- current administration scope is always visible (2.2.0): the scope line stays in view at every width, compacted to one sticky line on a small viewport, and nothing else is required to stay in view. The environment, the session controls and the navigation become static there (`STD-GLB-FE-005 §3.10`).
 
 ### 8.8 Blast Radius
 
@@ -538,7 +538,7 @@ The pipeline must:
 - Product permission management in Identity Admin Portal;
 - canonical Tenant/Membership administration in Identity Experience;
 - mandatory Module Federation runtime for trust-critical login;
-- external component-library bypass of UI Platform without an approved exception.
+- external component-library bypass of UI Platform without an approved exception. The approved exception is `ADR-IAM-012`, which lets `packages/ui` stand in for the UI Platform packages until 2027-04-20 (2.2.0).
 
 ## 11. Compatibility Strategy
 

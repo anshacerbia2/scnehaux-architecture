@@ -3,7 +3,7 @@ doc_meta:
   id: STD-GLB-FE-009
   title: Enterprise Accessibility & Internationalization Standard
   owner: Principal Frontend Architect
-  version: 2.0.2
+  version: 2.0.3
   status: approved
   classification: restricted
   governed_by: [GDC-000]
@@ -43,7 +43,7 @@ A Component ACR is evidence for a component. VPAT-based reporting is reserved fo
 
 Interactive elements use native elements where their semantics and behavior fit. Custom composite widgets document their applicable APG pattern, focus model, required and optional keys, typeahead, disabled behavior, and controlled/uncontrolled state.
 
-Every operable element is reachable and usable with the keyboard. Focus is visible (WCAG 2.2 SC 2.4.7) and the focused element is not entirely hidden by author-created content (SC 2.4.11). The indicator is an `outline`; a shadow may enhance it but never replaces it, because forced-colors mode computes `box-shadow` as `none` (STD-GLB-FE-005 section 3.9). Modal overlays contain focus according to their pattern and restore focus to a valid target on close; non-modal overlays do not trap focus.
+Every operable element is reachable and usable with the keyboard. Focus is visible (WCAG 2.2 SC 2.4.7) and the focused element is not entirely hidden by author-created content (SC 2.4.11). A sticky region is compacted to one line on a small viewport and pads the scroll position by its height, as STD-GLB-FE-005 §3.10 states (2.0.3). The indicator is an `outline`; a shadow may enhance it but never replaces it, because forced-colors mode computes `box-shadow` as `none` (STD-GLB-FE-005 section 3.9). Modal overlays contain focus according to their pattern and restore focus to a valid target on close; non-modal overlays do not trap focus.
 
 Icon-only controls expose an accessible name. Dynamic announcements use an appropriate live region. Decorative images use empty alternative text.
 

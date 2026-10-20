@@ -19,16 +19,25 @@ Standardizing on Atlas Declarative schema Management for Safe and Traceable Data
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-05-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
-| 2026-08-18 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver             |
+| ---------- | ----------------- | ------------ | ------------------------- | -------------------- |
+| 2026-05-01 | accepted          | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-08-18 | accepted          | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-10-20 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
 
 **Amended 2026-08-18: the destructive gate no longer depends on `atlas migrate lint`.**
 Since Atlas v0.38 that command aborts on the free CLI — _"'atlas migrate lint' is
 available only to Atlas Pro users"_ — so the mechanism this decision originally named
 cannot run without a commercial account. Atlas remains the schema tool; §5 now states the
 gate as a required property and lists the mechanisms that satisfy it.
+
+**Amended 2026-10-20, in place,** as the owner approved that day: §5.1 item 2 names squawk, a
+parsing PostgreSQL migration linter, as the preferred form of the destructive-statement gate, and
+§5.4 pins the Atlas CLI. Three lines written before the 2026-08-18 amendment, in §6 and §7, contradicted
+it and are corrected: a pipeline that meets §5.1 needs no waiver. It is edited in place because no
+system this decision governs is in production (GDC-010 §2.4.2). The repositories that run Atlas
+migrations are identity-control and organization-control, and both run only on the development
+server (`SAD-001` §9.1, `SAD-004` §10.3).
 
 ## 3. Context
 
@@ -48,14 +57,20 @@ All database schemas must be declaratively defined in a `schema.hcl` file under 
 
 _Amended 2026-08-18._
 
-The pipeline MUST block a destructive schema change from reaching production without a reviewed multi-phase plan. That requirement is the decision. The mechanism is not, because the mechanism originally named is no longer available: `atlas migrate lint` became an Atlas Pro feature in v0.38.
+The pipeline MUST block a destructive schema change from reaching production without a reviewed multi-phase plan. That requirement is the decision. The mechanism is not, because the mechanism originally named is no longer available: `atlas migrate lint` became an Atlas Pro feature in v0.38 [R1].
 
 Any combination of the following satisfies the gate, and a pipeline MUST implement at least the first two:
 
 1. **`atlas migrate validate`** on every pull request. Free, and it fails when a committed migration was edited after generation — which is how a reviewed plan and an applied plan quietly stop being the same artifact.
-2. **A destructive-statement gate** over the generated migration directory, blocking `DROP TABLE`, `DROP SCHEMA`, `DROP COLUMN`, `DROP CONSTRAINT`, `DROP INDEX`, `RENAME`, and `TRUNCATE` unless the line carries an explicit reviewed annotation. This reads text rather than a parsed plan and is therefore cruder than the analyzer it replaces; it is required because it fails, which the absent analyzer does not.
+2. **A destructive-statement gate** over the generated migration directory, blocking `DROP TABLE`, `DROP SCHEMA`, `DROP COLUMN`, `DROP CONSTRAINT`, `DROP INDEX`, `RENAME`, and `TRUNCATE` unless the statement carries an explicit reviewed annotation. It is required because it fails, which the absent analyzer does not.
+   - **Its preferred form is squawk (amended 2026-10-20).** squawk is a "Linter for Postgres migrations & SQL" [R2]. It parses: "Squawk uses its parser (based on rust-analyzer's parser) to create a CST" [R2]. So a destructive word inside a comment is not flagged, and an approval names the rule it waives: "Rule violations can be ignored via the `squawk-ignore` comment" [R2], for example `-- squawk-ignore ban-drop-column`, which covers one rule, not every rule on the line. Its rules cover every statement listed above and more; `ban-drop-column` exists because "Dropping a table or foreign table column or a composite type attribute may break existing clients" [R3]. A statement-aware gate matters because `ALTER TABLE` takes "An ACCESS EXCLUSIVE lock … unless explicitly noted" [R4].
+   - **How it runs.** From a pinned release, by version and checksum, as `STD-GLB-009` §Container Images rule 6 asks of scanners, with its configuration committed as `.squawk.toml`. It lints new migrations only: editing an applied migration breaks `atlas.sum` and fails item 1, so the existing `atlas:destructive-approved` lines stay, and new approvals use rule-scoped `squawk-ignore` comments.
+   - **A text match still satisfies the gate** where squawk is not yet in place. It reads text rather than a parsed plan, and is therefore cruder.
+   - **squawk is a community project**, Apache-2.0 and actively released, not a vendor product or a standard. It is preferred over a word list on its mechanism, not on a claimed adopter list.
 3. **A directory-and-schema synchronisation check**: run `atlas migrate diff` and assert the working tree stayed clean. A migration directory that no longer matches `schema.hcl` is drift that the next deploy applies silently.
-4. **`atlas migrate lint` with an Atlas Pro login**, where a commercial account and a pipeline token exist. This is the strongest option and is preferred where available, because it analyses the plan rather than its text.
+4. **`atlas migrate lint` with an Atlas Pro login**, where a commercial account and a pipeline token exist. This is the strongest option and is preferred where available, because it analyses the plan rather than its text. Atlas Pro costs "$9 per developer, per month plus usage based pricing for CI/CD pipelines and databases" [R5], and buying it stays the preferred upgrade.
+
+A pipeline that implements items 1 and 2 meets this gate. It is not a waiver, and a ROADMAP does not describe it as one.
 
 ### 5.2 Declarative Scope Is Per Schema
 
@@ -75,12 +90,18 @@ Where a shared library ships the DDL for a schema its own code queries, the cons
 
 A column added to a shared table and a change to the function that queries it are one change. Splitting them across two repositories permits a deployment in which one has shipped and the other has not, and re-declaring the schema in a consumer's `schema.hcl` creates exactly that split.
 
+### 5.4 The Standard Atlas Distribution, Pinned
+
+_Amended 2026-10-20._
+
+Pipelines run the standard Atlas CLI, pinned to an exact release, never `version: latest`. Atlas has "two editions: the standard distribution (the standard Atlas CLI), which includes all database features and integrations and unlocks Atlas Pro capabilities after atlas login, and the Community Edition, a minimal build distributed under the Apache 2.0 license" [R6]. The Community Edition leaves out migration linting, among other features [R6], so it is not used. The standard distribution is licensed under the Atlas MSA, not as open source [R6].
+
 ## 6. Consequences
 
 ### Positive
 
 - **Zero Schema Drift**: The database state in Git (`schema.hcl`) matches the target database state exactly.
-- **Safety Gatekeeping**: Destructive modifications are automatically detected and blocked by the CI/CD pipeline, requiring explicit ARB waiver and admin override.
+- **Safety Gatekeeping**: Destructive modifications are automatically detected and blocked by the CI/CD pipeline. Each one passes only with a reviewed, rule-scoped annotation in its migration (§5.1, amended 2026-10-20).
 - **Transactional Migrations**: Fails-safe; Atlas rolls back failed migration runs automatically if supported by the engine.
 
 ### Negative
@@ -114,7 +135,7 @@ A column added to a shared table and a change to the function that queries it ar
     --to "file://schema.hcl" \
     --dev-url "docker://postgres/16"
   ```
-- Pipeline runs `atlas migrate lint` on every Pull Request to enforce paved road conventions.
+- Pipeline runs `atlas migrate validate`, the destructive-statement gate (squawk preferred) and the synchronisation check on every Pull Request (§5.1), and `atlas migrate lint` only where an Atlas Pro login exists (amended 2026-10-20).
 
 ## 7. Compliance Impact
 
@@ -125,11 +146,11 @@ A column added to a shared table and a change to the function that queries it ar
 
 ### Compliance Status
 
-Compliant.
+Compliant. A pipeline that implements §5.1 items 1 and 2 is compliant without Atlas Pro (amended 2026-10-20).
 
 ### Required Waivers
 
-None.
+None. The gate of §5.1 is met without `atlas migrate lint`, so no waiver exists or is needed.
 
 ## 8. Alternatives Considered
 
@@ -144,3 +165,27 @@ None.
 - **Pros**: Direct control over exact commands run by the DBA.
 - **Cons**: Extremely error-prone, untraceable, and leads to massive environment drift (production database states diverging from dev).
 - **Why Rejected**: Unacceptable risk of production downtime due to human error.
+
+### Alternative C: Buy Atlas Pro Now
+
+- **Pros**: the plan analyzer of §5.1 item 4, and policies modelled in HCL [R7].
+- **Cons**: a per-developer and usage-based cost [R5], and a vendor login in every pipeline.
+- **Why Rejected**: not rejected, deferred. It stays the preferred upgrade; until it is bought, items 1 to 3 are the gate.
+
+### Alternative D: Keep the Word List and Call It Debt
+
+- **Pros**: no change.
+- **Cons**: a word list flags comments and cannot scope an approval to one rule, and calling a compliant gate "debt" or "a waiver" misstates §5.1.
+- **Why Rejected**: squawk parses the statement at the same cost.
+
+## 9. References
+
+### Informative
+
+- **[R1]** Ariga, _Verifying Migration Safety_, Atlas docs, box "Atlas Pro Feature", accessed 2026-10-20. <https://atlasgo.io/versioned/lint>. "Starting with v0.38, the atlas migrate lint command is available only to Atlas Pro users. To enable it, run: atlas login"
+- **[R2]** squawk, `README.md` (master), accessed 2026-10-20. <https://github.com/sbdchd/squawk>. "Linter for Postgres migrations & SQL"; "Prevent unexpected downtime caused by database migrations and encourage best practices around Postgres schemas and SQL"; §How it Works: "Squawk uses its parser (based on rust-analyzer's parser) to create a CST"; §Disabling rules via comments: "Rule violations can be ignored via the `squawk-ignore` comment". Licence Apache-2.0, per the GitHub API.
+- **[R3]** squawk docs, _ban-drop-column_, accessed 2026-10-20. <https://squawkhq.com/docs/ban-drop-column>. "Dropping a table or foreign table column or a composite type attribute may break existing clients."
+- **[R4]** PostgreSQL 18 Documentation, _ALTER TABLE_, accessed 2026-10-20. <https://www.postgresql.org/docs/current/sql-altertable.html>. "An ACCESS EXCLUSIVE lock is acquired unless explicitly noted."
+- **[R5]** Ariga, _Pricing_, Atlas Pro (Team), accessed 2026-10-20. <https://atlasgo.io/pricing>. "Starting from: $9 per developer, per month plus usage based pricing for CI/CD pipelines and databases"; feature "Migration linting & safety checks". Atlas Enterprise lists "Offline licenses for CI/CD".
+- **[R6]** Ariga, _Community Edition_, Atlas docs, accessed 2026-10-20. <https://atlasgo.io/community-edition>. "Atlas is available in two editions: the standard distribution (the standard Atlas CLI), which includes all database features and integrations and unlocks Atlas Pro capabilities after atlas login, and the Community Edition, a minimal build distributed under the Apache 2.0 license." The comparison table lists the licences "Apache 2.0 | Atlas MSA", and migration linting as absent from the Community Edition.
+- **[R7]** Ariga, _Atlas HCL schema_, §Policies, accessed 2026-10-20. <https://atlasgo.io/atlas-schema/hcl>. "Policies are available only to Atlas Pro users. To use this feature, run: atlas login"

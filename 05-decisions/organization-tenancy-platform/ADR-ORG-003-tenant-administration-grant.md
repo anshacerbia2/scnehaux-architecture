@@ -17,13 +17,20 @@ Tenant Administration Is a Recorded Grant, Checked with Current Membership.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-10-04 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver             |
+| ---------- | ----------------- | ------------ | ------------------------- | -------------------- |
+| 2026-10-04 | accepted          | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-10-20 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
+
+**Amended 2026-10-20, in place,** on two points the owner approved on 2026-10-20 as recommended: §5.5
+adds how a restore moves Tenant security versions and provider grant versions past what consumers
+hold, and §5.6 lets a provider suspend or revoke one Membership inside a Tenant. §6 no longer leaves
+the second open. It is edited in place because no system this decision governs is in production
+(GDC-010 §2.4.2): `SAD-004` §10.3 records that the only deployment is the development server.
 
 ## 3. Context
 
-The Organization Control API recognizes three callers (`ADR-ORG-001 §5.11`). Its design reads a
+The Organization Control API recognizes its callers by record (`ADR-ORG-001 §5.11`). Its design reads a
 record for two of them:
 
 - **A provider** holds a provider grant in force.
@@ -154,6 +161,65 @@ not change under the operator while security versions are reconciled (`SAD-004 �
   restored database before the service starts, as a row naming no actor. Only a pause may name none,
   so lifting one is always a provider's named decision.
 
+**Tenant and provider grant versions are bumped before the service serves (amended 2026-10-20).** A
+restore to an older point gives back Tenant security versions and provider grant versions that
+consumers have already seen superseded, and a consumer discards a lower version as already applied.
+Memberships are advanced from the consumer's report (`SAD-004 §6.6`). Tenants and grants are moved
+past what any consumer holds by a margin, as etcd restores its revision: "In order to ensure the
+revisions are never decreasing after a restore, you can supply the --bump-revision option" [R9]. etcd
+names the danger this avoids: "Restoring to an older revision may not correctly refresh the caches,
+causing unpredictable and inconsistent behavior in the controllers" [R9]. The restore, before the
+service serves and beside the pause above:
+
+1. **Adds a margin to every version.** Every `tenant_security_version` and `grant_version` gains
+   M = 10^9. etcd sizes its own margin the same way: "you may cover a week old snapshot with bumping
+   by 1'000'000'000 assuming that etcd runs with less than 1500 writes per second" [R9]. The versions
+   are `bigint`, and no row changes 10^9 times within a backup window.
+2. **Publishes the withdrawn ones.** Each suspended, offboarding or retired Tenant, and each revoked or
+   ended grant, is published at its new version. That only narrows access.
+3. **Publishes no active row.** Publishing an active row could grant again what a lost withdrawal
+   took away. It is the same rule as for Memberships: a restore never widens access.
+4. **Makes every consumer reconcile.** etcd marks the bumped revisions compacted so that "all watches
+   are terminated" and caches are invalidated [R9]. Here every consumer runs its reconciliation
+   (`ADR-ORG-001 §5.7`).
+
+The rows and their outbox entries are written in one transaction with no actor, as the pre-serve
+pause is. No consumer contract changes: identity-control and foundation-reference apply only a higher
+version and check no gap. The bump also ends "the same version, two states" for Tenants and grants,
+because no version a consumer holds can equal a new one. Extending the consumer report to Tenants and
+grants is rejected: it changes identity-control and foundation-reference, and gains nothing the bump
+lacks.
+
+### 5.6 A Provider May Suspend or Revoke One Membership Inside a Tenant (2026-10-20)
+
+A provider in force may suspend or revoke one Membership inside a Tenant, with
+`POST /v1/tenants/{tenant_id}/memberships/{membership_id}/suspend` and `…/revoke`. It contains: a
+lost withdrawal after a restore, or a compromised member in a cross-tenant exposure.
+
+- **Suspend and revoke only.** Never grant and never restore. Least privilege allows "only authorized
+  accesses … that are necessary to accomplish assigned organizational tasks" [R7], and the task is
+  containment: AC-2(13) asks to "Disable accounts of individuals within [Assignment: time period] of
+  discovery of [Assignment: significant risks]" [R10]. Giving access back stays the Tenant
+  administrator's act.
+- **An ordinary provider act, not break-glass.** In this estate break-glass means the emergency grants
+  (`ADR-ORG-002 §5.2`). The route needs a provider in force: an approved activation with its reason,
+  as Entra's just-in-time activation asks for a justification [R13], or an emergency grant, whose
+  use is then reviewed like any emergency use. Privileged accounts stay restricted to providers
+  (AC-6(5) [R10]).
+- **Usable at any time,** not only during a pause.
+- **Its command shape.** It requires `X-Administrative-Reason`, an `Idempotency-Key` and the
+  Membership's `expected_version`, as `STD-GLB-001` asks of a command on another actor's record. It
+  goes through the Membership state machine and its events, on the priority lane.
+- **Recorded where the Tenant sees it.** It runs through `db.WithProviderInTenant`, so the
+  privileged-access row names the Tenant, and the Tenant's administrators see it in
+  `GET /v1/provider-access`. AC-6(9): "Log the execution of privileged functions" [R10]. Google's
+  Access Transparency is the model: its logs "include details such as the affected resource and
+  action, the time of the action, the reason for the action, and information about the accessor"
+  [R11].
+- **No Tenant approval first.** It only narrows access, and it is used in incidents. Google's Access
+  Approval itself lets a request "be automatically approved without the customer's action to address
+  time-sensitive outages", and such requests "are logged in an auto approved state" [R12].
+
 ## 6. Consequences
 
 ### Positive
@@ -172,11 +238,12 @@ not change under the operator while security versions are reconciled (`SAD-004 �
   administrator with a token alone. It must first grant itself a Membership and an administration
   grant through a provider, and present `aal2`.
 
-- **A paused Tenant administrator cannot re-apply a withdrawal the restore lost (§5.5).** No
-  provider route transitions one Membership inside a Tenant, so until the pause is lifted the
-  containment for such a Membership is a Tenant suspension. Whether a provider may suspend or revoke
-  one Membership inside a Tenant, with its reason recorded, is not decided here: it widens what a
-  provider does inside a Tenant, and is reopened by its own amendment.
+- **A paused Tenant administrator cannot re-apply a withdrawal the restore lost (§5.5).** A provider
+  re-applies it instead, through §5.6, which widens what a provider does inside a Tenant to
+  suspending and revoking one Membership (amended 2026-10-20). A provider cannot grant or restore
+  one.
+- **A restore bumps every Tenant and grant version by 10^9 (§5.5).** The numbers jump, and every
+  consumer reconciles before normal operation.
 
 ### Operational
 
@@ -237,6 +304,28 @@ None.
 relationship, not a Product permission". Folding authority into it would make every Membership
 change an authority change, and every consumer of the projection would carry it.
 
+### Alternative D — Extend the Consumer Report to Tenants and Grants (§5.5)
+
+**Benefits:** the versions move only as far as a consumer holds them.
+
+**Rejected because:** it changes identity-control's and foundation-reference's report contract, and
+the bump needs no contract change. The margin is the bound etcd sizes explicitly [R9].
+
+### Alternative E — The Restore Runbook Alone (§5.5)
+
+**Rejected because:** a person repairing versions by hand leaves "the same version, two states" open,
+and the runbook would carry what a script should run (`STD-GLB-009` §A procedure step is a script).
+
+### Alternative F — A Provider May Change One Membership Any Way, Restore and Grant Included (§5.6)
+
+**Rejected because:** the task is containment, and least privilege gives no more than the task needs
+[R7][R10]. Restoring access is the Tenant administrator's decision.
+
+### Alternative G — A Pause That Exempts Named Tenants, or a Tenant Suspension Alone (§5.6)
+
+**Rejected because:** both act on a whole Tenant to fix one Membership, and neither helps outside a
+pause.
+
 ## 9. References
 
 - **[R1]** Auth0, _Organization Roles_ and _Add Roles to Organization Members_,
@@ -295,3 +384,44 @@ change an authority change, and every consumer of the projection would carry it.
   - §15.6.4: "The 503 (Service Unavailable) status code indicates that the server is currently unable
     to handle the request due to a temporary overload or scheduled maintenance, which will likely be
     alleviated after some delay."
+- **[R9]** etcd, _Disaster recovery_ (v3.6 operations guide), §Revision Difference and §Restoring
+  with revision bump, <https://etcd.io/docs/v3.6/op-guide/recovery/>, accessed 2026-10-20.
+  - "When you are restoring a cluster, existing clients may perceive the revision going back by many
+    hundreds or thousands"; "Restoring to an older revision may not correctly refresh the caches,
+    causing unpredictable and inconsistent behavior in the controllers."
+  - "When restoring from a snapshot in the context of either: known consumers of the watch API, local
+    cached copies of etcd data or when using Kubernetes in general - it is highly recommended to
+    restore using “revision bumps” below."
+  - "In order to ensure the revisions are never decreasing after a restore, you can supply the
+    --bump-revision option"; "Since each write to etcd increases the revision by one, you may cover a
+    week old snapshot with bumping by 1'000'000'000 assuming that etcd runs with less than 1500
+    writes per second."
+  - "In the context of Kubernetes controllers, it is important to also mark all the revisions,
+    including the bump, as compacted using --mark-compacted . This ensures that all watches are
+    terminated and etcd does not respond to requests about revisions that happened after taking the
+    snapshot - effectively invalidating its informer caches."
+- **[R10]** NIST SP 800-53 Rev. 5, from the OSCAL catalog
+  <https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json>,
+  accessed 2026-10-20:
+  - AC-2(13): "Disable accounts of individuals within [Assignment: time period] of discovery of
+    [Assignment: significant risks]."
+  - AC-6(5): "Restrict privileged accounts on the system to [Assignment: personnel or roles]."
+  - AC-6(9): "Log the execution of privileged functions." Its guidance: "Logging and analyzing the
+    use of privileged functions is one way to detect such misuse and, in doing so, help mitigate the
+    risk from insider threats and the advanced persistent threat."
+- **[R11]** Google Cloud, _Access Transparency overview_,
+  <https://cloud.google.com/assured-workloads/access-transparency/docs/overview>, accessed
+  2026-10-20: "Access Transparency logs record the actions that Google personnel take when accessing
+  Customer Data. Access Transparency log entries include details such as the affected resource and
+  action, the time of the action, the reason for the action, and information about the accessor."
+- **[R12]** Google Cloud, _Access Approval overview_, §Access Approval exclusions,
+  <https://cloud.google.com/assured-workloads/access-approval/docs/overview>, accessed 2026-10-20:
+  "the approval request may be automatically approved without the customer's action to address
+  time-sensitive outages. Such auto-approved Access Approval requests are logged in an auto approved
+  state."
+- **[R13]** Microsoft, _What is Microsoft Entra Privileged Identity Management?_,
+  <https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure>,
+  accessed 2026-10-20: "Provide just-in-time privileged access to Microsoft Entra ID and Azure
+  resources"; "Use justification to understand why users activate"; "Get notifications when
+  privileged roles are activated"; "Download audit history for internal or external audit". The
+  pattern §5.6 relies on: a provider in force only through an activation with a reason.

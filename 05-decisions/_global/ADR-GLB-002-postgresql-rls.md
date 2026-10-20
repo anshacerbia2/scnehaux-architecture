@@ -6,7 +6,7 @@ doc_meta:
   status: accepted
   created: 2026-01-01
   created_date: 2026-01-01
-  last_updated: 2026-08-22
+  last_updated: 2026-10-20
   created_by: Enterprise Architect
 ---
 
@@ -20,9 +20,17 @@ Mandating PostgreSQL Row-Level Security (RLS) as the Primary Multi-Tenant Isolat
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                    | Approver               |
-| ---------- | -------- | ------------ | ---------------------------- | ---------------------- |
-| 2026-05-01 | accepted | foundational | Architecture, Security, Data | Architecture Authority |
+| Date       | Status            | ADR Type     | Reviewers                    | Approver               |
+| ---------- | ----------------- | ------------ | ---------------------------- | ---------------------- |
+| 2026-05-01 | accepted          | foundational | Architecture, Security, Data | Architecture Authority |
+| 2026-10-20 | accepted, amended | foundational | Architecture, Security, Data | Architecture Authority |
+
+**Amended 2026-10-20, in place,** in §6 Operational Impact, as the owner approved that day. It asked
+the schema tool to generate and test RLS policies, which the free Atlas distribution cannot do. It now
+states how policies are applied and verified until the tool models them. It is edited in place
+because no system this decision governs is in production (GDC-010 §2.4.2): the repositories that
+apply RLS, identity-control and organization-control, run only on the development server (`SAD-001`
+§9.1, `SAD-004` §10.3).
 
 ## 3. Context
 
@@ -89,7 +97,7 @@ Compliance is verified by reading `pg_class.relforcerowsecurity` in addition to 
 
 ### Operational Impact
 
-- Requires the database migration system (Atlas) to support RLS DDL policy generation and testing.
+- Policies are applied by an idempotent SQL stage of the migration job and verified at runtime by a posture assertion, until the schema tool models them (amended 2026-10-20). Atlas models policies in HCL only in Atlas Pro: "Policies are available only to Atlas Pro users. To use this feature, run: atlas login" [R1]. organization-control applies `internal/controldb/rls.sql` after `atlas migrate apply`, and `posture.AssertIsolation` reports every table in an RLS schema that lacks `ENABLE`, `FORCE` or a policy. Buying Atlas Pro moves the policies into `schema.hcl` (`ADR-GLB-004 §5.1` item 4).
 
 ### Security Impact
 
@@ -158,3 +166,9 @@ None.
 - **Pros**: Perfect hardware-level isolation.
 - **Cons**: Extremely expensive infrastructure footprints, slow schema migrations (running migrations across thousands of databases), and massive connection pool exhaustion.
 - **Why Rejected**: Unviable due to high operational costs and scaling constraints for thousands of small tenants.
+
+## 9. References
+
+### Informative
+
+- **[R1]** Ariga, _Atlas HCL schema_, §Policies, accessed 2026-10-20. <https://atlasgo.io/atlas-schema/hcl>. "Policies are available only to Atlas Pro users. To use this feature, run: atlas login"

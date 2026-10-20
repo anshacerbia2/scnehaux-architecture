@@ -18,10 +18,17 @@ The Invited Person Accepts an Invitation, Signed In as Themselves.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                       |
-| ---------- | -------- | ------------ | ------------------------- | ------------------------------ |
-| 2026-10-19 | proposed | foundational | Architecture Review Board | Enterprise Architect — pending |
-| 2026-10-20 | accepted | foundational | Architecture Review Board | Enterprise Architect           |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver                       |
+| ---------- | ----------------- | ------------ | ------------------------- | ------------------------------ |
+| 2026-10-19 | proposed          | foundational | Architecture Review Board | Enterprise Architect — pending |
+| 2026-10-20 | accepted          | foundational | Architecture Review Board | Enterprise Architect           |
+| 2026-10-20 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect           |
+
+**Amended 2026-10-20, in place,** after acceptance, on one point the owner approved the same day: a
+retry of the issue command answers the invitation without its token, and the token is never in the
+idempotency record (§5.5, `STD-GLB-001` 1.7.0). §3 also corrects a statement the code contradicted.
+It is edited in place because no system this decision governs is in production (GDC-010 §2.4.2):
+`SAD-004` §10.3 and `SAD-012` §10.4 record that the only deployment is the development server.
 
 ## 3. Context
 
@@ -33,7 +40,9 @@ How the flow is built (`TDD-organization-control-004` 1.12.0, §Invitation Flow,
 
 - **Issue.** `POST /v1/invitations` is Tenant-scoped. It records the intent, the target address, an
   expiry (`ORGANIZATION_INVITATION_TTL`, 7 days) and the SHA-256 of a 256-bit token. The token is
-  returned once to the administrator and never stored.
+  returned once to the administrator. It was described as never stored, but the issue command's
+  idempotency record keeps the rendered answer, token included (found 2026-10-20). §5.5 removes it
+  from that record.
 - **Verify.** `POST /v1/invitations/verify-identity` is provider-scoped. It records that a Principal
   holding the invited address exists, and moves the invitation to `identity_verified`. The design
   says identity-control drives it: identity-control consumes `membership.invitation.requested`,
@@ -201,6 +210,18 @@ COMMIT
   delivers nothing. Organization Experience shows the link once, when the invitation is issued.
   The administrator sends it to the person by a channel of their own. It is never shown again; a
   lost link is revoked and issued again.
+- **A retry answers without the token (amended 2026-10-20).** The issue command records its answer
+  as the invitation alone, and answers the token only live. A retry with the same `Idempotency-Key`
+  therefore answers the invitation issued, without its token. A link lost that way is lost like any
+  other: it is revoked and issued again. That is `STD-GLB-001` 1.7.0's rule for a secret answered
+  once, which follows OWASP, "The best way to protect sensitive information is to not store it in the
+  first place" [R13], and AWS, whose secret access key "can be retrieved only at the time you create
+  it" [R14]. The IETF draft asks a replay to "respond with the result of the previously completed
+  operation" [R15]: the result is the invitation, and it is returned.
+- **Organization Experience shows a replay as such.** When the answer carries no token, the page says
+  the invitation was already issued and its link cannot be shown again, names the invitation, and
+  offers to revoke it and issue a new one. It uses a new `Idempotency-Key` after each successful
+  answer, so a deliberate second issue to the same address is a new command, not a replay.
 
 ### 5.6 Where the Person Accepts
 
@@ -215,7 +236,7 @@ Organization Experience serves the page, to any signed-in person.
 ### 5.7 An Invitee Without an Account
 
 A person with no Principal enrols from the invitation, proving the invited address with a code,
-and then accepts as in §5.1 (`ADR-IAM-011`, proposed). There is still no open self-registration.
+and then accepts as in §5.1 (`ADR-IAM-011`, accepted 2026-10-20). There is still no open self-registration.
 Until ADR-IAM-011 is built, a provider creates the Principal and issues the first credential
 (`ADR-IAM-010`), and the person proves the creation address before accepting.
 
@@ -226,7 +247,7 @@ Until ADR-IAM-011 is built, a provider creates the Principal and issues the firs
 | organization-control    | `TDD-organization-control-004`: acceptance as §5.1 to §5.4. The self caller on `accept`; the token-hash read (§5.2); the identity-control client (§5.3); `verify-identity`, `identity_verified` and its unique-index state removed; the lookup's constant `next` becomes `accept`; the issue command requests delivery (§5.5). `TDD-organization-control-001` lists the route under the self caller. SAD-004 §5.5's diagram is redrawn |
 | identity-control        | `TDD-identity-control-008` (or 001): `POST /v1/principals/{principal_id}/identifiers:match`, Organization Control's workload alone, a boolean answer, counting only `active` addresses with `verified_at` set, no address in a response or a log. `TDD-identity-control-008`: a command that sends a proof code to an `active`, unproven address, so a creation address can be proven                                                  |
 | identity-kernel         | None. The claim set and the no-mail rule stay                                                                                                                                                                                                                                                                                                                                                                                          |
-| organization-experience | `TDD-organization-experience-002`: the link shown once on issue (§5.5); the acceptance page and its BFF route for a person with no Tenant (§5.6). The BFF guard's provider-only list loses `/v1/invitations/verify-identity`                                                                                                                                                                                                           |
+| organization-experience | `TDD-organization-experience-002`: the link shown once on issue (§5.5), a replay shown without it and a new key after each answer (2026-10-20); the page branches on the problem `type`, not on `404`; the acceptance page and its BFF route for a person with no Tenant (§5.6). The BFF guard's provider-only list loses `/v1/invitations/verify-identity`                                                                            |
 | identity-experience     | `TDD-identity-experience-002`: the account application offers to prove an unproven creation address                                                                                                                                                                                                                                                                                                                                    |
 
 The route `verify-identity` has no caller outside organization-control's own tests and
@@ -417,3 +438,16 @@ which discloses people outside their Tenant.
   organization."; for a new user, "the user is forced to provide the same email address used to
   send the invitation."; "When a user successfully accepts an invitation, the invitation is
   automatically deleted from the system."
+- **[R13]** OWASP, _Cryptographic Storage Cheat Sheet_, §Minimize the Storage of Sensitive
+  Information, <https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html>,
+  accessed 2026-10-20: "The best way to protect sensitive information is to not store it in the
+  first place."
+- **[R14]** Amazon Web Services, _Manage access keys for IAM users_,
+  <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html>, accessed
+  2026-10-20: "The secret access key can be retrieved only at the time you create it. If you lose
+  your secret access key, you must delete the access key and create a new one."
+- **[R15]** IETF HTTPAPI WG, _The Idempotency-Key HTTP Header Field_,
+  draft-ietf-httpapi-idempotency-key-header-07 (expired 2026-04-18, work in progress),
+  <https://www.ietf.org/archive/id/draft-ietf-httpapi-idempotency-key-header-07.txt>, accessed
+  2026-10-20. §2.6: "The request was retried after the original request completed. The resource
+  SHOULD respond with the result of the previously completed operation, success or an error."

@@ -17,9 +17,15 @@ Client Registration Ownership and the Developer Console's Authority.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-10-01 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver             |
+| ---------- | ----------------- | ------------ | ------------------------- | -------------------- |
+| 2026-10-01 | accepted          | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-10-20 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
+
+**Amended 2026-10-20, in place,** with §5.11: whether a client asks a person's consent is derived
+from its audience class and is never a registration field. The owner approved it on 2026-10-20. It
+is edited in place because no system this decision governs is in production (GDC-010 §2.4.2):
+`SAD-001` §9.1 and `SAD-002` record that the only deployment is the development server.
 
 ## 3. Context
 
@@ -126,6 +132,10 @@ The class bounds more than revocation. An access token outlives the session that
 - **It validates as registration does.** Only an active `confidential` client. The URI "MUST be an absolute URI" and "MUST NOT include a fragment component" [R19], has no credentials or wildcard, and is `https` in production (`ADR-IAM-009 §5.1`). Moving to the registered URI, or removing one that is not registered, is refused.
 - **The kernel is written before the commit, and the sweep confirms first.** The apply writes the URI under the registration's row lock, then the kernel client's back-channel logout URL with front-channel logout off, and rolls back on a kernel failure. The drift sweep reads a differing URI again under the registration's share lock before it repairs it, so a sweep between the kernel write and the commit does not put the old URI back.
 - **A logout already sent is not repeated.** The kernel "should not retransmit a Back-Channel Logout Request unless the OP suspects that previous transmissions may have failed due to potentially recoverable errors" [R19]. A session removed during the change is told to whichever URI the client held at that instant, and the next one goes to the new URI.
+
+### 5.11 Consent Is Derived From the Audience Class (2026-10-20)
+
+**Whether a client asks consent is not a registration field.** Registration and adoption set it from the audience class, as `STD-IAM-002 §3.6` states: an `external` registration requires consent, and no other class does. Every vendor ties consent to whether a party is third-party, not to a toggle. Auth0: "Third-party applications always require consent and cannot skip the consent dialog" [R20]. A free field would let a registrant make an `external` client consent-free, so the Developer Console offers none. A difference between the kernel client's consent setting and the one its class derives is drift, and the reconciler repairs it. The class follows who operates the client, not who wrote it: "“Third-party” refers to operational control, not authorship" [R21].
 
 ## 6. Consequences
 
@@ -246,6 +256,12 @@ None.
 
 **Rejected because:** retirement deletes the kernel client, so a moved endpoint would cost the client its sessions, keys and audience for the time a new registration takes. A trust change of the same weight as a redirect URI already has a governed route, with a second person in production [R1].
 
+### Alternative M — A Registrant Chooses Consent per Client (§5.11)
+
+- **Pros**: one field, and every case is the registrant's to decide.
+- **Cons**: an `external` client could be registered consent-free, which no source permits [R20].
+- **Why Rejected**: the class already decides it, so the field could only be set wrong.
+
 ## 9. References
 
 ### Normative
@@ -273,3 +289,5 @@ None.
 - **[R13]** Microsoft, _Configurable token lifetimes in the Microsoft identity platform_, accessed 2026-10-08. <https://learn.microsoft.com/en-us/entra/identity-platform/configurable-token-lifetimes>. "Adjusting the lifetime of an access token is a trade-off between improving system performance and increasing the amount of time that the client retains access after the user's account is disabled"; a token lifetime policy "controls how long access, SAML, and ID tokens for this resource are considered valid"; the access token lifetime has a minimum of 10 minutes.
 - **[R14]** Microsoft, _Assign tokenLifetimePolicy_, Microsoft Graph v1.0, accessed 2026-10-08. <https://learn.microsoft.com/en-us/graph/api/application-post-tokenlifetimepolicies?view=graph-rest-1.0>. "Assign a tokenLifetimePolicy to an application"; least privileged application permissions "Application.ReadWrite.OwnedBy and Policy.Read.All". Creating a policy takes `Policy.ReadWrite.ApplicationConfiguration` (_Create tokenLifetimePolicy_, <https://learn.microsoft.com/en-us/graph/api/tokenlifetimepolicy-post-tokenlifetimepolicies?view=graph-rest-1.0>).
 - **[R15]** Okta, _Configure an access policy_, accessed 2026-10-08. <https://developer.okta.com/docs/guides/configure-access-policy/main/>. "Access policies help you secure your APIs by defining different access and refresh token lifetimes for a given combination of grant type, user, and scope"; "Access policies are specific to a particular authorization server"; "an access token for a banking API may include a transactions:read scope with a multi-hour token lifetime. By contrast, the lifetime of an access token for transferring funds should be only a matter of minutes."
+- **[R20]** Auth0, _User Consent and Third-Party Applications_, §Skip consent for first-party applications, accessed 2026-10-20. <https://auth0.com/docs/get-started/applications/confidential-and-public-applications/user-consent-and-third-party-applications>. "Third-party applications always require consent and cannot skip the consent dialog."
+- **[R21]** Auth0, _First-Party and Third-Party Applications_, accessed 2026-10-20. <https://auth0.com/docs/get-started/applications/confidential-and-public-applications/first-party-and-third-party-applications>. "“Third-party” refers to operational control, not authorship."

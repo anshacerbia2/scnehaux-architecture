@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.5.0
+  version: 2.6.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-19
+  last_reviewed: 2026-10-20
   parent_pad: PAD-PLT-002
 ---
 
@@ -431,7 +431,7 @@ RLS is defense in depth. Application authorization remains mandatory.
 
 - active authority records follow domain lifecycle;
 - revoked Membership and privileged-administration facts are retained according to security/audit policy;
-- the privileged-access record and its reviews are not purged until a retention standard names a period: CIS asks for "a minimum of 90 days", and a row is needed at least until a review covers it (`ADR-ORG-002 §5.6`, 2.2.0);
+- the privileged-access record, its reviews and the emergency uses are kept 7 years, the audit-log period of `STD-GLB-007` 1.1.0, and purged after that by the maintenance stage; a Tenant's decommissioning never purges them (`ADR-ORG-002 §5.6`, 2.6.0). This line once said they were kept until a retention standard named a period; `STD-GLB-007` already named it;
 - invitation data expires and is minimized after completion;
 - offboarding records remain until all obligations and evidence retention requirements complete;
 - projections and reconciliation cursors retain only operationally required history;
@@ -451,8 +451,8 @@ RLS is defense in depth. Application authorization remains mandatory.
   - **Containment.** A provider pauses every Tenant administrator's commands until the versions are reconciled (`ADR-ORG-003 §5.5`). `restore.sh` can record the pause in the restored database before the service starts.
   - **Reconciliation.** `POST /v1/projections/advance-versions` takes a consumer's reconciliation report and, for each Membership the consumer holds at a higher version, moves authority's version past it and publishes authority's state there, a withdrawal on the priority lane. It advances only Memberships the consumer reports active, so it narrows access or changes nothing. A Membership the consumer holds withdrawn at a higher version stays withdrawn there until the runbook re-applies the lost withdrawal (`TDD-organization-control-002` 1.15.0 §After a Restore to an Older Point).
 - **What the restore plan does not cover.** These are recorded, not claimed:
-  - **Tenant security versions and provider grant versions are not reconciled.** A consumer's report carries Memberships only. Extending it to Tenants and grants changes identity-control and foundation-reference, and is the owner's decision.
-  - **A lost withdrawal cannot be re-applied by its Tenant administrator while paused**, and no provider route transitions one Membership inside a Tenant. A Tenant suspension is the containment until that is decided (`ADR-ORG-003 §6`).
+  - **Tenant security versions and provider grant versions are bumped, decided 2026-10-20 and not yet built (2.6.0).** Before the service serves, the restore adds 10^9 to every Tenant security version and provider grant version, publishes the withdrawn ones and no active one, and has every consumer reconcile (`ADR-ORG-003 §5.5`). Until organization-control builds it, these versions are not reconciled.
+  - **A lost withdrawal is re-applied by a provider, decided 2026-10-20 and not yet built (2.6.0).** A provider may suspend or revoke one Membership inside a Tenant, never grant or restore one (`ADR-ORG-003 §5.6`). Until it is built, a Tenant suspension is the containment.
   - **The drill restores to the instant of its own backup**, so it exercises neither the pause nor the version advance. Both are proven by integration tests.
 - **Recovery reads an operator needs (2.3.0).** A provider reads a Membership's enforcement state with a reason (`ADR-ORG-004 §5.2`), lists a consumer's dead letters with the event, aggregate and version each carried (`TDD-organization-control-005` 2.5.0), and sends a failed deprovisioning again. An `unresolved` one is not sent again, because the target may have released the infrastructure (§7.5).
 
@@ -551,6 +551,9 @@ A caller's authority is read from the standard's claims and this system's own re
 | Tenant administrator | `principal_id`, `subject_type`, `tenant_id`                                 | —                                                                                                                                      |
 | Provider             | `principal_id`, `subject_type` `human`, `acr`, `auth_time`; no `tenant_id`  | provider authority in force for the `principal_id`: an approved activation of an eligible grant, or an emergency grant (`ADR-ORG-002`) |
 | Projection consumer  | `principal_id`, `subject_type` `workload`, `workload_owner`; no `tenant_id` | an active consumer registered with the `principal_id`                                                                                  |
+| Reporter (2.6.0)     | `principal_id`, `subject_type` `workload`; no `tenant_id`                   | an active reporter registered with the `principal_id`, for `provisioning` or `obligation:<domain>`, on those report routes alone       |
+
+A reporter is the production provisioning system or an obligation-owning domain. It authenticates as its own workload, never with a person's provider token (`ADR-ORG-001 §5.11`, decided 2026-10-20, not yet built).
 
 Every actor is recorded by `principal_id`, never by `sub` (`STD-IAM-002 §3.2`).
 
@@ -754,6 +757,8 @@ Final sizing follows load tests for administrative, bulk, projection, and reconc
 - migration rehearsal environment using sanitized data.
 
 No production credential or customer data is used in lower environments.
+
+**Production status (2.6.0).** As of 2026-10-20, no system this SAD governs has reached production. The only deployment is the development server (`deploy/dev/imam-station.md`). Until this statement changes, the ADRs governing these systems are changed in place (`GDC-010 §2.4.2`).
 
 ### 10.4 CI/CD
 
