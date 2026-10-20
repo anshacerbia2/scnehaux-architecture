@@ -159,9 +159,10 @@ POST /v1/principals/{principal_id}:issue-temporary-password
   bootstrap administrator sets the password with **Temporary** on, and adds **Configure OTP** to the
   person's required actions, so the first sign-in sets a password and enrolls TOTP. Keycloak
   documents both: "If Temporary is ON, the user must change the password at the first login", and
-  required actions "are required after the user provides credentials" [R9]. The runbook's step 10.1
-  is that procedure (`deploy/dev/README.md`); it is how a person such as `billy` becomes a Tenant's
-  first administrator today. Alternative F says why it is not the lasting path.
+  required actions "are required after the user provides credentials" [R9]. The runbook carried that
+  procedure as step 10.1 while the command was being built; it was retired on 2026-10-20, when
+  identity-control served the command, and step 10 now uses the command. Alternative F says why the
+  Admin Console is not the lasting path.
 
 ### 5.5 What Each Repository Changes
 
