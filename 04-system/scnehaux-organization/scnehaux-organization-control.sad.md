@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.6.0
+  version: 2.6.1
   status: approved
   classification: restricted
   governed_by:
@@ -431,7 +431,7 @@ RLS is defense in depth. Application authorization remains mandatory.
 
 - active authority records follow domain lifecycle;
 - revoked Membership and privileged-administration facts are retained according to security/audit policy;
-- the privileged-access record, its reviews and the emergency uses are kept 7 years, the audit-log period of `STD-GLB-007` 1.1.0, and purged after that by the maintenance stage; a Tenant's decommissioning never purges them (`ADR-ORG-002 §5.6`, 2.6.0). This line once said they were kept until a retention standard named a period; `STD-GLB-007` already named it;
+- the privileged-access record, its reviews and the emergency uses are kept 7 years, the audit-log period of `STD-GLB-007` 1.1.0, and purged after that by the maintenance stage; a `BEFORE DELETE` and a `BEFORE TRUNCATE` trigger refuse any earlier delete, for every role (`STD-GLB-007` 1.2.0, 2.6.1); a Tenant's decommissioning never purges them (`ADR-ORG-002 §5.6`, 2.6.0). This line once said they were kept until a retention standard named a period; `STD-GLB-007` already named it;
 - invitation data expires and is minimized after completion;
 - offboarding records remain until all obligations and evidence retention requirements complete;
 - projections and reconciliation cursors retain only operationally required history;
@@ -451,8 +451,8 @@ RLS is defense in depth. Application authorization remains mandatory.
   - **Containment.** A provider pauses every Tenant administrator's commands until the versions are reconciled (`ADR-ORG-003 §5.5`). `restore.sh` can record the pause in the restored database before the service starts.
   - **Reconciliation.** `POST /v1/projections/advance-versions` takes a consumer's reconciliation report and, for each Membership the consumer holds at a higher version, moves authority's version past it and publishes authority's state there, a withdrawal on the priority lane. It advances only Memberships the consumer reports active, so it narrows access or changes nothing. A Membership the consumer holds withdrawn at a higher version stays withdrawn there until the runbook re-applies the lost withdrawal (`TDD-organization-control-002` 1.15.0 §After a Restore to an Older Point).
 - **What the restore plan does not cover.** These are recorded, not claimed:
-  - **Tenant security versions and provider grant versions are bumped, decided 2026-10-20 and not yet built (2.6.0).** Before the service serves, the restore adds 10^9 to every Tenant security version and provider grant version, publishes the withdrawn ones and no active one, and has every consumer reconcile (`ADR-ORG-003 §5.5`). Until organization-control builds it, these versions are not reconciled.
-  - **A lost withdrawal is re-applied by a provider, decided 2026-10-20 and not yet built (2.6.0).** A provider may suspend or revoke one Membership inside a Tenant, never grant or restore one (`ADR-ORG-003 §5.6`). Until it is built, a Tenant suspension is the containment.
+  - **Tenant versions, Tenant security versions and provider grant versions are bumped (2.6.0, built 2.6.1).** Before the service serves, the restore adds 10^9 to every Tenant `version`, Tenant security version and provider grant version, publishes the withdrawn ones and no active one, and has every consumer reconcile (`ADR-ORG-003 §5.5`). organization-control's `restore.sh` runs it as the `restore-bump` stage (organization-control #75). A consumer orders a Tenant by the pair (`tenant_security_version`, `tenant_version`), so every Tenant event and snapshot row carries both.
+  - **A lost withdrawal is re-applied by a provider (2.6.0, built 2.6.1).** A provider may suspend or revoke one Membership inside a Tenant, never grant or restore one (`ADR-ORG-003 §5.6`), through `POST /v1/tenants/{tenant_id}/memberships/{membership_id}/suspend` or `/revoke` (organization-control #75).
   - **The drill restores to the instant of its own backup**, so it exercises neither the pause nor the version advance. Both are proven by integration tests.
 - **Recovery reads an operator needs (2.3.0).** A provider reads a Membership's enforcement state with a reason (`ADR-ORG-004 §5.2`), lists a consumer's dead letters with the event, aggregate and version each carried (`TDD-organization-control-005` 2.5.0), and sends a failed deprovisioning again. An `unresolved` one is not sent again, because the target may have released the infrastructure (§7.5).
 

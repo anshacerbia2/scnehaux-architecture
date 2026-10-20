@@ -23,8 +23,8 @@ Tenant Administration Is a Recorded Grant, Checked with Current Membership.
 | 2026-10-20 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
 
 **Amended 2026-10-20, in place,** on two points the owner approved on 2026-10-20 as recommended: §5.5
-adds how a restore moves Tenant security versions and provider grant versions past what consumers
-hold, and §5.6 lets a provider suspend or revoke one Membership inside a Tenant. §6 no longer leaves
+adds how a restore moves Tenant versions, Tenant security versions and provider grant versions past
+what consumers hold, and how a consumer orders a Tenant by both of its versions, and §5.6 lets a provider suspend or revoke one Membership inside a Tenant. §6 no longer leaves
 the second open. It is edited in place because no system this decision governs is in production
 (GDC-010 §2.4.2): `SAD-004` §10.3 records that the only deployment is the development server.
 
@@ -162,8 +162,8 @@ not change under the operator while security versions are reconciled (`SAD-004 �
   so lifting one is always a provider's named decision.
 
 **Tenant and provider grant versions are bumped before the service serves (amended 2026-10-20).** A
-restore to an older point gives back Tenant security versions and provider grant versions that
-consumers have already seen superseded, and a consumer discards a lower version as already applied.
+restore to an older point gives back Tenant versions, Tenant security versions and provider grant
+versions that consumers have already seen superseded, and a consumer discards a lower version as already applied.
 Memberships are advanced from the consumer's report (`SAD-004 §6.6`). Tenants and grants are moved
 past what any consumer holds by a margin, as etcd restores its revision: "In order to ensure the
 revisions are never decreasing after a restore, you can supply the --bump-revision option" [R9]. etcd
@@ -171,8 +171,9 @@ names the danger this avoids: "Restoring to an older revision may not correctly 
 causing unpredictable and inconsistent behavior in the controllers" [R9]. The restore, before the
 service serves and beside the pause above:
 
-1. **Adds a margin to every version.** Every `tenant_security_version` and `grant_version` gains
-   M = 10^9. etcd sizes its own margin the same way: "you may cover a week old snapshot with bumping
+1. **Adds a margin to every version.** Every Tenant's `version` and `tenant_security_version`, and
+   every `grant_version`, gains M = 10^9. Both Tenant versions move, because a consumer orders a
+   Tenant by both (below). etcd sizes its own margin the same way: "you may cover a week old snapshot with bumping
    by 1'000'000'000 assuming that etcd runs with less than 1500 writes per second" [R9]. The versions
    are `bigint`, and no row changes 10^9 times within a backup window.
 2. **Publishes the withdrawn ones.** Each suspended, offboarding or retired Tenant, and each revoked or
@@ -184,11 +185,22 @@ service serves and beside the pause above:
    (`ADR-ORG-001 §5.7`).
 
 The rows and their outbox entries are written in one transaction with no actor, as the pre-serve
-pause is. No consumer contract changes: identity-control and foundation-reference apply only a higher
-version and check no gap. The bump also ends "the same version, two states" for Tenants and grants,
+pause is. identity-control and foundation-reference apply only a higher version and check no gap. The bump also ends "the same version, two states" for Tenants and grants,
 because no version a consumer holds can equal a new one. Extending the consumer report to Tenants and
 grants is rejected: it changes identity-control and foundation-reference, and gains nothing the bump
 lacks.
+
+**A consumer orders a Tenant by the pair (`tenant_security_version`, `tenant_version`).** It applies a
+Tenant event or snapshot row only when the pair it carries is greater than the pair it holds,
+compared as PostgreSQL compares two row constructors: "the row elements are compared left-to-right,
+stopping as soon as an unequal or null pair of elements is found" [R14]. Ordered by one version alone,
+a consumer loses a change either way. By `tenant_security_version` alone, an activation, which moves
+only `tenant_version`, is discarded when it follows a snapshot of the Tenant in provisioning. By
+`tenant_version` alone, a restored Tenant's withdrawal can be discarded when its `tenant_version` was
+not bumped past what the consumer holds. Every Tenant event and snapshot row therefore carries both
+versions. identity-control orders by the pair (identity-control #114), and foundation-reference #30, open on
+2026-10-20, makes foundation-reference do the same. The consumer contract changes only in requiring `tenant_version`, which
+Organization Control already publishes.
 
 ### 5.6 A Provider May Suspend or Revoke One Membership Inside a Tenant (2026-10-20)
 
@@ -425,3 +437,8 @@ pause.
   resources"; "Use justification to understand why users activate"; "Get notifications when
   privileged roles are activated"; "Download audit history for internal or external audit". The
   pattern §5.6 relies on: a provider in force only through an activation with a reason.
+- **[R14]** PostgreSQL 17 Documentation, _Comparison Functions and Operators_ / _Row and Array
+  Comparisons_, §9.25.5 Row Constructor Comparison,
+  <https://www.postgresql.org/docs/17/functions-comparisons.html>, accessed 2026-10-20. "For the <,
+  <=, > and >= cases, the row elements are compared left-to-right, stopping as soon as an unequal or
+  null pair of elements is found."

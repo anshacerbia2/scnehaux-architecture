@@ -25,6 +25,7 @@ On the server:
 - **The devtunnel CLI**, logged in with the account that will own the tunnel: `devtunnel user login -g -d` (GitHub, device code).
 - **Git checkouts** of identity-kernel, identity-control and organization-control.
 - **Somewhere outside Docker for backups**, such as a second disk (STD-GLB-009 rule 9).
+- **Two people and a change ticket for the ceremonies.** The kernel's signing-key ceremony (step 2) and identity-control's bootstrap ceremony (step 3) each need an operator and a witness, never the same person, and a third person reviews each record (STD-IAM-001 §3.10). The ticket's identifier is each ceremony's reason, and the records are kept with it. Who they are is the owner's decision and is never written in a public repository (identity-control `docs/runbooks/bootstrap-ceremony.md` §Who performs it).
 
 On each laptop that runs a BFF: Node.js, `pwsh`, a local PostgreSQL for the BFF's sessions, and the devtunnel CLI, logged in with the same account when the laptop needs an owner-only port.
 
@@ -50,12 +51,28 @@ The tunnel is how anything off the server reaches it. Every stack publishes on `
 Follow identity-kernel §First start, in tunnel mode as [§Behind a dev tunnel instead of a DNS name] describes:
 
 1. Copy `.env.example` to `.env`. `KEYCLOAK_HOSTNAME` is the tunnel's host for port 8080, without `https://`.
-2. Start the stack. When `.env` sets `COMPOSE_FILE` to list the tunnel file and a local file, run plain `docker compose up -d --wait`, with no `-f` (pitfall 12). Otherwise run `docker compose -f compose.yaml -f compose.tunnel.yaml up -d --wait`.
-3. `docker compose logs realm-apply`. It ends in `applied revision ...`.
-4. `./new-client-key.sh realm-apply`, then `./create-apply-client.sh`. Put the line it prints in `.env`, then start the stack again.
-5. `./tunnel-admin.sh`, so the Admin Console's login stays on port 8081 (pitfall 6).
+2. **The signing-key ceremony, before the first `up`.** With the operator and the witness both present, from the root of the identity-kernel checkout, follow identity-kernel `docs/runbooks/signing-key-ceremony.md`:
 
-The issuer is now `https://<KEYCLOAK_HOSTNAME>/realms/scnehaux`.
+   ```sh
+   scripts/signing-key-ceremony.sh deploy/dev/keys "<operator>" "<witness>" "<change ticket>"
+   ```
+
+   It makes the realm's signing keystore in the pinned image with no network, and writes it to `deploy/dev/keys/signing`, its password to `deploy/dev/keys/vault`, and its certificate and the ceremony record, with the `kid`, beside them (`keys/realm-signing.crt`, `keys/realm-signing.ceremony.json`). It refuses a witness equal to the operator and a keys directory that already holds a keystore. **The kernel refuses to start without the keystore** (`ADR-IAM-002 §5.3`), so this step comes before item 3. The witness reads the record it prints.
+
+3. Start the stack. When `.env` sets `COMPOSE_FILE` to list the tunnel file and a local file, run plain `docker compose up -d --wait`, with no `-f` (pitfall 12). Otherwise run `docker compose -f compose.yaml -f compose.tunnel.yaml up -d --wait`.
+4. `docker compose logs realm-apply`. It ends in `applied revision ... signs with the keystore's key`.
+5. **The witness compares the `kid`.** `curl -fsS https://<KEYCLOAK_HOSTNAME>/realms/scnehaux/protocol/openid-connect/certs` lists exactly one `PS256` key, whose `kid` is the record's. Any other `PS256` key, such as `fallback-PS256`, stops the ceremony (identity-kernel `docs/runbooks/custody-outage.md`). Attach the record and the terminal output to the change ticket, never to chat. The reviewer reviews them there.
+6. `./new-client-key.sh realm-apply`, then `./create-apply-client.sh`. Put the line it prints in `.env`, then start the stack again.
+7. `./tunnel-admin.sh`, so the Admin Console's login stays on port 8081 (pitfall 6).
+8. **Schedule the daily backup** in the operator's crontab, as identity-kernel §Backups gives it:
+
+   ```text
+   45 2 * * * <identity-kernel checkout>/deploy/dev/backup.sh <backup directory>/identity-kernel >/dev/null
+   ```
+
+   `backup.sh` writes the roles and the database as one set, verifies the dump, and keeps the newest 14 complete sets by count. **It never copies the signing keystore or its vault file** (STD-GLB-009 rule 9). Check it runs: the line is in `crontab -l`, `journalctl -u cron` shows today's run, and today's set is in the directory.
+
+The issuer is now `https://<KEYCLOAK_HOSTNAME>/realms/scnehaux`. The keystore stays in `deploy/dev/keys/signing` for the server's life. A lost one is not restored: the server is built from zero (step 15), with a new ceremony and a new `kid`.
 
 ## 3. identity-control, and the ceremony once
 
@@ -64,7 +81,10 @@ Follow identity-control §Before you start and §First start. In order:
 1. Copy `.env.example` to `.env`, and fill in `KEYCLOAK_ISSUER` (the issuer of step 2, exactly), the passwords, `KC_BOOTSTRAP_ADMIN_PASSWORD` copied from the kernel's `.env`, and `KERNEL_DEPLOY_DIR`.
 2. Run `./create-kernel-clients.sh >> .env`, then `./create-registration-client.sh`, then `./create-security-ref-key.sh`.
 3. `docker compose up -d --build`, then `curl -fsS http://127.0.0.1:8082/readyz`.
-4. `./bootstrap.sh "<you>" "<reason>"`. **The ceremony succeeds once per Control Database.** A second run is refused by design.
+4. `./bootstrap.sh "<operator>" "<witness>" "<reason>"`, with both people present (identity-control `docs/runbooks/bootstrap-ceremony.md`, STD-IAM-001 §3.10). The witness is required and is never the operator: `identity-bootstrap` and the database both refuse the same name, compared trimmed and case-folded. The reason names the change ticket. Keep the printed output, with the `principal_id`, with that ticket. **The ceremony succeeds once per Control Database.** A second run is refused by design; a ceremony that failed after creating its Principal is resumed, never rerun (identity-control §One-off tasks).
+5. **Schedule the daily backup:** identity-control §Backups gives the cron line for its `backup.sh`, which keeps the newest 14 complete sets.
+
+The ceremony's record is reviewed later, in step 7, by a third person: the reviewer reads it with a provider's sign-in, and Organization Control grants that only once it is wired.
 
 A network that intercepts TLS to the Go module proxy breaks the build at `go mod download`. Set `GOPROXY=direct` (STD-GLB-009 rule 7). Until the repository's compose passes `GOPROXY` from `.env`, it goes in a local `compose.override.yaml` (identity-control §First start).
 
@@ -98,10 +118,14 @@ Two clients were made by scripts before identity-control could register clients:
 Follow organization-control §Before you start, §First start, and §Wiring to other services.
 
 1. Copy `.env.example` to `.env`. Fill in `KEYCLOAK_ISSUER` (the value identity-control's `.env` holds) and the six passwords. Then `docker compose up -d --build` and `curl -fsS http://127.0.0.1:8083/readyz`.
-2. The wiring is two scripts, the files CI runs. Export `IDENTITY_CALLER_PASSWORD`, `IDENTITY_CALLER_KEY_FILE` and `IDENTITY_OPERATOR_TOTP_FILE` alone, never by sourcing identity-control's `.env`. Then run `pwsh ./scripts/dev-wire.ps1 -IdentityRepo <identity-control checkout> -KernelDeployDir <kernel deploy/dev> -Operator "<you>" -State <state file>` and `pwsh ./scripts/dev-wiring-proof.ps1 -IdentityRepo <identity-control checkout> -State <state file>`. Keep the state file's directory outside every directory a container mounts. It receives a private key.
-3. Schedule the daily `maintenance` task in your crontab, with the line organization-control §One-off tasks gives. It exits 3 on a security incident open for more than 24 hours. **Check that it runs** (STD-GLB-009 rule 14), with that section's three checks: `crontab -l` shows the line; `systemctl status cron` reads `active (running)`; and the maintenance log in your home directory is from today, or `journalctl -u cron --since today` shows the run. cron reads a changed crontab by itself, so nothing is restarted after `crontab -e`.
+2. The wiring is two scripts, the files CI runs. Export `IDENTITY_CALLER_PASSWORD`, `IDENTITY_CALLER_KEY_FILE` and `KEYCLOAK_ISSUER` alone, never by sourcing identity-control's `.env`; the operator's TOTP file is found in the identity-control checkout (step 5.2). Then run `pwsh ./scripts/dev-wire.ps1 -IdentityRepo <identity-control checkout> -KernelDeployDir <kernel deploy/dev> -Operator "<you>" -State <state file>`. For the proof, also export `KC_BOOTSTRAP_ADMIN_PASSWORD` and `KC_ADMIN_URL`, then run `pwsh ./scripts/dev-wiring-proof.ps1 -IdentityRepo <identity-control checkout> -KernelDeployDir <kernel deploy/dev> -State <state file>` (organization-control §Wiring to other services). Keep the state file's directory outside every directory a container mounts. It receives private keys.
+   - **The development reporters are registered here** (organization-control §Wiring to other services, step 6b; `ADR-ORG-001 §5.11`). Organization Control admits a provisioning or obligation report only from a reporter on record. For each of `provisioning`, `obligation:product`, `obligation:hcm`, `obligation:billing` and `obligation:audit`, `dev-wire.ps1` makes a key pair beside the state file, creates a workload `dev-reporter-<what it reports>` in identity-control, registers it with `POST /v1/reporters`, and writes its client and key file into the state file. The stand-in scripts of steps 9 and 13 report as these reporters. `GET /v1/reporters` lists them.
+3. Schedule the daily `maintenance` task in your crontab, with the line organization-control §One-off tasks gives. It exits 3 on a security incident open for more than 24 hours. **Check that it runs** (STD-GLB-009 rule 14), with that section's three checks: `crontab -l` shows the line; `systemctl status cron` reads `active (running)`; and the maintenance log in your home directory is from today, or `journalctl -u cron --since today` shows the run. cron reads a changed crontab by itself, so nothing is restarted after `crontab -e`. Schedule organization-control's `backup.sh` too, with the line its §Backups gives.
+4. **The bootstrap ceremony's review.** The first Principal creates the reviewer's Principal (`POST /v1/principals`), and Organization Control grants it `provider:identity-control`. The reviewer, neither the operator, the witness nor the first Principal's holder, reads `GET /v1/bootstrap-ceremony` and records `POST /v1/bootstrap-ceremony:review` with an `Idempotency-Key`, the finding as the `X-Administrative-Reason`, and `{"reviewer": "<the reviewer's name>", "outcome": "satisfactory"}` or `"findings"` (identity-control `docs/runbooks/bootstrap-ceremony.md` §Review). The route and the database refuse a review by the operator, the witness or the first Principal. The review is insert-only. Until it is recorded, the realm serves no one but the people setting it up.
 
 **Never run `docker compose down -v` in organization-control after this.** The wiring retires the ceremony's own grant in identity-control. From then on the operator is a provider through organization-control's database alone, and a new database revokes that grant everywhere.
+
+**An `Idempotency-Key` is remembered for 7 days.** Both services purge a completed key, with the answer recorded under it, 7 days after it completed, through foundation-platform v0.5.0's `idempotency.PurgeCompleted` (STD-GLB-001 §Commands Require an `Idempotency-Key`). organization-control purges in its daily `maintenance` (item 3), and identity-control in its scheduled sweep. Within the window, a retry with the same key answers the recorded result. After it, the same key is a new command: a creation creates again, and a command whose own state refuses a repeat, such as a second ceremony, still refuses it. An uncompleted key is never purged. Retry a failed command within the 7 days, and never reuse a key from an earlier run.
 
 ## 8. The organization-experience BFF client
 
@@ -114,7 +138,7 @@ Follow organization-experience §Registering it (§The client lists every proper
 
 ## 9. Provisioning a Tenant
 
-A Tenant is created `requested` and becomes `active` only after the provisioning system reports that its boundary exists (SAD-004 §5.1, §7.5). **No provisioning system runs on a development server.** The operator stands in for it with organization-control's `scripts/dev-provisioning.ps1`, which reports the outcome through the same routes the provisioning system calls. The decision is recorded in [SAD-004 §7.5](../../04-system/scnehaux-organization/scnehaux-organization-control.sad.md#75-provisioning) (2.4.0), with its sources and the options rejected, and detailed in organization-control's `TDD-organization-control-003` §The Provisioning System on a Development Server. Follow organization-control §Provisioning a Tenant on the development server. In order:
+A Tenant is created `requested` and becomes `active` only after the provisioning system reports that its boundary exists (SAD-004 §5.1, §7.5). **No provisioning system runs on a development server.** The operator stands in for it with organization-control's `scripts/dev-provisioning.ps1`, which reports the outcome through the same routes the provisioning system calls, as the development provisioning reporter that step 7.2 registered. The decision is recorded in [SAD-004 §7.5](../../04-system/scnehaux-organization/scnehaux-organization-control.sad.md#75-provisioning) (2.4.0), with its sources and the options rejected, and detailed in organization-control's `TDD-organization-control-003` §The Provisioning System on a Development Server. Follow organization-control §Provisioning a Tenant on the development server. In order:
 
 1. **In organization-experience, in provider mode:** request the Tenant (Tenants, Request tenant), then **Start provisioning** on its row. The row shows the request's correlation identifier.
 2. **On the server**, from organization-control's checkout, with the wiring's variables exported (step 7.2): `pwsh ./scripts/dev-provisioning.ps1 -IdentityRepo <identity-control checkout> -State <state file> -TenantId <tenant_id> -Realized`. It refuses, sending nothing, a Tenant that is not `provisioning` or a request that already has an outcome. `-Failed -Reason "<why>"` tries the failure path; the row then offers **Retry provisioning**.
@@ -152,7 +176,7 @@ An invitation is accepted by the invited person, signed in as themselves, with a
 
 ## 13. Offboarding a Tenant on the development server
 
-An offboarding waits on two parties that do not run on a development server: the domains that own its obligations, which resolve them, and the provisioning system, which reports the outcome of the deprovisioning that release sends. You stand in for both with two organization-control scripts, through the routes those parties call (SAD-004 §7.5, 2.5.0; STD-GLB-009 rule 13). Follow organization-control §Offboarding a Tenant on the development server:
+An offboarding waits on two parties that do not run on a development server: the domains that own its obligations, which resolve them, and the provisioning system, which reports the outcome of the deprovisioning that release sends. You stand in for both with two organization-control scripts, through the routes those parties call, as the development reporters that step 7.2 registered (SAD-004 §7.5, 2.5.0; STD-GLB-009 rule 13). Follow organization-control §Offboarding a Tenant on the development server:
 
 1. **In organization-experience, in provider mode:** **Begin offboarding** on the Tenant's row, complete the freeze, and **Raise obligation** for each one the Tenant owes.
 2. **On the server**, from organization-control's checkout, with the wiring's variables exported (step 7.2): `pwsh ./scripts/dev-obligation.ps1` resolves one obligation as the domain it was raised against (`-Completed`, or `-Waived` or `-Failed` with `-Reason`). The console offers no such control, on purpose.
@@ -186,12 +210,13 @@ A reset destroys the three databases. It is the one procedure that runs `docker 
 
 1. **Back up first** (step 16's forms): each database, the roles, `.env` and `keys/` of every stack, except the kernel's signing keystore and its vault files, which are never copied (STD-GLB-009 rule 9).
 2. **Take the stacks down in reverse dependency order**, because each one joins the networks of the stacks before it: `docker compose down -v` in organization-control, then identity-control, then identity-kernel.
-3. **Remove `.env` and `keys/`** from each stack. The private keys belong to container users (65532, 65534) and are mode 0600, so removing them needs root.
+3. **Remove `.env` and `keys/`** from each stack. The private keys belong to container users (65532, 65534, and 1000 for the kernel's keystore) and are mode 0600 or 0400, so removing them needs root. The kernel's `keys/` holds the signing keystore, so step 2 runs the signing-key ceremony again.
 4. **Keep the local overrides** (`compose.override.yaml`, and the kernel's local file) **and keep the tunnel.** The issuer URL then stays the same, and nothing configured with it changes.
 5. Run steps 2 to 8 again.
 
 What the owner redoes afterwards:
 
+- **Both ceremonies, with their reviews:** the signing-key ceremony (step 2.2) gives the realm a new `kid`, so every token signed before the reset fails; the bootstrap ceremony (step 3.4) and its review (step 7.4) run on the new Control Database.
 - **The owner's TOTP:** the user is new, so the authenticator entry for it is stale. Delete it from the app and enroll again (step 5.1). The server's `operator-totp.json` went with `keys/`, so step 5.2 runs again too.
 - **The BFFs' public JWKs:** the laptops keep their private keys. Each sends its public JWK again for steps 4 and 8.
 - **The laptop's session store:** the BFF's sessions name users, clients and tokens of the old realm. Clear the session store in the database `IDENTITY_EXPERIENCE_DEV_DATABASE_URL` names (identity-experience's `.env`), and the organization BFF's likewise.
@@ -200,14 +225,14 @@ What the owner redoes afterwards:
 
 STD-GLB-009 rule 9 says what a backup holds, and each repository's §Backups gives its exact commands. The order is the same for every stack:
 
-1. Put `.env` and `keys/` back first. The migrate job sets the login roles' passwords from `.env`, so it and the restored roles must agree. The kernel's signing keystore is not in the backup: a kernel restored without it runs the key ceremony again, and its realm publishes a new `kid` (`ADR-IAM-002 §5.3`).
+1. Put `.env` and `keys/` back first. The migrate job sets the login roles' passwords from `.env`, so it and the restored roles must agree. The kernel's signing keystore is not in the backup and stays where it is, in `keys/signing` and `keys/vault`: the restored realm loads it under the same `kid`. A server whose keystore is lost is not restored. It is built from zero (step 15), with a new ceremony and a new `kid` (`ADR-IAM-002 §5.3`).
 2. Start the database alone: `docker compose up -d postgres`.
 3. Restore the roles from the `pg_dumpall --globals-only` file with `psql`, then each database from its `pg_dump -Fc` file with `pg_restore`. The roles come first, because the objects' owners must already exist.
 4. `docker compose up -d --build`. The migrate job applies anything newer than the backup, and the service starts once it has succeeded.
 
-identity-control and organization-control do steps 2 and 3 with one script, `./restore.sh <roles file> <dump>`, which refuses a stack that already holds the database. Their `deploy-dev` jobs run it on every change against a stack whose volume they have deleted (STD-GLB-002 §Restore Evidence). A stack without the script follows its §Backups by hand.
+Each of the three stacks does steps 2 and 3 with one script, `./restore.sh <roles file> <dump>`, which refuses a stack that already holds the database. Their `deploy-dev` jobs run it in a restore drill against a stack whose volume they have deleted (STD-GLB-002 §Restore Evidence). The kernel's drill also checks that the backup holds no keystore file, password or private key, and that the restored realm signs under the same `kid`.
 
-Restore the stacks in dependency order, kernel first. A restored organization-control database brings its provider grants back, and with them the provider authority that identity-control projects from them.
+Restore the stacks in dependency order, kernel first. A restored organization-control database brings its provider grants back, and with them the provider authority that identity-control projects from them. organization-control's `restore.sh` also runs its `restore-bump` stage before the service serves: every Tenant `version`, Tenant security version and provider grant version gains 10^9, the withdrawn ones are published, and every consumer is asked to reconcile (`ADR-ORG-003 §5.5`).
 
 ## Known pitfalls
 

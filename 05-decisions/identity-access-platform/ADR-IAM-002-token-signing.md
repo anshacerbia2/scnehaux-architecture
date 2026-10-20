@@ -7,6 +7,7 @@ doc_meta:
   created: 2026-01-01
   created_date: 2026-01-01
   created_by: Enterprise Architect
+  authorizes: [STD-GLB-009]
 ---
 
 # ADR-IAM-002: Token Signing Algorithm and Key Lifecycle Management
@@ -27,7 +28,10 @@ in each environment, how the keystore reaches the kernel, and that the developme
 backs the keystore up. It also states that every environment is the first custody phase today. The
 owner approved the recommendation on 2026-10-20. It is edited in place because no system this
 decision governs is in production (GDC-010 §2.4.2): `SAD-001` §9.1 records that the only
-deployment is the development server.
+deployment is the development server. A second amendment the same day adds §5.4: the ingress closes
+the legacy realm endpoint, on which Keycloak 26.7.5 generates an RS256 key, and production does not
+go live until a test proves it. That gate is a new mandatory restriction, so this decision authorizes
+`STD-GLB-009` 2.0.0. identity-kernel #71 built it for the development server first.
 
 ## 3. Context
 
@@ -98,6 +102,15 @@ A signing key passes through the states below. Each maps to a state NIST SP 800-
 - **Non-exportable custody is a later phase.** A KMS or HSM that never releases the private key is adopted when an audit or regulatory obligation requires it. The pinned kernel's key providers hold the key pair themselves [R11], so that phase needs a kernel integration the pinned release does not document, and it is decided in its own ADR.
 - **A throwaway kernel**, such as a test run's, may sign with a key it generated itself, because nothing outside that run verifies its tokens.
 
+### 5.4 The Ingress Closes the Legacy Realm Endpoint (amended 2026-10-20)
+
+**The pinned kernel generates an RS256 key when an anonymous request asks for its legacy realm endpoint.** Keycloak 26.7.5 serves `GET /realms/{realm}` to anyone and returns the realm's RS256 public key in it: `PublicRealmResource.getRealm` sets `rep.setPublicKeyPem(PemUtils.encodeKey(session.keys().getActiveRsaKey(realm).getPublicKey()))` [R23]. `getActiveRsaKey` asks for `getActiveKey(realm, KeyUse.SIG, Algorithm.RS256)` [R24]. The realm's RS256 provider is disabled, because the JWKS advertises `PS256` keys only (§5.1), so no RS256 key is active. `DefaultKeyManager.getActiveKey` then asks a key provider factory to create fallback keys, and logs "No keys found for realm={0} and algorithm={1} for use={2}. Generating keys." [R24]. That key is generated in the kernel, which §5.3 forbids ("No replica generates key material"), and it is published beside the `PS256` key, which §5.1 forbids.
+
+- **Every ingress that serves the realm answers `404` to `GET /realms/{realm}`**, the realm's root path and nothing below it, matched without regard to case, with repeated or trailing slashes, matrix parameters or percent-encoding, on the decoded path. Caddy's `path_regexp` "Runs against the URI-decoded/unescaped path" [R26]. identity-kernel's development proxy closes `(?i)^/+realms/+[^/]+/*$` on every listener (identity-kernel #71, TDD-identity-kernel-002 §The Published Key Set).
+- **No client loses anything.** Discovery, the key set and the token endpoint are below the realm's root, and stay served. Keycloak asks for only some paths to be exposed: "When using a reverse proxy, Keycloak only requires certain paths to be exposed", with `/realms/` exposed because "This path is needed to work correctly, for example, for OIDC endpoints" [R25]. Only the root of one realm is closed.
+- **The kernel refuses what gets past the proxy.** `realm-apply` refuses any enabled key whose public key is not the keystore's, so a `fallback-RS256` made by a caller on the internal network fails the next run. identity-kernel's compatibility suite records what the pinned image does on that endpoint, so a Keycloak upgrade that changes it is seen.
+- **It is a production gate** (`STD-GLB-009` §Security & Access Governance, 2.0.0, which this section authorizes). No production ingress exists yet. Its configuration closes the endpoint before the realm serves anyone, and a test against the public host proves the `404` for each spelling, as identity-kernel's `deploy-dev` proves it for the development server.
+
 ## 6. Consequences
 
 ### Positive
@@ -120,6 +133,7 @@ A signing key passes through the states below. Each maps to a state NIST SP 800-
 - The rotation schedule publishes the next key before activating it, and the retirement window is recomputed from the live token lifetime classes rather than read as a constant.
 - The identity kernel's compatibility suite proves `PS256` issuance and verification on every candidate release; a candidate that cannot issue `PS256` is not promoted.
 - The secret manager holds the only copy of an active or retiring private key; destroying it at retirement is part of the rotation, and is recorded.
+- Every ingress in front of the realm answers `404` to `GET /realms/{realm}`, and production does not go live until a test proves it (§5.4).
 - Production manifests name the secret in a `SecretProviderClass`, and the realm declares the `java-keystore` provider with `${vault.…}` passwords. The kernel is built with the file vault enabled.
 
 ## 7. Compliance Impact
@@ -133,6 +147,7 @@ A signing key passes through the states below. Each maps to a state NIST SP 800-
 - STD-IAM-002 §3.2.2 - the operative algorithm allowlist and the `RS256` exception.
 - STD-IAM-001 §3.10 - the ceremony that generates a key: two people, recorded, and an independent review.
 - STD-GLB-009 §Development Server Deployment, rule 9 - the development server never backs the signing keystore up.
+- STD-GLB-009 §Security & Access Governance (2.0.0) - the production gate on the legacy realm endpoint (§5.4). This decision authorizes that major revision: the Standard names it in `authorized_by`.
 - `tech-radar.yaml` - `aws-secrets-manager` and `aws-kms`, adopted with this amendment.
 
 ### Compliance Status
@@ -224,3 +239,7 @@ The external sources this decision rests on, cited as `[Rn]`. In-repository evid
 - **[R19]** AWS, _AWS Secrets Manager quotas_, accessed 2026-10-20. <https://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_limits.html>. Secret value size: "65,536 Bytes".
 - **[R20]** AWS, _Use AWS Secrets and Configuration Provider CSI with IAM Roles for Service Accounts (IRSA)_, §Identify which secrets to mount, accessed 2026-10-20. <https://docs.aws.amazon.com/secretsmanager/latest/userguide/integrating_csi_driver.html>. "To determine which secrets the ASCP mounts in Amazon EKS as files on the filesystem, you create a SecretProviderClass YAML file."
 - **[R21]** AWS, _Log AWS Secrets Manager events with AWS CloudTrail_, accessed 2026-10-20. <https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieve-ct-entries.html>. "AWS CloudTrail records all API calls for Secrets Manager as events".
+- **[R23]** Keycloak 26.7.5 source, `services/src/main/java/org/keycloak/services/resources/PublicRealmResource.java`, accessed 2026-10-20. <https://github.com/keycloak/keycloak/blob/26.7.5/services/src/main/java/org/keycloak/services/resources/PublicRealmResource.java>. `getRealm()`, annotated `@GET`, "Public information about the realm", returns `realmRep(...)`, which calls `rep.setPublicKeyPem(PemUtils.encodeKey(session.keys().getActiveRsaKey(realm).getPublicKey()));`.
+- **[R24]** Keycloak 26.7.5 source, `services/src/main/java/org/keycloak/keys/DefaultKeyManager.java`, accessed 2026-10-20. <https://github.com/keycloak/keycloak/blob/26.7.5/services/src/main/java/org/keycloak/keys/DefaultKeyManager.java>. `getActiveRsaKey` calls `getActiveKey(realm, KeyUse.SIG, Algorithm.RS256)`; `getActiveKey` logs "Failed to find active key for realm, trying fallback", filters the factories by `kf.createFallbackKeys(session, use, algorithm)`, and logs "No keys found for realm={0} and algorithm={1} for use={2}. Generating keys."
+- **[R25]** Keycloak, _Configuring a reverse proxy_, §Exposed path recommendations, accessed 2026-10-20. <https://www.keycloak.org/server/reverseproxy>. "When using a reverse proxy, Keycloak only requires certain paths to be exposed." For `/realms/`: "This path is needed to work correctly, for example, for OIDC endpoints."
+- **[R26]** Caddy, _Request matchers_, `path_regexp`, accessed 2026-10-20. <https://caddyserver.com/docs/caddyfile/matchers>. "Like path, but supports regular expressions. Runs against the URI-decoded/unescaped path."
