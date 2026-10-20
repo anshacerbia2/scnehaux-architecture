@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -16,6 +16,13 @@ doc_meta:
 ---
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
+
+> **Revision 2.2.0 is pending exact-commit ratification.** It makes the neutral
+> strong border the control boundary and tests it at 3:1 (section 3, Semantic
+> Usage Doctrine). Under GDC-000 section 2.6.7, revision 2.1.0 remains binding
+> until the authorized human authority approves the exact commit containing
+> this revision. The existing `last_reviewed` is updated only in the
+> ratification commit or manifest.
 
 > **Implementation boundary:** Sass maps are current. A DTCG 2025.10 source generating CSS, Sass, and Panda contracts remains a migration target, not an implemented guarantee.
 
@@ -173,17 +180,17 @@ Shared styling follows the semantic consumption boundary. Source enforcement is 
 
 To ensure consistent design decisions across product teams, the `Emphasis` layers must obey explicit behavioral guidelines. Misusing layers (e.g., rendering body copy with `contrast` emphasis) is a semantic violation:
 
-| Emphasis Layer                             | Intended Visual & Semantic Rationale                                                                   | Typical UX/UI Components                                                        |
-| :----------------------------------------- | :----------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
-| **`subtle`**                               | Passive contextual surface or border accents representing background canvases and structural sections. | Alert banners, passive cards, table row hover, static badge fills               |
-| **`default`**                              | Standard interactive element surfaces, outlines, and readable copy.                                    | Standard button surfaces, default input borders, readable body copy, main icons |
-| **`strong`**                               | Elevated prominence representing active visual priority or highlighted emphasis.                       | Active indicators, bold headings, high-visibility warning borders               |
-| **`solid`**                                | Opaque, full-chroma fill that carries the scheme's identity. Surface role only.                        | Filled primary buttons, filled badges, selected segmented-control items         |
-| **`contrast`**                             | Text, icon, or shadow color designed to sit on a `solid` surface of the same scheme.                   | Label of a filled primary button, icon on a filled danger badge                 |
-| **`canvas`**                               | Neutral page background. Neutral surface only.                                                         | Application page background                                                     |
-| **`sunken`**, **`raised`**, **`floating`** | Neutral elevation steps below or above the canvas. Neutral surface only.                               | Inset wells; cards; popovers and menus                                          |
+| Emphasis Layer                             | Intended Visual & Semantic Rationale                                                                   | Typical UX/UI Components                                                                                   |
+| :----------------------------------------- | :----------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| **`subtle`**                               | Passive contextual surface or border accents representing background canvases and structural sections. | Alert banners, passive cards, table row hover, static badge fills                                          |
+| **`default`**                              | Standard interactive element surfaces, outlines, and readable copy.                                    | Standard button surfaces, dividers, readable body copy, main icons                                         |
+| **`strong`**                               | Elevated prominence representing active visual priority or highlighted emphasis.                       | Text-input and other control boundaries, active indicators, bold headings, high-visibility warning borders |
+| **`solid`**                                | Opaque, full-chroma fill that carries the scheme's identity. Surface role only.                        | Filled primary buttons, filled badges, selected segmented-control items                                    |
+| **`contrast`**                             | Text, icon, or shadow color designed to sit on a `solid` surface of the same scheme.                   | Label of a filled primary button, icon on a filled danger badge                                            |
+| **`canvas`**                               | Neutral page background. Neutral surface only.                                                         | Application page background                                                                                |
+| **`sunken`**, **`raised`**, **`floating`** | Neutral elevation steps below or above the canvas. Neutral surface only.                               | Inset wells; cards; popovers and menus                                                                     |
 
-Every `contrast` token is tested against the `solid` surface of its scheme in each theme and state; every `text` and `icon` token at `subtle`, `default`, or `strong` is tested against the neutral surfaces it is declared for.
+Every `contrast` token is tested against the `solid` surface of its scheme in each theme and state; every `text` and `icon` token at `subtle`, `default`, or `strong` is tested against the neutral surfaces it is declared for. The neutral `border` token at `strong` emphasis in its default state is the boundary of a control that has no other visual indicator, such as a text input, and is tested at 3:1 against every declared neutral surface in each theme and mode (WCAG 2.2 SC 1.4.11 [1]: "Where a text-input has an indicator such as a complete border […], that indicator must meet 3:1 contrast ratio" [2]). Scheme borders (`primary`, `danger`, and the others) mark states that text or another cue also carries, and are not tested for 3:1.
 
 #### Domain Semantic Layer (Logical Intent Mapping)
 
@@ -294,3 +301,10 @@ The SASS compile pipeline (`pnpm --filter "@scnx/system" build`) is the primary 
 ### 5.7.3 Waiver Protocol
 
 Formal exceptions follow GDC-010 and the applicable standard-governance process. Routine justified Tier-3 aliases are reviewed as token-contract changes, not treated as automatic waivers.
+
+## 6. References
+
+Retrieved 2026-10-20.
+
+1. W3C, WCAG 2.2, Success Criterion 1.4.11 Non-text Contrast: <https://www.w3.org/TR/WCAG22/>. "The visual presentation of the following have a contrast ratio of at least 3:1 against adjacent color(s): User Interface Components Visual information required to identify user interface components and states".
+2. W3C WAI, Understanding SC 1.4.11 Non-text Contrast: <https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html>. "Where a text-input has an indicator such as a complete border ( #767676 ), that indicator must meet 3:1 contrast ratio"; for adjacent colours, "if an input has a white internal background, dark border, and white external background the 'adjacent color' to the component would be the white external background".
