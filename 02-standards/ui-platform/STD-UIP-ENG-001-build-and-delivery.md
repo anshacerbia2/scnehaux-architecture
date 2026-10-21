@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-ENG-001
   title: UI Platform Build & Delivery Standards
   owner: Principal UI/UX Architect
-  version: 2.2.0
+  version: 2.3.0
   status: approved
   classification: public
   governed_by: [PAD-PLT-003]
@@ -14,6 +14,12 @@ doc_meta:
 ---
 
 # UI Platform Build & Delivery Standards (STD-UIP-ENG-001)
+
+> **Revision 2.3.0 is pending exact-commit ratification.** It adds the
+> interaction-trace method to section 3.3 (PLAN P3). Under GDC-000 section
+> 2.6.7, revision 2.2.0 remains binding until the authorized human authority
+> approves the exact commit containing this revision. The existing
+> `last_reviewed` is updated only in the ratification commit or manifest.
 
 > **Implementation boundary:** this approved release contract does not establish that existing packages pass its CI and consumer gates.
 
@@ -63,6 +69,12 @@ Build both packages, create tarballs with the pinned `pnpm pack` command, and in
   4. A time is an aggregate (the median) of repeated samples, never one sample [14], measured on a named runner whose hardware is recorded [14]. Samples alternate between scenarios, each in a fresh browser context.
   5. A measurement is comparative evidence, not a budget. A budget is a limit on a named metric for a named scenario [15]; until one is approved for a scenario, no measured value passes or fails a release. The first release record holds the baseline later releases are compared against.
 - Capture interaction traces for dynamic-height transitions. A layout read is permitted when required for behavior, but claims about forced layout count, frame rate, and theme-switch latency require named scenarios and trace evidence.
+- The interaction-trace method:
+  1. The scenarios are opening and closing every shipped dynamic-height transition, once uninterrupted and once reversed mid-transition, with and without reduced motion, and switching the theme mode, each from the packed tarballs.
+  2. A forced layout is layout the engine runs synchronously because script "queries geometric properties (such as offsetWidth) after styles have been invalidated" [16][17]. It is counted from an engine trace as a layout event nested inside a script task, per interaction. Engine traces are Chromium-only [18], so forced layouts are counted in Chromium; a count claimed in a design document is a gate, and any other count is evidence.
+  3. No frame rate is claimed. Long animation frames, frames of 50 ms or more [19], are recorded during each interaction where the engine supports them.
+  4. Theme-switch latency is the Event Timing duration of the switching click, from the input to the next paint [20], in every engine of the support matrix that exposes it.
+  5. Times are medians of repeated samples on a recorded runner [14], and, like payload measurements, are evidence and not budgets until a budget is approved for a named scenario.
 - Do not claim `0` reflows, fixed 60 FPS, a universal `<2 KB` or 12 KB budget, or sub-50 ms theme switching without the corresponding supported-scenario evidence.
 - Library minification remains deferred to the consumer build as decided in ADR-UIP-BLD-001; measure final consumer output, not only raw `dist` files.
 
@@ -100,7 +112,7 @@ The CI pipeline executes the source gate and packed-package gate, stores their e
 
 ## 6. References
 
-References 1–8 retrieved 2026-10-03; 9–15 retrieved 2026-10-20.
+References 1–8 retrieved 2026-10-03; 9–15 retrieved 2026-10-20; 16–20 retrieved 2026-10-21.
 
 1. Semantic Versioning 2.0.0, `semver.md` at commit `f99d5485190a47c0863949e7da810a5553e0ed4d`: <https://github.com/semver/semver/blob/f99d5485190a47c0863949e7da810a5553e0ed4d/semver.md>. Item 1: "Software using Semantic Versioning MUST declare a public API"; item 3: "Once a versioned package has been released, the contents of that version MUST NOT be modified"; item 7: a minor version "MUST be incremented if any public API functionality is marked as deprecated"; item 9: a pre-release "indicates that the version is unstable"; FAQ: "Before you completely remove the functionality in a new major release there should be at least one minor release that contains the deprecation".
 2. React, Versioning policy, at react.dev commit `8c68ae8d2410abe59f351195780c6f8ea9f50904`: <https://github.com/reactjs/react.dev/blob/8c68ae8d2410abe59f351195780c6f8ea9f50904/src/content/community/versioning-policy.md>. "Whenever possible, we add warnings in preparation for future breaking changes. That way, if your app has no warnings on the latest release, it will be compatible with the next major release."
@@ -117,3 +129,8 @@ References 1–8 retrieved 2026-10-03; 9–15 retrieved 2026-10-20.
 13. Size Limit, README at commit `3deb55962bb7f4ad4167bd2bb3e04f3f6549370e`: <https://github.com/ai/size-limit/blob/3deb55962bb7f4ad4167bd2bb3e04f3f6549370e/README.md>. It "Can calculate **the time** it would take a browser to download and **execute** your JS. Time is a much more accurate and understandable metric compared to the size in bytes"; its time plugin "runs headless Chrome [...] to track the time a browser takes to compile and execute your JS."
 14. Lighthouse, `docs/variability.md` at commit `8cbac2d085f0fc8f4da2089e7e8e822076179f9e`: <https://github.com/GoogleChrome/lighthouse/blob/8cbac2d085f0fc8f4da2089e7e8e822076179f9e/docs/variability.md>. "use aggregate values like the median, 90th percentile, or even min/max instead of single test results"; "The median Lighthouse score of 5 runs is twice as stable as 1 run"; on hardware, "Minimum 2 dedicated cores (4 recommended)".
 15. web.dev, Performance budgets 101: <https://web.dev/articles/performance-budgets-101> (retrieved 2026-10-20). "A performance budget is a set of limits imposed on metrics that affect site performance"; "You should have a budget in place for different types of pages on your site since the content will vary."
+16. Chrome for Developers, Forced reflow (Performance insights), published 2025-10-08: <https://developer.chrome.com/docs/performance/insights/forced-reflow> (retrieved 2026-10-21). "A forced reflow occurs when JavaScript queries geometric properties (such as offsetWidth) after styles have been invalidated by a change to the DOM state."
+17. web.dev, Avoid large, complex layouts and layout thrashing: <https://web.dev/articles/avoid-large-complex-layouts-and-layout-thrashing> (retrieved 2026-10-21). "in order to answer the height question, the browser must first apply the style change [...], and then run layout. [...] This is called forced synchronous layout (or sometimes forced reflow)."
+18. Playwright, `Browser.startTracing`, `docs/src/api/class-browser.md` at commit `66070a1eaa0b869379607a9e0e1a652ddf2a77da`: <https://github.com/microsoft/playwright/blob/66070a1eaa0b869379607a9e0e1a652ddf2a77da/docs/src/api/class-browser.md>. "This API controls Chromium Tracing which is a low-level chromium-specific debugging tool"; the trace file "can be opened in Chrome DevTools performance panel".
+19. W3C, Long Animation Frames API, at w3c/long-animation-frames commit `b3beb0e0564b2ba3022efa3afaefbbece066a59a`: <https://github.com/w3c/long-animation-frames/blob/b3beb0e0564b2ba3022efa3afaefbbece066a59a/index.bs>. It detects "long animation frames" that "monopolize the UI thread for extended periods of time"; "This API surfaces tasks that take 50ms or more." web-features 3.43.0 lists it as not Baseline (Chromium 123 only).
+20. W3C, Event Timing, at w3c/event-timing commit `f8e11d6cd1818cdf4ae883da0a323520b9c6b403`: <https://github.com/w3c/event-timing/blob/f8e11d6cd1818cdf4ae883da0a323520b9c6b403/index.bs>. "the duration from event hardware timestamp to the next paint after the event is handled is a useful user experience metric." web-features 3.43.0 lists it as Baseline Newly available (Chrome 76, Firefox 89, Safari 26.2).
