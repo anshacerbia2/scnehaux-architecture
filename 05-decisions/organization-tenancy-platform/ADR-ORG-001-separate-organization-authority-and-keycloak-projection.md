@@ -23,12 +23,17 @@ Separate Organization authority from Identity and use Keycloak only as a bounded
 | :--------- | :---------------- | :----------- | :------------------------------------------------------- | :--------------------- |
 | 2026-08-11 | accepted          | foundational | Architecture, Identity, Core Platform, Security, Product | Architecture Authority |
 | 2026-10-20 | accepted, amended | foundational | Architecture, Identity, Core Platform, Security, Product | Architecture Authority |
+| 2026-10-21 | accepted, amended | foundational | Architecture, Identity, Core Platform, Security, Product | Architecture Authority |
 
 **Amended 2026-10-20, in place,** on two points the owner approved on 2026-10-20 as recommended: §5.7
 states that a consumer reconciles itself on an interval it declares, and §5.11 admits a fourth
 caller, a registered reporter workload. It is edited in place because no system this decision
 governs is in production (GDC-010 §2.4.2): `SAD-004` §10.3 and `SAD-012` §10.4 record that the only
 deployment is the development server, and identity-control's is recorded in `SAD-001` §9.1.
+
+**Amended 2026-10-21, in place,** on one point: §5.11's reporter registry row gains a third kind of
+entry, `invitation:resolve`, for identity-control's invitation resolve route (`ADR-IAM-011 §5.7`).
+Same evidence for editing in place.
 
 ## 3. Context
 
@@ -240,7 +245,7 @@ No role and no private claim names the consumer. It is not named by `client_id` 
 **A reporter is a workload Principal this platform registered to report one kind of outcome (amended 2026-10-20).** The production provisioning system reports `POST /v1/provisioning/realized|failed` and `POST /v1/offboardings/{id}/deprovisioning`, and an obligation-owning domain reports `POST /v1/obligations/{id}/resolve`. Neither is a person, so neither holds a person's provider token:
 
 - **One workload client per external system.** It is registered through identity-control's workload registration, with an owner (`ADR-IAM-003 §5.8`), and gets its token with the client credentials grant, which a client uses "when the client is requesting access to the protected resources under its control, or those of another resource owner that have been previously arranged with the authorization server" and which "MUST only be used by confidential clients" [R10]. It authenticates with a client assertion signed by its own key, RSA of at least 3072 bits, as RFC 7523 §2.2 defines it [R11]. RFC 9700 recommends "signed JWTs ("Private Key JWT")" [R12]. Microsoft describes the same flow: a service uses "its own credentials, instead of impersonating a user" [R13]. In the kernel, "Each OIDC client has a built-in service account", and a signed JWT "enables the client to authenticate without a shared secret" [R16]. The token's `aud` names this API alone [R12].
-- **Admitted from a record, not a scope.** A reporter registry row names the workload's `principal_id` and what it may report: `provisioning`, or `obligation:<domain>`. A token is a reporter's when its `subject_type` is `workload` and its `principal_id` is that of an active registered reporter, as for a consumer above. No OAuth scope decides it, because roles stay out of tokens (`STD-IAM-002 §3.2`), and retiring a reporter is a change to a record here, not to the kernel.
+- **Admitted from a record, not a scope.** A reporter registry row names the workload's `principal_id` and what it may report: `provisioning`, or `obligation:<domain>`, or, for identity-control's invitation resolve route alone, `invitation:resolve` (amended 2026-10-21, `ADR-IAM-011 §5.7`). A token is a reporter's when its `subject_type` is `workload` and its `principal_id` is that of an active registered reporter, as for a consumer above. No OAuth scope decides it, because roles stay out of tokens (`STD-IAM-002 §3.2`), and retiring a reporter is a change to a record here, not to the kernel.
 - **Admitted alone, per route.** A `provisioning` reporter reaches the three provisioning reports and nothing else. An `obligation:<domain>` reporter reaches `/resolve`, and only for an obligation raised against that domain. The domain comes from the record, so a `domain` in the body must match it. Every other route answers a workload `403`. Least privilege: "Access should also be granted with the least privileges needed to complete the task" [R14], and AC-6 applies "to system processes, ensuring that the processes have access to systems and operate at privilege levels no higher than necessary" [R15]. IA-9 asks that services be uniquely identified "before establishing communications" [R15].
 - **Recorded.** Each report writes a privileged-access row with the authority `reporter`, beside `consumer`. It is reviewed through the workload's owner, not in the weekly provider review.
 - **A person's fallback stays a person's act.** An operator who reports on the provisioning system's behalf does so as a provider, with the system's confirmation in the reason. There is no provider fallback for an obligation: no control lets an operator resolve another domain's obligation (`TDD-organization-control-004`).

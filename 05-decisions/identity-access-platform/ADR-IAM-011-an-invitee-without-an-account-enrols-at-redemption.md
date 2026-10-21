@@ -18,10 +18,17 @@ An Invitee Without an Account Enrols at Redemption, After Proving the Address.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                       |
-| ---------- | -------- | ------------ | ------------------------- | ------------------------------ |
-| 2026-10-19 | proposed | foundational | Architecture Review Board | Enterprise Architect — pending |
-| 2026-10-20 | accepted | foundational | Architecture Review Board | Enterprise Architect           |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver                       |
+| ---------- | ----------------- | ------------ | ------------------------- | ------------------------------ |
+| 2026-10-19 | proposed          | foundational | Architecture Review Board | Enterprise Architect — pending |
+| 2026-10-20 | accepted          | foundational | Architecture Review Board | Enterprise Architect           |
+| 2026-10-21 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect           |
+
+**Amended 2026-10-21, in place,** on one point: §5.7 settles the three points §5.1 left to
+`TDD-organization-control-004`, which are how Organization Control recognises identity-control's
+workload, the one answer for a token that resolves to nothing, and the read path. It is edited in
+place because no system this decision governs is in production (GDC-010 §2.4.2): `SAD-001` §9.1
+and `SAD-004` §10.3 record that the only deployment is the development server.
 
 ## 3. Context
 
@@ -143,6 +150,72 @@ Membership.
 | identity-kernel         | None. Registration stays disabled, and the kernel sends no mail                                                                                                                                                                                                          |
 | scnehaux-architecture   | `STD-IAM-001 §3.1`: its exception (2.8.0) gains a second recipient, the person who has just proven the invited address, once this decision is accepted. SAD-001 lists the creation path                                                                                  |
 
+### 5.7 How Organization Control Recognises, Answers and Reads for the Resolve Route (amended 2026-10-21)
+
+`POST /v1/invitations/resolve` (§5.1) left three points to `TDD-organization-control-004` 1.16.0 and
+organization-control ROADMAP item 56. They are decided here, so that the TDD and the code follow
+one rule.
+
+**(a) The caller is a registered workload, admitted from a record, for this route alone.** This
+follows `ADR-ORG-001 §5.11`, which admits a registered reporter workload and no role from the token.
+
+- **A registry row, not a scope and not a client identifier.** The reporter registry row of
+  `ADR-ORG-001 §5.11` names a workload's `principal_id` and what it may do. It gains one entry,
+  `invitation:resolve`. A token is the resolver's when its `subject_type` is `workload` and its
+  `principal_id` is that of an active registered entry with that capability. No OAuth scope decides
+  it (`STD-IAM-002 §3.2` keeps roles out of tokens), and no `client_id` does: a retired client's
+  key is freed, and RFC 9068 warns that an authorization server "should prevent clients from
+  registering an arbitrary client_id value, as this would allow malicious clients to select the sub
+  of a high-privilege resource owner" [R12].
+- **Not the consumer registration.** identity-control is also a registered projection consumer
+  (`SAD-004` §7.6), and that admits it to the consumer routes. Resolving an invitation is another
+  act, and a consumer admission that also resolved would let every consumer, `foundation-reference`
+  included, read an invitation's address. AC-6 asks for "only authorized accesses ... that are
+  necessary to accomplish assigned organizational tasks" [R11], so each route has its own entry.
+- **Alone, per route.** An entry with `invitation:resolve` reaches this route and nothing else.
+  Every other route answers that workload `403`, and every other caller answers `403` on this one.
+- **Recorded.** Each call writes a privileged-access row as a reporter's report does, with the
+  authority `reporter` and the capability in its detail. It names no Tenant, because a call that
+  finds nothing names none and a call that finds an invitation must not differ. It is reviewed
+  through the workload's owner (`ADR-ORG-001 §5.11`). The calls are bounded by identity-control's
+  own limits per invitation and per client address (§5.2).
+- **Development runs production's path.** identity-control registers as a workload with an owner
+  (`ADR-IAM-003 §5.8`) and signs in with its own key; no development flag admits another caller.
+
+**(b) One answer for a token that resolves to nothing: `404`, always the same.** An unknown,
+expired, revoked or accepted token gets the same status, the same problem type and the same body,
+and no field of it derives from the row. The lookup (`TDD-organization-control-004` §Acceptance, and
+Enumeration Resistance) already renders every outcome identically, and WSTG-IDNT-04 asks that the
+application return "consistent generic error messages" [R3]. `404` is the status HTTP defines for
+it: the server "did not find a current representation for the target resource or is not willing to
+disclose that one exists" [R10]. The route makes one lookup by the token's hash whatever the
+outcome, so its duration does not separate the cases either. A malformed request body is a `400`
+that says nothing about invitations. identity-control never forwards the `404`: its own answer is
+the `202` of §5.1.
+
+**(c) The read path is a scope of its own, which the database confines to one row.** The route reads
+`invitation.invitation`, which is protected by row-level security, before any Tenant is known and
+with no person signed in.
+
+- **The scope.** `db.WithInvitationResolver(token_hash)` binds the hash of the token in the
+  request, and a dedicated database role is the only role that reads the table through it. A
+  `SELECT` policy on that role admits only the row whose `token_hash` equals the bound value and
+  that is `pending` and not past its expiry. PostgreSQL shows a row only when the policy's
+  expression "returns true", and "any rows for which the expression returns false or null will not
+  be visible" [R13]. So the database, not the handler, makes the read return at most one row, and
+  makes an absent, expired, revoked or accepted invitation the same empty result, which is what
+  (b) needs. The role is granted the invitation's identifier and target address only, and the
+  policy is declared by name in the service's posture check, as the other additional policies are.
+- **Not the provider scope** (`db.WithProviderScope`): it needs a Tenant, an actor and recorded
+  access, and a token is resolved before it has a Tenant. **Not the self scope**
+  (`db.WithSelfInvitation`): it is the signed-in invitee's, and none exists yet. **Not an owning
+  connection**: a table owner or a superuser bypasses row security by default
+  (`STD-GLB-007` R4 quotes PostgreSQL on it).
+- **Not a view over the pending invitations.** `STD-GLB-002` §Aggregate Reads Under Row-Level
+  Security reads a view that "names no row". A view of pending invitations by token hash would let
+  this role list every pending invitation's address across Tenants, which is wider than the task.
+  **Not a `SECURITY DEFINER` function**, for the reason that section gives.
+
 ## 6. Consequences
 
 ### Positive
@@ -242,6 +315,21 @@ administrator's request, and leaves it behind when the invitation lapses. Entra'
   appropriate protection to prevent users from brute-forcing tokens in the URL, such as rate
   limiting."
 
+- **[R10]** IETF RFC 9110, _HTTP Semantics_, June 2022, §15.5.5 404 Not Found, accessed 2026-10-21.
+  <https://www.rfc-editor.org/rfc/rfc9110>. "The 404 (Not Found) status code indicates that the
+  origin server did not find a current representation for the target resource or is not willing to
+  disclose that one exists."
+- **[R11]** NIST SP 800-53 Rev. 5, AC-6 _Least Privilege_, from the OSCAL catalog, accessed 2026-10-21.
+  <https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json>.
+  "Employ the principle of least privilege, allowing only authorized accesses for users (or
+  processes acting on behalf of users) that are necessary to accomplish assigned organizational
+  tasks."
+- **[R12]** IETF RFC 9068, _JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens_, October 2021,
+  §5 Security Considerations, accessed 2026-10-21. <https://www.rfc-editor.org/rfc/rfc9068>. "the
+  authorization server should prevent clients from registering an arbitrary client_id value, as this
+  would allow malicious clients to select the sub of a high-privilege resource owner and confuse any
+  authorization logic on the resource server relying on the "sub" value."
+
 ### Informative
 
 - **[R5]** GitHub, _Invite members to your organization with an email address_ (GitHub blog, July
@@ -276,3 +364,7 @@ administrator's request, and leaves it behind when the invitation lapses. Entra'
   <https://github.com/okta/okta-management-openapi-spec/blob/master/dist/current/management-minimal.yaml>.
   "Users who don't have a password must complete the welcome flow by visiting the activation link
   to complete the transition to `ACTIVE` status."
+- **[R13]** PostgreSQL 17 Documentation, _CREATE POLICY_, accessed 2026-10-21.
+  <https://www.postgresql.org/docs/17/sql-createpolicy.html>. "Rows for which the expression returns
+  true will be visible. Any rows for which the expression returns false or null will not be visible
+  to the user (in a SELECT), and will not be available for modification (in an UPDATE or DELETE)."

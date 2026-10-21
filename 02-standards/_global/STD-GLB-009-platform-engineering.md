@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-009
   title: Enterprise Platform Engineering Standard
   owner: Principal Platform Architect
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   governed_by: [GDC-000]
   authorized_by: [ADR-IAM-002]
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-20
+  last_reviewed: 2026-10-21
 ---
 
 # Enterprise Platform Engineering Standard (STD-GLB-009)
@@ -238,6 +238,14 @@ Every Scnehaux service ships as an OCI image, and an image carries every vulnera
     - _A base that brings executables the image never runs_ gives way to one that carries only what the image runs, such as the distribution's base with the one package installed. NIST asks for base layers "from minimalistic technologies ... to reduce attack surface areas" [R11], and CISA's own example of a package left unused is one a base image brings: "Base layer container images often contain unused packages" [R40]. A component that is not in the image needs no exception.
 11. **A built image name is never pulled (1.8.0).** A Compose service that both builds an image and names it MUST set `pull_policy: build`, and a service that runs that name without building it MUST set `pull_policy: never`. Without it, "If `pull_policy` is missing in the service definition, Compose attempts to pull the image first and then builds from source if the image isn't found in the registry or platform cache" [R56]. A name such as `scnehaux-identity-control-dev-migrate` has no digest to pin (rule 1), so an image of the same name published to a registry would run in place of the one the repository built. With `build`, "Compose builds the image. Compose rebuilds the image if it's already present" [R56]. With `never`, "Compose doesn't pull the image from a registry and relies on the platform cached image. If there is no cached image, a failure is reported" [R56], so a task run before the build fails instead of running someone else's image. A service repository's `deploy-dev` job asserts both, for every image name in its compose files that carries no digest.
 
+12. **Each image build has a `.dockerignore` that removes what the build does not read (2.1.0).** The file sits in the root of the build context, and it MUST exclude three kinds of path, with the patterns a repository's own layout needs:
+    - _Secrets and key material._ `.env` and `**/.env`, every `keys/` directory, `*.pem` and `**/*.pem`, a Compose override that holds a server's values (`compose.override.yaml`), and a local token file. A repository adds any other file that holds a credential.
+    - _Local state._ A sibling repository a workflow checks out into the workspace (for example `.kernel/`, `.identity/`, `.experience/`), a proof's or the image scan's working directory, coverage and test output, build output, and local databases and volumes.
+    - _Version control and CI metadata._ `.git` and `.github`.
+    - _Why._ Docker: "Build instructions such as COPY and ADD can refer to any of the files and directories in the context" [R75]. A `.dockerignore` in the root of the context does the opposite: "the files and directories that match patterns in the files are removed from the build context before it's sent to the builder" [R75], which "helps avoid sending unwanted files and directories to the builder" [R75]. A file that is never sent can neither be copied into a layer by a broad `COPY . .` nor fail the build because the builder cannot read it. Docker says of a secret passed as a build argument or an environment variable that it will "persist in the final image" [R76]. A secret file copied into a layer persists in the same way; that is this standard's inference, not Docker's words. Docker's text does not name `.git`, local state or CI metadata. They are excluded as the conservative choice: the history in `.git` holds every earlier version of every file, including any a secret was once committed in, and neither it nor the other two is read by a build.
+    - _What it does not do._ It is not the way to pass a secret to a build. Docker's answer is a secret mount or an SSH mount [R76], which keeps the secret out of the layers. The file is also not an allow-list rule: a repository MAY write `*` and re-include only what the build reads, which Docker's syntax supports and which excludes more, and it MUST still list the three kinds above where it does not.
+    - _Where it stands._ identity-control and organization-control carry such a file, with `.kernel/` and `keys/` excluded. Any other repository that builds an image from a directory gains one, tracked as a ROADMAP item in that repository.
+
 **The scanner.** Grype, run from `anchore/grype` pinned by digest:
 
 - `--fail-on high` exits non-zero "if it found vulnerabilities at or above the specified severity" [R14].
@@ -307,6 +315,7 @@ None. All platform engineering standards apply universally. Deviations require f
 6. **Stack-level proofs (1.7.0)**: Each proof of §Stack-Level Proofs is a workflow with a `<name>_ref` input per producer, run on pull requests, on `main`, daily and on dispatch, whose evidence artifact holds every measured figure with its bound.
 7. **Default-branch rulesets and backups (1.10.0)**: Each code repository's default branch is checked against §Security & Access Governance: a ruleset with `pull_request`, `non_fast_forward` and `deletion` and no bypass actors. Each server-deployed service's restore drill asserts that `backup.sh` keeps the newest 14 sets and never deletes the newest one (§Development Server Deployment rule 9).
 8. **The legacy realm endpoint (2.0.0)**: identity-kernel's `deploy-dev` proves the `404` on the development server's public port for every spelling, and its compatibility suite records what the pinned image does on the endpoint. A production deployment pipeline runs the same check against the production host before the realm serves anyone (§Security & Access Governance).
+9. **Build-context exclusions (2.1.0)**: Each repository that builds an image has a `.dockerignore` that excludes the three kinds of path in §Container Images rule 12. Its CI fails when the file is missing, or when a path of one of the kinds, such as a `keys/` directory, a `.env` file or `.git`, is not matched by it.
 
 ## 6. References
 
@@ -384,3 +393,5 @@ None. All platform engineering standards apply universally. Deviations require f
 - **[R72]** Keycloak 26.7.5 source, `PublicRealmResource.java`, accessed 2026-10-20. <https://github.com/keycloak/keycloak/blob/26.7.5/services/src/main/java/org/keycloak/services/resources/PublicRealmResource.java>. `getRealm()`, `@GET`, "Public information about the realm": `rep.setPublicKeyPem(PemUtils.encodeKey(session.keys().getActiveRsaKey(realm).getPublicKey()));`.
 - **[R73]** Keycloak 26.7.5 source, `DefaultKeyManager.java`, accessed 2026-10-20. <https://github.com/keycloak/keycloak/blob/26.7.5/services/src/main/java/org/keycloak/keys/DefaultKeyManager.java>. `getActiveRsaKey` calls `getActiveKey(realm, KeyUse.SIG, Algorithm.RS256)`; on no active key it calls `createFallbackKeys` and logs "No keys found for realm={0} and algorithm={1} for use={2}. Generating keys."
 - **[R74]** Caddy, _Request matchers_, `path_regexp`, accessed 2026-10-20. <https://caddyserver.com/docs/caddyfile/matchers>. "Like path, but supports regular expressions. Runs against the URI-decoded/unescaped path."
+- **[R75]** Docker, _Build context_, §What is a build context? and §.dockerignore files, accessed 2026-10-21. <https://docs.docker.com/build/concepts/context/>. "The build context is the set of files that your build can access."; "Build instructions such as COPY and ADD can refer to any of the files and directories in the context."; "You can use a .dockerignore file to exclude files or directories from the build context."; "This helps avoid sending unwanted files and directories to the builder, improving build speed, especially when using a remote builder."; "When you run a build command, the build client looks for a file named .dockerignore in the root directory of the context. If this file exists, the files and directories that match patterns in the files are removed from the build context before it's sent to the builder." Supports §Container Images rule 12.
+- **[R76]** Docker, _Build secrets_, accessed 2026-10-21. <https://docs.docker.com/build/building/secrets/>. "A build secret is any piece of sensitive information, such as a password or API token, consumed as part of your application's build process."; "Build arguments and environment variables are inappropriate for passing secrets to your build, because they persist in the final image. Instead, you should use secret mounts or SSH mounts, which expose secrets to your builds securely." Supports §Container Images rule 12.
