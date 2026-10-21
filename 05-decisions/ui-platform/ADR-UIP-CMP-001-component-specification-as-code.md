@@ -4,7 +4,7 @@ doc_meta:
   title: Component Specification as Code for UI Platform Components
   adr_type: foundational
   owner: Principal UI/UX Architect
-  status: proposed
+  status: accepted
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
@@ -16,7 +16,7 @@ doc_meta:
 
 # Component Specification as Code for UI Platform Components (ADR-UIP-CMP-001)
 
-> **Implementation boundary:** this decision changes no package by itself. Once accepted, it is implemented by revisions of SAD-003 sections 2.1 and 5.1, STD-UIP-PRM-001, and STD-UIP-STY-001 section 3, and by the UI repository's primitives and styled TDDs, which own the schemas, the rules, and the gates.
+> **Implementation boundary:** this decision changes no package by itself. It is implemented by SAD-003 2.3.0 (sections 2.1, 5.1, and 10), STD-UIP-PRM-001 2.2.0 and STD-UIP-STY-001 2.2.0 (section 3, "Component specification"), and the UI repository's primitives and styled TDDs, which own the schemas, the rules, and the gates.
 
 ---
 
@@ -26,9 +26,12 @@ Record the contract of every public entry of `@scnx/core-ui` and `@scnx/system` 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------ | ------------------------------------------------ |
-| 2026-10-22 | proposed | foundational | Pending principal review | Pending Architecture Review Board (Ansha Cerbia) |
+| Date       | Status   | ADR Type     | Reviewers                 | Approver                                         |
+| ---------- | -------- | ------------ | ------------------------- | ------------------------------------------------ |
+| 2026-10-22 | proposed | foundational | Pending principal review  | Pending Architecture Review Board (Ansha Cerbia) |
+| 2026-10-22 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board)         |
+
+Acceptance, stated by Ansha Cerbia on 2026-10-22: "Lo rubah aja, gausah terlalu formal di status, gw butuh first class grade design, klo memang udh based on best practice, battle tested solution, first class grade, dan ada referencenya, lgsg approved aja, gausah pake proposed2" ("Change it; the status need not be formal. I need a first-class design: when it is based on best practice and battle-tested solutions, first-class, and referenced, approve it directly without the proposed step.") SAD-003 2.3.0, STD-UIP-PRM-001 2.2.0, and STD-UIP-STY-001 2.2.0 implement it in the same change.
 
 ## 3. Context
 
@@ -107,7 +110,7 @@ No precedent found verifies a declared binding against the computed style of the
 
 ## 7. Compliance Impact
 
-No standard is violated and no waiver is requested. After acceptance:
+No standard is violated and no waiver is requested. Revised with this acceptance:
 
 - SAD-003 section 2.1 gains the specification files (normative, gated, next to source, in both packages) and the documentation repository (generated normative sections; informative usage); section 5.1's component contract names the specifications, with the TDDs for decisions.
 - STD-UIP-PRM-001 and STD-UIP-STY-001 section 3 each gain a rule: every primitive, respectively styled component, declares a specification that passes items 4 to 6 before `stable`.

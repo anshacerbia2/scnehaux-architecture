@@ -3,13 +3,13 @@ doc_meta:
   id: SAD-003
   title: Scnehaux UI Platform Software Architecture
   owner: Principal UI/UX Architect
-  version: 2.2.0
+  version: 2.3.0
   status: approved
   classification: public
   governed_by: [GDC-009]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-21
+  last_reviewed: 2026-10-22
   parent_pad: PAD-PLT-003
   technologies:
     - name: react
@@ -96,15 +96,17 @@ contracts and the public compatibility surface declared by a release.
 The UI Platform uses one normative design hierarchy and one deliberately small
 project-repository execution set:
 
-| Location                              | Artifact                                                                                                                                          | Authority boundary                                                                                                                                                                                                                                                                                             |
-| :------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scnehaux-architecture`               | GDC, EAD, PAD, SAD, ADR, STD, and Technology Radar                                                                                                | Enterprise, capability, system, decision, and standard authority according to lifecycle state                                                                                                                                                                                                                  |
-| `ui-platform/docs/designs/`           | Exactly the five TDDs attached to `SAD-003`                                                                                                       | Component design and implementation contract                                                                                                                                                                                                                                                                   |
-| `ui-platform/PLAN.md`                 | Ordered work, accountable role, decision authority, and binary acceptance                                                                         | Execution control only; cannot approve architecture or release                                                                                                                                                                                                                                                 |
-| `ui-platform/ROADMAP.md`              | Phase state, target date, dependency, and exit gate                                                                                               | Delivery milestone control only                                                                                                                                                                                                                                                                                |
-| `ui-platform/docs/reviews/`           | One non-normative record per review round or reviewed object                                                                                      | Audit trail and finding disposition only                                                                                                                                                                                                                                                                       |
-| `ui-platform/README.md`               | Links to the preceding authorities and developer entry points                                                                                     | Navigation only                                                                                                                                                                                                                                                                                                |
-| `ui-platform/packages/<package>/api/` | Public-API reports that API Extractor generates from the packed declarations, and the generated CSS contract (STD-UIP-ENG-001 section 3.5 item 1) | Generated evidence, never edited by hand; CI fails when a report differs from the tarball. Not normative. API Extractor generates "a report to be used as the basis for an API review workflow" (api-extractor.com, `overview/intro.md`, rushstack-websites commit `31a9e7c1c9fa32f660e1b51b8aac012a6b76d149`) |
+| Location                                                 | Artifact                                                                                                                                          | Authority boundary                                                                                                                                                                                                                                                                                             |
+| :------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scnehaux-architecture`                                  | GDC, EAD, PAD, SAD, ADR, STD, and Technology Radar                                                                                                | Enterprise, capability, system, decision, and standard authority according to lifecycle state                                                                                                                                                                                                                  |
+| `ui-platform/docs/designs/`                              | Exactly the five TDDs attached to `SAD-003`                                                                                                       | Component design and implementation contract                                                                                                                                                                                                                                                                   |
+| `ui-platform/PLAN.md`                                    | Ordered work, accountable role, decision authority, and binary acceptance                                                                         | Execution control only; cannot approve architecture or release                                                                                                                                                                                                                                                 |
+| `ui-platform/ROADMAP.md`                                 | Phase state, target date, dependency, and exit gate                                                                                               | Delivery milestone control only                                                                                                                                                                                                                                                                                |
+| `ui-platform/docs/reviews/`                              | One non-normative record per review round or reviewed object                                                                                      | Audit trail and finding disposition only                                                                                                                                                                                                                                                                       |
+| `ui-platform/README.md`                                  | Links to the preceding authorities and developer entry points                                                                                     | Navigation only                                                                                                                                                                                                                                                                                                |
+| `ui-platform/packages/<package>/api/`                    | Public-API reports that API Extractor generates from the packed declarations, and the generated CSS contract (STD-UIP-ENG-001 section 3.5 item 1) | Generated evidence, never edited by hand; CI fails when a report differs from the tarball. Not normative. API Extractor generates "a report to be used as the basis for an API review workflow" (api-extractor.com, `overview/intro.md`, rushstack-websites commit `31a9e7c1c9fa32f660e1b51b8aac012a6b76d149`) |
+| `ui-platform/packages/<package>/src/**/<name>.spec.json` | One specification per public entry of that package, of kind `primitive`, `styled`, or `entry` (ADR-UIP-CMP-001)                                   | Normative component contract of that entry: validated against its schema, checked against the packed artifacts, and published with the package; the TDDs keep the decisions and their tradeoffs                                                                                                                |
+| Documentation site repository                            | The UI Platform documentation site, built from the published tarballs                                                                             | Generates the normative sections of each page from the published specifications, API reports, and release evidence; its usage guidance is informative and never restates a generated fact                                                                                                                      |
 
 The project repository must not introduce a second architecture source of truth,
 decision register, working-consensus document, ratification manifest, local
@@ -260,13 +262,13 @@ route-local failure. Remotes do not inject UI Platform CSS.
 
 ### 5.1 Build-time records
 
-| Record             | Required identity and content                                                                   | Authority                              |
-| :----------------- | :---------------------------------------------------------------------------------------------- | :------------------------------------- |
-| Token definition   | Logical name, tier, type, value/reference, theme coverage, lifecycle                            | Canonical token source                 |
-| Export inventory   | Package, public subpath, artifact kind, resolved file, server/client classification             | Package manifest + generated inventory |
-| Consumer scenario  | Fixture, declared versions, imports, expected behavior                                          | TDD and support matrix                 |
-| Release evidence   | Source SHA, package version, tarball digest, SBOM digest, gate results, known limits, authority | Release assembler                      |
-| Component contract | Public name, semantic root, state/ARIA, styling hooks, stability                                | TDD and generated documentation        |
+| Record             | Required identity and content                                                                   | Authority                                  |
+| :----------------- | :---------------------------------------------------------------------------------------------- | :----------------------------------------- |
+| Token definition   | Logical name, tier, type, value/reference, theme coverage, lifecycle                            | Canonical token source                     |
+| Export inventory   | Package, public subpath, artifact kind, resolved file, server/client classification             | Package manifest + generated inventory     |
+| Consumer scenario  | Fixture, declared versions, imports, expected behavior                                          | TDD and support matrix                     |
+| Release evidence   | Source SHA, package version, tarball digest, SBOM digest, gate results, known limits, authority | Release assembler                          |
+| Component contract | Public name, semantic root, parts, states, keys, ARIA, options, token bindings, stability       | Component specification; TDD for decisions |
 
 Generated artifacts are derived and reproducible. Registry artifacts and
 release records are immutable. CI caches are expendable and never authority.
@@ -427,7 +429,9 @@ The proposed target has two packages, three logical token tiers, explicit
 exports, composition-root CSS loading, scoped theme roots, native/custom simple
 primitives, selected hidden implementation hooks for complex widgets, and
 scenario-qualified evidence. Federation remains conditional and does not change
-the standalone contract.
+the standalone contract. Each public entry's contract is one specification next
+to its source, checked against the packed artifacts and published with its
+package (ADR-UIP-CMP-001).
 
 ### Rejected
 
