@@ -6,7 +6,7 @@ doc_meta:
   version: 3.0.0
   status: approved
   governed_by: [GDC-000]
-  authorized_by: [ADR-IAM-002]
+  authorized_by: [ADR-IAM-002, ADR-GLB-020]
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
@@ -15,7 +15,7 @@ doc_meta:
 
 # Enterprise Platform Engineering Standard (STD-GLB-009)
 
-> **Open authorization gap (3.0.0):** rule 12 (`.dockerignore`) is a new mandatory restriction, so the version is major (GDC-007 §2.4.2). No accepted ADR governs container image builds or secret material: ADR-IAM-002 authorizes the 2.0.0 production gate on the legacy realm endpoint, ADR-GLB-004 governs the schema tooling, and ADR-GLB-009 the repository topology. The owner decides which decision authorizes rule 12, or whether one is written.
+> **Authorization (3.0.0):** ADR-GLB-020 authorizes rule 12 (`.dockerignore`), a new mandatory restriction, so the version is major (GDC-007 §2.4.2). ADR-IAM-002 authorizes the 2.0.0 revision. Implementation conformance still requires verification.
 >
 > **Authorization:** ADR-IAM-002 §5.4 authorizes this revision (2.0.0): the production gate on the identity kernel's legacy realm endpoint is a new mandatory restriction, so the version is major (GDC-007 §2.4.2). Implementation conformance for production still requires verification; no production ingress exists yet.
 
@@ -240,7 +240,7 @@ Every Scnehaux service ships as an OCI image, and an image carries every vulnera
     - _A base that brings executables the image never runs_ gives way to one that carries only what the image runs, such as the distribution's base with the one package installed. NIST asks for base layers "from minimalistic technologies ... to reduce attack surface areas" [R11], and CISA's own example of a package left unused is one a base image brings: "Base layer container images often contain unused packages" [R40]. A component that is not in the image needs no exception.
 11. **A built image name is never pulled (1.8.0).** A Compose service that both builds an image and names it MUST set `pull_policy: build`, and a service that runs that name without building it MUST set `pull_policy: never`. Without it, "If `pull_policy` is missing in the service definition, Compose attempts to pull the image first and then builds from source if the image isn't found in the registry or platform cache" [R56]. A name such as `scnehaux-identity-control-dev-migrate` has no digest to pin (rule 1), so an image of the same name published to a registry would run in place of the one the repository built. With `build`, "Compose builds the image. Compose rebuilds the image if it's already present" [R56]. With `never`, "Compose doesn't pull the image from a registry and relies on the platform cached image. If there is no cached image, a failure is reported" [R56], so a task run before the build fails instead of running someone else's image. A service repository's `deploy-dev` job asserts both, for every image name in its compose files that carries no digest.
 
-12. **Each image build has a `.dockerignore` that removes what the build does not read (3.0.0).** The file sits in the root of the build context, and it MUST exclude three kinds of path, with the patterns a repository's own layout needs:
+12. **Each image build has a `.dockerignore` that removes what the build does not read (3.0.0, `ADR-GLB-020`).** The file sits in the root of the build context, and it MUST exclude three kinds of path, with the patterns a repository's own layout needs:
     - _Secrets and key material._ `.env` and `**/.env`, every `keys/` directory, `*.pem` and `**/*.pem`, a Compose override that holds a server's values (`compose.override.yaml`), and a local token file. A repository adds any other file that holds a credential.
     - _Local state._ A sibling repository a workflow checks out into the workspace (for example `.kernel/`, `.identity/`, `.experience/`), a proof's or the image scan's working directory, coverage and test output, build output, and local databases and volumes.
     - _Version control and CI metadata._ `.git` and `.github`.
@@ -317,7 +317,7 @@ None. All platform engineering standards apply universally. Deviations require f
 6. **Stack-level proofs (1.7.0)**: Each proof of §Stack-Level Proofs is a workflow with a `<name>_ref` input per producer, run on pull requests, on `main`, daily and on dispatch, whose evidence artifact holds every measured figure with its bound.
 7. **Default-branch rulesets and backups (1.10.0)**: Each code repository's default branch is checked against §Security & Access Governance: a ruleset with `pull_request`, `non_fast_forward` and `deletion` and no bypass actors. Each server-deployed service's restore drill asserts that `backup.sh` keeps the newest 14 sets and never deletes the newest one (§Development Server Deployment rule 9).
 8. **The legacy realm endpoint (2.0.0)**: identity-kernel's `deploy-dev` proves the `404` on the development server's public port for every spelling, and its compatibility suite records what the pinned image does on the endpoint. A production deployment pipeline runs the same check against the production host before the realm serves anyone (§Security & Access Governance).
-9. **Build-context exclusions (3.0.0)**: Each repository that builds an image has a `.dockerignore` that excludes the three kinds of path in §Container Images rule 12. Its CI fails when the file is missing, or when a path of one of the kinds, such as a `keys/` directory, a `.env` file or `.git`, is not matched by it.
+9. **Build-context exclusions (3.0.0, `ADR-GLB-020`)**: Each repository that builds an image has a `.dockerignore` that excludes the three kinds of path in §Container Images rule 12. Its CI fails when the file is missing, or when a path of one of the kinds, such as a `keys/` directory, a `.env` file or `.git`, is not matched by it.
 
 ## 6. References
 
