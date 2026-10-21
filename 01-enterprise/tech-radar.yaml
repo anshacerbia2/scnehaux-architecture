@@ -1,7 +1,7 @@
 # tech-radar.yaml — Enterprise Technology Radar
 # Governed by: GDC-004 (Technology Lifecycle & Standards Governance)
 # Owner: Architecture Authority
-# Last updated: 2026-10-20
+# Last updated: 2026-10-21
 #
 # Ring changes are ARB decisions (GDC-004 section 3.2). Entries marked
 # "pending ARB" were proposed with the UI Platform ratification package on
@@ -205,6 +205,16 @@ technology_radar:
       owner: UI Platform Team
       rationale_adr: ADR-UIP-SEC-001
       trial_end_date: "2026-12-31"
+
+    # Proposed 2026-10-21 with ADR-UIP-REL-001 (accepted); pending ARB. Publishes
+    # the UI Platform packages from GitHub Actions through OIDC, with no stored
+    # npm token, and attaches npm provenance.
+    - name: npm-trusted-publishing
+      category: package-publishing
+      date_entered: "2026-10-21"
+      owner: UI Platform Team
+      rationale_adr: ADR-UIP-REL-001
+      trial_end_date: "2027-04-21"
 
     - name: vite
       category: frontend-build-tool

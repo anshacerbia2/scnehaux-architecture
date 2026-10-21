@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-003
   title: Scnehaux UI Platform Software Architecture
   owner: Principal UI/UX Architect
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: public
   governed_by: [GDC-009]
@@ -35,6 +35,12 @@ doc_meta:
 ---
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
+
+> **Revision 2.2.0 is pending exact-commit ratification.** Section 3.2 names the
+> public npm registry as the interim package storage, as accepted
+> ADR-UIP-REL-001 decides. Under GDC-000 section 2.6.7, the previous revision
+> remains binding until the authorized human authority approves the exact
+> commit containing this revision.
 
 > **Approved design baseline.** Approval establishes the architecture contract,
 > not implementation conformance or production release authority.
@@ -129,14 +135,15 @@ graph LR
 
 ### 3.2 External actors and systems
 
-| Actor/system           | Contract                                                                     |
-| :--------------------- | :--------------------------------------------------------------------------- |
-| UI Platform engineer   | Changes source and TDD-governed implementation through protected review      |
-| Developer Platform     | Supplies CI runners and package storage; provenance and signing once offered |
-| Sigstore public good   | Interim signing and public transparency log for `main` build attestations    |
-| Product build          | Installs a declared version and imports supported public entries             |
-| Product browser        | Executes component behavior and static CSS without UI Platform network calls |
-| Accessibility reviewer | Provides manual assistive-technology evidence and Component ACR review       |
+| Actor/system           | Contract                                                                         |
+| :--------------------- | :------------------------------------------------------------------------------- |
+| UI Platform engineer   | Changes source and TDD-governed implementation through protected review          |
+| Developer Platform     | Supplies CI runners; package storage, provenance, and signing once offered       |
+| Public npm registry    | Interim package storage with trusted publishing and provenance (ADR-UIP-REL-001) |
+| Sigstore public good   | Interim signing and public transparency log for `main` build attestations        |
+| Product build          | Installs a declared version and imports supported public entries                 |
+| Product browser        | Executes component behavior and static CSS without UI Platform network calls     |
+| Accessibility reviewer | Provides manual assistive-technology evidence and Component ACR review           |
 
 ### 3.3 Internal boundaries
 

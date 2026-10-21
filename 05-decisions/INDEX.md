@@ -59,7 +59,7 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-UIP-BLD-001](ui-platform/ADR-UIP-BLD-001-deferred-minification.md) | Deferred Minification | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-BLD-002](ui-platform/ADR-UIP-BLD-002-tsdown-package-build.md) | tsdown Replaces tsup as the UI Platform Package Builder | foundational | accepted | 2026-10-03 | N/A |
 | [ADR-UIP-PLT-001](ui-platform/ADR-UIP-PLT-001-verifiable-platform-contract.md) | Verifiable UI Platform Package and Release Contract | conflict_resolution | accepted | 2026-09-28 | N/A |
-| [ADR-UIP-REL-001](ui-platform/ADR-UIP-REL-001-npm-registry-trusted-publishing.md) | Public npm Registry with Trusted Publishing for UI Platform Releases | foundational | proposed | 2026-10-20 | N/A |
+| [ADR-UIP-REL-001](ui-platform/ADR-UIP-REL-001-npm-registry-trusted-publishing.md) | Public npm Registry with Trusted Publishing for UI Platform Releases | foundational | accepted | 2026-10-20 | N/A |
 | [ADR-UIP-SEC-001](ui-platform/ADR-UIP-SEC-001-supply-chain-evidence.md) | Supply-Chain Evidence with CycloneDX SBOMs and SLSA Build L2 Attestations | foundational | accepted | 2026-10-02 | N/A |
 | [ADR-UIP-TKN-001](ui-platform/ADR-UIP-TKN-001-three-tier-isolation-architecture.md) | ADR-UIP-TKN-001 Three-Tier Design Token Isolation Architecture | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-TKN-002](ui-platform/ADR-UIP-TKN-002-oklch-and-dual-engine-alpha.md) | ADR-UIP-TKN-002 OKLCH Gamut and Dual-Engine Alpha Blending Architecture | foundational | accepted | 2026-01-01 | N/A |

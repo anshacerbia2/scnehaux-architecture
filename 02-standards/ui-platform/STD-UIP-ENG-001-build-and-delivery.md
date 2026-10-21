@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-ENG-001
   title: UI Platform Build & Delivery Standards
   owner: Principal UI/UX Architect
-  version: 2.3.0
+  version: 2.4.0
   status: approved
   classification: public
   governed_by: [PAD-PLT-003]
@@ -14,6 +14,13 @@ doc_meta:
 ---
 
 # UI Platform Build & Delivery Standards (STD-UIP-ENG-001)
+
+> **Revision 2.4.0 is pending exact-commit ratification.** It moves the release
+> line of section 3.5 (3) to `2.0.0-beta.N` and `2.0.0`, as accepted
+> ADR-UIP-REL-001 item 5 decides. Under GDC-000 section 2.6.7, the previous
+> revision remains binding until the authorized human authority approves the
+> exact commit containing this revision. The existing `last_reviewed` is
+> updated only in the ratification commit or manifest.
 
 > **Implementation boundary:** this approved release contract does not establish that existing packages pass its CI and consumer gates.
 
@@ -84,7 +91,7 @@ Build both packages, create tarballs with the pinned `pnpm pack` command, and in
 
 1. **Public API.** The public API of each package is every subpath in its `exports` map, the TypeScript declarations those entries publish, and the documented CSS contract: custom properties, class and data-attribute hooks, cascade layer names, and token keys. Internal chunks and undocumented names are not public. The API is declared in the package documentation and checked against each release (SemVer 2.0.0 item 1 [1]; GOV.UK Frontend counts HTML, Sass, and JavaScript as its public API [3]).
 2. **Stability.** Every public entry is `candidate` or `stable` in the behavior inventory. The compatibility rules below bind `stable` entries only. A `candidate` entry may change in any release; release notes and the evidence packet label it, as Angular does for Developer Preview APIs, which "can change at any time, even in new patch versions" [4].
-3. **Versioning.** Both packages follow SemVer 2.0.0 and release together under one version. Before the first stable release, a published version is a pre-release of `1.0.0` (`1.0.0-beta.N`), which "indicates that the version is unstable" [1]; `1.0.0` is the first stable release. A published version is never modified or overwritten [1]. A breaking change to a stable entry is a major release; a new feature or a deprecation is a minor release; a patch release only fixes behavior [1]. Removing or renaming a token, selector, layer, or property is breaking; changing a token value or a component's appearance while keeping its names and structure is a minor change that the release records with its visual diffs [3].
+3. **Versioning.** Both packages follow SemVer 2.0.0 and release together under one version. Before the first stable release, a published version is a pre-release of `2.0.0` (`2.0.0-beta.N`), which "indicates that the version is unstable" [1]; `2.0.0` is the first stable release. The line starts at `2.0.0` because `@scnx/core-ui@1.0.0` already exists in the registry, a published version can never be reused, and `^1.0.0-beta.N` would resolve to it (ADR-UIP-REL-001 item 5). A published version is never modified or overwritten [1]. A breaking change to a stable entry is a major release; a new feature or a deprecation is a minor release; a patch release only fixes behavior [1]. Removing or renaming a token, selector, layer, or property is breaking; changing a token value or a component's appearance while keeping its names and structure is a minor change that the release records with its visual diffs [3].
 4. **Deprecation.** A stable feature is deprecated only in a minor release, never in a patch [1][3]. The release notes say why and what replaces it; the TypeScript declaration carries `@deprecated`, and a development build warns where the use can be detected [2]. A deprecated feature is removed only in a major release, after at least one minor release carried the deprecation [1] and no sooner than 180 days after that release, the grace window GDC-004 section 2.2 gives existing systems [5]. A feature still used by another platform entry is not deprecated [3].
 5. **Support matrix.** Each release declares and tests:
    - React and React DOM: the shared peer range, proven at its lowest and highest version (section 3.4);

@@ -4,11 +4,11 @@ doc_meta:
   title: Public npm Registry with Trusted Publishing for UI Platform Releases
   adr_type: foundational
   owner: Principal UI/UX Architect
-  status: proposed
+  status: accepted
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
-  last_reviewed: 2026-10-20
+  last_reviewed: 2026-10-21
   created: 2026-10-20
   created_date: 2026-10-20
   created_by: UI Platform Team
@@ -16,7 +16,7 @@ doc_meta:
 
 # Public npm Registry with Trusted Publishing for UI Platform Releases (ADR-UIP-REL-001)
 
-> **Implementation boundary:** this proposed decision publishes nothing. It answers lien L3 of the UI Platform P0 exit (long-term package storage and signing) and, once accepted, is implemented by a release workflow in the UI repository and by revisions of STD-UIP-ENG-001 section 3.5 (3) and SAD-003 section 3.2.
+> **Implementation boundary:** this decision publishes nothing by itself. It answers lien L3 of the UI Platform P0 exit (long-term package storage and signing) and, once accepted, is implemented by a release workflow in the UI repository and by revisions of STD-UIP-ENG-001 section 3.5 (3) and SAD-003 section 3.2.
 
 ---
 
@@ -26,9 +26,12 @@ Publish `@scnx/core-ui` and `@scnx/system` to the public npm registry under the 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------ | ------------------------------------------------ |
-| 2026-10-20 | proposed | foundational | Pending principal review | Pending Architecture Review Board (Ansha Cerbia) |
+| Date       | Status   | ADR Type     | Reviewers                 | Approver                                         |
+| ---------- | -------- | ------------ | ------------------------- | ------------------------------------------------ |
+| 2026-10-20 | proposed | foundational | Pending principal review  | Pending Architecture Review Board (Ansha Cerbia) |
+| 2026-10-21 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board)         |
+
+Acceptance, stated by Ansha Cerbia on 2026-10-21: "Saya, sebagai ARB, menerima ADR-UIP-REL-001 per 2026-10-21." ("As ARB, I accept ADR-UIP-REL-001 as of 2026-10-21.") Item 1's precondition (a second, organization-controlled Owner of the `@scnx` organization and required two-factor authentication) remains open until the owner records it; no version is published before then.
 
 ## 3. Context
 
@@ -54,7 +57,7 @@ Registry facts, 2026-10-20:
 
 1. **Registry:** the public npm registry, under the `@scnx` scope. The `@scnx` organization stays, but it stops depending on one personal account: before the first publish, its current owner adds a second Owner, an account the organization controls (Owners "manage organization members and billing", and the last owner cannot be removed [R8]), and requires two-factor authentication for every member [R9]. No personal credential publishes: only the trusted publisher of item 2 does.
 2. **Publishing identity:** npm trusted publishing [R1]. Each package on npmjs.com trusts exactly one publisher: the UI repository's release workflow on a GitHub-hosted runner. No npm token is created or stored. Every publish carries npm provenance, "signed by Sigstore public good servers and logged in a public transparency ledger" [R2].
-3. **Release workflow:** started by a person, it runs in a GitHub environment whose required reviewer is the Release Lead. It downloads the tarballs of one CI run on `main`, checks their digests against that run's evidence packet and attestations, and publishes those files unchanged. A failed check publishes nothing.
+3. **Release workflow:** started by a person, it runs in a GitHub environment whose required reviewer is the Release Lead. It downloads the tarballs of one CI run on `main`, checks their digests against that run's evidence packet and attestations, and publishes those files unchanged. A failed check publishes nothing. The workflow stages each tarball with `npm stage publish`, which "defers 2FA to approval" [R10], so a version goes live only when a maintainer approves it with two-factor authentication on npmjs.com or the CLI [R11]: a second human approval after the GitHub environment's. The staging and the trusted publisher need npm CLI 11.15.0 or later and Node.js 22.14.0 or later [R1][R11]. Staging a package that does not yet exist (`@scnx/system`) publishes a public placeholder `0.0.0-stage` [R11].
 4. **Channels:** a pre-release is published with `--tag beta`; `latest` moves only on a stable release. npm sets `latest` on every publish "unless the `--tag` option is used" [R4], so the workflow always passes `--tag`.
 5. **Version line:** the UI Platform continues on a new major version: pre-releases are `2.0.0-beta.N`, and `2.0.0` is the first stable release, for both packages in lockstep. Version `1.x` of `@scnx/core-ui` stays the 2025 package. This replaces `1.0.0-beta.N` and `1.0.0` in STD-UIP-ENG-001 section 3.5 (3) by a revision of that standard after this decision is accepted.
 6. **Earlier packages:** `@scnx/core-ui@1.0.0`, `@scnx/design-system`, and `@scnx/ui` are deprecated with `npm deprecate` and a message naming `@scnx/system@2` and `@scnx/core-ui@2`. They are not unpublished: registry data is immutable [R3], and a deprecation leaves existing installs working.
@@ -109,5 +112,7 @@ Informative:
 - [R7] GitHub Docs, reusables `package_registry/authenticate-packages` and `package_registry/packages-classic-pat-only`, same commit: "You need an access token to publish, install, and delete private, internal, and public packages"; GitHub Packages "only supports authentication using a personal access token (classic)". Supports the first alternative.
 - [R8] npm Docs, Organization roles and permissions, `content/organizations/managing-organization-members/organization-roles-and-permissions.mdx` at npm/documentation commit `4e8e03b978033529bf8f50d74305b29939eb022c`: <https://github.com/npm/documentation/blob/4e8e03b978033529bf8f50d74305b29939eb022c/content/organizations/managing-organization-members/organization-roles-and-permissions.mdx>. "**Owner:** Users who manage organization members and billing"; "On the public registry, you cannot remove the last owner from an organization." Supports item 1.
 - [R9] npm Docs, Requiring two-factor authentication in your organization, same commit: <https://github.com/npm/documentation/blob/4e8e03b978033529bf8f50d74305b29939eb022c/content/organizations/creating-and-managing-organizations/requiring-two-factor-authentication-in-your-organization.mdx>. "Organization owners can require organization members to enable two-factor authentication for their personal accounts, making it harder for malicious actors to access an organization's packages and settings." Supports item 1.
+- [R10] npm Docs, `npm stage` (CLI v11), `content/cli/v11/commands/npm-stage.mdx` at npm/documentation commit `4e8e03b978033529bf8f50d74305b29939eb022c` (retrieved 2026-10-21): <https://github.com/npm/documentation/blob/4e8e03b978033529bf8f50d74305b29939eb022c/content/cli/v11/commands/npm-stage.mdx>. "`npm stage publish` [...] Designed for automated workflows; defers 2FA to approval"; "For pre-release versions [...] the tag must be explicitly provided"; short-lived tokens issued through trust relationships "can only be used with `npm stage publish` and `npm publish`". Supports item 3.
+- [R11] npm Docs, Staged publishing for npm packages, `content/packages-and-modules/securing-your-code/staged-publishing.mdx`, same commit: <https://github.com/npm/documentation/blob/4e8e03b978033529bf8f50d74305b29939eb022c/content/packages-and-modules/securing-your-code/staged-publishing.mdx>. "A maintainer must then review and explicitly approve the staged package — with two-factor authentication (2FA) via the CLI or npmjs.com — before it becomes publicly available"; "When you stage a package that does not yet exist, npm publishes a placeholder version of the package with the version `0.0.0-stage`"; it "requires npm CLI version 11.15.0 or later and Node version 22.14.0 or higher". The trusted publishing page adds that configurations created after 2026-09-03 "are automatically set to allow `npm stage publish`". Supports item 3.
 
 In-repository and registry evidence (2026-10-20): the npm registry metadata of `@scnx/core-ui`, `@scnx/design-system`, and `@scnx/ui` and the `@scnx` organization's package list; the GitHub account `scnx` (user, created 2015-04-24); `@scnx/system`'s packed peer range `^1.0.0-beta.0` on `@scnx/core-ui`, which the `semver` package resolves to `1.0.0` when both exist.
