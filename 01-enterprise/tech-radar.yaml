@@ -264,8 +264,9 @@ technology_radar:
       category: accessibility-library
       date_entered: "2026-09-28"
       owner: UI Platform Team
-      # Not used. Evaluate only when a primitive needs a composite widget the
-      # platform does not provide (TDD primitives).
+      # Not used. ADR-UIP-PLT-001 UIP-DEC-001 (revised 2026-10-21, pending ARB
+      # acceptance) implements composite widgets without an interaction library;
+      # React Aria's documented assistive-technology findings stay a reference.
 
     - name: dtcg-design-tokens
       category: interchange-standard
