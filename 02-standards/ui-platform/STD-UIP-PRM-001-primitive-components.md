@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-PRM-001
   title: Enterprise UI Platform Primitive Components Standard
   owner: Principal Frontend Architect
-  version: 2.0.0
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by: [PAD-PLT-003]
@@ -14,6 +14,12 @@ doc_meta:
 ---
 
 # Enterprise UI Platform Primitive Components Standard (STD-UIP-PRM-001)
+
+> **Revision 2.1.0 is pending exact-commit ratification.** It replaces the React
+> Aria rule for composite widgets with the custom-implementation rule of the
+> revised ADR-UIP-PLT-001 UIP-DEC-001 (2026-10-21). Under GDC-000 section 2.6.7,
+> revision 2.0.0 remains binding until the authorized human authority approves
+> the exact commit containing this revision.
 
 > **Implementation boundary:** approval of this behavioral contract does not assert that the extracted implementation already conforms.
 
@@ -48,7 +54,8 @@ Primitives are organized into Layout Primitives (styling and geometry skeletal s
 
 - Every composite widget MUST expose a documented behavior matrix for keyboard, focus, pointer, touch, disabled state, controlled/uncontrolled state, and assistive technology.
 - Button, Disclosure/Accordion, Navigation, Sidebar, and layout primitives use native/custom behavior.
-- Combobox, Select, Menu, Dialog, Popover, Listbox, and Tabs use selected React Aria hooks behind the `@scnx/core-ui` contract. Vendor types and APIs MUST NOT leak into public types or props. Stable promotion requires APG behavior, manual NVDA and VoiceOver checks, bundle evidence, internationalization, security, maintenance, and license/provenance review.
+- Combobox, Select, Menu, Popover, Listbox, and Tabs are implemented in `@scnx/core-ui` to their APG pattern, without a third-party interaction library (ADR-UIP-PLT-001 UIP-DEC-001); Dialog uses the native `dialog` element. Each publishes a behavior matrix that runs in every engine of the support matrix before its entry is published. Stable promotion requires APG behavior, manual NVDA and VoiceOver checks, bundle evidence, internationalization, security, and maintenance review.
+- A custom composite widget designs around the assistive-technology differences that are already known for its pattern and records them in its TDD decision; for an editable combobox these include that NVDA stops announcing text edits while an option is active through `aria-activedescendant`, and that VoiceOver announces the active option in Chrome only when it carries `aria-selected="true"` and does not announce the option count (ADR-UIP-PLT-001 [R3]).
 - Using a third-party foundation does not transfer responsibility for the integration's accessibility or the consuming page's WCAG conformance to that dependency.
 
 #### Public polymorphism
