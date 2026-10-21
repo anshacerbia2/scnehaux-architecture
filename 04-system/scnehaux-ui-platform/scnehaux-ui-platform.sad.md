@@ -9,7 +9,7 @@ doc_meta:
   governed_by: [GDC-009]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-02
+  last_reviewed: 2026-10-21
   parent_pad: PAD-PLT-003
   technologies:
     - name: react
@@ -35,12 +35,6 @@ doc_meta:
 ---
 
 # Scnehaux UI Platform Software Architecture (SAD-003)
-
-> **Revision 2.2.0 is pending exact-commit ratification.** Section 3.2 names the
-> public npm registry as the interim package storage, as accepted
-> ADR-UIP-REL-001 decides. Under GDC-000 section 2.6.7, the previous revision
-> remains binding until the authorized human authority approves the exact
-> commit containing this revision.
 
 > **Approved design baseline.** Approval establishes the architecture contract,
 > not implementation conformance or production release authority.

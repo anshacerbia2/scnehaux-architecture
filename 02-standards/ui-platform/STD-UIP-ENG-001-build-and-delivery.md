@@ -15,13 +15,6 @@ doc_meta:
 
 # UI Platform Build & Delivery Standards (STD-UIP-ENG-001)
 
-> **Revision 2.4.0 is pending exact-commit ratification.** It moves the release
-> line of section 3.5 (3) to `2.0.0-beta.N` and `2.0.0`, as accepted
-> ADR-UIP-REL-001 item 5 decides. Under GDC-000 section 2.6.7, the previous
-> revision remains binding until the authorized human authority approves the
-> exact commit containing this revision. The existing `last_reviewed` is
-> updated only in the ratification commit or manifest.
-
 > **Implementation boundary:** this approved release contract does not establish that existing packages pass its CI and consumer gates.
 
 ## 1. Objective & Scope
