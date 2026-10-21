@@ -24,6 +24,12 @@ An Invitee Without an Account Enrols at Redemption, After Proving the Address.
 | 2026-10-20 | accepted          | foundational | Architecture Review Board | Enterprise Architect           |
 | 2026-10-21 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect           |
 
+**Amended 2026-10-21, in place, a second time,** on three points identity-control #117 stopped at:
+§5.8 gives the limits §5.2 left open and says how the client address reaches identity-control, §5.9
+decides an address held but not proven and a kernel username equal to the address, and §5.3 and
+`STD-IAM-001` 3.1.0 now name the enrolling person as a second recipient of the temporary password.
+Same evidence for editing in place as below.
+
 **Amended 2026-10-21, in place,** on one point: §5.7 settles the three points §5.1 left to
 `TDD-organization-control-004`, which are how Organization Control recognises identity-control's
 workload, the one answer for a token that resolves to nothing, and the read path. It is edited in
@@ -88,7 +94,7 @@ Facts that bound the choice:
 - **Where.** The acceptance page of `ADR-ORG-007 §5.6` offers a person who is not signed in **I do
   not have an account**. It hands the token, in the fragment, to Identity Experience's enrolment
   page.
-- **The route.** Identity Experience's BFF calls a new, anonymous identity-control command,
+- **The route.** Identity Experience's BFF calls a new identity-control command, anonymous as to the person (§5.8),
   `POST /v1/enrolments`, with the token in the body.
 - **What identity-control asks.** It asks Organization Control, as its workload, for the
   invitation the token names: a new route, `POST /v1/invitations/resolve`, which admits
@@ -108,7 +114,7 @@ Facts that bound the choice:
 - **The person returns it.** `POST /v1/enrolments/{enrolment_id}:verify` with the code. A wrong,
   expired or exhausted code creates nothing, and the person starts again from the link.
 - **Limits.** One open enrolment per invitation. Requests are rate-limited per invitation and per
-  client address. A run of refusals is a signal, beside the invitation lookup count
+  client address, with the values and the address path of §5.8. A run of refusals is a signal, beside the invitation lookup count
   (`ADR-ORG-007 §5.4`).
 
 ### 5.3 The Principal Is Created, With a Temporary Password Shown Once
@@ -120,7 +126,8 @@ On the right code, in one command:
   `verified_at` set, because the code just proved it.
 - **A temporary password is issued as `ADR-IAM-010 §5.1` and §5.2 issue it:** random, 120 bits,
   temporary in the kernel, `no-store`, never logged or stored, lapsing within 24 hours. It is shown
-  once, to the person who returned the code, in that response.
+  once, to the person who returned the code, in that response. `STD-IAM-001` 3.1.0 §3.1 names that
+  person as the exception's second recipient (amended 2026-10-21), on the conditions below.
 - **Evidence.** The enrolment is recorded: the invitation, the address's hash, the Principal
   created and when. The first password binding is notified to the address (`ADR-IAM-007 §5.1`).
 - **Nothing else is granted.** The new Principal holds no Membership.
@@ -148,7 +155,7 @@ Membership.
 | identity-experience     | The enrolment page and its anonymous BFF routes: the code form, and the temporary password shown once with `no-store`                                                                                                                                                    |
 | organization-experience | The acceptance page offers **I do not have an account** and hands the token to the enrolment page in the fragment                                                                                                                                                        |
 | identity-kernel         | None. Registration stays disabled, and the kernel sends no mail                                                                                                                                                                                                          |
-| scnehaux-architecture   | `STD-IAM-001 §3.1`: its exception (2.8.0) gains a second recipient, the person who has just proven the invited address, once this decision is accepted. SAD-001 lists the creation path                                                                                  |
+| scnehaux-architecture   | `STD-IAM-001 §3.1`: its exception (2.8.0) gains a second recipient, the person who has just proven the invited address, once this decision is accepted (written 2026-10-21, `STD-IAM-001` 3.1.0). SAD-001 lists the creation path                                        |
 
 ### 5.7 How Organization Control Recognises, Answers and Reads for the Resolve Route (amended 2026-10-21)
 
@@ -218,6 +225,126 @@ with no person signed in.
   this role list every pending invitation's address across Tenants, which is wider than the task.
   **Not a `SECURITY DEFINER` function**, for the reason that section gives.
 
+### 5.8 The Limits, and How the Client Address Reaches identity-control (amended 2026-10-21)
+
+§5.2 asks for limits "per invitation and per client address" and gives no values. They are decided
+here. The sources set a ceiling and name the techniques; none sets these values, so each is this
+decision's choice, below the ceiling and conservative, and the first review of real traffic may
+lower or raise it.
+
+**What the sources say.** NIST SP 800-63B-4 §3.2.2: "the verifier SHALL limit consecutive failed
+authentication attempts using a specific authenticator on a single subscriber account to no more
+than 100", "The limit of 100 attempts is an upper bound, and agencies MAY impose lower limits" [R15].
+It names waiting "after a failed attempt for a period of time that increases", "30 seconds up to an
+hour" [R15]. OWASP, for the forgotten-password request, asks for "rate-limiting on a per-account
+basis" because "an attacker could make thousands of password reset requests per hour for a given
+account, flooding the user's intake system" [R17]. OWASP says a failed-login counter "should be
+associated with the account itself, rather than the source IP address, in order to prevent an attacker
+from making login attempts from a large number of different IP addresses" [R18], and that blocking by
+IP address "should not be used as the sole or primary defense due to the ease in circumvention", with
+"Short (i.e. burst) and long time periods" considered [R19].
+
+**The limits.** Every count is kept in this service's own store, under a keyed hash of the invitation
+identifier or of the address, and each is deleted when its window ends.
+
+| What is counted                                    | Limit                             | At the limit                                                     |
+| -------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------- |
+| Codes sent for one invitation                      | 3 in 1 hour, 5 in 24 hours        | `202` as always, and no code is sent                             |
+| Failed `:verify` attempts for one invitation       | 5 per code (§5.2), 15 in 24 hours | The same refusal as a wrong code, until the 24 hours have passed |
+| Requests to `POST /v1/enrolments` from one address | 5 in 1 minute, 20 in 1 hour       | `429` with `Retry-After`                                         |
+| Requests to `:verify` from one address             | 5 in 1 minute, 30 in 1 hour       | `429` with `Retry-After`                                         |
+
+- **Why per invitation is silent and per address is not.** A per-invitation limit that answered
+  differently would tell the caller that the token names an invitation, which is the oracle of §5.1
+  [R3]. So it answers as always and does nothing. A per-address count includes every request, whatever
+  the token, so a `429` tells nothing about any invitation. The per-address count is read before
+  Organization Control is asked, so it also bounds that route's calls (§5.7).
+- **Why the per-invitation limit cannot be used against a person.** Every call needs the invitation's
+  token, so only a holder of the token can reach it. OWASP's warning that "care must be taken to
+  prevent it from being used to cause a denial of service by locking out other users' accounts" does
+  not arise for an outsider [R18]. The lockout lasts 24 hours
+  and is not permanent.
+- **Why 15 and not 100.** One invitation allows 15 guesses against 10^8 eight-digit codes in 24 hours,
+  where NIST's ceiling of 100 attempts is set for a six-digit code [R15].
+- **The address windows are shared-egress aware.** A company's people may leave through one address,
+  so the hourly figures are above one person's need. The burst figure, 5 a minute, is the one that
+  stops a script. OWASP says a mitigation must "not rely on a single predictable volume limit" [R19], so the address limit is one layer beside the
+  per-invitation limit and the code's own bounds, not the only defence.
+- **IPv6.** The address is counted as its /64 prefix, so a person with a /64 cannot take a fresh
+  address per request. No source gives the prefix length; it is the conservative choice.
+- **Options.** (1) Per invitation only: it leaves a script free to spray the route with guessed
+  tokens, and rejected. (2) Per address only: it lets one token holder flood an address with codes
+  from many addresses, and OWASP's per-account rule [R17] rejects it. (3) Both, as above. Chosen.
+
+**The client address reaches identity-control from the BFF, which presents its own credentials.**
+The route stays anonymous as to the person: no one is signed in. It is not anonymous as to the caller.
+
+- **The address the platform's own ingress saw.** The ingress overwrites any forwarding header a
+  client sent with the address of the TCP connection it accepted, and the BFF trusts exactly that one
+  hop and no chain behind it. RFC 7239 says the header "cannot be relied upon to be correct, as it
+  may be modified, whether mistakenly or for malicious reasons, by every node on the way to the
+  server, including the client making the request", and that "the chain of IP addresses listed before
+  the request came to the proxy cannot be trusted" [R16]. A BFF that trusts a header a browser can set
+  gives the attacker the limit's key. A BFF with `trustProxy: false`, as today, sees only the ingress
+  and cannot supply the address at all.
+- **It is forwarded in `Forwarded: for=<address>`.** The BFF calls the two enrolment routes as a
+  registered workload with an owner (`ADR-IAM-003 §5.8`), with its own client key. identity-control
+  admits it from a record naming its `principal_id`, as `ADR-ORG-001 §5.11` admits a reporter, for
+  these two routes alone, and reads `Forwarded` only on a call carrying that workload's token. On any
+  other call the header is ignored. RFC 7239 defines the parameter: "The "for" parameter is used to
+  disclose information about the client that initiated the request", and a server that "requires some
+  address-based functionality" may receive "an IP address" [R16]. Only the first element's `for` is
+  read.
+- **Missing or malformed from the trusted workload: `400`.** The count has no key, and one shared
+  bucket would stop everyone. The status depends on nothing about the token, so it is no oracle.
+- **The address is kept no longer than its window.** RFC 7239 says identifiers that persist
+  "SHOULD NOT persist longer than client IP addresses" and treats the address as "privacy sensitive"
+  [R16]. The count holds a keyed hash and no address, and is deleted at the window's end. The address
+  is never logged with the token.
+- **Options.** (1) Trust `X-Forwarded-For` at identity-control: any caller could set it, and
+  rejected. (2) Use the connection's source address at identity-control: it is the BFF's, so every
+  person shares one count, and rejected. (3) The BFF forwards, authenticated, as above. Chosen.
+  (4) The browser calls identity-control directly: it would give the route a CORS and cookie surface
+  `ADR-IAM-009` and the BFF pattern exist to avoid, and rejected.
+
+### 5.9 An Address Held but Not Proven, and a Username That Equals the Address (amended 2026-10-21)
+
+§5.1 and §5.3 name one collision, an address a Principal already holds proven. Two more exist. The
+realm has `duplicateEmailsAllowed: false`, so the kernel would refuse the new user at `:verify`, and
+the command would be left with a mapping that recovery cannot complete.
+
+- **An address a Principal holds but has not proven** (a provider-created Principal's creation
+  address with no `verified_at`). **An existing kernel user whose username equals the address**, with
+  or without a Principal, such as a user whose mapping is pending or an orphan.
+- **Decision: the same as the proven case, in every observable way.** No code is sent, no Principal
+  is created, nothing is adopted, and the request answers the `202` of §5.1. The message sent to the
+  address says that an account exists for it and how to continue: sign in, confirm the address in the
+  account's settings, or ask the person who invited them. It does not say whether the address was
+  proven. The message reaches only the holder of the mailbox.
+- **Why not adopt it.** A code proves access to a mailbox: NIST says a confirmation code is used "to
+  confirm that an applicant has access to a postal address, email address, or phone number" [R1].
+  It does not prove the account is theirs. An unproven Principal may already hold a Membership or a
+  provider's grant, and adopting it on the code would hand them to whoever reads that mailbox first.
+  OWASP says: "Do not automatically link accounts solely because their email, preferred_username,
+  or other profile attributes match" [R18]. Adopting an orphan or a pending mapping stays recovery's
+  (`TDD-identity-control-001`), by a provider.
+- **Why not say so.** "This user ID is already in use." is OWASP's incorrect account-creation
+  response; the correct one is "A link to activate your account has been emailed to the address
+  provided." [R18]. WSTG-IDNT-04: "the application should respond with the same error message and
+  length to the different incorrect requests" [R3]. The response is one body and one status, and the
+  work is the same: OWASP asks that "responses return in a consistent amount of time" by "making
+  sure that the same logic is followed, instead of using a quick exit method" [R17], so the message
+  is sent through the same queue in every case.
+- **The check is made twice.** At the request, against this service's Principals (creation address
+  and username) and against the kernel user by exact username. At `:verify`, immediately before the
+  create, because a provider may have created the Principal in between. A collision at `:verify`
+  creates nothing, consumes the enrolment, and answers as a wrong code does. If the kernel still
+  refuses the create as a duplicate, the command treats it as that collision and leaves no mapping
+  for recovery to finish; the TDD says how the write is ordered.
+- **Options.** (1) Create anyway: the kernel refuses it, and rejected. (2) Adopt the held Principal on
+  the code: takeover of a held identifier, and rejected. (3) Say "an account exists": an oracle,
+  and rejected. (4) The same answer, and a message to the address. Chosen.
+
 ## 6. Consequences
 
 ### Positive
@@ -251,7 +378,7 @@ with no person signed in.
   password's rules.
 - [ADR-IAM-007](ADR-IAM-007-account-security-notifications.md): the code's delivery, and the
   development mail catcher.
-- `STD-IAM-001 §3.1`: its exception gains the enrolling person as a recipient, on acceptance.
+- `STD-IAM-001` 3.1.0 §3.1: its exception names the enrolling person as a second recipient (written 2026-10-21). The version is minor: it relaxes one exception under conditions and adds no mandatory restriction to anything that conforms, so GDC-007 §2.4.2 does not ask for an authorizing ADR.
 
 ### Compliance Status
 
@@ -259,7 +386,7 @@ Compliant once §5.6 is built and delivery is in production.
 
 ### Required Waivers
 
-None, once `STD-IAM-001 §3.1` names the second recipient.
+None. `STD-IAM-001` 3.1.0 §3.1 names the second recipient.
 
 ## 8. Alternatives Considered
 
@@ -332,6 +459,9 @@ administrator's request, and leaves it behind when the invitation lapses. Entra'
   would allow malicious clients to select the sub of a high-privilege resource owner and confuse any
   authorization logic on the resource server relying on the "sub" value."
 
+- **[R15]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, §3.2.2 Rate Limiting (Throttling) and Binding at Enrollment, accessed 2026-10-21. <https://pages.nist.gov/800-63-4/sp800-63b.html>. "the verifier SHALL limit consecutive failed authentication attempts using a specific authenticator on a single subscriber account to no more than 100 by disabling that authenticator."; "The limit of 100 attempts is an upper bound, and agencies MAY impose lower limits."; "Requiring the claimant to wait after a failed attempt for a period of time that increases as the subscriber account approaches its maximum allowance for consecutive failed attempts (e.g., 30 seconds up to an hour)"; "Binding at the time of enrollment is considered to be part of the enrollment process and is discussed in [SP800-63A]."
+- **[R16]** IETF RFC 7239, _Forwarded HTTP Extension_, June 2014, §4, §8.1 and §8.3, accessed 2026-10-21. <https://www.rfc-editor.org/rfc/rfc7239>. §8.1: "The "Forwarded" HTTP header field cannot be relied upon to be correct, as it may be modified, whether mistakenly or for malicious reasons, by every node on the way to the server, including the client making the request."; "First, the chain of IP addresses listed before the request came to the proxy cannot be trusted." §4: "The "for" parameter is used to disclose information about the client that initiated the request and subsequent proxies in a chain of proxies."; "If the server receiving proxied requests requires some address-based functionality, this parameter MAY instead contain an IP address". §8.3: "The client's IP address, that may be forwarded in the "for" parameter of this header field, is considered to be privacy sensitive by many people"; "If identifiers that persist across requests are required, their lifetimes SHOULD be limited and they SHOULD NOT persist longer than client IP addresses."
+
 ### Informative
 
 - **[R5]** GitHub, _Invite members to your organization with an email address_ (GitHub blog, July
@@ -375,3 +505,6 @@ administrator's request, and leaves it behind when the invitation lapses. Entra'
   <https://www.postgresql.org/docs/17/sql-createpolicy.html>. "Rows for which the expression returns
   true will be visible. Any rows for which the expression returns false or null will not be visible
   to the user (in a SELECT), and will not be available for modification (in an UPDATE or DELETE)."
+- **[R17]** OWASP, _Forgot Password Cheat Sheet_, §Forgot Password Request, accessed 2026-10-21. <https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html>. "Return a consistent message for both existent and non-existent accounts."; "Ensure that responses return in a consistent amount of time to prevent an attacker enumerating which accounts exist. This could be achieved by using asynchronous calls or by making sure that the same logic is followed, instead of using a quick exit method."; "Implement protections against excessive automated submissions such as rate-limiting on a per-account basis, requiring a CAPTCHA, or other controls. Otherwise an attacker could make thousands of password reset requests per hour for a given account, flooding the user's intake system (e.g., email inbox or SMS) with useless requests."
+- **[R18]** OWASP, _Authentication Cheat Sheet_, §Authentication Responses, §Account Lockout and §Secure Federated Account Linking, accessed 2026-10-21. <https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html>. Account creation, incorrect: "This user ID is already in use."; correct: "A link to activate your account has been emailed to the address provided." Lockout: "The counter of failed logins should be associated with the account itself, rather than the source IP address, in order to prevent an attacker from making login attempts from a large number of different IP addresses."; "care must be taken to prevent it from being used to cause a denial of service by locking out other users' accounts." Linking: "Do not automatically link accounts solely because their email, preferred_username, or other profile attributes match."
+- **[R19]** OWASP, _Credential Stuffing Prevention Cheat Sheet_, §IP Mitigation and Intelligence, accessed 2026-10-21. <https://cheatsheetseries.owasp.org/cheatsheets/Credential_Stuffing_Prevention_Cheat_Sheet.html>. "Blocking IP addresses may be sufficient to stop less sophisticated attacks, but should not be used as the sole or primary defense due to the ease in circumvention."; "not rely on a single predictable volume limit. Short (i.e. burst) and long time periods should be considered".
