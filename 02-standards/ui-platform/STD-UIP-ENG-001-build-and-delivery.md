@@ -10,16 +10,10 @@ doc_meta:
   authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-20
+  last_reviewed: 2026-10-21
 ---
 
 # UI Platform Build & Delivery Standards (STD-UIP-ENG-001)
-
-> **Revision 2.3.0 is pending exact-commit ratification.** It adds the
-> interaction-trace method to section 3.3 (PLAN P3). Under GDC-000 section
-> 2.6.7, revision 2.2.0 remains binding until the authorized human authority
-> approves the exact commit containing this revision. The existing
-> `last_reviewed` is updated only in the ratification commit or manifest.
 
 > **Implementation boundary:** this approved release contract does not establish that existing packages pass its CI and consumer gates.
 
