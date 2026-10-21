@@ -21,12 +21,17 @@ Tenant Administration Is a Recorded Grant, Checked with Current Membership.
 | ---------- | ----------------- | ------------ | ------------------------- | -------------------- |
 | 2026-10-04 | accepted          | foundational | Architecture Review Board | Enterprise Architect |
 | 2026-10-20 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-10-21 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
 
 **Amended 2026-10-20, in place,** on two points the owner approved on 2026-10-20 as recommended: §5.5
 adds how a restore moves Tenant versions, Tenant security versions and provider grant versions past
 what consumers hold, and how a consumer orders a Tenant by both of its versions, and §5.6 lets a provider suspend or revoke one Membership inside a Tenant. §6 no longer leaves
 the second open. It is edited in place because no system this decision governs is in production
 (GDC-010 §2.4.2): `SAD-004` §10.3 records that the only deployment is the development server.
+
+**Amended 2026-10-21, in place,** on one point: §5.6 names the provider's read of one Membership,
+which it left unnamed. Same evidence: `SAD-004` §10.3 records that the only deployment is the
+development server.
 
 ## 3. Context
 
@@ -228,6 +233,24 @@ lost withdrawal after a restore, or a compromised member in a cross-tenant expos
   Access Transparency is the model: its logs "include details such as the affected resource and
   action, the time of the action, the reason for the action, and information about the accessor"
   [R11].
+- **The provider's read of one Membership (amended 2026-10-21).** A provider in force may read one
+  Membership with `GET /v1/tenants/{tenant_id}/memberships/{membership_id}` (organization-control
+  ROADMAP item 61, planned, not built). The two commands above need the Membership's
+  `expected_version`, and the person who contains an exposure needs its current state first.
+  Without a read, the operator must type the identifier and version from somewhere else
+  (organization-experience #22).
+  - **The same authority as suspend and revoke, no more.** A provider in force, `X-Administrative-Reason`,
+    `db.WithProviderInTenant`, and a privileged-access row that names the Tenant, which the Tenant's
+    administrators see in `GET /v1/provider-access`. It is a privileged function whether it changes
+    the record or reads it: AC-6(9) asks to "Log the execution of privileged functions" [R10].
+    Whoever may contain a Membership may see the one Membership they contain, and nothing wider
+    (AC-6: "only authorized accesses … that are necessary to accomplish assigned organizational
+    tasks" [R7]).
+  - **One Membership, in that Tenant.** It answers that Membership's identifier, state and version.
+    It is not a listing, and it is not an unscoped read by identifier: a Membership that is not in
+    the Tenant in the path answers `404`, as an absent one does.
+  - **A safe method.** `GET` is one whose "defined semantics are essentially read-only" [R8], so it
+    takes no `Idempotency-Key` and no `expected_version`.
 - **No Tenant approval first.** It only narrows access, and it is used in incidents. Google's Access
   Approval itself lets a request "be automatically approved without the customer's action to address
   time-sensitive outages", and such requests "are logged in an auto approved state" [R12].

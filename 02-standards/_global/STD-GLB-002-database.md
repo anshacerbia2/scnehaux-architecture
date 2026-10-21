@@ -3,14 +3,14 @@ doc_meta:
   id: STD-GLB-002
   title: Enterprise Database & Persistence Standard
   owner: Architecture Review Board
-  version: 3.3.1
+  version: 3.4.0
   status: approved
   classification: internal
   governed_by: [GDC-000]
   authorized_by: [ADR-GLB-019]
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_reviewed: 2026-10-20
+  last_reviewed: 2026-10-21
 ---
 
 # STD-GLB-002: Enterprise Database & Persistence Standard
@@ -99,6 +99,7 @@ Authorized by ADR-GLB-019.
 - Every authoritative data store declares backup, restore, RPO, RTO, retention, and integrity requirements according to its reliability class
 - Backup existence is insufficient; restore must be tested
 - Ephemeral cache or search/index stores MUST NOT be the sole durable authority unless their durability model is explicitly approved
+- **A production session store is not an authoritative store (3.4.0).** It holds a session's server-side state, such as the Identity Experience BFF's, and nothing the platform cannot rebuild by a person signing in. It declares one retention, the session's absolute lifetime: a record is deleted when its session ends, and is excluded from backup, snapshot and restore, so no copy outlives the session. Restoring the platform starts it empty, and it needs no RPO, no restore test and no restore evidence. The rule and its sources are `STD-IAM-001` §3.4 (2.11.0): OWASP asks for an absolute timeout enforced on the server [R13], and NIST for a session to be terminated when its timeout expires [R14]. Neither source speaks to backups, so excluding the store from them is the conservative choice, for the reason given there.
 
 ### Restore Evidence
 
@@ -171,6 +172,7 @@ Normative:
 - **[R2]** NIST, _SP 800-53 Rev. 5_, CP-9 "System Backup" and CP-9(1) "Testing for Reliability and Integrity", same catalog, accessed 2026-10-08. CP-9 d: "Protect the confidentiality, integrity, and availability of backup information." CP-9(1): "Test backup information … to verify media reliability and information integrity." Its guidance: "Organizations need assurance that backup information can be reliably retrieved." CP-9(2) "Test Restoration Using Sampling": "Use a sample of backup information in the restoration of selected system functions as part of contingency plan testing." Supports rules 4 and 5.
 - **[R3]** NIST, _SP 800-53 Rev. 5_, CP-10 "System Recovery and Reconstitution", same catalog, accessed 2026-10-08. "Provide for the recovery and reconstitution of the system to a known state within … after a disruption, compromise, or failure." Supports rules 5 and 6.
 - **[R12]** NIST, _SP 800-53 Rev. 5_, CP-10(2) "Transaction Recovery", same catalog, accessed 2026-10-20. "Implement transaction recovery for systems that are transaction-based." Discussion: "Transaction-based systems include database management systems and transaction processing systems. Mechanisms supporting transaction recovery include transaction rollback and transaction journaling." Supports §A restore to an older point.
+- **[R14]** NIST SP 800-63B-4, _Digital Identity Guidelines: Authentication and Authenticator Management_, Session Management, §Reauthentication (Sec. 5.2), accessed 2026-10-21. <https://pages.nist.gov/800-63-4/sp800-63b.html>. "When either timeout expires, the session SHALL be terminated." Supports §Durability & Recovery.
 
 Informative:
 
@@ -182,3 +184,4 @@ Informative:
 - **[R9]** GitHub, _Events that trigger workflows_, `schedule`, accessed 2026-10-08. <https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows>. "In a public repository, scheduled workflows are automatically disabled when no repository activity has occurred in 60 days"; "Scheduled workflows will only run on the default branch." Supports §Cadence.
 - **[R10]** PostgreSQL 17 Documentation, _CREATE VIEW_, accessed 2026-10-09. <https://www.postgresql.org/docs/17/sql-createview.html>. Notes: "By default, access to the underlying base relations referenced in the view is determined by the permissions of the view owner"; "If any of the underlying base relations has row-level security enabled, then by default, the row-level security policies of the view owner are applied, and access to any additional relations referred to by those policies is determined by the permissions of the view owner." `security_barrier`: "This should be used if the view is intended to provide row-level security." Supports §Aggregate Reads Under Row-Level Security.
 - **[R11]** PostgreSQL 17 Documentation, _CREATE FUNCTION_, "Writing SECURITY DEFINER Functions Safely", accessed 2026-10-09. <https://www.postgresql.org/docs/17/sql-createfunction.html>. "For security, search_path should be set to exclude any schemas writable by untrusted users." Supports §Aggregate Reads Under Row-Level Security.
+- **[R13]** OWASP, _Session Management Cheat Sheet_, §Session Expiration, accessed 2026-10-21. <https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html>. "All sessions should implement an absolute timeout, regardless of session activity."; "Session timeout management and expiration must be enforced server-side." Supports §Durability & Recovery.

@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.6.1
+  version: 2.7.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-20
+  last_reviewed: 2026-10-21
   parent_pad: PAD-PLT-002
 ---
 
@@ -163,6 +163,8 @@ graph TB
     PROV[Tenant Provisioning System]
     OBS[OpenTelemetry / Observability]
     SECRET[Secret Management]
+    FREF[foundation-reference<br/>proof consumer, dev and CI only]
+    FREFDB[(Own PostgreSQL<br/>dev and CI only)]
 
     LB --> APP
     APP --> DB
@@ -172,7 +174,11 @@ graph TB
     PROV -. status events .-> BROKER
     SECRET --> APP
     APP -. telemetry .-> OBS
+    APP -. outbox delivery, workload token (dev and CI) .-> FREF
+    FREF --> FREFDB
 ```
+
+**`foundation-reference` is a container of the development server and CI, never of production (2.7.0).** It is the enforcing projection consumer that proves a Membership revocation here becomes a refused operation in another process (§7.6, `TDD-foundation-reference-001`). It has its own database on purpose: a consumer sharing this system's database could be updated by a join instead of by an event, and the property under test would no longer be a property of the event path. Production has no such container. Its consumers are the Identity Control Service and the products (§7.6), and `foundation-reference` is not a product. A production deployment registers no `foundation-reference` consumer and holds no workload credential for it.
 
 ### 4.2 Application Modules
 
