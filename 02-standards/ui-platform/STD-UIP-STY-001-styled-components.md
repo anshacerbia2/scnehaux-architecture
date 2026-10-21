@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-STY-001
   title: Enterprise UI Platform Styled Components & Compilation Standard
   owner: Principal Frontend Architect
-  version: 2.0.1
+  version: 2.1.0
   status: approved
   classification: restricted
   governed_by: [PAD-PLT-003]
@@ -14,6 +14,13 @@ doc_meta:
 ---
 
 # Enterprise UI Platform Styled Components & Compilation Standard (STD-UIP-STY-001)
+
+> **Revision 2.1.0 is pending exact-commit ratification.** It adds the rule for
+> governed values in component styles (section 3, "Governed values"). Under
+> GDC-000 section 2.6.7, revision 2.0.1 remains binding until the authorized
+> human authority approves the exact commit containing this revision. The
+> existing `last_reviewed` is updated only in the ratification commit or
+> manifest.
 
 > **Implementation boundary:** these rules define the approved target contract; the copied baseline does not yet satisfy it.
 
@@ -63,6 +70,15 @@ To prevent visual layout conflicts when multiple micro-frontends share the same 
 
 ---
 
+### Governed values
+
+STD-GLB-FE-005 section 3.2 requires tokens for the governed decisions (color, typography, spacing rhythm, radius, shadow, z-index, and motion) and permits "local geometry with no reusable semantic role" when its purpose is recorded. In component Sass and Panda recipes this means:
+
+- **Use the scale.** Spacing uses the `dimension.spacing` token of its relationship (inset for padding, stack or inline for gaps, section or page for regions; STD-UIP-TKN-001, "Dimension vocabulary"); typography uses a typography role; radius and motion use their tokens. Design systems that publish a spacing scale treat values off it as exceptions: "deviating from the spacing scales should be avoided whenever possible" [6]; "Each space token should be used in place of the raw pixel or REM values" [7], and hard-coded values are reported as violations [8].
+- **Round an off-scale value.** A literal off the scale becomes the nearest step of its relationship; a tie takes the smaller step. The change is a visual change and passes the visual review of section 3.
+- **Keep targets usable.** If rounding would make a pointer target smaller than 24 by 24 CSS pixels, the size WCAG 2.2 SC 2.5.8 requires [9], the value rounds up instead.
+- **Record local geometry.** A value stays a literal only when it is geometry of one element rather than rhythm: a positioning offset, an icon glyph size, a list-marker gutter, an inset or size relative to the surrounding text (for example inline code in `em`), or a unitless `line-height: 1` that collapses an icon or badge box. Each such value is recorded with its selector, property, purpose, and removal condition, and the stylesheet gate rejects every unrecorded literal.
+
 ### Build Pipeline Visual Testing
 
 - **Visual Regression Suite**: Modifying core styled components requires passing visual regression tests (such as Playwright visual comparison check) in the CI pipeline before merging.
@@ -82,10 +98,14 @@ Exceptions identify the affected selector or theme contract, supported consumer 
 
 ## 6. References
 
-Retrieved 2026-10-20.
+References 1–5 retrieved 2026-10-20; 6–9 retrieved 2026-10-21.
 
 1. React, `createPortal`, at react.dev commit `ae5e48074d4f73f1e349eda2a66841f9a959023e`: <https://github.com/reactjs/react.dev/blob/ae5e48074d4f73f1e349eda2a66841f9a959023e/src/content/reference/react-dom/createPortal.md>. "A portal only changes the physical placement of the DOM node. In every other way, the JSX you render into a portal acts as a child node of the React component that renders it. For example, the child can access the context provided by the parent tree, and events bubble up from children to parents according to the React tree."
 2. W3C, CSS Custom Properties for Cascading Variables Module Level 1, at csswg-drafts commit `160a00acff045d99796606f502812c9462e110e2`: <https://github.com/w3c/csswg-drafts/blob/160a00acff045d99796606f502812c9462e110e2/css-variables-1/Overview.bs>. "Custom properties are ordinary properties, so they can be declared on any element, are resolved with the normal inheritance and cascade rules"; the custom property definition table states "Inherited: yes".
 3. W3C, CSS Cascading and Inheritance Level 4, same commit: <https://github.com/w3c/csswg-drafts/blob/160a00acff045d99796606f502812c9462e110e2/css-cascade-4/Overview.bs>. "Inheritance propagates property values from parent elements to their children."
 4. Radix Themes, `packages/radix-ui-themes/src/components/theme.tsx` and `dialog.tsx` at commit `1faff10ac26ae17f09944d418c6949b93fc6b566`: <https://github.com/radix-ui/themes/tree/1faff10ac26ae17f09944d418c6949b93fc6b566/packages/radix-ui-themes/src/components>. The theme renders `asChild ? Slot.Root : 'div'` with its `data-*` attributes; dialog content renders `<DialogPrimitive.Portal container={container} forceMount={forceMount}>` followed by `<Theme asChild>`.
 5. Radix Primitives, `packages/react/portal/src/portal.tsx` at commit `eb3a2b7091293e27df8f9ba906632d8daa3d81a3`: <https://github.com/radix-ui/primitives/blob/eb3a2b7091293e27df8f9ba906632d8daa3d81a3/packages/react/portal/src/portal.tsx>. The default container is `document.body` (`containerProp || (mounted && globalThis?.document?.body)`); the `container` prop is "An optional container where the portaled content should be appended."
+6. Carbon Design System, Spacing, FAQ "Are spacing increments outside of the scale allowed?": <https://carbondesignsystem.com/elements/spacing/overview/> (retrieved 2026-10-21). "There are always exceptions to the rule, but deviating from the spacing scales should be avoided whenever possible."
+7. Atlassian Design System, Spacing: <https://atlassian.design/foundations/spacing> (retrieved 2026-10-21). "Each space token should be used in place of the raw pixel or REM values when adding space between components or objects on a page."
+8. Atlassian Design System, ESLint rule `ensure-design-token-usage`: <https://atlassian.design/components/eslint-plugin-design-system/ensure-design-token-usage/usage> (retrieved 2026-10-21). "Using anything other than design tokens such as hardcoded values or legacy theme colors will be considered violations."
+9. W3C, WCAG 2.2, Success Criterion 2.5.8 Target Size (Minimum), `guidelines/sc/22/target-size-minimum.html` at w3c/wcag commit `457cece22d8219be32d29c5c1313e71aa6b61eae`: <https://github.com/w3c/wcag/blob/457cece22d8219be32d29c5c1313e71aa6b61eae/guidelines/sc/22/target-size-minimum.html>. "The size of the target for pointer inputs is at least 24 by 24 CSS pixels", with exceptions for spacing, equivalents, inline targets, user-agent control, and essential presentation.
