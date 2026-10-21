@@ -19,11 +19,12 @@ Authorize the UI Platform package, interaction, theme, styling, and release cont
 
 ## 2. Status
 
-| Date       | Status   | ADR Type            | Reviewers                   | Approver                        |
-| ---------- | -------- | ------------------- | --------------------------- | ------------------------------- |
-| 2026-09-29 | accepted | conflict_resolution | Principal 1 and Principal 2 | Ansha Cerbia (UI Platform Lead) |
+| Date       | Status   | ADR Type            | Reviewers                                           | Approver                                 |
+| ---------- | -------- | ------------------- | --------------------------------------------------- | ---------------------------------------- |
+| 2026-09-29 | accepted | conflict_resolution | Principal 1 and Principal 2                         | Ansha Cerbia (UI Platform Lead)          |
+| 2026-10-21 | accepted | conflict_resolution | Architecture Review Board (revision of UIP-DEC-001) | Ansha Cerbia (Architecture Review Board) |
 
-> **Revision of UIP-DEC-001 pending ARB acceptance.** On 2026-10-21 the owner directed that composite widgets be implemented without React Aria ("manual aja", in reply to the choice between React Aria hooks and a custom implementation for the Combobox). UIP-DEC-001 is revised in place, because no system governed by this ADR is in production (GDC-000 section 2.6, item 4). The revision binds only after the ARB accepts it.
+Revision of UIP-DEC-001, 2026-10-21: the owner directed that composite widgets be implemented without React Aria ("manual aja", in reply to the choice between React Aria hooks and a custom implementation for the Combobox). UIP-DEC-001 is revised in place, because no system governed by this ADR is in production (GDC-000 section 2.6, item 4). Acceptance, stated by Ansha Cerbia on 2026-10-21: "aya, sebagai ARB, menerima revisi ADR-UIP-PLT-001 UIP-DEC-001 (komponen composite tanpa React Aria) per 2026-10-21." ("As ARB, I accept the revision of ADR-UIP-PLT-001 UIP-DEC-001 (composite components without React Aria) as of 2026-10-21.")
 
 ## 3. Context
 
@@ -45,7 +46,7 @@ This ADR authorizes version 2.0.0 of STD-UIP-TKN-001, STD-UIP-TKN-002, STD-UIP-P
 
 The v1 decisions are:
 
-1. **UIP-DEC-001 — Interaction foundation:** every primitive is implemented in `@scnx/core-ui` without a third-party interaction library. A primitive renders the native element when it provides the semantics and behavior (for example `dialog` for Dialog); otherwise it implements the WAI-ARIA Authoring Practices pattern for its widget [R1]. Combobox, Select, Menu, Popover, Listbox, and Tabs each ship with a behavior matrix run in every engine of the support matrix before their entry is published, and stable promotion additionally requires manual NVDA and VoiceOver results (STD-UIP-PRM-001). React Aria is a reference for known assistive-technology behavior, not a dependency [R3]. Revised in place on 2026-10-21; until then, this item named selected React Aria hooks for those widgets.
+1. **UIP-DEC-001 — Interaction foundation:** every primitive is implemented in `@scnx/core-ui` without a third-party interaction library. A primitive renders the native element when it provides the semantics and behavior (for example `dialog` for Dialog); otherwise it implements the WAI-ARIA Authoring Practices pattern for its widget [R1]. Combobox, Select, Menu, Popover, Listbox, and Tabs each ship with a behavior matrix run in every engine of the support matrix before their entry is published, and stable promotion additionally requires manual NVDA and VoiceOver results (STD-UIP-PRM-001). React Aria is a reference for known assistive-technology behavior, not a dependency [R3]. Revised in place and accepted on 2026-10-21; until then, this item named selected React Aria hooks for those widgets.
 2. **UIP-DEC-002 — Theme isolation:** public themes use `[data-scnx-theme="<theme-id>"][data-scnx-resolved-mode="<mode>"]` roots; the URL-safe theme ID identifies the brand and the resolved mode is a separate attribute. Resets are scoped; portals mount inside the originating root. A separate `:root` compatibility stylesheet may support a single-brand document. Shadow DOM is outside v1.
 3. **UIP-DEC-003 — Styling ownership:** one versioned token source generates Sass-facing and Panda-facing contracts. Panda is frozen to its existing recipe surface during P0. Sass components and Panda recipes use named cascade layers. The P0 exit review decides consolidation against the dual-engine eligibility rule in the following paragraph and the Styled Component Delivery TDD.
 4. **UIP-DEC-004 — Polymorphism:** interactive parts use `asChild` only at approved composition points. Typography/layout may use a closed `as` tag union. No component exposes both. Other components keep fixed elements.
