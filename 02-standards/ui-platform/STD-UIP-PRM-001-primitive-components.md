@@ -3,14 +3,14 @@ doc_meta:
   id: STD-UIP-PRM-001
   title: Enterprise UI Platform Primitive Components Standard
   owner: Principal Frontend Architect
-  version: 2.1.0
+  version: 2.2.0
   status: approved
   classification: restricted
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-21
+  last_reviewed: 2026-10-22
 ---
 
 # Enterprise UI Platform Primitive Components Standard (STD-UIP-PRM-001)
@@ -120,12 +120,19 @@ To keep component boundaries isolated and APIs clean:
 
 ---
 
+### Component specification
+
+- **One specification per entry**: Every public entry of `@scnx/core-ui` declares one `<name>.spec.json` in its source folder (ADR-UIP-CMP-001): an interactive primitive of kind `primitive` (root, parts with selectors, controlled props, states, keys with their expected effect, focus, accessible name, data hooks, stability), any other entry of kind `entry` (its kind of entry, stability, and anatomy when it renders parts).
+- **Single source**: The behavior inventory is generated from these specifications and never edited; a fact is stated in one specification only.
+- **Executed contract**: Behavior fixtures execute every declared key and part. An entry is not `stable` without a specification that passes its schema, the cross-reference rules, and these fixtures.
+
 ## 4. Exceptions
 
 An exception must document the affected public behavior and its impact on consumers. A widget that fails a required contract is excluded from stable exports until repaired or explicitly scoped as experimental.
 
 ## 5. Enforcement Mechanism
 
+- **Specification gate**: Every public entry has exactly one specification that validates against its schema and cross-reference rules (ADR-UIP-CMP-001).
 - **Behavior tests**: Unit and interaction tests execute the per-widget matrix, including native keyboard behavior, focus restoration, reduced motion, and controlled/uncontrolled state.
 - **Consumer tests**: Packed-package tests verify public exports, ref behavior, DOM semantics, and supported SSR/RSC use.
 - **Manual review**: Screen-reader and high-contrast results are recorded for each stable complex widget. Automated lint and axe checks cannot alone establish conformance.
