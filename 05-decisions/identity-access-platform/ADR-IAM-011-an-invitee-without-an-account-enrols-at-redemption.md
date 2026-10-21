@@ -175,7 +175,9 @@ follows `ADR-ORG-001 §5.11`, which admits a registered reporter workload and no
 - **Alone, per route.** An entry with `invitation:resolve` reaches this route and nothing else.
   Every other route answers that workload `403`, and every other caller answers `403` on this one.
 - **Recorded.** Each call writes a privileged-access row as a reporter's report does, with the
-  authority `reporter` and the capability in its detail. It names no Tenant, because a call that
+  authority `reporter`, and its detail carries the registry entry's purpose, `invitation:resolve`.
+  The authority alone would lose what was done: AU-3 asks that audit records "contain information
+  that establishes the following", among it "What type of event occurred" [R14]. It names no Tenant, because a call that
   finds nothing names none and a call that finds an invitation must not differ. It is reviewed
   through the workload's owner (`ADR-ORG-001 §5.11`). The calls are bounded by identity-control's
   own limits per invitation and per client address (§5.2).
@@ -364,6 +366,11 @@ administrator's request, and leaves it behind when the invitation lapses. Entra'
   <https://github.com/okta/okta-management-openapi-spec/blob/master/dist/current/management-minimal.yaml>.
   "Users who don't have a password must complete the welcome flow by visiting the activation link
   to complete the transition to `ACTIVE` status."
+- **[R14]** NIST SP 800-53 Rev. 5, AU-3 _Content of Audit Records_, from the OSCAL catalog, accessed
+  2026-10-21.
+  <https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json>.
+  "Ensure that audit records contain information that establishes the following:"; "What type of
+  event occurred;"
 - **[R13]** PostgreSQL 17 Documentation, _CREATE POLICY_, accessed 2026-10-21.
   <https://www.postgresql.org/docs/17/sql-createpolicy.html>. "Rows for which the expression returns
   true will be visible. Any rows for which the expression returns false or null will not be visible

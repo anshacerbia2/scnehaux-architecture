@@ -7,6 +7,7 @@ doc_meta:
   created: 2026-10-08
   created_date: 2026-10-08
   created_by: Identity Platform Team
+  authorizes: [STD-IAM-001]
 ---
 
 # ADR-IAM-009: Logout Reaches a Relying Party by the Back Channel
@@ -17,9 +18,17 @@ Logout Reaches a Relying Party by the Back Channel.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver             |
-| ---------- | -------- | ------------ | ------------------------- | -------------------- |
-| 2026-10-08 | accepted | foundational | Architecture Review Board | Enterprise Architect |
+| Date       | Status            | ADR Type     | Reviewers                 | Approver             |
+| ---------- | ----------------- | ------------ | ------------------------- | -------------------- |
+| 2026-10-08 | accepted          | foundational | Architecture Review Board | Enterprise Architect |
+| 2026-10-21 | accepted, amended | foundational | Architecture Review Board | Enterprise Architect |
+
+**Amended 2026-10-21, in place,** to authorize `STD-IAM-001` 3.0.0 (`authorizes: [STD-IAM-001]`). This
+decision governs how a relying party's server-side sessions end, and 3.0.0 adds the rule that the
+record of such a session ends with it and is not backed up (`STD-IAM-001` §3.4). That is a new
+mandatory restriction, so the version is major (GDC-007 §2.4.2). It is edited in place because no
+system this decision governs is in production (GDC-010 §2.4.2): `SAD-001` §9.1 records that the only
+deployment is the development server.
 
 ## 3. Context
 

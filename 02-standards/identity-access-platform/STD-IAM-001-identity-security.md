@@ -3,7 +3,9 @@ doc_meta:
   id: STD-IAM-001
   title: Enterprise Identity Security Standard
   owner: Enterprise Security Architect
-  version: 2.11.0
+  version: 3.0.0
+  governed_by: [GDC-000]
+  authorized_by: [ADR-IAM-009]
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -12,6 +14,8 @@ doc_meta:
 ---
 
 # Enterprise Identity Security Standard (STD-IAM-001)
+
+> **Authorization:** ADR-IAM-009 authorizes this revision (3.0.0): the session record's deletion at the end of its session, and its exclusion from backup, are a new mandatory restriction, so the version is major (GDC-007 §2.4.2). Implementation conformance still requires verification.
 
 ## 1. Objective & Scope
 
@@ -105,7 +109,7 @@ Business authorization, Tenant/Membership authority, Product permissions, and co
 - **A relying party that holds server-side sessions and that the identity kernel can reach MUST receive logout by OpenID Connect Back-Channel Logout, and front-channel logout MUST NOT be used by any client (2.7.0).** The kernel tells a relying party of a session removed through its Admin API only by the back channel, and the pinned release skips the back channel for a client with front-channel logout on [R33]. A front-channel logout is a frame in the person's browser, which browsers now deny the relying party's cookies and storage [R34]. The registration authority records the back-channel logout URI and holds front-channel logout off (`ADR-IAM-009`). A relying party the kernel cannot reach, such as one on a developer's machine, registers none and is bounded by the enforcement delay above
 - Products MUST NOT require synchronous Identity calls for every request solely to check session state when local token validation plus bounded revocation/projection mechanisms satisfy the requirement
 - Privileged administrative sessions SHOULD use server-managed/BFF session patterns where the application architecture supports them
-- **A server-side session record lives as long as its session, and is not kept beyond it (2.11.0).** A relying party's session store, such as the Identity Experience BFF's, holds what the server keeps for a session: its state and any token the relying party holds for it. In production:
+- **A server-side session record lives as long as its session, and is not kept beyond it (3.0.0, `ADR-IAM-009`).** A relying party's session store, such as the Identity Experience BFF's, holds what the server keeps for a session: its state and any token the relying party holds for it. In production:
   - **The record ends with the session.** It carries the session's absolute expiry, and the store deletes it at the earliest of the absolute timeout, the idle timeout, logout and revocation. The deletion is the store's own (an expiry on the record), not only a refusal when the record is read. Timeouts are enforced on the server: OWASP says "Session timeout management and expiration must be enforced server-side" [R45], "All sessions should implement an absolute timeout, regardless of session activity" [R45], and "When a session expires, the web application must take active actions to invalidate the session on both sides, client and server. The latter is the most relevant and mandatory from a security perspective" [R45]. NIST says "When either timeout expires, the session SHALL be terminated" [R44]; SP 800-63B-3 §7.1 said a session secret "SHALL time out and not be accepted after the times specified" [R44]. Neither says the record must be deleted. Deleting it is this standard's conservative choice, because the record holds a live session secret and tokens, and a record that is refused but kept keeps them for as long as the store keeps it.
   - **It is not backed up.** The session store is excluded from backup, snapshot and replication that outlives it, so no copy of a session exists past its absolute lifetime. Restoring the platform brings it up with an empty session store, and every person signs in again. The sources above set timeouts and say sessions are stored "in session objects or in a session management database or repository" and that when they hold sensitive information "it is required to duly encrypt and protect the session management repository" [R45]; none of them speaks to backups. The rule is the conservative reading: a backup copy outlives the session by the backup's retention, and a restore would bring back sessions that had ended, a revoked one included, which is what the revocation rules above forbid.
   - **It is not an authority.** Losing it costs a sign-in, so it is not an authoritative data store and declares no RPO or restore test (`STD-GLB-002` §Durability & Recovery). The person's account, grants and the kernel's own session remain where their owners keep them.
