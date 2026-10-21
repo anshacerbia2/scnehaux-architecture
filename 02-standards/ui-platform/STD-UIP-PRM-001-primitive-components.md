@@ -10,16 +10,10 @@ doc_meta:
   authorized_by: [ADR-UIP-PLT-001]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-09-29
+  last_reviewed: 2026-10-21
 ---
 
 # Enterprise UI Platform Primitive Components Standard (STD-UIP-PRM-001)
-
-> **Revision 2.1.0 is pending exact-commit ratification.** It replaces the React
-> Aria rule for composite widgets with the custom-implementation rule of the
-> revised ADR-UIP-PLT-001 UIP-DEC-001 (2026-10-21). Under GDC-000 section 2.6.7,
-> revision 2.0.0 remains binding until the authorized human authority approves
-> the exact commit containing this revision.
 
 > **Implementation boundary:** approval of this behavioral contract does not assert that the extracted implementation already conforms.
 
