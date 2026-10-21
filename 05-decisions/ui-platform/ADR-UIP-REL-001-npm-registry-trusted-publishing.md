@@ -4,11 +4,11 @@ doc_meta:
   title: Public npm Registry with Trusted Publishing for UI Platform Releases
   adr_type: foundational
   owner: Principal UI/UX Architect
-  status: proposed
+  status: accepted
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
-  last_reviewed: 2026-10-20
+  last_reviewed: 2026-10-21
   created: 2026-10-20
   created_date: 2026-10-20
   created_by: UI Platform Team
@@ -16,7 +16,7 @@ doc_meta:
 
 # Public npm Registry with Trusted Publishing for UI Platform Releases (ADR-UIP-REL-001)
 
-> **Implementation boundary:** this proposed decision publishes nothing. It answers lien L3 of the UI Platform P0 exit (long-term package storage and signing) and, once accepted, is implemented by a release workflow in the UI repository and by revisions of STD-UIP-ENG-001 section 3.5 (3) and SAD-003 section 3.2.
+> **Implementation boundary:** this decision publishes nothing by itself. It answers lien L3 of the UI Platform P0 exit (long-term package storage and signing) and, once accepted, is implemented by a release workflow in the UI repository and by revisions of STD-UIP-ENG-001 section 3.5 (3) and SAD-003 section 3.2.
 
 ---
 
@@ -26,9 +26,12 @@ Publish `@scnx/core-ui` and `@scnx/system` to the public npm registry under the 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------ | ------------------------------------------------ |
-| 2026-10-20 | proposed | foundational | Pending principal review | Pending Architecture Review Board (Ansha Cerbia) |
+| Date       | Status   | ADR Type     | Reviewers                 | Approver                                         |
+| ---------- | -------- | ------------ | ------------------------- | ------------------------------------------------ |
+| 2026-10-20 | proposed | foundational | Pending principal review  | Pending Architecture Review Board (Ansha Cerbia) |
+| 2026-10-21 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board)         |
+
+Acceptance, stated by Ansha Cerbia on 2026-10-21: "Saya, sebagai ARB, menerima ADR-UIP-REL-001 per 2026-10-21." ("As ARB, I accept ADR-UIP-REL-001 as of 2026-10-21.") Item 1's precondition (a second, organization-controlled Owner of the `@scnx` organization and required two-factor authentication) remains open until the owner records it; no version is published before then.
 
 ## 3. Context
 
