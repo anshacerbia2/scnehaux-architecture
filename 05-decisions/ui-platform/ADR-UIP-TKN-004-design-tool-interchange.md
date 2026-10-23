@@ -55,7 +55,7 @@ Constraints measured on 2026-10-23:
 
 1. **The repository is the only source.** A Figma file is a consumer of the token contract and of the design-system reference. Nothing is synchronized back. A change proposed in Figma becomes a pull request to the token source or the reference, gated like any other change.
 2. **The token build emits a design-tool profile** (TDD tokens FG1-FG6) as package exports of `@scnx/system`: `tokens/figma/<theme>.<mode>.color.tokens.json` (every Tier-2 color of one mode, identical key sets across modes, DTCG 2025.10 `srgb` color objects with `hex`, sRGB-clipped so each value equals the srgb-clip path the gate measured) and `tokens/figma/<theme>.dimension.tokens.json` (the Tier-2 dimension domain in pixels). Every token carries `$extensions["com.scnehaux.ui"]` with its CSS name and WEB code syntax `var(--ds-…)`. Groups follow the canonical path, so variables are named `color/neutral/surface/canvas/default`.
-3. **Variables reach Figma by its native import or by a bridge.** One collection per theme holds one mode per color file; a single-mode collection holds the dimensions. On a plan without modes only the light mode of the default theme is imported; the other files are imported, unchanged, once the plan allows modes.
+3. **Variables reach Figma by its native import or by a bridge.** One color collection holds a mode per color file (every theme and mode: Light, Dark, Achromatic light, Achromatic dark), and one dimension collection holds a mode per theme, so a frame switches theme and mode with one mode picker. On a plan without modes only the light mode of the default theme is filled; the other modes are added, from the same files, once the plan allows them.
 4. **A bridge is any tool that writes to a design file through the Figma Plugin API, and it must:**
    1. read the profile files unmodified, DTCG 2025.10 color objects included;
    2. set each variable's WEB code syntax from `$extensions["com.scnehaux.ui"].codeSyntax`;
@@ -77,7 +77,7 @@ Constraints measured on 2026-10-23:
 
 - Figma holds sRGB values; P3 displays show slightly less chroma in a design file than in the product (bounded by PG6).
 - Shadows, motion, and typography need a bridge; the native import alone yields colors and dimensions.
-- A first-party bridge is code to own; FigCraft at `94d0ab9` fails items 4.1 to 4.3 and would need a maintained fork.
+- The first-party bridge is code to own; FigCraft at `94d0ab9` fails items 4.1 to 4.3 and would need a maintained fork, so on 2026-10-23 Ansha Cerbia chose Figma with the repository's plugin ("ya gw rasa figma saja").
 
 ### Operational Impact
 
@@ -111,4 +111,4 @@ Retrieved 2026-10-23.
 - [R5] DivikWu/figcraft at commit `94d0ab90b58d7e9efd3e2b42e93d7d604b290c8d` (MIT): `packages/adapter-figma/src/adapters/variable-mapper.ts`, `dtcgValueToFigma` (`case 'color'`: `if (typeof value === 'string') return hexToFigmaRgba(value); return value as VariableValue;`) and `inferScopes` (scopes from `lower.includes('surface' | 'border' | 'text' …)`); `packages/core-mcp/src/dtcg.ts`, `parseDtcg`. Supports the context, item 4, and the alternatives.
 - [R6] Figma, Plugin API, `VariableScope`: <https://developers.figma.com/docs/plugins/api/VariableScope>. COLOR scopes `ALL_FILLS`, `FRAME_FILL`, `SHAPE_FILL`, `TEXT_FILL`, `STROKE_COLOR`, `EFFECT_COLOR`; FLOAT scopes include `CORNER_RADIUS`, `WIDTH_HEIGHT`, `GAP`, `STROKE_FLOAT`; "`ALL_SCOPES` is a special scope that means that the variable is shown in the picker for all fields." Supports item 4.3.
 
-In-repository evidence (2026-10-23): ui-platform pull request #109, `packages/design-system/scripts/tokens/figma.mjs` and its tests (per-mode key-set parity, PG6 bound, code syntax, pixel dimensions).
+In-repository evidence (2026-10-23): ui-platform pull request #109, `packages/design-system/scripts/tokens/figma.mjs` and its tests (per-mode key-set parity, PG6 bound, code syntax, pixel dimensions), and the repository's Figma plugin (`packages/design-system/figma-plugin/`, `scripts/figma/plan.mjs`), a first-party bridge meeting item 4.1-4.3 and 4.5-4.6 for variables, text styles, and effect styles, tested against a Plugin API double; components (item 4.4) follow.
