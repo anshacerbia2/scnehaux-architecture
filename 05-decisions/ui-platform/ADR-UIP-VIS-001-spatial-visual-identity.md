@@ -16,7 +16,7 @@ doc_meta:
 
 # Spatial Visual Identity with Materials and a Concentric Radius Ladder (ADR-UIP-VIS-001)
 
-> **Implementation boundary:** this decision changes no package by itself. STD-UIP-TKN-001 2.4.0 adds the token vocabulary; the UI repository's tokens and styled TDDs implement the values, and each component adopts the identity through its specification.
+> **Implementation boundary:** this decision changes no package by itself. STD-UIP-TKN-001 2.4.0 adds the token vocabulary; the UI repository's tokens and styled TDDs implement the values, and each component adopts the identity through its specification. The visual target built from this decision is kept in the design reference repository (ADR-UIP-VIS-002).
 
 ---
 
@@ -40,7 +40,7 @@ On 2026-10-23 the platform's visual language existed in three places that disagr
 - The documentation site, the product people see, set cards at 24px, panels at 28px, and inner blocks at 16px as Sass literals outside the tokens, on a tinted ground with a 22px dot grid.
 - Shadows were four generic elevations (`effect.shadow.low` to `overlay`) that each component combined with its own border, so a card, a menu, and a dialog drew three unrelated edges.
 
-No document named what makes a screen Scnehaux, so each new component chose again. Nine P1 components were next, and ui-platform's Figma path (ADR-UIP-TKN-004) would copy whatever the tokens say.
+No document named what makes a screen Scnehaux, so each new component chose again. Nine components (component wave 1, ui-platform PLAN "Component waves") were next, and ui-platform's Figma path (ADR-UIP-TKN-004) would copy whatever the tokens say.
 
 Precedent, retrieved 2026-10-23 and 2026-10-24:
 

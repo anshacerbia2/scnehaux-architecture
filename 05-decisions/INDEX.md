@@ -67,4 +67,5 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-UIP-TKN-003](ui-platform/ADR-UIP-TKN-003-token-taxonomy-and-naming-convention.md) | ADR-UIP-TKN-003 Token Taxonomy & Naming Convention | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-UIP-TKN-004](ui-platform/ADR-UIP-TKN-004-design-tool-interchange.md) | Design-Tool Interchange through a DTCG Profile of the Token Build | foundational | accepted | 2026-10-23 | N/A |
 | [ADR-UIP-VIS-001](ui-platform/ADR-UIP-VIS-001-spatial-visual-identity.md) | Spatial Visual Identity with Materials and a Concentric Radius Ladder | foundational | accepted | 2026-10-24 | N/A |
+| [ADR-UIP-VIS-002](ui-platform/ADR-UIP-VIS-002-design-reference-repository.md) | Design Reference Repository for the Visual Target | foundational | accepted | 2026-10-24 | N/A |
 | [ADR-UIP-WKS-001](ui-platform/ADR-UIP-WKS-001-storybook-component-workshop.md) | Storybook Component Workshop with Story Tests and Chromatic Visual Review | foundational | accepted | 2026-10-01 | N/A |
