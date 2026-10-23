@@ -3,16 +3,17 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.3.0
+  version: 2.4.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-20
+  last_reviewed: 2026-10-24
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   references:
     - PAD-PLT-003
+    - ADR-UIP-VIS-001
 ---
 
 # UI Platform Design Tokens Architecture & Pipeline (STD-UIP-TKN-001)
@@ -52,13 +53,13 @@ The platform enforces a strict **3-Tier Token Architecture**:
 
 #### Canonical grammar per domain
 
-| Domain     | Tier 1 (internal)                                                     | Tier 2 (public)                                     | Tier 2 example                        |
-| :--------- | :-------------------------------------------------------------------- | :-------------------------------------------------- | :------------------------------------ |
-| Color      | `color.{hue}.{axis}.{step}`                                           | `color.{scheme}.{role}.{emphasis}.{state}`          | `color.primary.surface.solid.default` |
-| Effect     | `effect.shadow.{sm\|md\|lg\|xl}`                                      | `effect.shadow.{low\|medium\|high\|overlay\|focus}` | `effect.shadow.overlay`               |
-| Dimension  | `dimension.{property}.{step}`, for example `dimension.z-index.{step}` | `dimension.{property}.{intent}`                     | `dimension.z-index.modal`             |
-| Typography | `typography.{property}.{step}`                                        | `typography.{context}.{variant}`                    | `typography.data.compact`             |
-| Motion     | `motion.duration.{step}`, `motion.easing.{curve-id}`                  | `motion.{action}.{duration\|easing}`                | `motion.enter.duration`               |
+| Domain     | Tier 1 (internal)                                                     | Tier 2 (public)                                                                   | Tier 2 example                        |
+| :--------- | :-------------------------------------------------------------------- | :-------------------------------------------------------------------------------- | :------------------------------------ |
+| Color      | `color.{hue}.{axis}.{step}`                                           | `color.{scheme}.{role}.{emphasis}.{state}`                                        | `color.primary.surface.solid.default` |
+| Effect     | `effect.shadow.{sm\|md\|lg\|xl}`                                      | `effect.shadow.{low\|medium\|high\|overlay\|focus}`, `effect.material.{material}` | `effect.material.menu`                |
+| Dimension  | `dimension.{property}.{step}`, for example `dimension.z-index.{step}` | `dimension.{property}.{intent}`                                                   | `dimension.z-index.modal`             |
+| Typography | `typography.{property}.{step}`                                        | `typography.{context}.{variant}`                                                  | `typography.data.compact`             |
+| Motion     | `motion.duration.{step}`, `motion.easing.{curve-id}`                  | `motion.{action}.{duration\|easing}`                                              | `motion.enter.duration`               |
 
 Tier-1 steps are numeric or opaque identifiers; Tier-2 names carry intent. A Tier-1 name never reuses a Tier-2 intent word, so `motion.duration.fast` and `dimension.z.modal` are not valid names in either tier.
 
@@ -101,7 +102,7 @@ Every role supports the `default` rest state.
 
 #### Effect contract
 
-Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
+Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. Every public theme also emits the material set of ADR-UIP-VIS-001: `effect.material.flat`, `effect.material.raised`, and `effect.material.panel` (surfaces on the page) and `effect.material.tooltip`, `effect.material.menu`, `effect.material.modal`, and `effect.material.sheet` (floating surfaces). A material shadow composes a 1px ring in `color.neutral.border.subtle.default`, except `tooltip`, which has none, with contact and ambient layers whose colors are Tier-2 `color.neutral.shadow.*` tokens; floating materials may add an inset top highlight in dark mode. A component that draws a material's fill, radius, and edge uses its material token, not a separate border and shadow. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
 
 The Sass validator rejects unsupported generated role/state combinations. Packed-output checks for grammar, key parity across themes, and value validity are release gates in STD-UIP-ENG-001.
 
@@ -109,17 +110,17 @@ The Sass validator rejects unsupported generated role/state combinations. Packed
 
 Tier-2 dimension names are `dimension.{property}.{intent}`. The property and intent vocabularies are closed:
 
-| Property       | Intents                                                                         | Intended use                                                                                        |
-| :------------- | :------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------- |
-| `spacing`      | `inset-compact`, `inset-default`, `inset-comfortable`                           | Padding between a container's edge and its content                                                  |
-| `spacing`      | `stack-compact`, `stack-default`, `stack-comfortable`                           | Block-axis gap between sibling elements                                                             |
-| `spacing`      | `inline-compact`, `inline-default`, `inline-comfortable`                        | Inline-axis gap between sibling elements                                                            |
-| `spacing`      | `section`, `page`                                                               | Gap between major page regions; gutter between the viewport edge and content                        |
-| `radius`       | `element`, `control`, `container`, `pill`                                       | Small inline elements such as code and badges; controls; cards, panels, menus; fully rounded shapes |
-| `border-width` | `default`, `strong`                                                             | Dividers and outlines; emphasized indicators such as an active-item marker                          |
-| `z-index`      | `base`, `dropdown`, `sticky`, `overlay`, `modal`, `popover`, `tooltip`, `toast` | Stacking layers                                                                                     |
+| Property       | Intents                                                                         | Intended use                                                                                                                                                                                                |
+| :------------- | :------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spacing`      | `inset-compact`, `inset-default`, `inset-comfortable`                           | Padding between a container's edge and its content                                                                                                                                                          |
+| `spacing`      | `stack-compact`, `stack-default`, `stack-comfortable`                           | Block-axis gap between sibling elements                                                                                                                                                                     |
+| `spacing`      | `inline-compact`, `inline-default`, `inline-comfortable`                        | Inline-axis gap between sibling elements                                                                                                                                                                    |
+| `spacing`      | `section`, `page`                                                               | Gap between major page regions; gutter between the viewport edge and content                                                                                                                                |
+| `radius`       | `mark`, `element`, `control`, `container`, `panel`, `pill`                      | Marks such as checkboxes and inline code; elements such as badges, tooltips, and small controls; controls and rows; containers such as cards, menus, and popovers; panels and dialogs; fully rounded shapes |
+| `border-width` | `default`, `strong`                                                             | Dividers and outlines; emphasized indicators such as an active-item marker                                                                                                                                  |
+| `z-index`      | `base`, `dropdown`, `sticky`, `overlay`, `modal`, `popover`, `tooltip`, `toast` | Stacking layers                                                                                                                                                                                             |
 
-Values within each spacing relationship ascend from `compact` to `comfortable`. `z-index` values strictly ascend in the listed order in every theme. Intents are single path segments; a hyphen inside an intent joins its relationship and density.
+Values within each spacing relationship ascend from `compact` to `comfortable`. `z-index` and `radius` values strictly ascend in the listed order in every theme. A radius inside a padded parent is the parent's radius minus the parent's padding (ADR-UIP-VIS-001 item 2). Intents are single path segments; a hyphen inside an intent joins its relationship and density.
 
 #### Values that are not Tier-2 tokens
 
