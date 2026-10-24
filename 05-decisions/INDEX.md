@@ -22,6 +22,8 @@ This is the authoritative index of all Architectural Decision Records within the
 | [ADR-GLB-018](_global/ADR-GLB-018-per-consumer-delivery-from-one-outbox.md) | ADR-GLB-018 Deliver One Outbox to Several Named Consumers, Each with Its Own Outcome | foundational | accepted | 2026-10-02 | N/A |
 | [ADR-GLB-019](_global/ADR-GLB-019-data-changes-in-migrations.md) | ADR-GLB-019 A Migration Changes Existing Data Only as a Bounded Data Migration, and Never Seeds | foundational | accepted | 2026-10-03 | N/A |
 | [ADR-GLB-020](_global/ADR-GLB-020-container-build-context-excludes-secrets-and-local-state.md) | ADR-GLB-020 A Container Build Context Excludes Secrets, Key Material and Local State | foundational | accepted | 2026-10-21 | N/A |
+| [ADR-GLB-021](_global/ADR-GLB-021-a-response-writes-an-absent-optional-value-as-null.md) | ADR-GLB-021 A Response Writes an Absent Optional Value as null, Never as a Sentinel | foundational | accepted | 2026-10-24 | N/A |
+| [ADR-GLB-022](_global/ADR-GLB-022-a-production-ingress-overwrites-forwarding-headers.md) | ADR-GLB-022 A Production Ingress Overwrites Client-Sent Forwarding Headers, and the Service Behind It Trusts One Hop | foundational | accepted | 2026-10-24 | N/A |
 | [ADR-GLB-FE-001](_global/ADR-GLB-FE-001-react-ecosystem.md) | ADR-GLB-FE-001 Standardization on React and Framework Paved Road | foundational | accepted | 2026-01-01 | N/A |
 | [ADR-GLB-FE-002](_global/ADR-GLB-FE-002-build-toolchain.md) | ADR-GLB-FE-002 Standardization on Next-Generation Build Toolchains | foundational | superseded | 2026-01-01 | N/A |
 | [ADR-GLB-FE-003](_global/ADR-GLB-FE-003-meta-framework.md) | ADR-GLB-FE-003 Standardization on Enterprise Meta-Framework | foundational | accepted | 2026-01-01 | N/A |
