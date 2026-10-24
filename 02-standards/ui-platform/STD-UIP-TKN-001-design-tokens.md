@@ -3,12 +3,12 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.4.0
+  version: 2.5.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-24
+  last_reviewed: 2026-10-25
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   references:
@@ -115,6 +115,7 @@ Tier-2 dimension names are `dimension.{property}.{intent}`. The property and int
 | `spacing`      | `inset-compact`, `inset-default`, `inset-comfortable`                           | Padding between a container's edge and its content                                                                                                                                                          |
 | `spacing`      | `stack-compact`, `stack-default`, `stack-comfortable`                           | Block-axis gap between sibling elements                                                                                                                                                                     |
 | `spacing`      | `inline-compact`, `inline-default`, `inline-comfortable`                        | Inline-axis gap between sibling elements                                                                                                                                                                    |
+| `spacing`      | `control-compact`, `control-default`, `control-comfortable`                     | Inline padding between a control's edge and its label, value, or icon; compact, default, and comfortable pair with small, medium, and large controls                                                        |
 | `spacing`      | `section`, `page`                                                               | Gap between major page regions; gutter between the viewport edge and content                                                                                                                                |
 | `radius`       | `mark`, `element`, `control`, `container`, `panel`, `pill`                      | Marks such as checkboxes and inline code; elements such as badges, tooltips, and small controls; controls and rows; containers such as cards, menus, and popovers; panels and dialogs; fully rounded shapes |
 | `border-width` | `default`, `strong`                                                             | Dividers and outlines; emphasized indicators such as an active-item marker                                                                                                                                  |
@@ -124,7 +125,7 @@ Values within each spacing relationship ascend from `compact` to `comfortable`. 
 
 #### Values that are not Tier-2 tokens
 
-- **Component geometry**, such as a sidebar width, a navigation-bar height, control, icon, and avatar sizes, and container maximum widths, is a documented structural value of its component (STD-UIP-TKN-002 section 3.1), not a token. A Tier-3 alias resolves to a Tier-2 token, and these values have no Tier-2 source.
+- **Component geometry**, such as a sidebar width, a navigation-bar height, control, icon, and avatar sizes, and container maximum widths, is a documented structural value of its component (STD-UIP-TKN-002 section 3.1), not a token. A Tier-3 alias resolves to a Tier-2 token, and these values have no Tier-2 source. A control's height is geometry; its inline padding is the `control` spacing relationship.
 - **Breakpoints** are not emitted as custom properties, because `var()` is not valid in a media-query condition. Responsive thresholds are build-time constants of the consuming layer.
 - **Opacity** has no Tier-2 token. A translucent state is a color token whose alpha is part of its value and is verified on its actual background.
 - **Transition shorthands** are not tokens. Components compose `motion.{action}.duration` and `motion.{action}.easing` with the properties they animate.
