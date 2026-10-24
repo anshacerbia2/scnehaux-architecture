@@ -3,17 +3,20 @@ doc_meta:
   id: STD-GLB-001
   title: Enterprise API Design Standard
   owner: Architecture Review Board
-  version: 1.8.0
+  version: 2.0.0
   status: approved
   classification: public
   governed_by: [EAD-004]
+  authorized_by: [ADR-GLB-021]
   review_cycle_days: 365
   created_date: 2026-01-01
-  last_updated: 2026-10-20
-  last_reviewed: 2026-10-20
+  last_updated: 2026-10-24
+  last_reviewed: 2026-10-24
 ---
 
 # STD-GLB-001: Enterprise API Design Standard
+
+> **Authorization (2.0.0):** ADR-GLB-021 authorizes §A Response Writes an Absent Optional Value as `null`. A response may no longer write a sentinel for "none", a new mandatory restriction, so the version is major (GDC-007 §2.4.2). Implementation conformance still requires verification: organization-control ROADMAP item 67 is the first case.
 
 ## Objective & Scope
 
@@ -99,6 +102,16 @@ Two request parts guard different failures. A version guards a decision taken on
 - **A person's command on their own account carries no reason.** The actor and the subject are the same Principal, and the record already names them, the object and the outcome. OWASP's "Reason" event attribute is "why the status above occurred e.g. User not authenticated in database check ..., Incorrect credentials" [R17]: the cause of the outcome, which the service records itself, not text the person types. Microsoft asks for fresh authentication instead: "When users manage their own authentication methods, the system prompts them to complete multi-factor authentication (MFA) if they last authenticated more than 10 minutes ago" [R15]. A person's command that gains access requires step-up for the same reason (`ADR-IAM-004`).
 - **The tradeoff.** Requiring a version on a person's own commands, refused `428` without one, was rejected: it guards no lost update, and it would refuse the person's second command whenever the first moved the version. An optional reason was rejected: nobody fills it, and free text a person types would carry personal data into the audit store. The residual risk is a taken-over account acting without explanation. A reason an attacker types would not reduce it. Step-up and the notification sent to every address of the Principal on an authenticator change (`STD-IAM-001 §3.1`) do.
 
+### A Response Writes an Absent Optional Value as `null`, Never as a Sentinel (2.0.0)
+
+`ADR-GLB-021` records the options and the sources. A value that is not there is written one way.
+
+- **A response member with no value is written as `null`**, and its schema declares it with an OpenAPI 3.1 type array, `type: [<type>, "null"]`. OpenAPI 3.1's Schema Object "is a superset of JSON Schema Specification Draft 2020-12" [R26], whose `type` may be an array that includes `"null"` [R27], and JSON has the literal `null` [R25]. `nullable: true` is not used: OpenAPI removed it in 3.1 [R28]. A member that is always present stays in `required`; `required` says the key is there, and `null` is the value [R27].
+- **A client reads a missing member and a `null` member as the same "none".** A service gives the two no different meaning in one response, as Zalando requires: both cases "must be handled in the exact same manner" [R29].
+- **A sentinel is never allowed.** A response never writes a value of the member's own type to mean "none": the nil UUID, `0001-01-01T00:00:00Z` or the Unix epoch, `0` or `-1`, an empty string where emptiness is not a real value. Such a value is valid for its type, so no schema and no client can tell it from a real one. RFC 9562 lets the nil UUID "communicate the absence of any other UUID value in situations that otherwise require or use a 128-bit UUID" [R24]; a JSON response is not such a situation, because it has `null`. A handler uses a pointer or a nullable type, so that the zero value of its language is never serialised as "none".
+- **A real `false`, `0` or `[]` stays as it is**, and a boolean or an empty list is not made `null` [R29]. A merge request keeps JSON Merge Patch's own meaning of `null`.
+- **The tradeoff.** Omitting the member was not chosen as the rule: a pinned specification that lists the member as required would also change `required`, and a consumer's contract test expects the key. Omission stays allowed for a member that is not required. A documented sentinel was rejected for the reason above.
+
 ### Rate Limiting
 
 All public-facing APIs MUST return standard rate-limit headers:
@@ -113,7 +126,7 @@ Legacy systems currently running SOAP or XML are exempt until their scheduled su
 
 ## Enforcement Mechanism
 
-API schema validation via the API Gateway and CI/CD spectral linters. A command that answers a secret has a test that its idempotency record holds no secret and that a replay answers without it (1.7.0). A service's purge has a test that a completed key past its window is deleted, and that a recent key and an uncompleted key are kept (1.8.0).
+API schema validation via the API Gateway and CI/CD spectral linters. A command that answers a secret has a test that its idempotency record holds no secret and that a replay answers without it (1.7.0). A service's purge has a test that a completed key past its window is deleted, and that a recent key and an uncompleted key are kept (1.8.0). A service's tests assert that a response with an absent optional value carries `null` and not the zero value of its type, and its schema check includes a response whose optional member is absent (2.0.0).
 
 ## References
 
@@ -144,3 +157,9 @@ API schema validation via the API Gateway and CI/CD spectral linters. A command 
 - **[R21]** OWASP, _Cryptographic Storage Cheat Sheet_, §Minimize the Storage of Sensitive Information, accessed 2026-10-20. <https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html>. "The best way to protect sensitive information is to not store it in the first place." And the _Forgot Password Cheat Sheet_, <https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html>, on tokens: "Invalidated after they have been used"; "Stored in a secure manner, as discussed in the Password Storage Cheat Sheet."
 - **[R22]** Stripe, _Idempotent requests_, accessed 2026-10-20. <https://docs.stripe.com/api/idempotent_requests>. "For API v1, Stripe saves the status code and body of the first request made with a given idempotency key after endpoint execution begins"; "For API v1, you can remove keys from the system automatically after they’re at least 24 hours old. We generate a new request if a key is reused after the original is pruned"; "Avoid using sensitive data (for example, email addresses or personal identifiers) as idempotency keys."
 - **[R23]** Adyen, _API idempotency_, accessed 2026-10-20. <https://docs.adyen.com/development-resources/api-idempotency/>. "Idempotency keys are valid for a period of 7 to 14 days after first submission."
+- **[R24]** IETF RFC 9562, _Universally Unique IDentifiers (UUIDs)_, §5.9 Nil UUID, May 2024. <https://www.rfc-editor.org/rfc/rfc9562.html#section-5.9>. Accessed 2026-10-24. "A Nil UUID value can be useful to communicate the absence of any other UUID value in situations that otherwise require or use a 128-bit UUID."
+- **[R25]** IETF RFC 8259, _The JavaScript Object Notation (JSON) Data Interchange Format_, §3 Values, December 2017. <https://www.rfc-editor.org/rfc/rfc8259.html#section-3>. Accessed 2026-10-24. "A JSON value MUST be an object, array, number, or string, or one of the following three literal names: false null true"
+- **[R26]** OpenAPI Initiative, _OpenAPI Specification v3.1.0_, §4.4 Data Types. <https://spec.openapis.org/oas/v3.1.0.html>. Accessed 2026-10-24. "Models are defined using the Schema Object, which is a superset of JSON Schema Specification Draft 2020-12."
+- **[R27]** IETF JSON Schema, _JSON Schema Validation_, draft 2020-12, §6.1.1 type and §6.5.3 required. <https://json-schema.org/draft/2020-12/json-schema-validation>. Accessed 2026-10-24. "If it is an array, elements of the array MUST be strings and MUST be unique."; the strings may be "null"; "If the value of "type" is an array, then an instance validates successfully if its type matches any of the types indicated by the strings in the array."; "An object instance is valid against this keyword if every item in the array is the name of a property in the instance."
+- **[R28]** OpenAPI Initiative, _Migrating from OpenAPI 3.0 to 3.1.0_, §Swap nullable for type arrays. <https://www.openapis.org/blog/2021/02/16/migrating-from-openapi-3-0-to-3-1-0>. Accessed 2026-10-24. "the `type` keyword can now define multiple types for a schema with an array. This is useful new functionality, but has also made nullable redundant."; "it was decided to remove nullable entirely instead of deprecate it."
+- **[R29]** Zalando, _RESTful API Guidelines_, §MUST use same semantics for null and absent properties. <https://opensource.zalando.com/restful-api-guidelines/>. Accessed 2026-10-24. "If a property is defined to be not required and nullable (see 2nd row in Table below), this rule demands that both cases must be handled in the exact same manner by specification."; "MUST not use null for boolean properties"; "SHOULD not use null for empty arrays". Google's _AIP-149_, <https://google.aip.dev/149>, is about protocol buffers: "In most cases, there is no meaningful difference between setting it to a default value (such as 0) as opposed to not setting it at all; however, occasionally this distinction is meaningful."
