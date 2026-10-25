@@ -8,7 +8,7 @@ doc_meta:
   classification: public
   governed_by: [PAD-PLT-003]
   review_cycle_days: 180
-  last_reviewed: 2026-10-24
+  last_reviewed: 2026-10-25
   created: 2026-10-24
   created_date: 2026-10-24
   created_by: UI Platform Team
@@ -30,7 +30,7 @@ Keep the visual target of the platform, the Scnehaux UI component reference and 
 | ---------- | -------- | ------------ | ------------------------- | ---------------------------------------- |
 | 2026-10-24 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board) |
 
-Accepted under the rule Ansha Cerbia stated on 2026-10-22 (ADR-UIP-CMP-001, section 2). On 2026-10-24 Ansha Cerbia chose the separate repository ("oke gas a"), asked for one folder per design and the default theme only ("dibikin per folder ya designnya, bikin yg default aja"), and asked that the architecture, plan, and roadmap be aligned with it ("lo adjust keseluruhan docs terkait").
+Accepted under the rule Ansha Cerbia stated on 2026-10-22 (ADR-UIP-CMP-001, section 2). On 2026-10-24 Ansha Cerbia chose the separate repository ("oke gas a"), asked for one folder per design and the default theme only ("dibikin per folder ya designnya, bikin yg default aja"; that theme is `industrial` since 2026-10-25, ADR-UIP-VIS-001 item 7), and asked that the architecture, plan, and roadmap be aligned with it ("lo adjust keseluruhan docs terkait").
 
 ## 3. Context
 
@@ -52,7 +52,7 @@ Three facts make that repository an architecture question rather than a convenie
 ## 5. Decision
 
 1. **The reference.** `anshacerbia2/scnehaux-design` holds the visual target: `design-system/` (the brand book `README.md`, `components/<Name>/` cards with `preview.html` and `README.md`, `components/bundle.css`, assets, fonts, and a viewer) and `concepts/<group>/` (one folder per group of product boards). It is non-normative. Where a card and a component specification disagree, the specification governs until a pull request changes it; where the reference's values and `@scnx/system` disagree, the package wins and the reference is regenerated.
-2. **Layers.** Scnehaux UI is the design system; a theme supplies only values. Rules and components are shared; each theme is `design-system/themes/<theme-id>/` with a snapshot of its tokens and its renders. `default` is the theme the platform ships with; another theme is a sibling folder that changes values, never rules (ADR-UIP-VIS-001).
+2. **Layers.** Scnehaux UI is the design system; a theme supplies only colour values. Rules, structure, and components are shared; each theme is `design-system/themes/<theme-id>/` with a snapshot of its tokens and its renders. `industrial` is the theme the platform ships with (named `default` until 2026-10-25, ADR-UIP-VIS-001 item 7); another theme is a sibling folder that changes colours, never rules or structure (ADR-UIP-VIS-001 items 6 and 7).
 3. **The brand book's status.** A section that restates ADR-UIP-VIS-001 cites it and adds nothing binding. Content voice, the motion signature, the icon grammar, and logo usage are guidance: they bind a component only after an ADR or STD revision records them. The brand book states this at its top.
 4. **Producers.** Component renders are produced in the repository from `tokens.css` and `bundle.css` with a headless browser, by a script the repository holds. Concept boards are edited as `.dc.html`; their `.html` and `.png` are produced by the design tool's runtime outside the repository and committed with their source in the same pull request. That producer cannot run from the repository; a board that must change without the tool is first converted to a plain-HTML source.
 5. **Change flow.** A design change lands in the repository by pull request first; a canvas is republished from the merged files, never the reverse.
