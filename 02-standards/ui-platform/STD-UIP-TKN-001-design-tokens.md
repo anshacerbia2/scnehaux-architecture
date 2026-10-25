@@ -3,12 +3,12 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.7.0
+  version: 2.8.0
   status: approved
   classification: restricted
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-10-25
+  last_reviewed: 2026-10-26
   governed_by: [PAD-PLT-003]
   authorized_by: [ADR-UIP-PLT-001]
   references:
@@ -102,7 +102,7 @@ Every role supports the `default` rest state.
 
 #### Effect contract
 
-Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. Every public theme also emits the material set of ADR-UIP-VIS-001: `effect.material.flat`, `effect.material.raised`, and `effect.material.panel` (surfaces on the page) and `effect.material.tooltip`, `effect.material.menu`, `effect.material.modal`, and `effect.material.sheet` (floating surfaces). A material's layers are Tier-2 values that a theme maps. In the `industrial` theme an on-page material is a 1px ring in `color.neutral.border.subtle.default` and nothing else, and a floating material composes that ring, except `tooltip`, which has none, with contact and ambient layers whose colors are Tier-2 `color.neutral.shadow.*` tokens; in dark mode, `menu`, `modal`, and `sheet` add a 1px inset top edge in `color.neutral.border.default.default`, because shadows read weakly on dark grounds; no other layer color is allowed. A component that draws a material's fill, radius, and edge uses its material token, not a separate border and shadow. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
+Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. Every public theme also emits the material set of ADR-UIP-VIS-001: `effect.material.flat`, `effect.material.raised`, and `effect.material.panel` (surfaces on the page) and `effect.material.tooltip`, `effect.material.menu`, `effect.material.modal`, and `effect.material.sheet` (floating surfaces). A material's layers are Tier-2 values that a theme maps. In the `scnx-platform` theme an on-page material is a 1px ring in `color.neutral.border.subtle.default` and nothing else, and a floating material composes that ring, except `tooltip`, which has none, with contact and ambient layers whose colors are Tier-2 `color.neutral.shadow.*` tokens; in dark mode, `menu`, `modal`, and `sheet` add a 1px inset top edge in `color.neutral.border.default.default`, because shadows read weakly on dark grounds; no other layer color is allowed. The `scnx-saas` theme keeps the soft on-page shadows: `flat` is the ring, and `raised` and `panel` compose the ring with soft contact and ambient layers; its floating materials and their dark-mode inset top edge are as above, from its own Tier-1 values. A component that draws a material's fill, radius, and edge uses its material token, not a separate border and shadow. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
 
 The Sass validator rejects unsupported generated role/state combinations. Packed-output checks for grammar, key parity across themes, and value validity are release gates in STD-UIP-ENG-001.
 
@@ -122,7 +122,7 @@ Tier-2 dimension names are `dimension.{property}.{intent}`. The property and int
 | `border-width` | `default`, `strong`                                                             | Dividers and outlines; emphasized indicators such as an active-item marker                                                                                                                                  |
 | `z-index`      | `base`, `dropdown`, `sticky`, `overlay`, `modal`, `popover`, `tooltip`, `toast` | Stacking layers                                                                                                                                                                                             |
 
-Values within each spacing relationship, and the `size` control relationship, ascend from `compact` to `comfortable`. `z-index` values strictly ascend in the listed order. In every theme, `radius` values are non-decreasing from `mark` to `panel`, with `pill` excluded; the `industrial` theme sets them to 0 (ADR-UIP-VIS-001 item 2), and `pill` is fully rounded for the shapes whose roundness carries meaning. Intents are single path segments; a hyphen inside an intent joins its relationship and density.
+Values within each spacing relationship, and the `size` control relationship, ascend from `compact` to `comfortable`. `z-index` values strictly ascend in the listed order. In every theme, `radius` values are non-decreasing from `mark` to `panel`, with `pill` excluded; the `scnx-platform` theme sets them to 0 (ADR-UIP-VIS-001 item 2), the `scnx-saas` theme maps the concentric ladder `mark` 0.25rem, `element` 0.5rem, `control` 0.75rem, `container` 1rem, and `panel` 1.5rem, and `pill` is fully rounded in both for the shapes whose roundness carries meaning. Intents are single path segments; a hyphen inside an intent joins its relationship and density.
 
 #### Guarded floors
 
@@ -162,8 +162,26 @@ The current implementation generates color values using Sass maps and a compile-
 The platform supports multi-theme and multi-brand white-label capabilities under a strict cascading model:
 
 1. **Baseline Theme**: Every public theme uses a URL-safe brand identifier and supplies required variables for each declared mode below `[data-scnx-theme="<theme-id>"][data-scnx-resolved-mode="<mode>"]`. Preference values such as `system` are resolved before selector application and are not CSS selector identities. A separate `:root` compatibility output MAY serve a single-brand document.
-2. **Cascading Overrides**: Brand themes (for example `achromatic`) may override any Tier-2 key within that scoped root: colour, radius, spacing, size, type, motion, and materials. The guarded floors hold under every override (Guarded floors, above). Shadow DOM is outside v1.
+2. **Cascading Overrides**: Brand themes (for example `scnx-saas`) may override any Tier-2 key within that scoped root: colour, radius, spacing, size, type, motion, and materials. The guarded floors hold under every override (Guarded floors, above). Shadow DOM is outside v1.
 3. **Partial Contract Invariant**: An override may define fewer keys than the baseline. It must document inheritance and any additional public keys. Compile-time map checks do not alone prove CSS selector isolation or valid computed values.
+
+#### Theme naming
+
+A theme id names who owns the look, never a trait of it (ADR-UIP-VIS-001 item 7):
+
+1. **Named after the owner of the look.** A trait name stops being true the day the theme maps another Tier-2 key; trait words stay for values within an axis (`light`, `dark`, `large`, `high-contrast`).
+2. **`scnx-` is reserved.** Only themes that `@scnx/system` ships take the `scnx-` prefix. A product's or a client's theme takes its own name (for example `northwind`), so it can never collide with a shipped theme. The theme gate fails a `scnx-` id that the package does not ship.
+3. **Mode is its own axis.** A mode (`light`, `dark`) is set by `data-scnx-resolved-mode` and is never part of a theme id.
+4. **A theme is a look, not a product.** A product picks a theme; a new theme is made only when a product needs a different look, and each theme has one brand book (ADR-UIP-VIS-002).
+
+The shipped themes are:
+
+| Theme id        | Owner                                                                            | Look                                                                                                      |
+| :-------------- | :------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------- |
+| `scnx-platform` | The Scnehaux platform: IAM, AI runtime, organization, and the documentation site | The default theme: the Scnx Blue palette, square (radius 0, `pill` for meaningful shapes), ring materials |
+| `scnx-saas`     | The SaaS products                                                                | An ink palette, the concentric radius ladder, materials with soft shadows                                 |
+
+`scnx-platform` was `industrial` (until 2026-10-25 `default`), and `scnx-saas` was `achromatic`. The ids changed with no compatibility alias because the platform is before v1. The id appears in the theme root (`data-scnx-theme="scnx-saas"`), the emitted files (`tokens/css/scnx-saas.css`, `tokens/json/scnx-saas.json`), and the design-tool modes.
 
 #### Build-Time Contract Validation
 
