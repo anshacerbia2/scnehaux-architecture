@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-003
   title: Scnehaux UI Platform Software Architecture
   owner: Principal UI/UX Architect
-  version: 2.5.0
+  version: 2.6.0
   status: approved
   classification: public
   governed_by: [GDC-009]
@@ -432,9 +432,10 @@ primitives, selected hidden implementation hooks for complex widgets, and
 scenario-qualified evidence. Federation remains conditional and does not change
 the standalone contract. Each public entry's contract is one specification next
 to its source, checked against the packed artifacts and published with its
-package (ADR-UIP-CMP-001). The visual identity is a small set of rules bound to tokens (materials, a
-square structure that is identical in every theme, themes that change colour only, ink for action and the
-primary scheme for meaning; ADR-UIP-VIS-001), and the visual target lives in a separate, non-normative
+package (ADR-UIP-CMP-001). The visual identity is a small set of rules bound to tokens (materials,
+design-agnostic components that read every value through a component hook falling back to a semantic
+token, themes that may map any semantic token above guarded floors, a square default theme, ink for
+action and the primary scheme for meaning; ADR-UIP-VIS-001), and the visual target lives in a separate, non-normative
 design reference repository (ADR-UIP-VIS-002).
 
 ### Rejected
