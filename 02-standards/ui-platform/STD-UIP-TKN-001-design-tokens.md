@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.5.0
+  version: 2.6.0
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -37,7 +37,7 @@ The design token architecture is governed by four core principles to ensure cros
 1. **Semantic Isolation**: UI components consume abstract semantic tokens (Tier 2) rather than raw value primitives (Tier 1), shielding component layouts from changes in core visual definitions.
 2. **Measured Color Behavior**: OKLCH is an authoring color space; contrast depends on the actual foreground/background pair, alpha, theme, and display conversion.
 3. **Interoperability Target**: DTCG 2025.10 JSON is the proposed canonical interchange format. Native-platform outputs require their own implementation and validation before they are claimed.
-4. **Symmetrical Theme Paths**: Supported themes supply the same required semantic keys, while brand overrides remain scoped to a declared root.
+4. **Symmetrical Theme Paths**: Supported themes supply the same required semantic keys, while brand overrides remain scoped to a declared root and change colour only; structure is the system's and identical in every theme (ADR-UIP-VIS-001 items 6 and 7).
 
 ## 3. Normative Rules
 
@@ -102,7 +102,7 @@ Every role supports the `default` rest state.
 
 #### Effect contract
 
-Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. Every public theme also emits the material set of ADR-UIP-VIS-001: `effect.material.flat`, `effect.material.raised`, and `effect.material.panel` (surfaces on the page) and `effect.material.tooltip`, `effect.material.menu`, `effect.material.modal`, and `effect.material.sheet` (floating surfaces). A material shadow composes a 1px ring in `color.neutral.border.subtle.default`, except `tooltip`, which has none, with contact and ambient layers whose colors are Tier-2 `color.neutral.shadow.*` tokens; in dark mode, `menu`, `modal`, and `sheet` add a 1px inset top edge in `color.neutral.border.default.default`, because shadows read weakly on dark grounds; no other layer color is allowed. A component that draws a material's fill, radius, and edge uses its material token, not a separate border and shadow. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
+Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. Every public theme also emits the material set of ADR-UIP-VIS-001: `effect.material.flat`, `effect.material.raised`, and `effect.material.panel` (surfaces on the page) and `effect.material.tooltip`, `effect.material.menu`, `effect.material.modal`, and `effect.material.sheet` (floating surfaces). An on-page material is a 1px ring in `color.neutral.border.subtle.default` and nothing else. A floating material composes that ring, except `tooltip`, which has none, with contact and ambient layers whose colors are Tier-2 `color.neutral.shadow.*` tokens; in dark mode, `menu`, `modal`, and `sheet` add a 1px inset top edge in `color.neutral.border.default.default`, because shadows read weakly on dark grounds; no other layer color is allowed. A component that draws a material's fill, radius, and edge uses its material token, not a separate border and shadow. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
 
 The Sass validator rejects unsupported generated role/state combinations. Packed-output checks for grammar, key parity across themes, and value validity are release gates in STD-UIP-ENG-001.
 
@@ -121,7 +121,11 @@ Tier-2 dimension names are `dimension.{property}.{intent}`. The property and int
 | `border-width` | `default`, `strong`                                                             | Dividers and outlines; emphasized indicators such as an active-item marker                                                                                                                                  |
 | `z-index`      | `base`, `dropdown`, `sticky`, `overlay`, `modal`, `popover`, `tooltip`, `toast` | Stacking layers                                                                                                                                                                                             |
 
-Values within each spacing relationship ascend from `compact` to `comfortable`. `z-index` and `radius` values strictly ascend in the listed order in every theme. A radius inside a padded parent is the parent's radius minus the parent's padding (ADR-UIP-VIS-001 item 2). Intents are single path segments; a hyphen inside an intent joins its relationship and density.
+Values within each spacing relationship ascend from `compact` to `comfortable`. `z-index` values strictly ascend in the listed order. `radius` values are non-decreasing from `mark` to `panel`, with `pill` excluded; ADR-UIP-VIS-001 item 2 sets them to 0, and `pill` is fully rounded and used only where roundness carries meaning. Intents are single path segments; a hyphen inside an intent joins its relationship and density.
+
+#### Theme-invariant structure
+
+The structural families are identical in every theme and mode (ADR-UIP-VIS-001 item 6): `dimension.radius`, `dimension.spacing`, `dimension.border-width`, `dimension.z-index`, every `typography.*` token, every `motion.*` token, and the geometry of every `effect.*` token (each layer's offsets, blur, spread, and inset, and the number of layers). A theme supplies `color.*` per mode and nothing else; the colours of shadow layers are colour tokens and may differ. The token gate fails when a theme or a mode sets a structural key, and when a structural value differs between themes or modes.
 
 #### Values that are not Tier-2 tokens
 
@@ -148,7 +152,7 @@ The current implementation generates color values using Sass maps and a compile-
 The platform supports multi-theme and multi-brand white-label capabilities under a strict cascading model:
 
 1. **Baseline Theme**: Every public theme uses a URL-safe brand identifier and supplies required variables for each declared mode below `[data-scnx-theme="<theme-id>"][data-scnx-resolved-mode="<mode>"]`. Preference values such as `system` are resolved before selector application and are not CSS selector identities. A separate `:root` compatibility output MAY serve a single-brand document.
-2. **Cascading Overrides**: Brand themes (for example `achromatic`) may override a documented subset within that scoped root. Shadow DOM is outside v1.
+2. **Cascading Overrides**: Brand themes (for example `achromatic`) override colour keys (`color.*`) only, within that scoped root; structural keys are the system's (Theme-invariant structure, above). Shadow DOM is outside v1.
 3. **Partial Contract Invariant**: An override may define fewer keys than the baseline. It must document inheritance and any additional public keys. Compile-time map checks do not alone prove CSS selector isolation or valid computed values.
 
 #### Build-Time Contract Validation
