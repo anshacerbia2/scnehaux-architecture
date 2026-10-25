@@ -3,7 +3,7 @@ doc_meta:
   id: STD-UIP-TKN-001
   title: UI Platform Design Tokens Architecture & Pipeline
   owner: Principal Frontend Architect
-  version: 2.6.0
+  version: 2.7.0
   status: approved
   classification: restricted
   review_cycle_days: 180
@@ -37,7 +37,7 @@ The design token architecture is governed by four core principles to ensure cros
 1. **Semantic Isolation**: UI components consume abstract semantic tokens (Tier 2) rather than raw value primitives (Tier 1), shielding component layouts from changes in core visual definitions.
 2. **Measured Color Behavior**: OKLCH is an authoring color space; contrast depends on the actual foreground/background pair, alpha, theme, and display conversion.
 3. **Interoperability Target**: DTCG 2025.10 JSON is the proposed canonical interchange format. Native-platform outputs require their own implementation and validation before they are claimed.
-4. **Symmetrical Theme Paths**: Supported themes supply the same required semantic keys, while brand overrides remain scoped to a declared root and change colour only; structure is the system's and identical in every theme (ADR-UIP-VIS-001 items 6 and 7).
+4. **Symmetrical Theme Paths**: Supported themes supply the same required semantic keys, while brand overrides remain scoped to a declared root and may map any Tier-2 key; the guarded floors hold in every theme and under every component hook (ADR-UIP-VIS-001 items 6 and 7).
 
 ## 3. Normative Rules
 
@@ -49,7 +49,7 @@ The platform enforces a strict **3-Tier Token Architecture**:
 
 1. **Tier 1 (Core Primitives)**: Raw scales and values. Components and applications do not consume them directly. Sass is the current authoring implementation, not a permanent architectural requirement.
 2. **Tier 2 (Global Semantic Contract)**: The public shared contract, listed per domain below.
-3. **Tier 3 (Component Tokens)**: Component aliases use `{component}.{element?}.{property}.{state?}` and require independent semantic intent.
+3. **Tier 3 (Component Hooks)**: Component aliases use `{component}.{element?}.{property}.{state?}`, require independent semantic intent, and reach CSS as `--scnx-` hooks that a component references with a Tier-2 fallback (Tier-3 Alias Governance, below).
 
 #### Canonical grammar per domain
 
@@ -102,7 +102,7 @@ Every role supports the `default` rest state.
 
 #### Effect contract
 
-Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. Every public theme also emits the material set of ADR-UIP-VIS-001: `effect.material.flat`, `effect.material.raised`, and `effect.material.panel` (surfaces on the page) and `effect.material.tooltip`, `effect.material.menu`, `effect.material.modal`, and `effect.material.sheet` (floating surfaces). An on-page material is a 1px ring in `color.neutral.border.subtle.default` and nothing else. A floating material composes that ring, except `tooltip`, which has none, with contact and ambient layers whose colors are Tier-2 `color.neutral.shadow.*` tokens; in dark mode, `menu`, `modal`, and `sheet` add a 1px inset top edge in `color.neutral.border.default.default`, because shadows read weakly on dark grounds; no other layer color is allowed. A component that draws a material's fill, radius, and edge uses its material token, not a separate border and shadow. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
+Every public theme emits the identical Tier-2 shadow set: `effect.shadow.low`, `effect.shadow.medium`, `effect.shadow.high`, `effect.shadow.overlay`, and `effect.shadow.focus`. Every public theme also emits the material set of ADR-UIP-VIS-001: `effect.material.flat`, `effect.material.raised`, and `effect.material.panel` (surfaces on the page) and `effect.material.tooltip`, `effect.material.menu`, `effect.material.modal`, and `effect.material.sheet` (floating surfaces). A material's layers are Tier-2 values that a theme maps. In the `industrial` theme an on-page material is a 1px ring in `color.neutral.border.subtle.default` and nothing else, and a floating material composes that ring, except `tooltip`, which has none, with contact and ambient layers whose colors are Tier-2 `color.neutral.shadow.*` tokens; in dark mode, `menu`, `modal`, and `sheet` add a 1px inset top edge in `color.neutral.border.default.default`, because shadows read weakly on dark grounds; no other layer color is allowed. A component that draws a material's fill, radius, and edge uses its material token, not a separate border and shadow. The Tier-1 sizes `sm`, `md`, `lg`, and `xl` are internal inputs and are never emitted as public names. `effect.shadow.focus` is an enhancement; the focus indicator itself is an `outline` (STD-GLB-FE-005 section 3.9).
 
 The Sass validator rejects unsupported generated role/state combinations. Packed-output checks for grammar, key parity across themes, and value validity are release gates in STD-UIP-ENG-001.
 
@@ -117,19 +117,29 @@ Tier-2 dimension names are `dimension.{property}.{intent}`. The property and int
 | `spacing`      | `inline-compact`, `inline-default`, `inline-comfortable`                        | Inline-axis gap between sibling elements                                                                                                                                                                    |
 | `spacing`      | `control-compact`, `control-default`, `control-comfortable`                     | Inline padding between a control's edge and its label, value, or icon; compact, default, and comfortable pair with small, medium, and large controls                                                        |
 | `spacing`      | `section`, `page`                                                               | Gap between major page regions; gutter between the viewport edge and content                                                                                                                                |
+| `size`         | `control-compact`, `control-default`, `control-comfortable`                     | Block size of a small, medium, and large control (a button, a field, a tab); a component enforces the 24px target floor on it                                                                               |
 | `radius`       | `mark`, `element`, `control`, `container`, `panel`, `pill`                      | Marks such as checkboxes and inline code; elements such as badges, tooltips, and small controls; controls and rows; containers such as cards, menus, and popovers; panels and dialogs; fully rounded shapes |
 | `border-width` | `default`, `strong`                                                             | Dividers and outlines; emphasized indicators such as an active-item marker                                                                                                                                  |
 | `z-index`      | `base`, `dropdown`, `sticky`, `overlay`, `modal`, `popover`, `tooltip`, `toast` | Stacking layers                                                                                                                                                                                             |
 
-Values within each spacing relationship ascend from `compact` to `comfortable`. `z-index` values strictly ascend in the listed order. `radius` values are non-decreasing from `mark` to `panel`, with `pill` excluded; ADR-UIP-VIS-001 item 2 sets them to 0, and `pill` is fully rounded and used only where roundness carries meaning. Intents are single path segments; a hyphen inside an intent joins its relationship and density.
+Values within each spacing relationship, and the `size` control relationship, ascend from `compact` to `comfortable`. `z-index` values strictly ascend in the listed order. In every theme, `radius` values are non-decreasing from `mark` to `panel`, with `pill` excluded; the `industrial` theme sets them to 0 (ADR-UIP-VIS-001 item 2), and `pill` is fully rounded for the shapes whose roundness carries meaning. Intents are single path segments; a hyphen inside an intent joins its relationship and density.
 
-#### Theme-invariant structure
+#### Guarded floors
 
-The structural families are identical in every theme and mode (ADR-UIP-VIS-001 item 6): `dimension.radius`, `dimension.spacing`, `dimension.border-width`, `dimension.z-index`, every `typography.*` token, every `motion.*` token, and the geometry of every `effect.*` token (each layer's offsets, blur, spread, and inset, and the number of layers). A theme supplies `color.*` per mode and nothing else; the colours of shadow layers are colour tokens and may differ. The token gate fails when a theme or a mode sets a structural key, and when a structural value differs between themes or modes.
+Nothing presentational is locked: a theme may map any Tier-2 key, and a product may set a component hook on a scope. These floors hold in every theme and mode and under every hook (ADR-UIP-VIS-001 item 6). A component enforces each in its own CSS where CSS can; the token gate checks the rest per theme and mode.
+
+1. **Target size**: the interactive box is at least 24 by 24 CSS pixels, `max(24px, …)` around its size (WCAG 2.2 SC 2.5.8).
+2. **Visible focus**: a minimum outline width with `max()`; the outline's colour pair is a contrast case (SC 2.4.7, 2.4.11).
+3. **Contrast**: every declared colour pair meets its minimum, per theme and mode (SC 1.4.3, 1.4.11).
+4. **Reduced motion**: under `prefers-reduced-motion: reduce` a component drops movement, whatever the motion tokens say (SC 2.3.3).
+5. **Shapes that carry meaning** are anatomy, not hooks: the radio indicator, the switch thumb, the status dot, and the spinner.
+6. **State mechanics**: which states exist, and that disabled controls do not react.
+
+The platform certifies the themes it ships in every mode; a product's own theme or hooks run the same gates in that product's CI. The radius order above is checked per theme.
 
 #### Values that are not Tier-2 tokens
 
-- **Component geometry**, such as a sidebar width, a navigation-bar height, control, icon, and avatar sizes, and container maximum widths, is a documented structural value of its component (STD-UIP-TKN-002 section 3.1), not a token. A Tier-3 alias resolves to a Tier-2 token, and these values have no Tier-2 source. A control's height is geometry; its inline padding is the `control` spacing relationship.
+- **Component geometry**, such as a sidebar width, a navigation-bar height, icon and avatar sizes, and container maximum widths, is a documented structural value of its component (STD-UIP-TKN-002 section 3.1), not a token, until a theme needs to change it; it then moves to Tier 2 through the alias review. Control heights are Tier 2 (`dimension.size.control-*`), and a control's inline padding is the `control` spacing relationship.
 - **Breakpoints** are not emitted as custom properties, because `var()` is not valid in a media-query condition. Responsive thresholds are build-time constants of the consuming layer.
 - **Opacity** has no Tier-2 token. A translucent state is a color token whose alpha is part of its value and is verified on its actual background.
 - **Transition shorthands** are not tokens. Components compose `motion.{action}.duration` and `motion.{action}.easing` with the properties they animate.
@@ -152,7 +162,7 @@ The current implementation generates color values using Sass maps and a compile-
 The platform supports multi-theme and multi-brand white-label capabilities under a strict cascading model:
 
 1. **Baseline Theme**: Every public theme uses a URL-safe brand identifier and supplies required variables for each declared mode below `[data-scnx-theme="<theme-id>"][data-scnx-resolved-mode="<mode>"]`. Preference values such as `system` are resolved before selector application and are not CSS selector identities. A separate `:root` compatibility output MAY serve a single-brand document.
-2. **Cascading Overrides**: Brand themes (for example `achromatic`) override colour keys (`color.*`) only, within that scoped root; structural keys are the system's (Theme-invariant structure, above). Shadow DOM is outside v1.
+2. **Cascading Overrides**: Brand themes (for example `achromatic`) may override any Tier-2 key within that scoped root: colour, radius, spacing, size, type, motion, and materials. The guarded floors hold under every override (Guarded floors, above). Shadow DOM is outside v1.
 3. **Partial Contract Invariant**: An override may define fewer keys than the baseline. It must document inheritance and any additional public keys. Compile-time map checks do not alone prove CSS selector isolation or valid computed values.
 
 #### Build-Time Contract Validation
@@ -258,6 +268,15 @@ Each action emits a `duration` and an `easing` token, for example `motion.enter.
 To prevent unbounded aliases, the platform reviews their semantics and reuse:
 
 - **Alias review**: Record the component purpose, Tier-2 fallback, theme/state coverage, and migration impact. A numerical cap and an ADR for each alias are not required.
+- **Listed in the specification**: every hook a component reads appears in its `*.spec.json`, with its Tier-2 fallback and the floors that bound it. A hook is public API; renaming or removing one is a breaking change.
+
+#### Hook mechanics
+
+- **Prefix**: Tier 3 is `--scnx-{component}-{part?}-{property}`, the component namespace of the `.scnx-*` classes and `data-scnx-*` attributes. Tier 2 stays `--ds-*`. Tier 1 is a compiler input and is never emitted (ADR-GLB-FE-010).
+- **Referenced with a fallback, never declared**: a component reads `var(--scnx-button-radius, var(--ds-dimension-radius-control))`; the package emits no Tier-3 declaration, so a hook costs nothing until a product sets it.
+- **Never registered**: a hook is never registered with `@property`, because a registered property always has a value and its Tier-2 fallback would never apply.
+- **Set on a scope**: a product sets a hook on the element or region it changes, not on `:root`, when the value changes at runtime.
+- **No literal design value**: a styled component's stylesheet holds no literal design value outside the hook-and-fallback pattern; the source gate fails one that does.
 
 #### Alias Naming Convention
 
@@ -269,9 +288,10 @@ All Tier-3 logical aliases follow:
 
 Examples:
 
-- `button.surface.hover` → `--ds-button-surface-hover`
-- `checkbox.indicator.color.checked` → `--ds-checkbox-indicator-color-checked`
-- `input.root.border.focus` → `--ds-input-root-border-focus`
+- `button.radius` → `var(--scnx-button-radius, var(--ds-dimension-radius-control))`
+- `button.surface.hover` → `--scnx-button-surface-hover`
+- `checkbox.indicator.color.checked` → `--scnx-checkbox-indicator-color-checked`
+- `input.root.border.focus` → `--scnx-input-root-border-focus`
 
 ---
 
@@ -286,7 +306,7 @@ Deviations identify the affected consumer contract, rationale, owner, and migrat
 Target source checks parse component styling and report bypasses:
 
 - **Blocking Rule**: Governed shared styles with unjustified raw color literals fail the source gate when the rule is implemented.
-- **Z-Index Enforcement**: Elements requiring z-index properties must reference a Tier-2 or Tier-3 z-index token (e.g., `var(--ds-dimension-z-index-modal)` or `var(--ds-dialog-root-z-index-default)`). Hardcoded z-index integers are prohibited.
+- **Z-Index Enforcement**: Elements requiring z-index properties must reference a Tier-2 or Tier-3 z-index token (e.g., `var(--ds-dimension-z-index-modal)` or `var(--scnx-dialog-z-index, var(--ds-dimension-z-index-modal))`). Hardcoded z-index integers are prohibited.
 - **Grammar Gate**: A packed-output check parses every emitted `--ds-*` name against the canonical grammar and fails on any name that does not map to a valid path, including legacy names such as `--ds-color-primary-solid-default-default` or `--ds-shadow-lg`.
 - **Theme Parity Gate**: The same check fails when two public themes emit different Tier-2 key sets.
 

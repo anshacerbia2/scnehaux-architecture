@@ -92,7 +92,7 @@ Format: `[component].[element?].[property].[state?]`.
 - `checkbox.indicator.color.checked`
 - `dialog.root.z-index.default`
 
-CSS output prefixes `--ds-` and converts dots to hyphens. `color.primary.surface.solid.default` becomes `--ds-color-primary-surface-solid-default`, `effect.shadow.low` becomes `--ds-effect-shadow-low`, and `dialog.root.z-index.default` becomes `--ds-dialog-root-z-index-default`.
+CSS output converts dots to hyphens. Tier 2 takes the prefix `--ds-`: `color.primary.surface.solid.default` becomes `--ds-color-primary-surface-solid-default`, and `effect.shadow.low` becomes `--ds-effect-shadow-low`. Since 2026-10-25 (ADR-UIP-VIS-001 revision 3; STD-UIP-TKN-001 2.7.0, "Hook mechanics") Tier 3 takes the prefix `--scnx-` and is a component hook: `dialog.z-index` becomes `--scnx-dialog-z-index`, read as `var(--scnx-dialog-z-index, var(--ds-dimension-z-index-modal))`, referenced with its Tier-2 fallback and never declared or registered. Until then Tier 3 also took `--ds-` (`--ds-dialog-root-z-index-default`).
 
 ---
 
