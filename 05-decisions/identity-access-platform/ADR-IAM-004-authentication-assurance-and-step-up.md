@@ -113,17 +113,32 @@ API.
 
 On a development server, the agent that operates the server acts as its bootstrap provider. That
 agent needs `aal2` tokens, and a person's TOTP code, valid for 30 seconds, cannot reasonably be
-relayed to it. The provider therefore holds a second TOTP authenticator on that server:
+relayed to it. The provider therefore holds a TOTP authenticator of the server's own, beside their
+own:
 
-- **It is bound at `aal2`.** The account already has the person's own TOTP, and NIST requires that
-  "binding … requires authentication at either the maximum AAL currently available in the
-  subscriber account or the maximum AAL at which the new authenticator will be used, whichever is
-  lower" [R6]. Binding a second authenticator is permitted: "CSPs SHALL permit the binding of
-  multiple authenticators to a subscriber account" [R6].
-  - The enrollment script signs in at `aal2` with one code the person reads from their own
-    authenticator, once.
-  - It then asks the kernel to set up another TOTP, through the supported application-initiated
-    action `kc_action=CONFIGURE_TOTP`.
+- **It is bound at the level the account holds.** NIST requires that "binding … requires
+  authentication at either the maximum AAL currently available in the subscriber account or the
+  maximum AAL at which the new authenticator will be used, whichever is lower", and that "CSPs SHALL
+  permit the binding of multiple authenticators to a subscriber account" [R6]. Which level that is
+  depends on which authenticator comes first.
+- **On a server stood up from zero, the server's comes first.** The bootstrap operator then holds a
+  password and no second factor, so the highest level available is `aal1`.
+  - The operator scripts' first `aal2` sign-in binds the server's TOTP, labelled `dev-server`, through
+    the kernel's configuration page (§5.4). No person's code is needed.
+  - The order is forced. Every client a browser signs in through, the Admin Portal's included, is
+    registered by a provider call at `aal2`. Until the server holds a second factor, nothing can
+    register one.
+- **The person's own authenticator is then bound at `aal2`**, in the account application, with
+  **Add an authenticator app** (`TDD-identity-experience-002` §As Built: Sessions and
+  Authenticators).
+  - The step-up asks for a code. The person reads one code computed from the server's TOTP, once, on
+    the server and in their own session. The code is never relayed through chat or a ticket, and the
+    secret stays unprinted.
+  - The kernel's own page then shows the QR code for the person's authenticator app.
+- **Where the person's TOTP is bound already,** the server's is bound at `aal2` instead: the
+  enrollment script signs in with one code the person reads from their own authenticator, then asks
+  the kernel to set up another TOTP through the supported application-initiated action
+  `kc_action=CONFIGURE_TOTP`.
 - **Its secret never leaves the server.** It is written to the deployment's `keys/`, mode 0600, and
   is never printed. The scripts compute codes from it.
 - **Only on a development server.** On a development server the server holds both factors of that
