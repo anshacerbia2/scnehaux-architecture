@@ -1,6 +1,6 @@
 # imam-station
 
-The facts of one development server, imam-station, as recorded on 2026-10-07 and updated on 2026-10-16 and 2026-10-20 (three times). The rules are in [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). The procedure is the [development server runbook](README.md). This page records only what is specific to this host. It holds no secret: no password, token or key appears here, and none may be added.
+The facts of one development server, imam-station, as recorded on 2026-10-07 and updated on 2026-10-16, 2026-10-20 and 2026-10-25. The rules are in [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). The procedure is the [development server runbook](README.md). This page records only what is specific to this host. It holds no secret: no password, token or key appears here, and none may be added.
 
 ## Host
 
@@ -59,6 +59,7 @@ All on `127.0.0.1`:
 | 8081 | Keycloak directly: the Admin Console |
 | 8082 | identity-control                     |
 | 5433 | identity-control's Postgres          |
+| 8025 | identity-control's Mailpit interface |
 | 8083 | organization-control                 |
 
 ## Dev tunnel
@@ -72,13 +73,14 @@ All on `127.0.0.1`:
 | Admin    | `https://gqr8l4jz-8081.asse.devtunnels.ms`                 |
 | Expiry   | 30 days, as `devtunnel show` reports it                    |
 
-| Port | Access                                               |
-| :--- | :--------------------------------------------------- |
-| 8080 | anonymous: the issuer, which browsers and BFFs reach |
-| 8081 | owner only                                           |
-| 8082 | owner only                                           |
-| 5433 | owner only                                           |
-| 8083 | owner only: organization-control, for a laptop's BFF |
+| Port | Access                                                 |
+| :--- | :----------------------------------------------------- |
+| 8080 | anonymous: the issuer, which browsers and BFFs reach   |
+| 8081 | owner only                                             |
+| 8082 | owner only: identity-control, for a laptop's BFF       |
+| 5433 | owner only                                             |
+| 8025 | owner only: identity-control's Mailpit, to read a code |
+| 8083 | owner only: organization-control, for a laptop's BFF   |
 
 The Admin Console is at `/admin/master/console/` on the admin host. It loads only after the kernel's `tunnel-admin.sh` has set the master realm's frontend URL to that host.
 
@@ -88,12 +90,12 @@ The unit files exist on this server only, in the user's systemd directory. They 
 
 Recorded 2026-10-20, as the server's operator reported it. People are not named on this page: the repository is public, and a username is personal data.
 
-| Fact                               | Value                                                                                                                                                                          |
-| :--------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| organization-experience BFF client | `organization-experience-bff`, registered through identity-control in the `per-sign-in` form, for a laptop BFF at `http://127.0.0.1:8091`                                      |
-| Device clients                     | One registration per developer device (STD-GLB-009 rule 15). The client above serves one laptop. A second device gets its own client, added here as a row with its device name |
-| First Tenant                       | `Scnehaux Dev`, `01a15393-acef-7000-9a70-24d78a5351d5`, `active` (provisioned through runbook step 9)                                                                          |
-| Its first administrator            | a named development account, granted through runbook step 11; who it is is recorded on the server, not here                                                                    |
+| Fact                               | Value                                                                                                                                                                                                                                                                                                                                                             |
+| :--------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| organization-experience BFF client | `organization-experience-bff`, registered through identity-control in the `per-sign-in` form, for a laptop BFF at `http://127.0.0.1:8091`                                                                                                                                                                                                                         |
+| Device clients                     | One registration per developer device (STD-GLB-009 rule 15). The client above serves one laptop. A second device gets its own client, added here as a row with its device name. An identity BFF device's clients, `identity-experience-bff-<device>` and the enrolment workload `identity-experience-enrolment-<device>` (runbook step 4), are added the same way |
+| First Tenant                       | `Scnehaux Dev`, `01a15393-acef-7000-9a70-24d78a5351d5`, `active` (provisioned through runbook step 9)                                                                                                                                                                                                                                                             |
+| Its first administrator            | a named development account, granted through runbook step 11; who it is is recorded on the server, not here                                                                                                                                                                                                                                                       |
 
 ## Local, uncommitted files
 
@@ -111,14 +113,15 @@ The realm's signing key was made by the signing-key ceremony before the kernel's
 
 | File, under `identity-kernel/deploy/dev/keys/` | Holds                                                        | Custody                                                                                     |
 | :--------------------------------------------- | :----------------------------------------------------------- | :------------------------------------------------------------------------------------------ |
-| `signing/realm-signing.p12`                    | the PKCS#12 keystore, one RSA-3072 key pair                  | owned by 1000, the kernel's user, mode 0400, in a directory of mode 0500; mounted read-only |
-| `vault/scnehaux_realm-signing-password`        | its password, for Keycloak's file vault                      | the same                                                                                    |
-| `realm-signing.crt`                            | its certificate, the public half                             | root, mode 0644                                                                             |
-| `realm-signing.ceremony.json`                  | the ceremony record: operator, witness, reason, times, `kid` | root, mode 0644; a copy is attached to the change ticket, never pasted in chat              |
+| `signing/realm-signing-<kid>.p12`              | the PKCS#12 keystore, one RSA-3072 key pair                  | owned by 1000, the kernel's user, mode 0400, in a directory of mode 0500; mounted read-only |
+| `vault/scnehaux_realm-signing-<kid>`           | its password, for Keycloak's file vault                      | the same                                                                                    |
+| `realm-signing-<kid>.crt`                      | its certificate, the public half                             | root, mode 0644                                                                             |
+| `realm-signing-<kid>.ceremony.json`            | the ceremony record: operator, witness, reason, times, `kid` | root, mode 0644; a copy is attached to the change ticket, never pasted in chat              |
 
 - **One copy, on this host's disk only.** The keystore and its vault file are never copied: not to `/mnt/imam-storage`, not with `.env` and `keys/`, not to the ticket (STD-GLB-009 rule 9, `ADR-IAM-002 §5.3`). NIST SP 800-57 gives the backup of a private signature key as "No (in general)" (`ADR-IAM-002` [R6]).
 - **Its protection here is access control.** Only root and the kernel's container user can read it, and the kernel mounts it read-only. The people who hold root on this host can read it; that is accepted for a development server and nowhere else.
 - **A lost or damaged keystore is not restored.** The kernel refuses to start without it (identity-kernel `docs/runbooks/custody-outage.md`), and the server is rebuilt from zero (runbook step 15) with a new ceremony and a new `kid`. Every development token signed before then fails.
+- Each later key is made by the same ceremony and moved in and out of service by identity-kernel `docs/runbooks/signing-key-rotation.md`, so more than one keystore can be here during a rotation. A key's files are removed only by its retirement, abandonment or revocation.
 - The ceremony's operator, witness and reviewer are recorded in the ceremony record and on the change ticket, not on this page.
 
 ## Backups

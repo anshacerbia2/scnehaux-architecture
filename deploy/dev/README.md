@@ -11,23 +11,40 @@ The repositories:
 | identity-kernel         | server-deployed | [README](https://github.com/anshacerbia2/identity-kernel/blob/main/deploy/dev/README.md)         |
 | identity-control        | server-deployed | [README](https://github.com/anshacerbia2/identity-control/blob/main/deploy/dev/README.md)        |
 | organization-control    | server-deployed | [README](https://github.com/anshacerbia2/organization-control/blob/main/deploy/dev/README.md)    |
-| identity-experience     | laptop-run      | [deploy/dev](https://github.com/anshacerbia2/identity-experience/tree/main/deploy/dev)           |
+| identity-experience     | laptop-run      | [README](https://github.com/anshacerbia2/identity-experience/blob/main/deploy/dev/README.md)     |
 | organization-experience | laptop-run      | [README](https://github.com/anshacerbia2/organization-experience/blob/main/deploy/dev/README.md) |
 
-A section name below in the form "identity-control §First start" means that heading in that repository's `deploy/dev/README.md`. A repository whose README does not yet have the skeleton's headings has the same content under its older heading, named in brackets.
+A section name below in the form "identity-control §First start" means that heading in that repository's `deploy/dev/README.md`. Those READMEs are current, and this page gives the order and the hand-offs, never a copy of their commands. When a command here and in a README differ, the README is right and this page is the one to fix. The step numbers below are cited by those READMEs (identity-experience's client is step 4, organization-experience's is step 8), so a new step is added as a sub-item and never renumbers one.
+
+Every image build on the server sets `BUILD_REVISION=$(git rev-parse HEAD)`, for example `BUILD_REVISION=$(git rev-parse HEAD) docker compose up -d --build`. It records the commit as the image's `org.opencontainers.image.revision` label (`unknown` without it), and each repository's `deploy-dev` sets it and checks it.
+
+## Where each part runs
+
+| Part                                                                                                | Runs on               | Notes                                                                                                            |
+| :-------------------------------------------------------------------------------------------------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------- |
+| identity-kernel: Keycloak, Caddy, `realm-apply`, and the signing keystore                           | the server            | Docker only. Its scripts are `bash`; no `pwsh`                                                                   |
+| identity-control: the API, its database, and Mailpit, the development mail catcher (`smtp-catcher`) | the server            | `pwsh` for its scripts. Mailpit's interface is on `127.0.0.1:8025`, and its SMTP is on the internal network only |
+| organization-control: the API, its database, its dispatcher and sweeps                              | the server            | `pwsh` for the wiring and the stand-in scripts                                                                   |
+| The dev tunnel and its watchdog                                                                     | the server            | The only way anything off the server reaches it                                                                  |
+| The operator's procedure scripts: adoption, registration, wiring, provisioning, obligations         | the server            | They call the APIs on `127.0.0.1`, from the checkouts there                                                      |
+| identity-experience BFF, on `127.0.0.1:8090`, with its session store                                | each developer laptop | No compose stack on the server. Reaches the kernel on port 8080 and identity-control on owner-only 8082          |
+| organization-experience BFF, on `127.0.0.1:8091`, with its session store                            | each developer laptop | Reaches the kernel on port 8080 and organization-control on owner-only 8083                                      |
+| Each BFF's private key and sign-in client                                                           | its laptop            | One client and one key per device. Only the public JWK leaves the laptop                                         |
+
+foundation-reference has no `deploy/dev`, and nothing of it runs on a server or a laptop.
 
 ## 0. Prerequisites
 
 On the server:
 
 - **Docker with Compose v2** (`docker compose`, not `docker-compose`), and your user in the `docker` group.
-- **PowerShell 7 (`pwsh`).** The procedure scripts are PowerShell, because CI runs the same files: identity-control's `scripts/dev-token.ps1`, `dev-smoke.ps1` and `dev-adopt-bff.ps1`, and organization-control's `scripts/dev-wire.ps1`, `dev-wiring-proof.ps1` and `dev-provisioning.ps1`. A server without `pwsh` cannot run steps 5 to 7 and 9 as written.
+- **PowerShell 7 (`pwsh`).** The procedure scripts are PowerShell, because CI runs the same files: identity-control's `scripts/dev-token.ps1`, `dev-adopt-caller.ps1` and `dev-production-switches.ps1`, organization-control's `scripts/dev-wire.ps1`, `dev-wiring-proof.ps1`, `dev-provisioning.ps1`, `dev-obligation.ps1` and `dev-deprovisioning.ps1`, organization-experience's `scripts/dev-register-bff.ps1`, and identity-experience's `scripts/dev-wire-enrolment.ps1`. A server without `pwsh` cannot run steps 4 to 9 and 13 as written. The kernel needs Docker alone.
 - **The devtunnel CLI**, logged in with the account that will own the tunnel: `devtunnel user login -g -d` (GitHub, device code).
-- **Git checkouts** of identity-kernel, identity-control and organization-control.
+- **Git checkouts** of identity-kernel, identity-control and organization-control, and, for the operator's scripts, of identity-experience and organization-experience.
 - **Somewhere outside Docker for backups**, such as a second disk (STD-GLB-009 rule 9).
-- **Two people and a change ticket for the ceremonies.** The kernel's signing-key ceremony (step 2) and identity-control's bootstrap ceremony (step 3) each need an operator and a witness, never the same person, and a third person reviews each record (STD-IAM-001 §3.10). The ticket's identifier is each ceremony's reason, and the records are kept with it. Who they are is the owner's decision and is never written in a public repository (identity-control `docs/runbooks/bootstrap-ceremony.md` §Who performs it).
+- **Two people and a change ticket for the ceremonies.** The kernel's signing-key ceremony (step 2) and identity-control's bootstrap ceremony (step 3) each need an operator and a witness, never the same person, and a third person, the reviewer, reviews each record (STD-IAM-001 §3.10). Registering the first signing key in identity-control (step 3.5) needs the operator and a second holder of the ceremony role as approver, who for the activation is also not the key's generating operator (identity-kernel `docs/runbooks/signing-key-rotation.md` §Who performs it). The ticket's identifier is each ceremony's reason, and the records are kept with it. Who they are is the owner's decision and is never written in a public repository (identity-control `docs/runbooks/bootstrap-ceremony.md` §Who performs it).
 
-On each laptop that runs a BFF: Node.js, `pwsh`, a local PostgreSQL for the BFF's sessions, and the devtunnel CLI, logged in with the same account when the laptop needs an owner-only port.
+On each laptop that runs a BFF: Node.js 24 and pnpm 10, `pwsh` (for `scripts/dev-local.ps1`), a local PostgreSQL for the BFF's sessions, and the devtunnel CLI, logged in with the same account when the laptop needs an owner-only port.
 
 ## 1. The dev tunnel
 
@@ -40,27 +57,28 @@ The tunnel is how anything off the server reaches it. Every stack publishes on `
 | 8082 | the Identity Control API                  | owner only                            | no                          |
 | 8083 | the Organization Control API              | owner only                            | no                          |
 | 5433 | identity-control's Postgres               | owner only, only for a laptop replica | no                          |
+| 8025 | identity-control's Mailpit interface      | owner only, only to read a code       | no                          |
 
 - **Persistent, never temporary.** `devtunnel create` once. The tunnel's host is the issuer, so a new tunnel means a new issuer for every token and every application's configuration.
 - **Anonymous access on port 8080 alone:** `devtunnel access create <tunnel> -p 8080 --anonymous`.
-- **Ports 8082, 8083 and 5433** are added without `--anonymous`, for example `devtunnel port create <tunnel> -p 8082`. Step 3 needs 8082 only to call identity-control from off the server, and 5433 only for a laptop replica (identity-control [§Running the code from a laptop]).
+- **Ports 8082, 8083, 5433 and 8025** are added without `--anonymous`, for example `devtunnel port create <tunnel> -p 8082`. The identity BFF on a laptop needs 8082, and the organization BFF needs 8083. 5433 is only for a laptop replica (identity-control [§Running the code from a laptop]), and 8025 only to read a proof code from a laptop (identity-control [§Reading a code in the mail catcher]).
 - **Host it as a systemd user service, with lingering enabled** (`loginctl enable-linger <user>`), so it starts at boot and survives logouts. Add a **watchdog timer** that requests the issuer's public discovery URL and restarts the service when it stops answering, because the host can lose its relay while its process stays alive (STD-GLB-009 rule 10). The unit files are on the server and in no repository. Their names are on the environment page.
 
 ## 2. identity-kernel
 
 Follow identity-kernel §First start, in tunnel mode as [§Behind a dev tunnel instead of a DNS name] describes:
 
-1. Copy `.env.example` to `.env`. `KEYCLOAK_HOSTNAME` is the tunnel's host for port 8080, without `https://`.
-2. **The signing-key ceremony, before the first `up`.** With the operator and the witness both present, from the root of the identity-kernel checkout, follow identity-kernel `docs/runbooks/signing-key-ceremony.md`:
+1. Copy `deploy/dev/.env.example` to `deploy/dev/.env`. `KEYCLOAK_HOSTNAME` is the tunnel's host for port 8080, without `https://`.
+2. **The signing-key ceremony, before the first `up`.** With the operator and the witness both present, from the root of the identity-kernel checkout, follow identity-kernel `docs/runbooks/signing-key-ceremony.md` (identity-kernel §First start):
 
    ```sh
    scripts/signing-key-ceremony.sh deploy/dev/keys "<operator>" "<witness>" "<change ticket>"
    ```
 
-   It makes the realm's signing keystore in the pinned image with no network, and writes it to `deploy/dev/keys/signing`, its password to `deploy/dev/keys/vault`, and its certificate and the ceremony record, with the `kid`, beside them (`keys/realm-signing.crt`, `keys/realm-signing.ceremony.json`). It refuses a witness equal to the operator and a keys directory that already holds a keystore. **The kernel refuses to start without the keystore** (`ADR-IAM-002 §5.3`), so this step comes before item 3. The witness reads the record it prints.
+   It makes the realm's signing keystore in the pinned image with no network. Every file is named by the key's `kid`: the keystore is `deploy/dev/keys/signing/realm-signing-<kid>.p12`, its password is `deploy/dev/keys/vault/scnehaux_realm-signing-<kid>`, and its certificate and the ceremony record, with the `kid`, are beside them (`keys/realm-signing-<kid>.crt`, `keys/realm-signing-<kid>.ceremony.json`; identity-kernel §Keys). It refuses a witness equal to the operator and a keys directory that already holds a keystore. **The kernel refuses to start without the keystore** (`ADR-IAM-002 §5.3`), so this step comes before item 3. The witness reads the record it prints.
 
-3. Start the stack. When `.env` sets `COMPOSE_FILE` to list the tunnel file and a local file, run plain `docker compose up -d --wait`, with no `-f` (pitfall 12). Otherwise run `docker compose -f compose.yaml -f compose.tunnel.yaml up -d --wait`.
-4. `docker compose logs realm-apply`. It ends in `applied revision ... signs with the keystore's key`.
+3. Start the stack, with `BUILD_REVISION=$(git rev-parse HEAD)` set for the build. When `.env` sets `COMPOSE_FILE` to list the tunnel file and a local file, run plain `docker compose up -d --wait`, with no `-f` (pitfall 12). Otherwise run `docker compose -f compose.yaml -f compose.tunnel.yaml up -d --wait`.
+4. `docker compose logs realm-apply`. It ends in `applied revision ... signs with the custody key`.
 5. **The witness compares the `kid`.** `curl -fsS https://<KEYCLOAK_HOSTNAME>/realms/scnehaux/protocol/openid-connect/certs` lists exactly one `PS256` key, whose `kid` is the record's. Any other `PS256` key, such as `fallback-PS256`, stops the ceremony (identity-kernel `docs/runbooks/custody-outage.md`). Attach the record and the terminal output to the change ticket, never to chat. The reviewer reviews them there.
 6. `./new-client-key.sh realm-apply`, then `./create-apply-client.sh`. Put the line it prints in `.env`, then start the stack again.
 7. `./tunnel-admin.sh`, so the Admin Console's login stays on port 8081 (pitfall 6).
@@ -72,54 +90,66 @@ Follow identity-kernel §First start, in tunnel mode as [§Behind a dev tunnel i
 
    `backup.sh` writes the roles and the database as one set, verifies the dump, and keeps the newest 14 complete sets by count. **It never copies the signing keystore or its vault file** (STD-GLB-009 rule 9). Check it runs: the line is in `crontab -l`, `journalctl -u cron` shows today's run, and today's set is in the directory.
 
-The issuer is now `https://<KEYCLOAK_HOSTNAME>/realms/scnehaux`. The keystore stays in `deploy/dev/keys/signing` for the server's life. A lost one is not restored: the server is built from zero (step 15), with a new ceremony and a new `kid`.
+The issuer is now `https://<KEYCLOAK_HOSTNAME>/realms/scnehaux`. The keystore stays in `deploy/dev/keys/signing` until a rotation retires it. A lost one is not restored: the server is built from zero (step 15), with a new ceremony and a new `kid`.
+
+`realm-apply` made this first key active on the empty realm. It is registered in identity-control's registry once identity-control runs (step 3.5), and every later key is staged, activated and retired by identity-kernel `docs/runbooks/signing-key-rotation.md`, never by hand.
 
 ## 3. identity-control, and the ceremony once
 
 Follow identity-control §Before you start and §First start. In order:
 
-1. Copy `.env.example` to `.env`, and fill in `KEYCLOAK_ISSUER` (the issuer of step 2, exactly), the passwords, `KC_BOOTSTRAP_ADMIN_PASSWORD` copied from the kernel's `.env`, and `KERNEL_DEPLOY_DIR`.
+1. Copy `.env.example` to `.env`, and fill in `KEYCLOAK_ISSUER` (the issuer of step 2, exactly), the passwords, `KC_BOOTSTRAP_ADMIN_PASSWORD` copied from the kernel's `.env`, and `KERNEL_DEPLOY_DIR`. **Keep `IDENTITY_NOTIFICATION_DELIVERY=smtp-catcher`**, which `.env.example` sets: the stack's Mailpit, the development mail catcher, then receives every account security notification, proof codes included, and relays nothing. A code is read in its interface on `127.0.0.1:8025` (step 10.5).
 2. Run `./create-kernel-clients.sh >> .env`, then `./create-registration-client.sh`, then `./create-security-ref-key.sh`.
-3. `docker compose up -d --build`, then `curl -fsS http://127.0.0.1:8082/readyz`.
+3. `BUILD_REVISION=$(git rev-parse HEAD) docker compose up -d --build`, then `curl -fsS http://127.0.0.1:8082/readyz`.
 4. `./bootstrap.sh "<operator>" "<witness>" "<reason>"`, with both people present (identity-control `docs/runbooks/bootstrap-ceremony.md`, STD-IAM-001 §3.10). The witness is required and is never the operator: `identity-bootstrap` and the database both refuse the same name, compared trimmed and case-folded. The reason names the change ticket. Keep the printed output, with the `principal_id`, with that ticket. **The ceremony succeeds once per Control Database.** A second run is refused by design; a ceremony that failed after creating its Principal is resumed, never rerun (identity-control §One-off tasks).
-5. **Schedule the daily backup:** identity-control §Backups gives the cron line for its `backup.sh`, which keeps the newest 14 complete sets.
+5. **Register the kernel's first signing key.** The key `realm-apply` made active (step 2) is staged, approved and activated in identity-control's registry with the three `scripts/signing-key-rotation.sh` commands of identity-kernel `docs/runbooks/signing-key-rotation.md` §The first key, run from the kernel's checkout with `IDENTITY_CONTROL_DEPLOY_DIR` set. The `kid` is the one in the ceremony record. The operator and a second ceremony-role holder, the approver, are present; the approver is never the operator or the key's generating operator. The activation finds the key already active and alone, and changes nothing in the realm. Identity-control's `signing-key` task, which the script runs, is behind a profile and never starts with `up` (identity-control §One-off tasks).
+6. **Schedule the daily backup:** identity-control §Backups gives the cron line for its `backup.sh`, which keeps the newest 14 complete sets.
 
 The ceremony's record is reviewed later, in step 7, by a third person: the reviewer reads it with a provider's sign-in, and Organization Control grants that only once it is wired.
 
 A network that intercepts TLS to the Go module proxy breaks the build at `go mod download`. Set `GOPROXY=direct` (STD-GLB-009 rule 7). Until the repository's compose passes `GOPROXY` from `.env`, it goes in a local `compose.override.yaml` (identity-control §First start).
 
-## 4. The identity-experience BFF client
+## 4. The identity-experience BFF client, and its enrolment workload
 
-The BFF runs on a laptop and signs in as its own confidential client, `identity-experience-bff`, with a key the laptop makes. Its README is identity-experience's `deploy/dev` (the script's header until the README exists).
+The BFF runs on a laptop and signs in as its own confidential client, with a key the laptop makes. **One client per device**: `identity-experience-bff-<device>`, for example `identity-experience-bff-ada-laptop` (STD-GLB-009 rule 15, `ADR-IAM-001 §5.12`). Follow identity-experience §First start. The registrations of items 2 and 3 are provider calls at `aal2`, so they are sent once step 5 gives the operator a token. Make the keys now, register after step 5.
 
 1. **On the laptop:** `node scripts/new-client-key.mjs`. The private key stays there, and only the public JWK leaves.
-2. **On the server:** a new server registers the client through identity-control's `POST /v1/registrations` as `privileged`, in the `provider-scope` form. `create-bff-client.sh` is superseded, and it refuses a client that exists. A server whose client the script already made adopts it in step 6.
-3. **More than one device: one registration per device** (STD-GLB-009 rule 15, `ADR-IAM-001 §5.12`). Each device makes its own key and gets its own client, for example `identity-experience-bff-<device>`, registered through identity-control's `POST /v1/registrations` like step 2: `privileged`, in the `provider-scope` form, with the same redirect URI. The device sets `IDENTITY_EXPERIENCE_CLIENT_ID` to its own client. A registration holds one active key, and a second only while a rotation overlaps, so `set-client-key.sh` is never given two devices' keys. A key is rotated through identity-control (`POST /v1/registrations/{registration_id}/keys`, as organization-experience §Rotating the key shows). identity-control treats a key that its registration does not declare as a wrong declaration. Record each device's client on the server's environment page.
+2. **On the server, the operator registers the client.** On a new server the client does not exist, so identity-experience §First start step 2, "It does not exist (a new server)", registers it through identity-control's `POST /v1/registrations` as `privileged`, in the `provider-scope` form, with audience `identity-control-api` and the redirect URI below. `create-bff-client.sh` is superseded and never run on a server built from zero. The laptop sets `IDENTITY_EXPERIENCE_CLIENT_ID` to its own client.
+3. **Each further device registers its own client** the same way, with its own key and the same redirect URI. A registration holds one active key, and a second only while a rotation overlaps, so `set-client-key.sh` is never given two devices' keys and one client is never adopted with two devices' keys (identity-control §Several developer devices). A key is rotated through identity-control (`POST /v1/registrations/{registration_id}/keys`, as organization-experience §Rotating the key shows). A device that is lost is suspended without touching the others. Record each device's client on the server's environment page.
+4. **The enrolment workload, for the enrolment page** (identity-experience §First start, step 4; `ADR-IAM-011 §5.8`). A person invited to a Tenant who holds no account enrols from the invitation, and the BFF calls identity-control's enrolment routes as a workload of its own, never with a person's token. It is optional: without it the page says that enrolment is unavailable. Each device has its own, `identity-experience-enrolment-<device>`:
+   - **On the laptop:** `node scripts/new-client-key.mjs identity-experience-enrolment`, and send the public JWK.
+   - **On the server, the operator** runs identity-experience's `scripts/dev-wire-enrolment.ps1 -IdentityRepo <identity-control checkout> -Device <device> -JwkFile <the public JWK>`, with the secrets identity-control's `dev-smoke.ps1` reads. It creates the workload (`POST /v1/workloads`) and admits it as an enrolment caller (`POST /v1/enrolment-callers`), the steps of identity-control §Enrolment from an invitation, and prints the client. `GET /v1/enrolment-callers` lists the record.
+   - **On the laptop,** the printed client goes in `.env` as `IDENTITY_EXPERIENCE_ENROLMENT_CLIENT_ID`, and `./scripts/dev-local.ps1` runs again.
+   - The page resolves the invitation through organization-control, which step 7.2 wires (item 6c). Without that entry an enrolment is counted and answered `503`.
 
 The redirect URI is `http://127.0.0.1:8090/auth/callback`, on `127.0.0.1` and not `localhost:8080` (pitfall 7).
 
 ## 5. The operator's TOTP
 
-Every provider route requires `acr` `aal2`: a password and a TOTP code. Follow identity-control [§Two factors for providers, on a server that ran before them].
+Every provider route requires `acr` `aal2`: a password and a TOTP code. Follow identity-control §The server's own TOTP for the bootstrap operator.
 
 1. **The owner enrolls first, in a browser.** Sign in to the Admin Portal. It asks for `aal2`, and the kernel shows the enrollment page. Scan the QR code with an authenticator app.
-2. **Then the server gets its own TOTP** for the bootstrap operator, because nobody can relay a 30-second code to an agent. Follow identity-control [§The server's own TOTP for the bootstrap operator]. `Get-ScnehauxToken` from `scripts/dev-token.ps1`, with `-EnrollTotpFile deploy/dev/keys/operator-totp.json` and `-Otp <the owner's current code>`, signs in at `aal2` and enrolls a second TOTP labelled `dev-server`. It writes the secret to that file, mode 0600, never prints it, and refuses when the file exists. Later tokens use `-TotpSecretFile` with the same path.
+2. **Then the server gets its own TOTP** for the bootstrap operator, because nobody can relay a 30-second code to an agent. `Get-ScnehauxToken` from `scripts/dev-token.ps1`, with `-EnrollTotpFile deploy/dev/keys/operator-totp.json` and `-Otp <the owner's current code>`, signs in at `aal2` and enrolls a second TOTP labelled `dev-server`. It writes the secret to that file, mode 0600, never prints it, and refuses when the file exists. Later tokens use `-TotpSecretFile` with the same path, and every script in identity-control's `scripts/` finds the file without being told. (identity-control §First start step 8 also binds it on the first adoption run, where the operator has no second factor yet. This page takes the owner's code first.)
 
-## 6. Adopt the caller and the BFF, then disable unmanaged clients
+Steps 4.2 and 4.3 are sent now, if they were waiting for this token.
 
-Two clients were made by scripts before identity-control could register clients: `identity-control-caller` (by `create-kernel-clients.sh`) and, on an older server, `identity-experience-bff` (by `create-bff-client.sh`). Both are adopted, as `privileged` in the `provider-scope` form, never `internal`. Follow identity-control [§Adopting the BFF].
+## 6. Adopt the caller, then end in the production settings
 
-1. **The BFF:** `pwsh ./scripts/dev-adopt-bff.ps1 -BffJwkFile <the BFF's public JWK>` shows the plan. Add `-Apply` to adopt.
-2. **The caller:** today its declaration is only in identity-control's `scripts/dev-smoke.ps1`, step 9b (`application_ref` `identity-control-dev`, redirect `http://127.0.0.1:8099/callback`, audience `identity-control-api`, converging `token_format` and `audience_scope`). Send that declaration to `POST /v1/registrations:adopt`, first with `dry_run`, then for real. The identity-control README is gaining a step of its own for it.
-3. **Then** set `IDENTITY_UNMANAGED_CLIENTS=disable` in identity-control's `.env`, and recreate the service with `docker compose up -d identity-control`. A restart keeps the environment the container was created with. Done before both adoptions, this disables the BFF and every open session, or the caller.
+One client was made by a script before identity-control could register clients: `identity-control-caller`, by `create-kernel-clients.sh`. It is adopted, as `privileged` in the `provider-scope` form, never `internal`. The BFFs are registered in steps 4 and 8, so there is nothing of them to adopt. Follow identity-control §First start, steps 8 to 11.
+
+1. **The caller:** from the repository root, with `.env` loaded, `pwsh ./scripts/dev-adopt-caller.ps1` shows the plan, and `-Apply` adopts it. It converges `token_format` and `audience_scope`. A `redirect_uris` or `client_keys` difference means the declaration is wrong and is fixed there, never in the console.
+2. **The drift check:** `GET /v1/registrations:drift` with a provider token answers no findings. A finding is applied with `POST /v1/registrations:reconcile`, with its reason (identity-control §First start, step 10).
+3. **End in the production settings.** Put `IDENTITY_UNMANAGED_CLIENTS=disable` and `IDENTITY_TOKEN_TYPE=enforce` in identity-control's `.env`, and recreate the service with `docker compose up -d identity-control`. A restart keeps the environment the container was created with. Done before the caller is adopted, `disable` disables it, and `enforce` refuses tokens typed `JWT`. Then `pwsh ./scripts/dev-production-switches.ps1` checks the result, as `deploy-dev` does on every change.
 
 ## 7. organization-control, and the wiring
 
 Follow organization-control §Before you start, §First start, and §Wiring to other services.
 
-1. Copy `.env.example` to `.env`. Fill in `KEYCLOAK_ISSUER` (the value identity-control's `.env` holds) and the six passwords. Then `docker compose up -d --build` and `curl -fsS http://127.0.0.1:8083/readyz`.
-2. The wiring is two scripts, the files CI runs. Export `IDENTITY_CALLER_PASSWORD`, `IDENTITY_CALLER_KEY_FILE` and `KEYCLOAK_ISSUER` alone, never by sourcing identity-control's `.env`; the operator's TOTP file is found in the identity-control checkout (step 5.2). Then run `pwsh ./scripts/dev-wire.ps1 -IdentityRepo <identity-control checkout> -KernelDeployDir <kernel deploy/dev> -Operator "<you>" -State <state file>`. For the proof, also export `KC_BOOTSTRAP_ADMIN_PASSWORD` and `KC_ADMIN_URL`, then run `pwsh ./scripts/dev-wiring-proof.ps1 -IdentityRepo <identity-control checkout> -KernelDeployDir <kernel deploy/dev> -State <state file>` (organization-control §Wiring to other services). Keep the state file's directory outside every directory a container mounts. It receives private keys.
+1. Copy `.env.example` to `.env`. Fill in `KEYCLOAK_ISSUER` (the value identity-control's `.env` holds) and the six passwords. Copy `compose.override.example.yaml` to `compose.override.yaml` (the subnet pin), and set `GOPROXY=direct` where the proxy is intercepted. Then `BUILD_REVISION=$(git rev-parse HEAD) docker compose up -d --build` and `curl -fsS http://127.0.0.1:8083/readyz`.
+2. The wiring is two scripts, the files CI runs (`dev-wire.ps1` is organization-control §Wiring to other services, steps 1 to 6c; `dev-wiring-proof.ps1` is step 7). Export `IDENTITY_CALLER_PASSWORD`, `IDENTITY_CALLER_KEY_FILE` and `KEYCLOAK_ISSUER` alone, never by sourcing identity-control's `.env`; the operator's TOTP file is found in the identity-control checkout (step 5.2). Then run `pwsh ./scripts/dev-wire.ps1 -IdentityRepo <identity-control checkout> -KernelDeployDir <kernel deploy/dev> -Operator "<you>" -State <state file>`. For the proof, also export `KC_BOOTSTRAP_ADMIN_PASSWORD` and `KC_ADMIN_URL`, then run `pwsh ./scripts/dev-wiring-proof.ps1 -IdentityRepo <identity-control checkout> -KernelDeployDir <kernel deploy/dev> -State <state file>` (organization-control §Wiring to other services). Keep the state file's directory outside every directory a container mounts. It receives private keys.
    - **The development reporters are registered here** (organization-control §Wiring to other services, step 6b; `ADR-ORG-001 §5.11`). Organization Control admits a provisioning or obligation report only from a reporter on record. For each of `provisioning`, `obligation:product`, `obligation:hcm`, `obligation:billing` and `obligation:audit`, `dev-wire.ps1` makes a key pair beside the state file, creates a workload `dev-reporter-<what it reports>` in identity-control, registers it with `POST /v1/reporters`, and writes its client and key file into the state file. The stand-in scripts of steps 9 and 13 report as these reporters. `GET /v1/reporters` lists them.
+   - **identity-control's invitation resolve is admitted here too** (step 6c; `ADR-IAM-011 §5.7`). identity-control asks Organization Control, as its own workload, which invitation a token names when a person with no account enrols. That workload, step 2's `identity-control-workload`, is admitted to `POST /v1/invitations/resolve` alone, from its own `invitation:resolve` reporter entry: the consumer registration of step 4 does not cover it, because each route has its own entry. `dev-wire.ps1` registers it and writes it into the state file's `reporters`, with identity-control's key file. Each resolve writes a privileged-access row with the authority `reporter`, reviewed through the workload's owner.
+   - **Step 5 of the wiring** also sets `ORGANIZATION_IDENTITY_CONTROL_URL`, where invitation acceptance asks whether the signed-in person holds the invited address. Without it `POST /v1/invitations/accept` answers `503`. Identity-control's own side, `IDENTITY_ORGANIZATION_BASE_URL`, is set in step 6 of the same section; without it an enrolment request is counted and answered `503`.
 3. Schedule the daily `maintenance` task in your crontab, with the line organization-control §One-off tasks gives. It exits 3 on a security incident open for more than 24 hours. **Check that it runs** (STD-GLB-009 rule 14), with that section's three checks: `crontab -l` shows the line; `systemctl status cron` reads `active (running)`; and the maintenance log in your home directory is from today, or `journalctl -u cron --since today` shows the run. cron reads a changed crontab by itself, so nothing is restarted after `crontab -e`. Schedule organization-control's `backup.sh` too, with the line its §Backups gives.
 4. **The bootstrap ceremony's review.** The first Principal creates the reviewer's Principal (`POST /v1/principals`), and Organization Control grants it `provider:identity-control`. The reviewer, neither the operator, the witness nor the first Principal's holder, reads `GET /v1/bootstrap-ceremony` and records `POST /v1/bootstrap-ceremony:review` with an `Idempotency-Key`, the finding as the `X-Administrative-Reason`, and `{"reviewer": "<the reviewer's name>", "outcome": "satisfactory"}` or `"findings"` (identity-control `docs/runbooks/bootstrap-ceremony.md` §Review). The route and the database refuse a review by the operator, the witness or the first Principal. The review is insert-only. Until it is recorded, the realm serves no one but the first Principal and the reviewer (STD-IAM-001 §3.10).
 
@@ -132,9 +162,10 @@ Follow organization-control §Before you start, §First start, and §Wiring to o
 Follow organization-experience §Registering it (§The client lists every property).
 
 1. **On the laptop:** `node scripts/new-client-key.mjs`.
-2. **The operator** registers `organization-experience-bff` with organization-experience's `scripts/dev-register-bff.ps1`, which sends `POST /v1/registrations` as `privileged` in the `per-sign-in` form, with audience `organization-control-api` and redirect `http://127.0.0.1:8091/auth/callback`. organization-experience's `stack-proof` workflow runs the same script (STD-GLB-009 §A procedure step is a script, and CI runs it).
+2. **The operator** registers `organization-experience-bff` (a second device's client has its own name, item 3) with organization-experience's `scripts/dev-register-bff.ps1`, which sends `POST /v1/registrations` as `privileged` in the `per-sign-in` form, with audience `organization-control-api` and redirect `http://127.0.0.1:8091/auth/callback`. organization-experience's `stack-proof` workflow runs the same script (STD-GLB-009 §A procedure step is a script, and CI runs it).
 3. **A second device registers its own client,** for example `organization-experience-bff-<device>`, with the same script, and sets `ORGANIZATION_EXPERIENCE_CLIENT_ID` to it (STD-GLB-009 rule 15).
-4. **Port 8091,** because the identity BFF has 8090. The two still share one cookie, `__Host-ident_session`. A browser scopes cookies by host and not by port, so signing in to one BFF signs the browser out of the other. Use one BFF at a time, or two browser profiles (organization-experience §Before running both BFFs at once).
+4. **The BFF's `.env`** names the identity BFF's origin in `ORGANIZATION_EXPERIENCE_IDENTITY_EXPERIENCE_ORIGIN`, `http://127.0.0.1:8090` as `.env.example` sets it. The BFF never calls it. The invitation acceptance page links a person with no account to `<origin>/account/enrol#<token>` (`ADR-IAM-011 §5.1`), and the BFF refuses to start without the variable. The BFF reaches organization-control through the tunnel's owner-only port 8083, on `127.0.0.1:8083` after `devtunnel connect`.
+5. **Port 8091,** because the identity BFF has 8090. The two still share one cookie, `__Host-ident_session`. A browser scopes cookies by host and not by port, so signing in to one BFF signs the browser out of the other. Use one BFF at a time, or two browser profiles (organization-experience §Before running both BFFs at once).
 
 ## 9. Provisioning a Tenant
 
@@ -154,7 +185,7 @@ A person a provider creates in the Admin Portal has `UPDATE_PASSWORD` outstandin
 2. **Give the value to the person** on a channel other than the one that carries the username. On a development server, the owner reads it and gives it to the person directly.
 3. **The person signs in** with the username and the temporary password. The kernel requires a new password and refuses the temporary value as the new one (identity-kernel `passwordHistory`). A sign-in at `aal2` then enrolls a TOTP authenticator and shows the recovery codes (ADR-IAM-005 §5.3).
 4. **A lost or lapsed value:** the person's page offers **Issue a new temporary password** while the person has set no password of their own. An unused value is deleted when it lapses.
-5. **The email is not proven yet.** To be invited (step 12), the person proves it in the Account application: **Send a code**, then enter the code. On a development server the code reaches the development mail catcher (ADR-IAM-007 §5.3), whose UI identity-control publishes on `127.0.0.1:8025` (identity-control `deploy/dev/README.md`).
+5. **The email is not proven yet.** To be invited (step 12), the person proves it in the Account application: **Send a code**, then enter the code. On a development server the code reaches the development mail catcher (ADR-IAM-007 §5.3), whose UI identity-control publishes on `127.0.0.1:8025` (identity-control §Reading a code in the mail catcher). From a laptop, add port 8025 to the tunnel as owner-only (step 1). Never relay a code in a ticket or a chat.
 
 ## 11. The first Tenant administrator
 
@@ -169,7 +200,7 @@ A Tenant is `active` after step 9, and nobody can sign in for it until a provide
 An invitation is accepted by the invited person, signed in as themselves, with an email they have proven ([ADR-ORG-007](../../05-decisions/organization-tenancy-platform/ADR-ORG-007-the-invited-person-accepts-signed-in.md)). Granting a Membership directly (the Tenant's Memberships, **Grant membership**) remains available for a person who exists.
 
 1. **The person exists, can sign in, and has proven the invited email** (step 10, items 1 to 5). An address counts only once its holder has returned the code sent to it (ADR-ORG-007 §5.3).
-   - _A person with no account_ would enrol from the invitation instead ([ADR-IAM-011](../../05-decisions/identity-access-platform/ADR-IAM-011-an-invitee-without-an-account-enrols-at-redemption.md), accepted 2026-10-20, not built). Until it is accepted and built, create the person first (step 10).
+   - _A person with no account_ enrols from the invitation instead ([ADR-IAM-011](../../05-decisions/identity-access-platform/ADR-IAM-011-an-invitee-without-an-account-enrols-at-redemption.md)): the acceptance page links to the identity BFF's enrolment page, `http://127.0.0.1:8090/account/enrol#<token>`. It needs the enrolment workload (step 4.4) and organization-control's `invitation:resolve` entry (step 7.2), and the code reaches the mail catcher. Otherwise create the person first (step 10).
 2. **In organization-experience, in the Tenant, as its administrator:** invite the email. The page shows the acceptance link once; the token travels only in its fragment. On a development server nothing delivers it, so give it to the person yourself.
 3. **The person opens the link** and signs in without choosing a Tenant. The page accepts the invitation for the signed-in person only, then offers to sign in to the new Tenant. Any refusal (unknown or expired link, an address not proven, a link meant for someone else) reads the same.
 4. **A lost link** is revoked and issued again.
@@ -191,7 +222,7 @@ Each script reads first and refuses, sending nothing, a transition the service w
 Always in dependency order: **identity-kernel, then identity-control, then organization-control**. Each is updated with the same two commands, in its `deploy/dev`:
 
 ```sh
-git pull && docker compose up -d --build
+git pull && BUILD_REVISION=$(git rev-parse HEAD) docker compose up -d --build
 ```
 
 Then check each one before the next:
@@ -202,7 +233,7 @@ Then check each one before the next:
 | identity-control     | `docker compose logs migrate` succeeded, and `curl -fsS http://127.0.0.1:8082/readyz`                                                    |
 | organization-control | `docker compose logs migrate` succeeded, and `curl -fsS http://127.0.0.1:8083/readyz`                                                    |
 
-A release that needs more than this says so in its README, in a section between the skeleton's own sections (for example identity-control [§Moving a server to `identity-control-api`]).
+A release that needs more than this is taken by standing the server up again from zero (step 15), which every environment is: identity-control's README keeps no in-place upgrade procedure either. The realm signing key is the one thing rotated in place, every 30 days, by identity-kernel `docs/runbooks/signing-key-rotation.md`, with an operator and an approver.
 
 ## 15. Reset from zero
 
