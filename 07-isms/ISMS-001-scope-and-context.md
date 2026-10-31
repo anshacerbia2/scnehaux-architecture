@@ -4,7 +4,7 @@ doc_meta:
   title: ISMS Scope and Context
   owner: ISMS Owner
   version: 1.0.0
-  status: proposed
+  status: approved
   classification: public
   governed_by: [GDC-012, EAD-007]
   review_cycle_days: 365
@@ -112,15 +112,15 @@ No text of the standard is reproduced. Requirements below are the organisation's
 
 The ISMS is the set of records in `07-isms/` and the processes they describe. It is kept as code: each record is a reviewed file, checked by the linter of [GDC-012](../00-governance/GDC-012-isms-guideline.md), and approved through a pull request by the role [GDC-012 §2.3.2](../00-governance/GDC-012-isms-guideline.md#232-taxonomy) names.
 
-| Process                                                                                           | Record                                    | State                       |
-| :------------------------------------------------------------------------------------------------ | :---------------------------------------- | :-------------------------- |
-| Scope and context                                                                                 | ISMS-001 (this record)                    | Proposed                    |
-| Policy, roles and responsibilities                                                                | ISMS-002                                  | Proposed                    |
-| Risk assessment and treatment method                                                              | ISMS-003                                  | Proposed                    |
-| Risk register, treatment plan and SoA                                                             | `risk-register`, `risk-treatment-and-soa` | Planned (next pull request) |
-| Objectives and measurement                                                                        | `objectives`                              | Planned                     |
-| Asset and script inventory, change management, supplier register, incident management, continuity | one record of each kind                   | Planned                     |
-| Internal audit, management review, nonconformity and corrective action                            | Their own records                         | Planned                     |
+| Process                                                                                           | Record                  | State                         |
+| :------------------------------------------------------------------------------------------------ | :---------------------- | :---------------------------- |
+| Scope and context                                                                                 | ISMS-001 (this record)  | Approved                      |
+| Policy, roles and responsibilities                                                                | ISMS-002                | Approved                      |
+| Risk assessment and treatment method                                                              | ISMS-003                | Approved                      |
+| Risk register, treatment plan and SoA                                                             | ISMS-004, ISMS-005      | Approved                      |
+| Objectives and measurement                                                                        | `objectives`            | Planned (ISMS-005 T30)        |
+| Asset and script inventory, change management, supplier register, incident management, continuity | one record of each kind | Planned (ISMS-005 T25 to T29) |
+| Internal audit, management review, nonconformity and corrective action                            | Their own records       | Planned (ISMS-005 T31, T36)   |
 
 The ISMS MUST be improved through the same loop: a risk, an audit finding or an incident leads to a pull request that changes a record and, where needed, a standard, a decision or code in the repository that owns it.
 
