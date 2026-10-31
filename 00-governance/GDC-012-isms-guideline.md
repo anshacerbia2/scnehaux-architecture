@@ -9,12 +9,10 @@ doc_meta:
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-10-31
-  last_reviewed: 2026-10-31
+  last_reviewed: 2026-11-01
 ---
 
 # Information Security Management System (ISMS) Guideline
-
-> **Pending ratification.** This guideline is a review candidate under GDC-000 §2.6.7. It carries no authority until the Architecture Authority approves this exact commit, and no ISMS record is merged before then.
 
 ## 1. Context & Scope
 

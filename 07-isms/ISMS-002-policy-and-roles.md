@@ -4,7 +4,7 @@ doc_meta:
   title: Information Security Policy and Roles
   owner: Top Management
   version: 1.0.0
-  status: proposed
+  status: approved
   classification: public
   governed_by: [GDC-012, ISMS-001]
   review_cycle_days: 365
