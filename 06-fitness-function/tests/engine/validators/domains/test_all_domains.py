@@ -5,6 +5,7 @@ from tests.conftest import make_validator
 from engine.validators.domains.adr_validator import ADRValidator
 from engine.validators.domains.ead_validator import EADValidator
 from engine.validators.domains.gdc_validator import GDCValidator
+from engine.validators.domains.isms_validator import ISMSValidator
 from engine.validators.domains.pad_validator import PADValidator
 from engine.validators.domains.sad_validator import SADValidator
 from engine.validators.domains.std_validator import STDValidator
@@ -36,6 +37,7 @@ def test_missing_doc_meta_for_all():
         (GDCValidator, "GDC-002.md"),
         (EADValidator, "EAD-001.md"),
         (TDDValidator, "TDD-001.md"),
+        (ISMSValidator, "ISMS-001.md"),
     ]:
         v = make_validator(cls=cls, doc_meta={}, rules=rules, filename=fname)
         v.doc_meta = None  # Simulate truly missing metadata

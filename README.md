@@ -86,6 +86,12 @@ Defines the component-level blueprints built downstream.
 
 - **Guideline**: [GDC-011 — Technical Design Document (TDD) Guideline](00-governance\GDC-011-tdd-guideline.md)
 
+### 07-isms / ISMS (The Management-System Layer)
+
+Holds the ISO/IEC 27001:2022 management-system records: scope, policy and roles, risk method and register, risk treatment and Statement of Applicability, and the operational records that show controls operating. The ISMS is aligned with the standard; these records make no certification claim.
+
+- **Guideline**: [GDC-012 — Information Security Management System (ISMS) Guideline](00-governance\GDC-012-isms-guideline.md)
+
 ---
 
 ## Quick Start: The Governance Engine

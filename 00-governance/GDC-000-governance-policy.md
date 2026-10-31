@@ -14,6 +14,8 @@ doc_meta:
 
 # Documentation Governance Policy (The Constitution)
 
+> **Pending ratification.** This revision is a review candidate under §2.6.7. The previously approved Git revision remains binding until the Architecture Authority approves this exact commit.
+
 ## 1. Context & Scope
 
 ### 1.1 The Ecosystem Goals
@@ -56,17 +58,18 @@ To physically execute the [Separation of Concerns](#12-core-philosophy-the-exist
 8. **Change Frequency**: Inversely proportional to the Decision Horizon, this dictates how often the artifact is expected to be mutated or become obsolete.
 9. **NFR Focus**: Driven by the Target Audience and Blast Radius, this identifies the specific Non-Functional Requirements (e.g., SLA, Latency, RTO, IAM) that must be rigorously quantified.
 
-By applying these 9 interconnected dimensions, every architectural artifact is categorized into one of 7 distinct **Artifact Domains** and rigidly mapped in the following matrix:
+By applying these 9 interconnected dimensions, every artifact is categorized into one of 8 distinct **Artifact Domains** and rigidly mapped in the following matrix:
 
-| Artifact Domain                                                        | Asset Owned                           | Scope                                | Abstraction       | Primary Owner                                            | Target Audience                     | Blast Radius                      | Horizon       | Change Freq | NFR Focus                                                   |
-| :--------------------------------------------------------------------- | :------------------------------------ | :----------------------------------- | :---------------- | :------------------------------------------------------- | :---------------------------------- | :-------------------------------- | :------------ | :---------- | :---------------------------------------------------------- |
-| **[GDC](GDC-005-gdc-guideline.md)** (Governance Document Contract)     | Governance Framework                  | Ecosystem                            | Meta-Framework    | Architecture Authority                                   | All SWEs                            | Ecosystem                         | Permanent     | Low         | Gov Metrics                                                 |
-| **[EAD](GDC-006-ead-guideline.md)** (Enterprise Architecture Document) | Enterprise Strategy                   | Enterprise                           | Macro-Strategy    | Architecture Authority                                   | C-Level, VP, Architecture Authority | Massive (One-Way)                 | Strategic     | Low         | Cost Optimization, Sustainability, Security                 |
-| **[STD](GDC-007-std-guideline.md)** (Standard Document)                | Standards & Methodologies             | Inherited (Enterprise/Domain/System) | Guardrails        | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team)  | Inherited (Massive/Domain/System) | Living        | Medium      | Inherited (Context)                                         |
-| **[PAD](GDC-008-pad-guideline.md)** (Product Architecture Document)    | Domain Capability                     | Domain                               | Domain Capability | Domain Team                                              | Domain Team, PMs                    | Domain-wide                       | Long-term     | Med-Low     | Performance Efficiency, Reliability, Security               |
-| **[SAD](GDC-009-sad-guideline.md)** (System Architecture Document)     | Cohesive Physical System Architecture | System                               | Container Topo    | System Team                                              | System Team                         | System-level                      | Mid-term      | Medium      | Performance Efficiency, Reliability, Operational Excellence |
-| **[TDD](GDC-011-tdd-guideline.md)** (Technical Design Document)        | Component & Implementation Design     | Component                            | Code Contracts    | Component Team                                           | Component Team                      | Component                         | Ephemeral     | High        | Reliability, Security, Operational Excellence               |
-| **[ADR](GDC-010-adr-guideline.md)** (Architecture Decision Record)     | Architectural Decisions               | Inherited (Enterprise/Domain/System) | Rationale         | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team)  | Inherited (Massive/Domain/System) | Point-in-time | Immutable   | Inherited (Context)                                         |
+| Artifact Domain                                                                       | Asset Owned                             | Scope                                | Abstraction       | Primary Owner                                            | Target Audience                      | Blast Radius                      | Horizon       | Change Freq | NFR Focus                                                   |
+| :------------------------------------------------------------------------------------ | :-------------------------------------- | :----------------------------------- | :---------------- | :------------------------------------------------------- | :----------------------------------- | :-------------------------------- | :------------ | :---------- | :---------------------------------------------------------- |
+| **[GDC](GDC-005-gdc-guideline.md)** (Governance Document Contract)                    | Governance Framework                    | Ecosystem                            | Meta-Framework    | Architecture Authority                                   | All SWEs                             | Ecosystem                         | Permanent     | Low         | Gov Metrics                                                 |
+| **[EAD](GDC-006-ead-guideline.md)** (Enterprise Architecture Document)                | Enterprise Strategy                     | Enterprise                           | Macro-Strategy    | Architecture Authority                                   | C-Level, VP, Architecture Authority  | Massive (One-Way)                 | Strategic     | Low         | Cost Optimization, Sustainability, Security                 |
+| **[STD](GDC-007-std-guideline.md)** (Standard Document)                               | Standards & Methodologies               | Inherited (Enterprise/Domain/System) | Guardrails        | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team)   | Inherited (Massive/Domain/System) | Living        | Medium      | Inherited (Context)                                         |
+| **[PAD](GDC-008-pad-guideline.md)** (Product Architecture Document)                   | Domain Capability                       | Domain                               | Domain Capability | Domain Team                                              | Domain Team, PMs                     | Domain-wide                       | Long-term     | Med-Low     | Performance Efficiency, Reliability, Security               |
+| **[SAD](GDC-009-sad-guideline.md)** (System Architecture Document)                    | Cohesive Physical System Architecture   | System                               | Container Topo    | System Team                                              | System Team                          | System-level                      | Mid-term      | Medium      | Performance Efficiency, Reliability, Operational Excellence |
+| **[TDD](GDC-011-tdd-guideline.md)** (Technical Design Document)                       | Component & Implementation Design       | Component                            | Code Contracts    | Component Team                                           | Component Team                       | Component                         | Ephemeral     | High        | Reliability, Security, Operational Excellence               |
+| **[ADR](GDC-010-adr-guideline.md)** (Architecture Decision Record)                    | Architectural Decisions                 | Inherited (Enterprise/Domain/System) | Rationale         | Inherited (Architecture Authority or Domain/System Team) | Inherited (All SWEs or Local Team)   | Inherited (Massive/Domain/System) | Point-in-time | Immutable   | Inherited (Context)                                         |
+| **[ISMS](GDC-012-isms-guideline.md)** (Information Security Management System record) | Information Security Management Records | ISMS scope                           | Management System | ISMS Owner (role)                                        | Top Management, ISMS Owner, Auditors | Enterprise assurance (Two-Way)    | Cyclic        | Medium      | Security, Reliability, Operational Excellence               |
 
 To illustrate this separation of concerns practically, consider the analogy of a nation's infrastructure planning: EAD acts as the national planning agency (Bappenas) setting macro objectives, PAD acts as regional planning (Bappeda) mapping domain capabilities, SAD acts as public works planning (PU Perencanaan) designing physical container topologies, and TDD acts as the public works execution (PU Pelaksanaan) building the granular components.
 
@@ -77,14 +80,17 @@ The 9 dimensions of the SoC Philosophy (Scope, Abstraction, NFR Focus, etc.) are
 - **C4 Model (The Vertical Axis)**: Standard C4 is used as the foundational Y-axis (depth) of our ecosystem. It dictates how we zoom in from the Enterprise level (System Landscape / C0) down to the Component level (C3). This guarantees that every artifact operates at the correct level of abstraction and naturally serves the right audience (from C-Level executives at C0 down to SWEs at C3) without mixing technical depths.
   - _Why not UML or ArchiMate?_ UML is too syntax-heavy and demands specialized training, while ArchiMate is often disconnected from the reality of code. C4 provides a lightweight, intuitive "map-like" mental model that developers natively understand without requiring proprietary modeling tools.
 
-  | Level    | C4 Name              | Scnehaux Artifacts           | SoC Scope             | Location                        |
-  | :------- | :------------------- | :--------------------------- | :-------------------- | :------------------------------ |
-  | **Meta** | **Cross-Cutting**    | **GDC**, **ADR**, **STD**    | Ecosystem / Inherited | Root Repo (`00`, `02`, `05`)    |
-  | **C0**   | **System Landscape** | **EAD**                      | Enterprise            | Root Repo (`01-enterprise`)     |
-  | **C1**   | **System Context**   | **PAD**                      | Domain                | Root Repo (`03-domain`)         |
-  | **C2**   | **Container**        | **SAD**                      | System                | Root Repo (`04-system`)         |
-  | **C3**   | **Component**        | **TDD**                      | Component             | **Specific Project Repository** |
-  | **C4**   | **Code**             | Source Code / Implementation | Code Base             | **Specific Project Repository** |
+  | Level    | C4 Name               | Scnehaux Artifacts           | SoC Scope             | Location                        |
+  | :------- | :-------------------- | :--------------------------- | :-------------------- | :------------------------------ |
+  | **Meta** | **Cross-Cutting**     | **GDC**, **ADR**, **STD**    | Ecosystem / Inherited | Root Repo (`00`, `02`, `05`)    |
+  | **C0**   | **System Landscape**  | **EAD**                      | Enterprise            | Root Repo (`01-enterprise`)     |
+  | **C1**   | **System Context**    | **PAD**                      | Domain                | Root Repo (`03-domain`)         |
+  | **C2**   | **Container**         | **SAD**                      | System                | Root Repo (`04-system`)         |
+  | **C3**   | **Component**         | **TDD**                      | Component             | **Specific Project Repository** |
+  | **C4**   | **Code**              | Source Code / Implementation | Code Base             | **Specific Project Repository** |
+  | **None** | **Management System** | **ISMS**                     | ISMS scope            | Root Repo (`07-isms`)           |
+
+  ISMS records sit outside the C4 zoom. They describe how the organisation manages information security risk across every level, and they cite architecture artifacts as evidence rather than refining them ([GDC-012](GDC-012-isms-guideline.md)).
 
 - **Domain-Driven Design (DDD) & Team Topologies (The Business Anchor)**: While C4 handles technical zoom, DDD and Team Topologies provide the strategic anchor. At the macro level, **DDD Strategic Design** (Bounded Contexts) constructs the long-term foundations of our EAD and PAD artifacts, enforcing a strict separation between horizontal Platform services and vertical Business Products. As we zoom in, **DDD Tactical Design** (Aggregates, Entities) shapes the physical boundaries within our SADs and TDDs. Concurrently, **Team Topologies** enforces Conway's Law across the entire ecosystem, dictating the ownership and collaboration models for every single artifact.
   - _Why not TOGAF?_ TOGAF's 4 domains (Business, Data, Application, Technology) are often too rigid and academic for hyper-growth cloud-native engineering teams. DDD provides the most pragmatic vocabulary for forcing technologists to define "What bounded context are we actually building?" while Team Topologies enforces Conway's Law in our documentation ownership.
@@ -169,8 +175,8 @@ graph TD
 **A. The Root Architecture Repository (Centralized Governance Hub)**:
 
 - **Role**: Acts as the centralized hub and policy-maker for the entire engineering ecosystem. It physically houses the governance and architectural policies, the automated Fitness Function, and the overarching architectural context that all downstream projects must obey.
-- **Artifacts Housed**: Governance Artifacts (GDC), Architectural Artifacts (EAD, STD, PAD, SAD, ADR), and the Fitness Function.
-- **Layout Pattern**: Top-level directories are strictly separated by abstraction level (Enterprise, Domain, System) or cross-cutting concerns (Governance, Standards, Decisions). Sub-directories then group artifacts by logical bounded contexts or business domains.
+- **Artifacts Housed**: Governance Artifacts (GDC), Architectural Artifacts (EAD, STD, PAD, SAD, ADR), Management-System Records (ISMS), and the Fitness Function.
+- **Layout Pattern**: Top-level directories are strictly separated by abstraction level (Enterprise, Domain, System) or cross-cutting concerns (Governance, Standards, Decisions, Information Security Management). Sub-directories then group artifacts by logical bounded contexts or business domains.
 - **Map of the Root Architecture Repository:**
   ```text
   scnehaux-architecture/
@@ -214,7 +220,10 @@ graph TD
   │
   ├── ...                              # (Validators and CI/CD Automation Scripts)
   │
-  └── 06-fitness-function/             # (The Fitness Function Engine)
+  ├── 06-fitness-function/             # (The Fitness Function Engine)
+  │
+  └── 07-isms/                         # (ISMS - ISO/IEC 27001:2022 Management-System Records)
+      └── ISMS-001-scope-and-context.md
   ```
 
 **B. Project Repositories (Decentralized Execution)**:
@@ -247,6 +256,7 @@ graph TD
     subgraph Tier1 ["Tier 1: Artifact Domain Policies"]
         GovGuide["Governance Guidelines (GDC-005)"]
         ArchGuide["Architecture Guidelines (GDC-006 to GDC-011)"]
+        IsmsGuide["Management-System Guideline (GDC-012)"]
     end
 
     subgraph Tier2 ["Tier 2: Fitness Function Policies"]
@@ -262,12 +272,15 @@ graph TD
 
     Gov000 ==>|Mandates| GovGuide
     Gov000 ==>|Mandates| ArchGuide
+    Gov000 ==>|Mandates| IsmsGuide
     Gov000 ==>|Delegates Automation To| FitFunc
 
     GovGuide -.->|Codified Into| ContextSchemas
     GovGuide -.->|Codified Into| ContextLogic
     ArchGuide -.->|Codified Into| ContextSchemas
     ArchGuide -.->|Codified Into| ContextLogic
+    IsmsGuide -.->|Codified Into| ContextSchemas
+    IsmsGuide -.->|Codified Into| ContextLogic
 
     FitFunc -->|Defines Architecture Of| BaseSchemas
     FitFunc -->|Defines Architecture Of| BaseLogic
@@ -278,6 +291,7 @@ graph TD
     style Gov000 fill:#805ad5,stroke:#553c9a,stroke-width:2px,color:#fff
     style GovGuide fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
     style ArchGuide fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
+    style IsmsGuide fill:#1a365d,stroke:#3182ce,stroke-width:2px,color:#fff
     style FitFunc fill:#2b6cb0,stroke:#63b3ed,stroke-width:2px,color:#fff
     style BaseSchemas fill:#2b6cb0,stroke:#63b3ed,stroke-width:2px,color:#fff
     style BaseLogic fill:#2b6cb0,stroke:#63b3ed,stroke-width:2px,color:#fff
@@ -364,6 +378,7 @@ To maintain the unbroken DAG illustrated above, the following structural policie
    - **Attachment Policy**: ADRs and STDs attach through `governed_by` **ONLY** to an **EAD** or a **PAD**, or to **GDC-000** when the rule is enterprise-wide and purely technical. They cannot be attached to a SAD or a TDD.
    - **Independence**: An STD is established directly by an EAD or PAD; it does not require an ADR to enforce its existence. An ADR is never the structural parent of an STD.
    - **Authorization Edge**: A major revision of an STD (version `X.0.0` with `X ≥ 2`) must be authorized by an ADR ([GDC-007 §2.4.2](GDC-007-std-guideline.md)). The STD names that ADR in `authorized_by`, and the ADR names the STD in `authorizes`. This edge records who authorized the current major version. It is not a lineage edge and never replaces the `governed_by` attachment.
+4. **The Management-System Attachment (ISMS)**: ISMS records sit outside the C4 Contractual Lineage. They attach through `governed_by` **ONLY** to GDC-012, to an EAD, or to another ISMS record. They never attach to a PAD, SAD, TDD, STD, or ADR, and no architecture artifact attaches to them. An ISMS record cites architecture artifacts and repositories as evidence through links, never through lineage fields ([GDC-012 §2.5](GDC-012-isms-guideline.md)).
 
 #### 2.4.2 The 1-to-N Execution Mapping (PAD to SAD)
 
@@ -405,11 +420,11 @@ Architecture artifacts are not static, they represent the evolving truth of the 
 1. **Git as the Ultimate Revision History**: We do not maintain manual "Revision History" tables inside markdown files. Git commit history is the single source of truth for who changed what, when, and why.
 2. **Mandatory Lifecycle Metadata**: Every artifact must declare its current lifecycle state (e.g., whether it is a draft under review, an active baseline, or a retired concept) within its YAML frontmatter.
 3. **Decentralized State Machines**: The exact allowable statuses (e.g., `proposed`, `approved`, `deprecated`) and the valid transition paths between them are explicitly defined by their respective GDC Guidelines.
-4. **Decision Records vs. Semantic Versioning**: ADRs are not versioned. Before the first production deployment of a system an ADR governs, a changed decision is edited in place; after it, a _new_ ADR supersedes the old one (GDC-010 §2.4.2). All other artifacts (including GDCs, EADs, STDs, PADs, SADs, and TDDs) are Versioned Artifacts and use Semantic Versioning.
+4. **Decision Records vs. Semantic Versioning**: ADRs are not versioned. Before the first production deployment of a system an ADR governs, a changed decision is edited in place; after it, a _new_ ADR supersedes the old one (GDC-010 §2.4.2). All other artifacts (including GDCs, EADs, STDs, PADs, SADs, TDDs, and ISMS records) are Versioned Artifacts and use Semantic Versioning.
 5. **The Version Bump Mandate**: From the first production deployment onward, any modification to the architectural content of an `approved` versioned artifact MUST include a corresponding version bump in its YAML metadata. Before it, artifacts are edited in place without amendment sections, and Git history is the revision record; the version-bump audit is disabled until then.
 6. **The Baseline Stability Mandate**: A versioned artifact whose status asserts it is, or has been, an official baseline (`approved`, `deprecated`) MUST carry a stable Semantic Version of `1.0.0` or higher. Semantic Versioning reserves major version zero for initial development, where anything MAY change at any time; an artifact cannot simultaneously be the blueprint other teams build against and a document whose contract may move underneath them. Pre-baseline statuses (`chartered`, `draft`, `proposed`) are the correct home for `0.y.z` and remain unconstrained — promotion to a baseline status and promotion to `1.0.0` are one act, not two. Enforced by the `approved_version_not_stable` fitness function.
 
-7. **Approved Versioned-Artifact Revision Authority**: An `approved` status on a Versioned Artifact identifies its active artifact class and previously ratified baseline; it does not pre-approve working-tree, pull-request, or merged edits to that file. A changed revision of any approved GDC, EAD, PAD, SAD, STD, or TDD becomes effective only when the human authority defined by its governing guideline explicitly approves the exact commit or ratification manifest containing the revision. This rule also applies when an artifact schema has no pre-approval lifecycle value suitable for an in-place revision. CI success, review comments, and merge permission are necessary evidence but never substitute for that exact-revision authorization. Until authorization is recorded, the previously approved Git revision remains binding, and the changed revision must identify itself as pending ratification in its document body. At ratification, the artifact's `last_reviewed` date and any required lifecycle metadata are updated in the exact approved commit or manifest.
+7. **Approved Versioned-Artifact Revision Authority**: An `approved` status on a Versioned Artifact identifies its active artifact class and previously ratified baseline; it does not pre-approve working-tree, pull-request, or merged edits to that file. A changed revision of any approved GDC, EAD, PAD, SAD, STD, TDD, or ISMS record becomes effective only when the human authority defined by its governing guideline explicitly approves the exact commit or ratification manifest containing the revision. This rule also applies when an artifact schema has no pre-approval lifecycle value suitable for an in-place revision. CI success, review comments, and merge permission are necessary evidence but never substitute for that exact-revision authorization. Until authorization is recorded, the previously approved Git revision remains binding, and the changed revision must identify itself as pending ratification in its document body. At ratification, the artifact's `last_reviewed` date and any required lifecycle metadata are updated in the exact approved commit or manifest.
 
 ### 2.7 Policy-as-Code
 
@@ -467,20 +482,21 @@ To manage governance across federated repositories without creating a human bott
 
 ### 4.1 The Glossary of Truth & Execution Gateways
 
-| Code              | Full Name                        | Authoritative Owner & Purpose                                                                                                                                                     |
-| :---------------- | :------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PRD**           | Product Requirements Document    | **[Owner: Product Managers]** Business "What" and "Why" (Non-technical). Not part of this framework.                                                                              |
-| **GDC (Vision)**  | Global Design Concept            | **[REJECTED]** High-Level Vision (C1). Replaced by the **EAD** (for enterprise strategy) and integrated into the **Domain Capability** section of **PAD**s.                       |
-| **GDC (Gov)**     | Governance Document Contract     | **[Owner: Architecture Authority]** Automated policy definitions and deterministic fitness function enforcement. _(See [Appendix 4.2](#appendix-4-2) for acronym clarification)._ |
-| **EAD**           | Enterprise Architecture Document | **[Owner: Architecture Authority]** Strategic "North Star" (C1), cross-domain policies, and enterprise capability models.                                                         |
-| **PAD**           | Product Architecture Document    | **[Owner: Domain Team]** Domain Capability (C2). Defines domain capabilities, integration contracts, and system positioning.                                                      |
-| **SAD**           | System Architecture Document     | **[Owner: System Team]** System Architecture (C2). Defines internal structure, deployment topology, observability, and resilience mechanics.                                      |
-| **ADR**           | Architecture Decision Record     | **[Owner: Inherited (Architecture Authority or Domain/System Team)]** Meta. Rationale for significant technical pivots and trade-offs (`05-decisions`).                           |
-| **STD**           | Standard Document                | **[Owner: Inherited (Architecture Authority or Domain/System Team)]** Meta. Mandatory engineering policies and guardrails (`02-standards`).                                       |
-| **TRD**           | Technical Requirements Document  | **[REJECTED]** Scnehaux rejects TRDs to prevent documentation fragmentation. _(See [Appendix 4.3](#appendix-4-3) for rationale)._                                                 |
-| **TDD (Design)**  | Technical Design Document        | **[Owner: Component Team]** Component artifacts (C3), API contracts, ERDs, Security, and Failure Handling.                                                                        |
-| **TDD (Testing)** | Test Driven Development          | **[Owner: Component Team]** Engineering Methodology. The discipline used to implement the Test Strategy.                                                                          |
-| **ERD**           | Entity Relationship Diagram      | **[Owner: Component Team]** Data Schema. The structural foundation of the TDD (Design).                                                                                           |
+| Code              | Full Name                                     | Authoritative Owner & Purpose                                                                                                                                                                                        |
+| :---------------- | :-------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **PRD**           | Product Requirements Document                 | **[Owner: Product Managers]** Business "What" and "Why" (Non-technical). Not part of this framework.                                                                                                                 |
+| **GDC (Vision)**  | Global Design Concept                         | **[REJECTED]** High-Level Vision (C1). Replaced by the **EAD** (for enterprise strategy) and integrated into the **Domain Capability** section of **PAD**s.                                                          |
+| **GDC (Gov)**     | Governance Document Contract                  | **[Owner: Architecture Authority]** Automated policy definitions and deterministic fitness function enforcement. _(See [Appendix 4.2](#appendix-4-2) for acronym clarification)._                                    |
+| **EAD**           | Enterprise Architecture Document              | **[Owner: Architecture Authority]** Strategic "North Star" (C1), cross-domain policies, and enterprise capability models.                                                                                            |
+| **PAD**           | Product Architecture Document                 | **[Owner: Domain Team]** Domain Capability (C2). Defines domain capabilities, integration contracts, and system positioning.                                                                                         |
+| **SAD**           | System Architecture Document                  | **[Owner: System Team]** System Architecture (C2). Defines internal structure, deployment topology, observability, and resilience mechanics.                                                                         |
+| **ADR**           | Architecture Decision Record                  | **[Owner: Inherited (Architecture Authority or Domain/System Team)]** Meta. Rationale for significant technical pivots and trade-offs (`05-decisions`).                                                              |
+| **STD**           | Standard Document                             | **[Owner: Inherited (Architecture Authority or Domain/System Team)]** Meta. Mandatory engineering policies and guardrails (`02-standards`).                                                                          |
+| **ISMS**          | Information Security Management System record | **[Owner: ISMS Owner (role)]** Management system. ISO/IEC 27001:2022 records: scope, policy and roles, risk method and register, risk treatment and Statement of Applicability, and operational records (`07-isms`). |
+| **TRD**           | Technical Requirements Document               | **[REJECTED]** Scnehaux rejects TRDs to prevent documentation fragmentation. _(See [Appendix 4.3](#appendix-4-3) for rationale)._                                                                                    |
+| **TDD (Design)**  | Technical Design Document                     | **[Owner: Component Team]** Component artifacts (C3), API contracts, ERDs, Security, and Failure Handling.                                                                                                           |
+| **TDD (Testing)** | Test Driven Development                       | **[Owner: Component Team]** Engineering Methodology. The discipline used to implement the Test Strategy.                                                                                                             |
+| **ERD**           | Entity Relationship Diagram                   | **[Owner: Component Team]** Data Schema. The structural foundation of the TDD (Design).                                                                                                                              |
 
 <a id="appendix-4-2"></a>
 

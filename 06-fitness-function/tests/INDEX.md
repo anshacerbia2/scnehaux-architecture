@@ -81,6 +81,8 @@ This index documents the test suite utilities and fixtures.
 | **test_audit_traceability_graph_self_reference** | *(No docstring provided)* |
 | **test_audit_traceability_graph_acyclic_clean** | *(No docstring provided)* |
 | **test_audit_hierarchy_and_orphans_non_dict** | *(No docstring provided)* |
+| **test_audit_hierarchy_tiers_isms_attachments** | *(No docstring provided)* |
+| **test_audit_orphans_isms_requires_governed_by** | *(No docstring provided)* |
 
 ### `tests/engine/auditors/test_waiver_auditor.py`
 
@@ -130,6 +132,7 @@ This index documents the test suite utilities and fixtures.
 | **test_parse_frontmatter_no_doc_meta** | *(No docstring provided)* |
 | **test_strip_code_fences_removes_fenced_blocks** | *(No docstring provided)* |
 | **test_extract_doc_id_references** | *(No docstring provided)* |
+| **test_extract_doc_id_references_recognises_isms_records** | *(No docstring provided)* |
 | **test_clean_content_for_length_with_softbreak** | Cover line 92 (softbreak/hardbreak handling). |
 | **test_extract_links_no_links** | Cover line 121 (walk called with empty token list). |
 | **test_extract_sections_normalized_numbered_headings** | Cover extract_sections_normalized with numbered section headings (regex strip). |
@@ -219,6 +222,38 @@ This index documents the test suite utilities and fixtures.
 | **test_gdc_missing_subsection** | *(No docstring provided)* |
 | **test_gdc_subsection_out_of_order** | *(No docstring provided)* |
 | **test_gdc_non_guideline_file_skipped** | *(No docstring provided)* |
+
+### `tests/engine/validators/domains/test_isms_validator.py`
+
+| Function | Description |
+| :--- | :--- |
+| **_isms_schema** | *(No docstring provided)* |
+| **_meta** | *(No docstring provided)* |
+| **_content** | *(No docstring provided)* |
+| **_validator** | *(No docstring provided)* |
+| **_messages** | *(No docstring provided)* |
+| **test_isms_valid_record_passes_full_validation** | *(No docstring provided)* |
+| **test_isms_schema_rejects_person_owner_and_non_public_classification** | *(No docstring provided)* |
+| **test_isms_schema_declares_lifecycle_and_classification** | *(No docstring provided)* |
+| **test_isms_requires_a_clause_or_control** | *(No docstring provided)* |
+| **test_isms_mapping_ignores_non_list_values** | *(No docstring provided)* |
+| **test_isms_declared_reference_must_be_cited_exactly** | *(No docstring provided)* |
+| **test_isms_mapping_section_missing_is_left_to_schema** | *(No docstring provided)* |
+| **test_isms_review_cadence_exceeded** | *(No docstring provided)* |
+| **test_isms_review_cadence_within_limit_and_non_integer_ignored** | *(No docstring provided)* |
+| **test_isms_single_home_conflict** | *(No docstring provided)* |
+| **test_isms_single_home_skips_other_kind_and_deprecated_self** | *(No docstring provided)* |
+| **test_isms_certification_claim_detected** | *(No docstring provided)* |
+| **test_isms_alignment_wording_allowed** | *(No docstring provided)* |
+| **test_isms_personal_identifiers_detected** | *(No docstring provided)* |
+| **test_isms_team_handle_is_not_a_personal_identifier** | *(No docstring provided)* |
+| **test_isms_reproduced_requirement_text_detected_outside_code** | *(No docstring provided)* |
+| **test_isms_valid_control_table_has_no_findings** | *(No docstring provided)* |
+| **test_isms_invalid_control_status_value** | *(No docstring provided)* |
+| **test_isms_control_table_requires_evidence_column** | *(No docstring provided)* |
+| **test_isms_implemented_requires_repository_evidence** | *(No docstring provided)* |
+| **test_isms_not_applicable_requires_justification** | *(No docstring provided)* |
+| **test_isms_tables_without_control_status_are_ignored** | *(No docstring provided)* |
 
 ### `tests/engine/validators/domains/test_pad_validator.py`
 

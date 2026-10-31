@@ -33,9 +33,13 @@ class SeverityRule(str, Enum):
     MISSING_SECTION_KEYWORD = "missing_section_keyword"
     SCHEMA_VALIDATION_FAILED = "schema_validation_failed"
     SUBSECTION_ORDER_VIOLATION = "subsection_order_violation"
+    ISMS_CONTROL_STATUS_VIOLATION = "isms_control_status_violation"
 
     # 3. SEMANTIC & QUALITY DOMAIN (Meaning & Language)
     AMBIGUITY_RULES = "ambiguity_rules"
+    ISMS_CERTIFICATION_CLAIM = "isms_certification_claim"
+    ISMS_PERSONAL_IDENTIFIER = "isms_personal_identifier"
+    ISMS_REPRODUCED_REQUIREMENT_TEXT = "isms_reproduced_requirement_text"
     NFR_TAXONOMY_VIOLATION = "nfr_taxonomy_violation"
     PROHIBITED_WORDS = "prohibited_words"
     STRUCTURAL_INTEGRITY_VIOLATION = "structural_integrity_violation"
@@ -49,6 +53,7 @@ class SeverityRule(str, Enum):
     DRAFT_STATUS_VIOLATION = "draft_status_violation"
     EXCEPTION_EXPIRED = "exception_expired"
     EXEMPT_DOCUMENT_SKIPPED = "exempt_document_skipped"
+    ISMS_REVIEW_CADENCE_VIOLATION = "isms_review_cadence_violation"
     REVIEW_AGE_VIOLATION = "review_age_violation"
     UNAUTHORIZED_MAJOR_REVISION = "unauthorized_major_revision"
     VERSION_BUMP_REQUIRED = "version_bump_required"
