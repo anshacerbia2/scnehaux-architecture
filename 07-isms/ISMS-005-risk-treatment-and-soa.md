@@ -4,7 +4,7 @@ doc_meta:
   title: Risk Treatment Plan and Statement of Applicability
   owner: ISMS Owner
   version: 1.0.0
-  status: proposed
+  status: approved
   classification: public
   governed_by: [GDC-012, ISMS-003]
   review_cycle_days: 90
@@ -234,77 +234,77 @@ Progress is reviewed at each review of this record and of the register ([ISMS-00
 
 What each `partial` or `planned` control lacks, and the action that closes it.
 
-| Control | What is missing                                                                                                                | Action                    |
-| :------ | :----------------------------------------------------------------------------------------------------------------------------- | :------------------------ |
-| A.5.1   | The policy is proposed, not approved, and nobody has acknowledged it                                                           | Approval of ISMS-002; T33 |
-| A.5.2   | The list of role holders and the ceremony review deadline are not recorded                                                     | T7                        |
-| A.5.3   | Witness and approver are typed names; pull requests need no second approval                                                    | T8, T19                   |
-| A.5.4   | No management review has been held                                                                                             | T36                       |
-| A.5.5   | No list of authorities to contact                                                                                              | T32                       |
-| A.5.6   | No list of forums or advisory feeds, and no owner                                                                              | T35                       |
-| A.5.7   | No written threat-intelligence process beyond the scanners                                                                     | T35                       |
-| A.5.8   | Security Notes are only recommended in a TDD                                                                                   | T40                       |
-| A.5.9   | No inventory of data stores, scripts or owners; no catalogue entries                                                           | T25                       |
-| A.5.10  | No acceptable-use rule for laptops, the shared host or AI agents                                                               | T24                       |
-| A.5.11  | No leaver procedure for the host, GitHub, the tunnel or ceremony roles                                                         | T33, T43                  |
-| A.5.12  | Tiers are not applied to stores or fields; public documents carry other labels                                                 | T34, T18                  |
-| A.5.13  | Backups, dumps and ceremony records carry no label                                                                             | T34                       |
-| A.5.14  | No transfer rules; the ceremony record store is unnamed                                                                        | T34, T7                   |
-| A.5.17  | Host secrets are plain-text files; a password is copied between stacks                                                         | T5, T23                   |
-| A.5.19  | No supplier register                                                                                                           | T26                       |
-| A.5.20  | No supplier terms reviewed                                                                                                     | T26                       |
-| A.5.21  | Actions pinned by tag in two repositories; shared workflows called from `main`                                                 | T6                        |
-| A.5.22  | No supplier review or change watch                                                                                             | T26                       |
-| A.5.23  | No rule for acquiring, using and leaving cloud services                                                                        | T26                       |
-| A.5.24  | No incident management plan, contacts or classification scale                                                                  | T27                       |
-| A.5.25  | No common triage criteria across repositories                                                                                  | T27                       |
-| A.5.26  | No overall response procedure or notification rule                                                                             | T27                       |
-| A.5.27  | No post-incident review or nonconformity log                                                                                   | T31, T27                  |
-| A.5.28  | Audit & Evidence not built; CI evidence kept 90 days; no chain of custody                                                      | T13, T7                   |
-| A.5.29  | No plan that keeps security controls in place during a disruption                                                              | T29                       |
-| A.5.30  | Recovery point not met in development; one host; two sources disagree on the objectives                                        | T29, T11                  |
-| A.5.31  | No register of legal and contractual duties                                                                                    | T32                       |
-| A.5.32  | No licence in the seven code repositories; no licence check in the Go and BFF builds                                           | T38                       |
-| A.5.33  | Ceremony records, CI evidence and backups are outside the record protections                                                   | T13, T34                  |
-| A.5.34  | No erasure path, privacy notice or record of processing                                                                        | T39, T32                  |
-| A.5.35  | No independent review of the ISMS                                                                                              | T36                       |
-| A.5.36  | Several enforcement items in the standards are not built                                                                       | T5, T42                   |
-| A.6.1   | No screening criteria per role                                                                                                 | T33                       |
-| A.6.2   | Security duties not in role holders' terms                                                                                     | T33                       |
-| A.6.3   | No training plan or records                                                                                                    | T33                       |
-| A.6.4   | No disciplinary route                                                                                                          | T33                       |
-| A.6.5   | No post-exit duties or removal steps                                                                                           | T33, T43                  |
-| A.6.6   | No confidentiality agreements                                                                                                  | T33                       |
-| A.6.7   | No remote-working rule                                                                                                         | T33                       |
-| A.6.8   | No reporting route for people or outsiders                                                                                     | T27                       |
-| A.7.7   | No clear-screen rule                                                                                                           | T33                       |
-| A.7.9   | No laptop protection baseline                                                                                                  | T20                       |
-| A.7.10  | Backup disk shared with other projects; no media handling rule                                                                 | T20, T21                  |
-| A.7.14  | No disposal rule for laptops or the backup disk                                                                                | T20                       |
-| A.8.1   | No endpoint baseline                                                                                                           | T20                       |
-| A.8.2   | Host root holders can read the keystore; the master administrator uses a fixed password; infrastructure access is not governed | T21, T15, T43             |
-| A.8.4   | Rulesets unverified on six repositories; no second approval                                                                    | T42, T19                  |
-| A.8.5   | Weak member password policy; notifications not delivered                                                                       | T16, T14                  |
-| A.8.6   | No capacity monitoring for the shared host                                                                                     | T35                       |
-| A.8.7   | No malware protection on the host or laptops                                                                                   | T35, T20                  |
-| A.8.8   | No alert when a scheduled scan fails                                                                                           | T4                        |
-| A.8.9   | Tunnel units, scheduled jobs and local overrides exist only on the server                                                      | T35, T28                  |
-| A.8.10  | No erasure path; backup purge on decommissioning not shown                                                                     | T39, T29                  |
-| A.8.11  | Names and email addresses are not masked in logs                                                                               | T34                       |
-| A.8.12  | No secret scanning                                                                                                             | T5                        |
-| A.8.13  | No copy off the host; backup failures are silent                                                                               | T11, T9                   |
-| A.8.14  | One host; no redundancy built                                                                                                  | T11, T29                  |
-| A.8.15  | No central log store                                                                                                           | T13, T10                  |
-| A.8.16  | Alerts are not evaluated or delivered                                                                                          | T10, T4                   |
-| A.8.17  | No host time-source rule or check                                                                                              | T35                       |
-| A.8.18  | No rule for superuser database access, container shells or root on the host                                                    | T35                       |
-| A.8.19  | No inventory of operator scripts; no rule for host packages                                                                    | T25                       |
-| A.8.21  | No recorded security terms for the tunnel; production ingress not built                                                        | T26, T17                  |
-| A.8.24  | Cloud key custody not built; key age not checked by machine                                                                    | T12, T41                  |
-| A.8.28  | No static analysis; no secure-coding rules                                                                                     | T37                       |
-| A.8.31  | Only development exists                                                                                                        | T17                       |
-| A.8.32  | No change procedure outside ceremonies; no emergency-change rule                                                               | T28, T19                  |
-| A.8.34  | No rules for auditors' access                                                                                                  | T36                       |
+| Control | What is missing                                                                                                                | Action        |
+| :------ | :----------------------------------------------------------------------------------------------------------------------------- | :------------ |
+| A.5.1   | Nobody has yet acknowledged the approved policy                                                                                | T33           |
+| A.5.2   | The list of role holders and the ceremony review deadline are not recorded                                                     | T7            |
+| A.5.3   | Witness and approver are typed names; pull requests need no second approval                                                    | T8, T19       |
+| A.5.4   | No management review has been held                                                                                             | T36           |
+| A.5.5   | No list of authorities to contact                                                                                              | T32           |
+| A.5.6   | No list of forums or advisory feeds, and no owner                                                                              | T35           |
+| A.5.7   | No written threat-intelligence process beyond the scanners                                                                     | T35           |
+| A.5.8   | Security Notes are only recommended in a TDD                                                                                   | T40           |
+| A.5.9   | No inventory of data stores, scripts or owners; no catalogue entries                                                           | T25           |
+| A.5.10  | No acceptable-use rule for laptops, the shared host or AI agents                                                               | T24           |
+| A.5.11  | No leaver procedure for the host, GitHub, the tunnel or ceremony roles                                                         | T33, T43      |
+| A.5.12  | Tiers are not applied to stores or fields; public documents carry other labels                                                 | T34, T18      |
+| A.5.13  | Backups, dumps and ceremony records carry no label                                                                             | T34           |
+| A.5.14  | No transfer rules; the ceremony record store is unnamed                                                                        | T34, T7       |
+| A.5.17  | Host secrets are plain-text files; a password is copied between stacks                                                         | T5, T23       |
+| A.5.19  | No supplier register                                                                                                           | T26           |
+| A.5.20  | No supplier terms reviewed                                                                                                     | T26           |
+| A.5.21  | Actions pinned by tag in two repositories; shared workflows called from `main`                                                 | T6            |
+| A.5.22  | No supplier review or change watch                                                                                             | T26           |
+| A.5.23  | No rule for acquiring, using and leaving cloud services                                                                        | T26           |
+| A.5.24  | No incident management plan, contacts or classification scale                                                                  | T27           |
+| A.5.25  | No common triage criteria across repositories                                                                                  | T27           |
+| A.5.26  | No overall response procedure or notification rule                                                                             | T27           |
+| A.5.27  | No post-incident review or nonconformity log                                                                                   | T31, T27      |
+| A.5.28  | Audit & Evidence not built; CI evidence kept 90 days; no chain of custody                                                      | T13, T7       |
+| A.5.29  | No plan that keeps security controls in place during a disruption                                                              | T29           |
+| A.5.30  | Recovery point not met in development; one host; two sources disagree on the objectives                                        | T29, T11      |
+| A.5.31  | No register of legal and contractual duties                                                                                    | T32           |
+| A.5.32  | No licence in the seven code repositories; no licence check in the Go and BFF builds                                           | T38           |
+| A.5.33  | Ceremony records, CI evidence and backups are outside the record protections                                                   | T13, T34      |
+| A.5.34  | No erasure path, privacy notice or record of processing                                                                        | T39, T32      |
+| A.5.35  | No independent review of the ISMS                                                                                              | T36           |
+| A.5.36  | Several enforcement items in the standards are not built                                                                       | T5, T42       |
+| A.6.1   | No screening criteria per role                                                                                                 | T33           |
+| A.6.2   | Security duties not in role holders' terms                                                                                     | T33           |
+| A.6.3   | No training plan or records                                                                                                    | T33           |
+| A.6.4   | No disciplinary route                                                                                                          | T33           |
+| A.6.5   | No post-exit duties or removal steps                                                                                           | T33, T43      |
+| A.6.6   | No confidentiality agreements                                                                                                  | T33           |
+| A.6.7   | No remote-working rule                                                                                                         | T33           |
+| A.6.8   | No reporting route for people or outsiders                                                                                     | T27           |
+| A.7.7   | No clear-screen rule                                                                                                           | T33           |
+| A.7.9   | No laptop protection baseline                                                                                                  | T20           |
+| A.7.10  | Backup disk shared with other projects; no media handling rule                                                                 | T20, T21      |
+| A.7.14  | No disposal rule for laptops or the backup disk                                                                                | T20           |
+| A.8.1   | No endpoint baseline                                                                                                           | T20           |
+| A.8.2   | Host root holders can read the keystore; the master administrator uses a fixed password; infrastructure access is not governed | T21, T15, T43 |
+| A.8.4   | Rulesets unverified on six repositories; no second approval                                                                    | T42, T19      |
+| A.8.5   | Weak member password policy; notifications not delivered                                                                       | T16, T14      |
+| A.8.6   | No capacity monitoring for the shared host                                                                                     | T35           |
+| A.8.7   | No malware protection on the host or laptops                                                                                   | T35, T20      |
+| A.8.8   | No alert when a scheduled scan fails                                                                                           | T4            |
+| A.8.9   | Tunnel units, scheduled jobs and local overrides exist only on the server                                                      | T35, T28      |
+| A.8.10  | No erasure path; backup purge on decommissioning not shown                                                                     | T39, T29      |
+| A.8.11  | Names and email addresses are not masked in logs                                                                               | T34           |
+| A.8.12  | No secret scanning                                                                                                             | T5            |
+| A.8.13  | No copy off the host; backup failures are silent                                                                               | T11, T9       |
+| A.8.14  | One host; no redundancy built                                                                                                  | T11, T29      |
+| A.8.15  | No central log store                                                                                                           | T13, T10      |
+| A.8.16  | Alerts are not evaluated or delivered                                                                                          | T10, T4       |
+| A.8.17  | No host time-source rule or check                                                                                              | T35           |
+| A.8.18  | No rule for superuser database access, container shells or root on the host                                                    | T35           |
+| A.8.19  | No inventory of operator scripts; no rule for host packages                                                                    | T25           |
+| A.8.21  | No recorded security terms for the tunnel; production ingress not built                                                        | T26, T17      |
+| A.8.24  | Cloud key custody not built; key age not checked by machine                                                                    | T12, T41      |
+| A.8.28  | No static analysis; no secure-coding rules                                                                                     | T37           |
+| A.8.31  | Only development exists                                                                                                        | T17           |
+| A.8.32  | No change procedure outside ceremonies; no emergency-change rule                                                               | T28, T19      |
+| A.8.34  | No rules for auditors' access                                                                                                  | T36           |
 
 The production gates (actions marked "Yes") are not yet in the owning repositories' ROADMAPs. They are added there once this record is approved, one pull request per repository.
 

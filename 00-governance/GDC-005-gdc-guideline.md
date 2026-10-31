@@ -9,12 +9,10 @@ doc_meta:
   governed_by: [GDC-000]
   review_cycle_days: 180
   created_date: 2026-01-01
-  last_reviewed: 2026-06-14
+  last_reviewed: 2026-11-01
 ---
 
 # Governance Document Contract (GDC) Guideline
-
-> **Pending ratification.** This revision is a review candidate under GDC-000 §2.6.7. The previously approved Git revision remains binding until the Architecture Authority approves this exact commit.
 
 ## 1. Context & Scope
 

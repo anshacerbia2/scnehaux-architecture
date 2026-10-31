@@ -4,7 +4,7 @@ doc_meta:
   title: Information Security Risk Methodology
   owner: Top Management
   version: 1.0.0
-  status: proposed
+  status: approved
   classification: public
   governed_by: [GDC-012, ISMS-001]
   review_cycle_days: 365
@@ -93,7 +93,7 @@ Until production exists, a risk is rated twice: **now** (development) and **at p
 
 A risk rated High or Very high **at production** MUST have a treatment that is a production gate in the owning repository's ROADMAP.
 
-These values are proposed by this record and take effect when Top Management approves it.
+Top Management approved these values on 1 November 2026, with this record.
 
 ### The assessment
 

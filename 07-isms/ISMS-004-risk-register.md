@@ -4,7 +4,7 @@ doc_meta:
   title: Information Security Risk Register
   owner: ISMS Owner
   version: 1.0.0
-  status: proposed
+  status: approved
   classification: public
   governed_by: [GDC-012, ISMS-003]
   review_cycle_days: 90
