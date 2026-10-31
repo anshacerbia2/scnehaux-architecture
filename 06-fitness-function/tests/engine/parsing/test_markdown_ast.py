@@ -105,6 +105,11 @@ def test_extract_doc_id_references():
     assert "ADR-018" in refs and "ADR-GLB-001" in refs and "STD-E019" in refs
 
 
+def test_extract_doc_id_references_recognises_isms_records():
+    refs = extract_doc_id_references("The risk register ISMS-004 follows ISMS-003.")
+    assert refs == ["ISMS-004", "ISMS-003"]
+
+
 # ---------- Additional coverage tests ----------
 
 

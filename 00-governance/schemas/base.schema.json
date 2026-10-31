@@ -15,7 +15,8 @@
         "PAD": "03-domain",
         "SAD": "04-system",
         "ADR": "05-decisions",
-        "TDD": "docs/designs"
+        "TDD": "docs/designs",
+        "ISMS": "07-isms"
       },
       "ignored_files": {
         "exact_matches": [
@@ -134,10 +135,14 @@
         "missing_section": "ERROR",
         "missing_section_keyword": "ERROR",
         "schema_validation_failed": "CRITICAL",
-        "subsection_order_violation": "WARNING"
+        "subsection_order_violation": "WARNING",
+        "isms_control_status_violation": "ERROR"
       },
       "3. Semantic & Quality Domain (Meaning & Language)": {
         "ambiguity_rules": "WARNING",
+        "isms_certification_claim": "ERROR",
+        "isms_personal_identifier": "ERROR",
+        "isms_reproduced_requirement_text": "ERROR",
         "nfr_taxonomy_violation": "ERROR",
         "prohibited_words": "ERROR",
         "structural_integrity_violation": "CRITICAL",
@@ -151,6 +156,7 @@
         "draft_status_violation": "ERROR",
         "exception_expired": "ERROR",
         "exempt_document_skipped": "INFO",
+        "isms_review_cadence_violation": "ERROR",
         "review_age_violation": "WARNING",
         "unauthorized_major_revision": "ERROR",
         "version_bump_required": "ERROR"

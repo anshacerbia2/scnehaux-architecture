@@ -1,0 +1,219 @@
+{
+  "$id": "https://scnehaux.com/codex/gov/guidelines/schemas/isms.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Information Security Management System (ISMS) Record Validation Rules",
+  "type": "object",
+  "config": {
+    "target_doc": "GDC-012-isms-guideline.md"
+  },
+  "x-isms-rules": {
+    "record_review_cycle_max_days": {
+      "scope-and-context": 365,
+      "policy-and-roles": 365,
+      "risk-methodology": 365,
+      "risk-register": 90,
+      "risk-treatment-and-soa": 90,
+      "objectives": 180,
+      "asset-inventory": 90,
+      "change-management": 365,
+      "supplier-register": 180,
+      "incident-management": 365,
+      "continuity": 365,
+      "internal-audit": 365,
+      "management-review": 365,
+      "nonconformity-log": 90,
+      "other": 365
+    },
+    "single_instance_records": [
+      "scope-and-context",
+      "policy-and-roles",
+      "risk-methodology",
+      "risk-register",
+      "risk-treatment-and-soa",
+      "objectives",
+      "asset-inventory",
+      "change-management",
+      "supplier-register",
+      "incident-management",
+      "continuity",
+      "internal-audit",
+      "management-review",
+      "nonconformity-log"
+    ],
+    "allowed_governed_by_prefixes": ["GDC-", "EAD-", "ISMS-"],
+    "mapping_section": "ISO/IEC 27001 Mapping",
+    "control_status": {
+      "status_column": "control status",
+      "evidence_column": "evidence",
+      "justification_column": "justification",
+      "allowed_values": ["implemented", "partial", "planned", "not applicable"],
+      "evidence_required_for": ["implemented"],
+      "justification_required_for": ["not applicable"],
+      "empty_justification_values": ["", "-", "n/a", "na", "none"]
+    },
+    "certification_claim_patterns": [
+      "\\bISO(?:/IEC)?\\s*27001(?::\\s*2022)?\\s*[-\\s]?(?:certified|certificated|accredited|compliant)\\b",
+      "\\b(?:certified|certificated|accredited|compliant)\\s+(?:to|with|against|under|for)\\s+ISO(?:/IEC)?\\s*27001",
+      "\\bcompl(?:y|ies|ying)\\s+with\\s+ISO(?:/IEC)?\\s*27001",
+      "\\b(?:hold|holds|held|achieved|obtained|awarded|granted)\\s+(?:an?\\s+|the\\s+)?ISO(?:/IEC)?\\s*27001(?::\\s*2022)?\\s+certific",
+      "\\bISO(?:/IEC)?\\s*27001(?::\\s*2022)?\\s+certificat(?:e|ion)\\s+(?:has\\s+been\\s+|was\\s+)?(?:achieved|obtained|awarded|granted|issued|held)\\b"
+    ],
+    "personal_identifier_patterns": [
+      "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",
+      "(?<![\\w.@/-])@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?![\\w/-])"
+    ],
+    "reproduced_requirement_patterns": ["\\bshall\\b"]
+  },
+  "properties": {
+    "filename": {
+      "type": "string",
+      "pattern": "^ISMS-\\d{3}-[a-z0-9-]+\\.md$"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/metadata_rules"
+    },
+    {
+      "$ref": "#/definitions/section_rules"
+    },
+    {
+      "$ref": "#/definitions/content_rules"
+    }
+  ],
+  "definitions": {
+    "metadata_rules": {
+      "title": "Metadata Rules",
+      "description": "Rules for the YAML Frontmatter (doc_meta)",
+      "required": ["doc_meta"],
+      "properties": {
+        "doc_meta": {
+          "title": "Required Fields",
+          "allOf": [
+            {
+              "$ref": "https://scnehaux.com/codex/gov/guidelines/schemas/base.schema.json#/definitions/common_metadata_fields"
+            },
+            {
+              "type": "object",
+              "required": [
+                "owner",
+                "version",
+                "classification",
+                "governed_by",
+                "review_cycle_days",
+                "last_reviewed",
+                "isms_record",
+                "iso_clauses",
+                "annex_a_controls"
+              ],
+              "properties": {
+                "id": {
+                  "title": "Document ID",
+                  "type": "string",
+                  "pattern": "^ISMS-\\d{3}$"
+                },
+                "owner": {
+                  "title": "Owner Role",
+                  "type": "string",
+                  "enum": [
+                    "Top Management",
+                    "ISMS Owner",
+                    "Information Security Officer",
+                    "Architecture Authority",
+                    "Enterprise Security Architect",
+                    "Internal Auditor"
+                  ]
+                },
+                "status": {
+                  "title": "Allowed Statuses",
+                  "type": "string",
+                  "enum": ["draft", "proposed", "approved", "deprecated"]
+                },
+                "classification": {
+                  "title": "Allowed Classifications",
+                  "type": "string",
+                  "enum": ["public"]
+                },
+                "governed_by": {
+                  "title": "Governed By",
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string" }
+                },
+                "review_cycle_days": {
+                  "title": "Review Cycle (Days)",
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "isms_record": {
+                  "title": "ISMS Record Kind",
+                  "type": "string",
+                  "enum": [
+                    "scope-and-context",
+                    "policy-and-roles",
+                    "risk-methodology",
+                    "risk-register",
+                    "risk-treatment-and-soa",
+                    "objectives",
+                    "asset-inventory",
+                    "change-management",
+                    "supplier-register",
+                    "incident-management",
+                    "continuity",
+                    "internal-audit",
+                    "management-review",
+                    "nonconformity-log",
+                    "other"
+                  ]
+                },
+                "iso_clauses": {
+                  "title": "ISO/IEC 27001:2022 Clauses",
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(?:4|5|6|7|8|9|10|4\\.[1-4]|5\\.[1-3]|6\\.1(?:\\.[1-3])?|6\\.[23]|7\\.[1-4]|7\\.5(?:\\.[1-3])?|8\\.[1-3]|9\\.1|9\\.2(?:\\.[12])?|9\\.3(?:\\.[1-3])?|10\\.[12])$"
+                  }
+                },
+                "annex_a_controls": {
+                  "title": "ISO/IEC 27001:2022 Annex A Controls",
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^A\\.(?:5\\.(?:[1-9]|[12][0-9]|3[0-7])|6\\.[1-8]|7\\.(?:[1-9]|1[0-4])|8\\.(?:[1-9]|[12][0-9]|3[0-4]))$"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "section_rules": {
+      "title": "Section Rules",
+      "description": "Rules for required and recommended sections in the Markdown body",
+      "required": [
+        "Purpose & Scope",
+        "ISO/IEC 27001 Mapping",
+        "Record",
+        "Review & Change Control"
+      ],
+      "recommended": ["Open Gaps", "References"],
+      "x-titles": {
+        "required": "Required Sections",
+        "recommended": "Recommended Sections"
+      }
+    },
+    "content_rules": {
+      "title": "Content Quality Rules",
+      "description": "Rules for required and recommended keywords inside specific Markdown sections",
+      "properties": {
+        "ISO/IEC 27001 Mapping": {
+          "type": "string",
+          "pattern": "ISO/IEC 27001:2022"
+        }
+      }
+    }
+  }
+}

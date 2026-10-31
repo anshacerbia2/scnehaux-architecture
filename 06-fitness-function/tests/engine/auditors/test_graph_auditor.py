@@ -117,3 +117,29 @@ def test_audit_hierarchy_and_orphans_non_dict():
     }
     assert audit_hierarchy_tiers(meta, sev) == []
     assert audit_orphans(meta, sev) == []
+
+
+def test_audit_hierarchy_tiers_isms_attachments():
+    meta = {
+        "ISMS-001": {"governed_by": ["GDC-012", "EAD-006"], "_filepath": "ISMS-001.md"},
+        "ISMS-002": {"governed_by": ["ISMS-001"], "_filepath": "ISMS-002.md"},
+        "ISMS-003": {"governed_by": ["PAD-001", 7], "_filepath": "ISMS-003.md"},
+    }
+    sev = {"structural_integrity_violation": "CRITICAL"}
+    findings = audit_hierarchy_tiers(meta, sev)
+
+    assert len(findings) == 2
+    assert all("ISMS 'ISMS-003'" in msg for _, msg, _ in findings)
+    assert any("cannot attach to 'PAD-001'" in msg for _, msg, _ in findings)
+
+
+def test_audit_orphans_isms_requires_governed_by():
+    meta = {
+        "ISMS-004": {"_filepath": "ISMS-004.md"},
+        "ISMS-005": {"governed_by": ["GDC-012"], "_filepath": "ISMS-005.md"},
+    }
+    sev = {"traceability_violation": "ERROR"}
+    findings = audit_orphans(meta, sev)
+
+    assert len(findings) == 1
+    assert "ISMS 'ISMS-004' must declare 'governed_by'" in findings[0][1]

@@ -321,7 +321,7 @@ def generate_domain_flowcharts():
     domain_sections = []
 
     # Custom sort order defined by architecture hierarchy
-    order = ["gdc", "ead", "pad", "sad", "tdd", "adr", "std"]
+    order = ["gdc", "ead", "pad", "sad", "tdd", "adr", "std", "isms"]
 
     def get_order(filename):
         prefix = filename.split("_")[0].lower()

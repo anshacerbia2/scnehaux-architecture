@@ -14,6 +14,8 @@ doc_meta:
 
 # Governance Document Contract (GDC) Guideline
 
+> **Pending ratification.** This revision is a review candidate under GDC-000 §2.6.7. The previously approved Git revision remains binding until the Architecture Authority approves this exact commit.
+
 ## 1. Context & Scope
 
 In accordance with the [Circular Governance (Metaprogramming)](./GDC-000-governance-policy.md#12-core-philosophy-the-existential-maxims), the Governance framework must subject itself to the exact same rigorous validation criteria it imposes on downstream architectures.
@@ -125,7 +127,7 @@ The linter enforces the presence of these sections. Their semantic purposes are:
 
 #### 2.4.1 Git-Centric Audit Trail (No Backdoor Approvals)
 
-A governance artifact (whether GDC, EAD, SAD, PAD, STD, TDD, or ADR) is only considered 'Approved' or 'Accepted' when it is formally reviewed and merged via a Git Pull Request. You must not manually change the artifact's status without a PR, nor use external tools (like Jira or Confluence) as proof of approval. The Git commit history is the only recognized proof.
+A governance artifact (whether GDC, EAD, SAD, PAD, STD, TDD, ADR, or ISMS) is only considered 'Approved' or 'Accepted' when it is formally reviewed and merged via a Git Pull Request. You must not manually change the artifact's status without a PR, nor use external tools (like Jira or Confluence) as proof of approval. The Git commit history is the only recognized proof.
 
 ### 2.5 The Downstream Guideline Interface
 

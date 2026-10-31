@@ -128,6 +128,7 @@ def audit_hierarchy_tiers(
     ADR & STD -> EAD or PAD (GDC-000 for enterprise-wide technical rules).
     The ADR that authorizes an STD major revision is declared in `authorized_by`
     and audited by authorization_auditor; it is not an attachment edge.
+    ISMS -> GDC, EAD, or ISMS (outside the C4 lineage; GDC-012).
     """
     findings = []
     sev = severity_levels[SeverityRule.STRUCTURAL_INTEGRITY_VIOLATION]
@@ -202,6 +203,21 @@ def audit_hierarchy_tiers(
                         )
                     )
 
+        # Check ISMS (outside the C4 lineage: GDC-000 Section 2.4.1, GDC-012)
+        elif doc_id.startswith("ISMS-"):
+            for p in _as_list(meta.get("governed_by")):
+                if not isinstance(p, str) or not p.startswith(
+                    ("GDC-", "EAD-", "ISMS-")
+                ):
+                    findings.append(
+                        (
+                            sev,
+                            f"Hierarchy violation: ISMS '{doc_id}' cannot attach to '{p}'. "
+                            "Must be GDC-012, an EAD, or another ISMS record.",
+                            filepath,
+                        )
+                    )
+
     return findings
 
 
@@ -250,6 +266,16 @@ def audit_orphans(
                 (
                     sev,
                     f"Orphan artifact: PAD '{doc_id}' must declare 'governed_by' (pointing to an EAD).",
+                    filepath,
+                )
+            )
+
+        elif doc_id.startswith("ISMS-") and not meta.get("governed_by"):
+            findings.append(
+                (
+                    sev,
+                    f"Orphan artifact: ISMS '{doc_id}' must declare 'governed_by' "
+                    "(pointing to GDC-012, an EAD, or another ISMS record).",
                     filepath,
                 )
             )

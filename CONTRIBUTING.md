@@ -73,6 +73,7 @@ When designing a system, executing an architectural decision, or defining a doma
 - [`SAD` (Software Architecture)](00-governance\GDC-009-sad-guideline.md): For defining a specific physical system's topology and internal reality.
 - [`ADR` (Architecture Decision Record)](00-governance\GDC-010-adr-guideline.md): For recording a significant architecture pivot or formal paved-road exception.
 - [`TDD` (Technical Design Document)](00-governance\GDC-011-tdd-guideline.md): For defining detailed component-level blueprints (Level C3).
+- [`ISMS` (Information Security Management System record)](00-governance\GDC-012-isms-guideline.md): For an ISO/IEC 27001:2022 management-system record (scope, risk, Statement of Applicability, operational records).
 
 > [!WARNING]
 >

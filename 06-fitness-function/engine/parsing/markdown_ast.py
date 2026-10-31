@@ -265,7 +265,7 @@ def strip_code_fences(content: str) -> str:
 
 
 DOC_ID_REFERENCE_PATTERN = re.compile(
-    r"\b(?:GDC|EAD|STD|PAD|SAD|ADR|TDD)-[A-Z0-9]+(?:-[A-Z0-9]+)*\b"
+    r"\b(?:GDC|EAD|STD|PAD|SAD|ADR|TDD|ISMS)-[A-Z0-9]+(?:-[A-Z0-9]+)*\b"
 )
 
 

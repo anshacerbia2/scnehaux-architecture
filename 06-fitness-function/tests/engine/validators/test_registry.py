@@ -1,6 +1,7 @@
 from engine.validators.registry import detect_doc_type, get_validator
 from engine.validators.domains.adr_validator import ADRValidator
 from engine.validators.domains.sad_validator import SADValidator
+from engine.validators.domains.isms_validator import ISMSValidator
 
 
 def test_detect_doc_type():
@@ -11,6 +12,7 @@ def test_detect_doc_type():
                 "PAD": "03-domain",
                 "SAD": "04-system",
                 "ADR": "05-decisions",
+                "ISMS": "07-isms",
             }
         }
     }
@@ -19,6 +21,7 @@ def test_detect_doc_type():
     assert detect_doc_type("SAD-999", dummy_rules) == "SAD"
     assert detect_doc_type("PAD-XYZ", dummy_rules) == "PAD"
     assert detect_doc_type("GDC-002", dummy_rules) == "GDC"
+    assert detect_doc_type("ISMS-004", dummy_rules) == "ISMS"
 
     # Invalid or missing metadata IDs should return None
     assert detect_doc_type(None, dummy_rules) is None
@@ -29,4 +32,5 @@ def test_detect_doc_type():
 def test_get_validator():
     assert get_validator("ADR") == ADRValidator
     assert get_validator("SAD") == SADValidator
+    assert get_validator("ISMS") == ISMSValidator
     assert get_validator("UNKNOWN") is None

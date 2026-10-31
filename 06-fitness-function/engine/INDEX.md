@@ -48,7 +48,7 @@ This index documents the internal functions and classes of the Fitness Function 
 | **build_upward_graph** | Build an adjacency map of upward references restricted to known, non-self ids.<br><br>This function parses specific metadata fields (`UPWARD_EDGE_FIELDS`) across all<br>registered documents to map their upward topological dependencies. Self-references<br>are explicitly filtered out to avoid false-positive cycles.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;dict: A mapping from document ID to a set of its upstream parent IDs. |
 | **audit_traceability_graph** | Return a list of (category, message) tuples for global traceability defects.<br><br>Currently detects circular dependencies (length >= 2) in the upward-reference<br>graph and emits them as 'traceability_violation' (a blocking ERROR). |
 | **audit_duplicate_ids** | Evaluate duplicate document IDs across the repository to enforce the SSOT (Single Source of Truth) invariant.<br><br>This auditor iterates over the duplicate map generated during the pre-scan phase. For every duplicated<br>ID, it generates an error tuple pointing to the conflicting file paths.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples. |
-| **audit_hierarchy_tiers** | Enforce C4 Tier Mapping (GDC-000 Section 2.3.1).<br>TDD -> SAD -> PAD -> EAD.<br>ADR & STD -> EAD or PAD (GDC-000 for enterprise-wide technical rules).<br>The ADR that authorizes an STD major revision is declared in `authorized_by`<br>and audited by authorization_auditor; it is not an attachment edge. |
+| **audit_hierarchy_tiers** | Enforce C4 Tier Mapping (GDC-000 Section 2.3.1).<br>TDD -> SAD -> PAD -> EAD.<br>ADR & STD -> EAD or PAD (GDC-000 for enterprise-wide technical rules).<br>The ADR that authorizes an STD major revision is declared in `authorized_by`<br>and audited by authorization_auditor; it is not an attachment edge.<br>ISMS -> GDC, EAD, or ISMS (outside the C4 lineage; GDC-012). |
 | **audit_orphans** | Enforce architectural connectivity by ensuring no orphaned artifacts exist below the EAD tier.<br><br>This check validates that nodes with an in-degree of 0 (no incoming upward edges) are exclusively<br>top-level constructs (EADs or GDCs). Any lower-tier document (TDD, SAD, PAD) missing its requisite<br>parent reference (e.g. `parent_pad`, `governed_by`) is flagged as a traceability violation.<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;list[tuple[str, str, str]]: A list of (severity, message, filepath) tuples for orphaned nodes. |
 
 ### `engine/auditors/waiver_auditor.py`
@@ -135,6 +135,24 @@ This index documents the internal functions and classes of the Fitness Function 
 | Function | Description |
 | :--- | :--- |
 | **GDCValidator.validate_type_specific** | Execute rules specific to Governance Documents (GDC).<br><br>Enforces meta-governance constraints for guideline artifacts:<br>- If the document is a guideline (e.g., *-guideline.md), it dynamically fetches<br>&nbsp;&nbsp;required downstream subsections from `base.schema.json`.<br>- It strictly enforces the presence and sequential order of these subsections<br>&nbsp;&nbsp;nested under their respective parent headings to ensure structural consistency<br>&nbsp;&nbsp;across all domain templates (SAD, PAD, etc.).<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
+
+### `engine/validators/domains/isms_validator.py`
+
+| Function | Description |
+| :--- | :--- |
+| **_normalise_cell** | Lower-case a table cell and strip inline emphasis and code markers. |
+| **_is_repository_evidence** | A link counts as repository evidence when it is an `https://` URL or a relative path<br>inside this repository. Fragment-only links, `mailto:`, plain `http://`, and every other<br>scheme are rejected: they cannot point at a file, commit, pull request, or workflow run. |
+| **_cell_has_evidence** | *(No docstring provided)* |
+| **_clause_cited** | True when a clause (6.1.2) or control (A.5.9) number is cited and not as a prefix of a longer one. |
+| **ISMSValidator.validate_type_specific** | Execute rules specific to ISMS records (GDC-012).<br><br>Enforces the management-system record contract:<br>- At least one ISO/IEC 27001:2022 clause or Annex A control is declared, and every declared<br>&nbsp;&nbsp;number is cited in the 'ISO/IEC 27001 Mapping' section.<br>- `review_cycle_days` does not exceed the maximum for the record kind (`isms_record`).<br>- Each single-instance record kind has exactly one active home in the registry.<br>- The body makes no certification claim, carries no personal identifier, and does not<br>&nbsp;&nbsp;reproduce normative requirement text ('shall').<br>- Every 'Control status' table uses the control status vocabulary, links repository<br>&nbsp;&nbsp;evidence for each 'implemented' row, and justifies each 'not applicable' row.<br><br><pre>Args:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br><br>Returns:<br>&nbsp;&nbsp;&nbsp;&nbsp;None<br></pre> |
+| **ISMSValidator._validate_mapping** | *(No docstring provided)* |
+| **ISMSValidator._validate_review_cadence** | *(No docstring provided)* |
+| **ISMSValidator._validate_single_home** | *(No docstring provided)* |
+| **ISMSValidator._body_text** | Body text with code fences and frontmatter blanked, preserving line numbers. |
+| **ISMSValidator._scan** | *(No docstring provided)* |
+| **ISMSValidator._validate_publication_rules** | *(No docstring provided)* |
+| **ISMSValidator._iter_tables** | Yield each Markdown table as a list of (cells, line_number) rows, header row first. |
+| **ISMSValidator._validate_control_status_tables** | *(No docstring provided)* |
 
 ### `engine/validators/domains/pad_validator.py`
 
@@ -443,6 +461,19 @@ graph LR
     StartSTD((Start STD Validation)) --> CheckStatus{"Is status 'hold'?"}
     CheckStatus -->|Yes| WarnHold["Warning: STD is on hold"]
     CheckStatus -->|No| OKStatus["Continue"]
+```
+
+### ISMS Validator (`isms_validator.py`)
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e6e6fa', 'primaryTextColor': '#333', 'primaryBorderColor': '#7a67ee', 'lineColor': '#888', 'edgeLabelBackground': '#f4f4f4'}}}%%
+graph LR
+    StartISMS((Start ISMS Validation)) --> LoadRules["Load x-isms-rules from isms.schema.json"]
+    LoadRules --> CheckMapping{"Clauses or controls declared and cited?"}
+    CheckMapping --> CheckCadence{"review_cycle_days within record maximum?"}
+    CheckCadence --> CheckHome{"Single active home for record kind?"}
+    CheckHome --> CheckPublication["Scan body: certification claims, personal identifiers, 'shall'"]
+    CheckPublication --> CheckControls["Validate 'Control status' tables and evidence links"]
+    CheckControls --> EndISMS((Return findings))
 ```
 
 <!-- AUTO-GENERATED-DOMAIN-FLOWS:END -->

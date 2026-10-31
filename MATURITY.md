@@ -7,7 +7,7 @@
 | Artifact Layer       | Total Documents | Active / Approved | Proposed / Trial | Deprecated / Hold |
 | :------------------- | :-------------- | :---------------- | :--------------- | :---------------- |
 | **EAD** (Enterprise) | 7               | 7                 | 0                | 0                 |
-| **GDC** (Governance) | 12              | 12                | 0                | 0                 |
+| **GDC** (Governance) | 13              | 13                | 0                | 0                 |
 | **PAD** (Domain)     | 19              | -                 | -                | -                 |
 | **SAD** (System)     | 22              | -                 | -                | -                 |
 | **STD** (Standard)   | 30              | 30                | 0                | 0                 |
