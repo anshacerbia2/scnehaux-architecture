@@ -1,12 +1,12 @@
-# imam-station
+# dev-station
 
-The facts of one development server, imam-station, as recorded on 2026-10-07 and updated on 2026-10-16, 2026-10-20 and 2026-10-25. The rules are in [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). The procedure is the [development server runbook](README.md). This page records only what is specific to this host. It holds no secret: no password, token or key appears here, and none may be added.
+The facts of one development server, dev-station, as recorded on 2026-10-07 and updated on 2026-10-16, 2026-10-20 and 2026-10-25. The rules are in [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). The procedure is the [development server runbook](README.md). This page records only what is specific to this host. It holds no secret: no password, token or key appears here, and none may be added.
 
 ## Host
 
 | Fact      | Value                                                     |
 | :-------- | :-------------------------------------------------------- |
-| Host name | `imam-station`                                            |
+| Host name | `dev-station`                                             |
 | OS        | Ubuntu                                                    |
 | Docker    | 28.0, with Compose v2.33                                  |
 | Checkouts | `/home/development/apps/<repository>`, one per repository |
@@ -66,7 +66,7 @@ All on `127.0.0.1`:
 
 | Fact     | Value                                                      |
 | :------- | :--------------------------------------------------------- |
-| Tunnel   | `imam-keycloak.asse`                                       |
+| Tunnel   | `dev-keycloak.asse`                                        |
 | Host     | systemd user service `devtunnel-keycloak.service`          |
 | Watchdog | `devtunnel-keycloak-watchdog.timer`, every 5 minutes       |
 | Issuer   | `https://gqr8l4jz-8080.asse.devtunnels.ms/realms/scnehaux` |
@@ -118,7 +118,7 @@ The realm's signing key was made by the signing-key ceremony before the kernel's
 | `realm-signing-<kid>.crt`                      | its certificate, the public half                             | root, mode 0644                                                                             |
 | `realm-signing-<kid>.ceremony.json`            | the ceremony record: operator, witness, reason, times, `kid` | root, mode 0644; a copy is attached to the change ticket, never pasted in chat              |
 
-- **One copy, on this host's disk only.** The keystore and its vault file are never copied: not to `/mnt/imam-storage`, not with `.env` and `keys/`, not to the ticket (STD-GLB-009 rule 9, `ADR-IAM-002 §5.3`). NIST SP 800-57 gives the backup of a private signature key as "No (in general)" (`ADR-IAM-002` [R6]).
+- **One copy, on this host's disk only.** The keystore and its vault file are never copied: not to `/mnt/dev-storage`, not with `.env` and `keys/`, not to the ticket (STD-GLB-009 rule 9, `ADR-IAM-002 §5.3`). NIST SP 800-57 gives the backup of a private signature key as "No (in general)" (`ADR-IAM-002` [R6]).
 - **Its protection here is access control.** Only root and the kernel's container user can read it, and the kernel mounts it read-only. The people who hold root on this host can read it; that is accepted for a development server and nowhere else.
 - **A lost or damaged keystore is not restored.** The kernel refuses to start without it (identity-kernel `docs/runbooks/custody-outage.md`), and the server is rebuilt from zero (runbook step 15) with a new ceremony and a new `kid`. Every development token signed before then fails.
 - Each later key is made by the same ceremony and moved in and out of service by identity-kernel `docs/runbooks/signing-key-rotation.md`, so more than one keystore can be here during a rotation. A key's files are removed only by its retirement, abandonment or revocation.
@@ -126,20 +126,20 @@ The realm's signing key was made by the signing-key ceremony before the kernel's
 
 ## Backups
 
-The spare disk `/mnt/imam-storage` (1.8 TB) is the backup target: outside every Docker volume, as STD-GLB-009 rule 9 requires. Other projects share the disk, and its root is mode `777`, so ours live under one directory of their own, mode `700` and owned by the operator's account:
+The spare disk `/mnt/dev-storage` (1.8 TB) is the backup target: outside every Docker volume, as STD-GLB-009 rule 9 requires. Other projects share the disk, and its root is mode `777`, so ours live under one directory of their own, mode `700` and owned by the operator's account:
 
-| Directory                                                 | Holds                                                       |
-| :-------------------------------------------------------- | :---------------------------------------------------------- |
-| `/mnt/imam-storage/scnehaux-backups/identity-kernel`      | `globals-<date>.sql` and `keycloak-<date>.dump`             |
-| `/mnt/imam-storage/scnehaux-backups/identity-control`     | `globals-<date>.sql` and `identity_control-<date>.dump`     |
-| `/mnt/imam-storage/scnehaux-backups/organization-control` | `globals-<date>.sql` and `organization_control-<date>.dump` |
+| Directory                                                | Holds                                                       |
+| :------------------------------------------------------- | :---------------------------------------------------------- |
+| `/mnt/dev-storage/scnehaux-backups/identity-kernel`      | `globals-<date>.sql` and `keycloak-<date>.dump`             |
+| `/mnt/dev-storage/scnehaux-backups/identity-control`     | `globals-<date>.sql` and `identity_control-<date>.dump`     |
+| `/mnt/dev-storage/scnehaux-backups/organization-control` | `globals-<date>.sql` and `organization_control-<date>.dump` |
 
 The operator's crontab, from each repository's §Backups and organization-control's §One-off tasks. Every stack's line runs its `backup.sh`, never a bare `pg_dump`. The kernel's runs at 02:45, so it does not start with organization-control's. Every `<date>` is the UTC date, as every `backup.sh` writes it (`date -u +%F`), so one night's sets share a name: run at 02:15 to 02:45 WIB, that is the previous day's date.
 
 ```text
-15 2 * * * /home/development/apps/identity-control/deploy/dev/backup.sh /mnt/imam-storage/scnehaux-backups/identity-control >/dev/null
-30 2 * * * /home/development/apps/organization-control/deploy/dev/backup.sh /mnt/imam-storage/scnehaux-backups/organization-control >/dev/null
-45 2 * * * /home/development/apps/identity-kernel/deploy/dev/backup.sh /mnt/imam-storage/scnehaux-backups/identity-kernel >/dev/null
+15 2 * * * /home/development/apps/identity-control/deploy/dev/backup.sh /mnt/dev-storage/scnehaux-backups/identity-control >/dev/null
+30 2 * * * /home/development/apps/organization-control/deploy/dev/backup.sh /mnt/dev-storage/scnehaux-backups/organization-control >/dev/null
+45 2 * * * /home/development/apps/identity-kernel/deploy/dev/backup.sh /mnt/dev-storage/scnehaux-backups/identity-kernel >/dev/null
 15 3 * * * cd /home/development/apps/organization-control/deploy/dev && docker compose run --rm maintenance >> "$HOME/organization-control-maintenance.log" 2>&1
 ```
 
@@ -149,4 +149,4 @@ The operator's crontab, from each repository's §Backups and organization-contro
 
 Gap on this host, against STD-GLB-009 rule 9 (1.10.0):
 
-- **No copy leaves the host.** `/mnt/imam-storage` is a disk in this machine, so the off-site copy of CISA's 3-2-1 rule is not met. This server is redeployed from zero, so the gap is accepted here; production must meet it.
+- **No copy leaves the host.** `/mnt/dev-storage` is a disk in this machine, so the off-site copy of CISA's 3-2-1 rule is not met. This server is redeployed from zero, so the gap is accepted here; production must meet it.

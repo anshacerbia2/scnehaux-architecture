@@ -553,7 +553,7 @@ Pipeline gates include:
 
 No production customer data or credentials are copied to lower environments.
 
-**Production status (1.4.0).** As of 2026-10-20, no system this SAD governs has reached production. The only deployment is a laptop BFF against the development server (`deploy/dev/imam-station.md`). Until this statement changes, the ADRs governing these systems are changed in place (`GDC-010 §2.4.2`).
+**Production status (1.4.0).** As of 2026-10-20, no system this SAD governs has reached production. The only deployment is a laptop BFF against the development server (`deploy/dev/dev-station.md`). Until this statement changes, the ADRs governing these systems are changed in place (`GDC-010 §2.4.2`).
 
 ## 11. Architecture Decisions
 
