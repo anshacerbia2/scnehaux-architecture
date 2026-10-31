@@ -764,7 +764,7 @@ Final sizing follows load tests for administrative, bulk, projection, and reconc
 
 No production credential or customer data is used in lower environments.
 
-**Production status (2.6.0).** As of 2026-10-20, no system this SAD governs has reached production. The only deployment is the development server (`deploy/dev/imam-station.md`). Until this statement changes, the ADRs governing these systems are changed in place (`GDC-010 §2.4.2`).
+**Production status (2.6.0).** As of 2026-10-20, no system this SAD governs has reached production. The only deployment is the development server (`deploy/dev/dev-station.md`). Until this statement changes, the ADRs governing these systems are changed in place (`GDC-010 §2.4.2`).
 
 ### 10.4 CI/CD
 

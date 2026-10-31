@@ -2,7 +2,7 @@
 
 This page takes a development server from an empty host to the three Scnehaux stacks running and wired, with both BFFs signing in from a laptop. It also covers updating the server, resetting it, and restoring it.
 
-It says what to do in which order, across repositories. Each repository's `deploy/dev/README.md` owns the details: the exact commands, the variables, and what each script checks. Each step names the README section to follow. The rules every `deploy/dev` follows, and their sources, are [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). One server's own facts, such as its addresses, ports, subnets and tunnel, are on its environment page, for example [imam-station](imam-station.md).
+It says what to do in which order, across repositories. Each repository's `deploy/dev/README.md` owns the details: the exact commands, the variables, and what each script checks. Each step names the README section to follow. The rules every `deploy/dev` follows, and their sources, are [STD-GLB-009 §Development Server Deployment](../../02-standards/_global/STD-GLB-009-platform-engineering.md#development-server-deployment). One server's own facts, such as its addresses, ports, subnets and tunnel, are on its environment page, for example [dev-station](dev-station.md).
 
 The repositories:
 

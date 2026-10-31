@@ -70,7 +70,7 @@ Three documents carry it, each at its own level (1.5.0):
 
 - **This section** is the rule: the `deploy/dev` skeleton every repository follows, and why.
 - **[The development server runbook](../../deploy/dev/README.md)** is the procedure across repositories: the order of the stacks, from an empty host to a wired server, updating, resetting and restoring, and the pitfalls met on the real server. Each step points to the repository README section that owns the detail.
-- **[The imam-station environment page](../../deploy/dev/imam-station.md)** holds one server's facts: its network, ports, subnets, tunnel and local files. It holds no secret.
+- **[The dev-station environment page](../../deploy/dev/dev-station.md)** holds one server's facts: its network, ports, subnets, tunnel and local files. It holds no secret.
 
 **Layout.**
 
