@@ -144,7 +144,7 @@ technology_radar:
       date_entered: "2026-02-01"
       owner: UI Platform Team
       rationale_adr: ADR-UIP-TKN-002
-      # ARB decision 2026-10-02 (Ansha Cerbia): trial extended from 2026-08-01
+      # ARB decision 2026-10-02: trial extended from 2026-08-01
       # to 2026-12-31; not adopted. Adoption criteria: the P1 browser support
       # matrix is declared; the packed token and component fixtures pass in
       # Chromium, Firefox, and WebKit (STD-UIP-STY-001, STD-UIP-ENG-001); a

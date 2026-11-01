@@ -19,9 +19,9 @@ Replace ADR-GLB-FE-006 with a styling decision governed by output ownership inst
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                   | Approver                                 |
-| ---------- | -------- | ----------- | --------------------------- | ---------------------------------------- |
-| 2026-09-29 | accepted | replacement | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
+| Date       | Status   | ADR Type    | Reviewers                   | Approver                  |
+| ---------- | -------- | ----------- | --------------------------- | ------------------------- |
+| 2026-09-29 | accepted | replacement | Principal 1 and Principal 2 | Architecture Review Board |
 
 ## 3. Context
 

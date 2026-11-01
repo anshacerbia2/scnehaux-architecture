@@ -26,12 +26,12 @@ Publish `@scnx/core-ui` and `@scnx/system` to the public npm registry under the 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------- | ------------------------------------------------ |
-| 2026-10-20 | proposed | foundational | Pending principal review  | Pending Architecture Review Board (Ansha Cerbia) |
-| 2026-10-21 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board)         |
+| Date       | Status   | ADR Type     | Reviewers                 | Approver                          |
+| ---------- | -------- | ------------ | ------------------------- | --------------------------------- |
+| 2026-10-20 | proposed | foundational | Pending principal review  | Pending Architecture Review Board |
+| 2026-10-21 | accepted | foundational | Architecture Review Board | Architecture Review Board         |
 
-Acceptance, stated by Ansha Cerbia on 2026-10-21: "Saya, sebagai ARB, menerima ADR-UIP-REL-001 per 2026-10-21." ("As ARB, I accept ADR-UIP-REL-001 as of 2026-10-21.") Item 1's precondition (a second, organization-controlled Owner of the `@scnx` organization and required two-factor authentication) remains open until the owner records it; no version is published before then.
+Acceptance, stated by the owner on 2026-10-21: "Saya, sebagai ARB, menerima ADR-UIP-REL-001 per 2026-10-21." ("As ARB, I accept ADR-UIP-REL-001 as of 2026-10-21.") Item 1's precondition (a second, organization-controlled Owner of the `@scnx` organization and required two-factor authentication) remains open until the owner records it; no version is published before then.
 
 ## 3. Context
 
