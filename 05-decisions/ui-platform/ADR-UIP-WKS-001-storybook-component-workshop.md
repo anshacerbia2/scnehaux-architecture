@@ -26,10 +26,10 @@ Adopt Storybook as the UI Platform component workshop, run every story as a brow
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                               | Approver                                         |
-| ---------- | -------- | ------------ | --------------------------------------- | ------------------------------------------------ |
-| 2026-10-01 | proposed | foundational | Pending principal review                | Pending Architecture Review Board (Ansha Cerbia) |
-| 2026-10-02 | accepted | foundational | Architecture Review Board (decision D2) | Ansha Cerbia (Architecture Review Board)         |
+| Date       | Status   | ADR Type     | Reviewers                               | Approver                          |
+| ---------- | -------- | ------------ | --------------------------------------- | --------------------------------- |
+| 2026-10-01 | proposed | foundational | Pending principal review                | Pending Architecture Review Board |
+| 2026-10-02 | accepted | foundational | Architecture Review Board (decision D2) | Architecture Review Board         |
 
 ## 3. Context
 

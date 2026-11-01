@@ -20,11 +20,11 @@ Standardization on Next-Generation Build Toolchains (Rsbuild & Vite)
 
 ## 2. Status
 
-| Date       | Status     | ADR Type     | Reviewers                              | Approver                                 |
-| ---------- | ---------- | ------------ | -------------------------------------- | ---------------------------------------- |
-| 2026-04-04 | proposed   | foundational | Frontend SMEs (Subject Matter Experts) | Architecture Review Board                |
-| 2026-04-07 | accepted   | foundational | Frontend SMEs (Subject Matter Experts) | Architecture Review Board                |
-| 2026-09-29 | superseded | foundational | Principal 1 and Principal 2            | Ansha Cerbia (Architecture Review Board) |
+| Date       | Status     | ADR Type     | Reviewers                              | Approver                  |
+| ---------- | ---------- | ------------ | -------------------------------------- | ------------------------- |
+| 2026-04-04 | proposed   | foundational | Frontend SMEs (Subject Matter Experts) | Architecture Review Board |
+| 2026-04-07 | accepted   | foundational | Frontend SMEs (Subject Matter Experts) | Architecture Review Board |
+| 2026-09-29 | superseded | foundational | Principal 1 and Principal 2            | Architecture Review Board |
 
 ## 3. Context
 

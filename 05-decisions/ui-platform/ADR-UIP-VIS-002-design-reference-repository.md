@@ -26,17 +26,17 @@ Keep the visual target of the platform, the Scnehaux UI component reference and 
 
 ## 2. Status
 
-| Date       | Status                | ADR Type     | Reviewers                 | Approver                                 |
-| ---------- | --------------------- | ------------ | ------------------------- | ---------------------------------------- |
-| 2026-10-24 | accepted              | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board) |
-| 2026-10-26 | accepted (revision 2) | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board) |
-| 2026-10-27 | accepted (revision 3) | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board) |
+| Date       | Status                | ADR Type     | Reviewers                 | Approver                  |
+| ---------- | --------------------- | ------------ | ------------------------- | ------------------------- |
+| 2026-10-24 | accepted              | foundational | Architecture Review Board | Architecture Review Board |
+| 2026-10-26 | accepted (revision 2) | foundational | Architecture Review Board | Architecture Review Board |
+| 2026-10-27 | accepted (revision 3) | foundational | Architecture Review Board | Architecture Review Board |
 
-Accepted under the rule Ansha Cerbia stated on 2026-10-22 (ADR-UIP-CMP-001, section 2). On 2026-10-24 Ansha Cerbia chose the separate repository ("oke gas a"), asked for one folder per design and the default theme only ("dibikin per folder ya designnya, bikin yg default aja"; that theme is `scnx-platform` since 2026-10-26, ADR-UIP-VIS-001 item 7), and asked that the architecture, plan, and roadmap be aligned with it ("lo adjust keseluruhan docs terkait").
+Accepted under the rule the owner stated on 2026-10-22 (ADR-UIP-CMP-001, section 2). On 2026-10-24 the owner chose the separate repository ("oke gas a"), asked for one folder per design and the default theme only ("dibikin per folder ya designnya, bikin yg default aja"; that theme is `scnx-platform` since 2026-10-26, ADR-UIP-VIS-001 item 7), and asked that the architecture, plan, and roadmap be aligned with it ("lo adjust keseluruhan docs terkait").
 
-Revision 2 was decided by Ansha Cerbia on 2026-10-26 with ADR-UIP-VIS-001 revision 4: a brand book belongs to a theme, not to a product ("brandbook artinya per theme kan bukan lagi per product"), so the repository holds one design per theme, each with its brand book, and what every theme shares once.
+Revision 2 was decided by the owner on 2026-10-26 with ADR-UIP-VIS-001 revision 4: a brand book belongs to a theme, not to a product ("brandbook artinya per theme kan bukan lagi per product"), so the repository holds one design per theme, each with its brand book, and what every theme shares once.
 
-Revision 3 was decided by Ansha Cerbia on 2026-10-27, accepting the recommendation of the documentation and design agents ("gw ikut rekomen lo", as their request for this revision records it): the documentation site's design has its source in the site's own repository, `anshacerbia2/ui-platform-docs`. The site had outgrown its first drawings in `scnx-platform/`, and two places describing one site's pages and behaviour would drift.
+Revision 3 was decided by the owner on 2026-10-27, accepting the recommendation of the documentation and design agents ("gw ikut rekomen lo", as their request for this revision records it): the documentation site's design has its source in the site's own repository, `anshacerbia2/ui-platform-docs`. The site had outgrown its first drawings in `scnx-platform/`, and two places describing one site's pages and behaviour would drift.
 
 ### Revision history
 

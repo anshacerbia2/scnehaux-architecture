@@ -26,11 +26,11 @@ Give design files (Figma) the UI Platform's tokens as a generated, one-way profi
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                                 |
-| ---------- | -------- | ------------ | ------------------------- | ---------------------------------------- |
-| 2026-10-23 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board) |
+| Date       | Status   | ADR Type     | Reviewers                 | Approver                  |
+| ---------- | -------- | ------------ | ------------------------- | ------------------------- |
+| 2026-10-23 | accepted | foundational | Architecture Review Board | Architecture Review Board |
 
-Accepted under the rule Ansha Cerbia stated on 2026-10-22 (ADR-UIP-CMP-001, section 2): a decision based on best practice and battle-tested, referenced solutions is approved directly. On 2026-10-23 Ansha Cerbia chose the free path for Figma ("yes pake jalur gratis") and asked that the Figma work be documented ("jgn lupa terkait figma masuk ke docs").
+Accepted under the rule the owner stated on 2026-10-22 (ADR-UIP-CMP-001, section 2): a decision based on best practice and battle-tested, referenced solutions is approved directly. On 2026-10-23 the owner chose the free path for Figma ("yes pake jalur gratis") and asked that the Figma work be documented ("jgn lupa terkait figma masuk ke docs").
 
 ## 3. Context
 
@@ -77,7 +77,7 @@ Constraints measured on 2026-10-23:
 
 - Figma holds sRGB values; P3 displays show slightly less chroma in a design file than in the product (bounded by PG6).
 - Shadows, motion, and typography need a bridge; the native import alone yields colors and dimensions.
-- The first-party bridge is code to own; FigCraft at `94d0ab9` fails items 4.1 to 4.3 and would need a maintained fork, so on 2026-10-23 Ansha Cerbia chose Figma with the repository's plugin ("ya gw rasa figma saja").
+- The first-party bridge is code to own; FigCraft at `94d0ab9` fails items 4.1 to 4.3 and would need a maintained fork, so on 2026-10-23 the owner chose Figma with the repository's plugin ("ya gw rasa figma saja").
 
 ### Operational Impact
 

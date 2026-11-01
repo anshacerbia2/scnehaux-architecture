@@ -19,12 +19,12 @@ Authorize the UI Platform package, interaction, theme, styling, and release cont
 
 ## 2. Status
 
-| Date       | Status   | ADR Type            | Reviewers                                           | Approver                                 |
-| ---------- | -------- | ------------------- | --------------------------------------------------- | ---------------------------------------- |
-| 2026-09-29 | accepted | conflict_resolution | Principal 1 and Principal 2                         | Ansha Cerbia (UI Platform Lead)          |
-| 2026-10-21 | accepted | conflict_resolution | Architecture Review Board (revision of UIP-DEC-001) | Ansha Cerbia (Architecture Review Board) |
+| Date       | Status   | ADR Type            | Reviewers                                           | Approver                  |
+| ---------- | -------- | ------------------- | --------------------------------------------------- | ------------------------- |
+| 2026-09-29 | accepted | conflict_resolution | Principal 1 and Principal 2                         | UI Platform Lead          |
+| 2026-10-21 | accepted | conflict_resolution | Architecture Review Board (revision of UIP-DEC-001) | Architecture Review Board |
 
-Revision of UIP-DEC-001, 2026-10-21: the owner directed that composite widgets be implemented without React Aria ("manual aja", in reply to the choice between React Aria hooks and a custom implementation for the Combobox). UIP-DEC-001 is revised in place, because no system governed by this ADR is in production (GDC-000 section 2.6, item 4). Acceptance, stated by Ansha Cerbia on 2026-10-21: "aya, sebagai ARB, menerima revisi ADR-UIP-PLT-001 UIP-DEC-001 (komponen composite tanpa React Aria) per 2026-10-21." ("As ARB, I accept the revision of ADR-UIP-PLT-001 UIP-DEC-001 (composite components without React Aria) as of 2026-10-21.")
+Revision of UIP-DEC-001, 2026-10-21: the owner directed that composite widgets be implemented without React Aria ("manual aja", in reply to the choice between React Aria hooks and a custom implementation for the Combobox). UIP-DEC-001 is revised in place, because no system governed by this ADR is in production (GDC-000 section 2.6, item 4). Acceptance, stated by the owner on 2026-10-21: "aya, sebagai ARB, menerima revisi ADR-UIP-PLT-001 UIP-DEC-001 (komponen composite tanpa React Aria) per 2026-10-21." ("As ARB, I accept the revision of ADR-UIP-PLT-001 UIP-DEC-001 (composite components without React Aria) as of 2026-10-21.")
 
 ## 3. Context
 
