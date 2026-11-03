@@ -45,7 +45,7 @@ No text of the standard is reproduced.
 
 ### The register
 
-Risk owners are roles from [ISMS-002 §Roles](ISMS-002-policy-and-roles.md#roles). Treatment actions (T1 to T43) are in [ISMS-005 §Treatment plan](ISMS-005-risk-treatment-and-soa.md#treatment-plan).
+Risk owners are roles from [ISMS-002 §Roles](ISMS-002-policy-and-roles.md#roles). Treatment actions (T1 to T45) are in [ISMS-005 §Treatment plan](ISMS-005-risk-treatment-and-soa.md#treatment-plan).
 
 | ID  | Asset or process                                                                                  | Threat and weakness                                                                                                                                                                                                                                                    | Existing controls                                                                                                                                                                                                                                                                                                  | Risk owner                    | Now              | At production                                                                                                                                           | Decision                                        | Treatment |
 | :-- | :------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------- | :--------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------------------------- | :-------- |
@@ -97,11 +97,11 @@ Risk owners are roles from [ISMS-002 §Roles](ISMS-002-policy-and-roles.md#roles
 
 ## Open Gaps
 
-| Gap                                                                                                                             | Treatment                     |
-| :------------------------------------------------------------------------------------------------------------------------------ | :---------------------------- |
-| The asset inventory that identification starts from does not exist, so this assessment started from the evidence review instead | Asset inventory record (T25)  |
-| The facts listed under "Not verified in this assessment"                                                                        | T15, T21, T35, T42            |
-| The risk owners are one person today, so acceptance and review are not independent                                              | T19; the internal audit (T36) |
+| Gap                                                                                                                                                                                        | Treatment                     |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------- |
+| This assessment started from the evidence review; the next starts from the asset inventory ([ISMS-007](ISMS-007-asset-inventory.md)), which lists five repositories with no scope decision | T44                           |
+| The facts listed under "Not verified in this assessment"                                                                                                                                   | T15, T21, T35, T42            |
+| The risk owners are one person today, so acceptance and review are not independent                                                                                                         | T19; the internal audit (T36) |
 
 ## References
 
