@@ -22,9 +22,9 @@ Adoption of a unified Design Token Taxonomy & Naming Convention across all UI pl
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                   | Approver                        |
-| ---------- | -------- | ------------ | --------------------------- | ------------------------------- |
-| 2026-09-29 | accepted | foundational | Principal 1 and Principal 2 | Ansha Cerbia (UI Platform Lead) |
+| Date       | Status   | ADR Type     | Reviewers                   | Approver         |
+| ---------- | -------- | ------------ | --------------------------- | ---------------- |
+| 2026-09-29 | accepted | foundational | Principal 1 and Principal 2 | UI Platform Lead |
 
 ## 3. Context
 

@@ -1,6 +1,6 @@
 import os, re
 
-root_dir = r'd:\Ansha\architecture-description\scnehaux-architecture'
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 for r, d, f in os.walk(root_dir):
     if '.git' in d: d.remove('.git')

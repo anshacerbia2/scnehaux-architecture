@@ -19,9 +19,9 @@ Authorize the version 2.0.0 revisions of six global frontend standards, rule by 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type            | Reviewers                   | Approver                                 |
-| ---------- | -------- | ------------------- | --------------------------- | ---------------------------------------- |
-| 2026-09-29 | accepted | conflict_resolution | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
+| Date       | Status   | ADR Type            | Reviewers                   | Approver                  |
+| ---------- | -------- | ------------------- | --------------------------- | ------------------------- |
+| 2026-09-29 | accepted | conflict_resolution | Principal 1 and Principal 2 | Architecture Review Board |
 
 ## 3. Context
 

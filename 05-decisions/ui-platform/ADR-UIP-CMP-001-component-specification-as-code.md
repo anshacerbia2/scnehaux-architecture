@@ -26,12 +26,12 @@ Record the contract of every public entry of `@scnx/core-ui` and `@scnx/system` 
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------- | ------------------------------------------------ |
-| 2026-10-22 | proposed | foundational | Pending principal review  | Pending Architecture Review Board (Ansha Cerbia) |
-| 2026-10-22 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board)         |
+| Date       | Status   | ADR Type     | Reviewers                 | Approver                          |
+| ---------- | -------- | ------------ | ------------------------- | --------------------------------- |
+| 2026-10-22 | proposed | foundational | Pending principal review  | Pending Architecture Review Board |
+| 2026-10-22 | accepted | foundational | Architecture Review Board | Architecture Review Board         |
 
-Acceptance, stated by Ansha Cerbia on 2026-10-22: "Lo rubah aja, gausah terlalu formal di status, gw butuh first class grade design, klo memang udh based on best practice, battle tested solution, first class grade, dan ada referencenya, lgsg approved aja, gausah pake proposed2" ("Change it; the status need not be formal. I need a first-class design: when it is based on best practice and battle-tested solutions, first-class, and referenced, approve it directly without the proposed step.") SAD-003 2.3.0, STD-UIP-PRM-001 2.2.0, and STD-UIP-STY-001 2.2.0 implement it in the same change.
+Acceptance, stated by the owner on 2026-10-22: "Lo rubah aja, gausah terlalu formal di status, gw butuh first class grade design, klo memang udh based on best practice, battle tested solution, first class grade, dan ada referencenya, lgsg approved aja, gausah pake proposed2" ("Change it; the status need not be formal. I need a first-class design: when it is based on best practice and battle-tested solutions, first-class, and referenced, approve it directly without the proposed step.") SAD-003 2.3.0, STD-UIP-PRM-001 2.2.0, and STD-UIP-STY-001 2.2.0 implement it in the same change.
 
 ## 3. Context
 

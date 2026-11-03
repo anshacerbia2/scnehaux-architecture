@@ -20,10 +20,10 @@ ADR-GLB-FE-006: Adopting Zero-Runtime CSS and Utility-First Compilation for UI P
 
 ## 2. Status
 
-| Date       | Status     | ADR Type     | Reviewers                   | Approver                                 |
-| ---------- | ---------- | ------------ | --------------------------- | ---------------------------------------- |
-| 2026-05-01 | accepted   | foundational | Architecture Review Board   | Principal Frontend Architect             |
-| 2026-09-29 | superseded | foundational | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
+| Date       | Status     | ADR Type     | Reviewers                   | Approver                     |
+| ---------- | ---------- | ------------ | --------------------------- | ---------------------------- |
+| 2026-05-01 | accepted   | foundational | Architecture Review Board   | Principal Frontend Architect |
+| 2026-09-29 | superseded | foundational | Principal 1 and Principal 2 | Architecture Review Board    |
 
 ## 3. Context
 

@@ -26,12 +26,12 @@ Replace tsup, which its maintainer no longer maintains, with tsdown as the build
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                 | Approver                                         |
-| ---------- | -------- | ------------ | ------------------------- | ------------------------------------------------ |
-| 2026-10-03 | proposed | foundational | Pending principal review  | Pending Architecture Review Board (Ansha Cerbia) |
-| 2026-10-03 | accepted | foundational | Architecture Review Board | Ansha Cerbia (Architecture Review Board)         |
+| Date       | Status   | ADR Type     | Reviewers                 | Approver                          |
+| ---------- | -------- | ------------ | ------------------------- | --------------------------------- |
+| 2026-10-03 | proposed | foundational | Pending principal review  | Pending Architecture Review Board |
+| 2026-10-03 | accepted | foundational | Architecture Review Board | Architecture Review Board         |
 
-Acceptance, stated by Ansha Cerbia on 2026-10-03: "Saya, sebagai ARB, menerima ADR-UIP-BLD-002 per 2026-10-03." ("As ARB, I accept ADR-UIP-BLD-002 as of 2026-10-03.") The decision was merged in `scnehaux-architecture` #50 (`28cc396`); its implementation, `ui-platform` #51, passed CI, Chromatic, and the P0 evidence workflow on `main` (`e42a9cf`).
+Acceptance, stated by the owner on 2026-10-03: "Saya, sebagai ARB, menerima ADR-UIP-BLD-002 per 2026-10-03." ("As ARB, I accept ADR-UIP-BLD-002 as of 2026-10-03.") The decision was merged in `scnehaux-architecture` #50 (`28cc396`); its implementation, `ui-platform` #51, passed CI, Chromatic, and the P0 evidence workflow on `main` (`e42a9cf`).
 
 ## 3. Context
 

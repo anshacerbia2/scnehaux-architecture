@@ -19,9 +19,9 @@ Replace ADR-GLB-FE-004 with a Module Federation decision defined by shared-modul
 
 ## 2. Status
 
-| Date       | Status   | ADR Type    | Reviewers                   | Approver                                 |
-| ---------- | -------- | ----------- | --------------------------- | ---------------------------------------- |
-| 2026-09-29 | accepted | replacement | Principal 1 and Principal 2 | Ansha Cerbia (Architecture Review Board) |
+| Date       | Status   | ADR Type    | Reviewers                   | Approver                  |
+| ---------- | -------- | ----------- | --------------------------- | ------------------------- |
+| 2026-09-29 | accepted | replacement | Principal 1 and Principal 2 | Architecture Review Board |
 
 ## 3. Context
 
