@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-002
   title: A Person Approves the Plan Before Any Dedicated Resource Is Created
   adr_type: foundational
-  status: accepted
+  status: proposed
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -14,15 +14,15 @@ doc_meta:
 
 ## 1. Title
 
-A bridge, silo or regional Tenant is built only after a second person approves the exact plan the provisioning service computed for it. The approval is recorded by the provisioning service, beside the plan it approves. A pooled Tenant needs no approval.
+A bridge, silo or regional Tenant is built only after a second person approves the exact plans the participating platforms computed for it, assembled by the provisioning service (`ADR-PRV-006`). The approval is recorded by the provisioning service, beside the plan it approves. A pooled Tenant needs no approval.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                            | Approver               |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
-| 2026-11-04 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
+| Date       | Status   | ADR Type     | Reviewers                                                            | Approver                         |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :------------------------------- |
+| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority (pending) |
 
-The owner approved this decision on 4 November 2026, after the design was merged in scnehaux-architecture #146 and ratified there.
+Amended on 4 November 2026 for the cross-platform contract of `ADR-PRV-006`, before ratification, as the server agent's review asked. It returns to `proposed` until the owner approves the amended wording.
 
 ## 3. Context
 
@@ -55,11 +55,11 @@ Organization Control already requires a second person for privileged acts: an el
 
 ### 5.2 The Approver Approves a Plan
 
-1. The service computes the plan for the request and saves it unchanged (`ADR-PRV-003 §5.3`).
-2. It records the plan's hash, the resources it creates, the region, and a monthly cost estimate.
+1. Each participant with work for the profile computes its own plan, saves it unchanged and reports it `planned` with its hash, summary and monthly cost estimate (`ADR-PRV-006 §5.3`, `ADR-PRV-003 §5.3`).
+2. The service records the set of participant plans, their hashes, the region and the total monthly cost estimate. The approval is bound to the hash of that set.
 3. It reports progress to Organization Control with the stage `awaiting_approval` and an `expected_by` 7 days ahead (`ADR-PRV-001 §5.4`).
 4. An approver opens the request in the provisioning panel (`SAD-021 §5.5`), reads the plan summary, and approves or rejects it. Both need a reason; approval also needs the contract or order reference that covers the cost.
-5. On approval the service applies the saved plan whose hash was approved, and nothing else [R1]. If that apply fails because the infrastructure changed after planning, the service plans again and asks for approval again.
+5. On approval the service sends each participant `apply` with its own approved plan hash, in ascending rank, and each applies that saved plan and nothing else [R1]. If an apply fails because the infrastructure changed after planning, that participant plans again and the set is approved again.
 6. On rejection, or when 7 days pass with no decision, the service reports `failed` with the cause `approval_rejected` or `approval_expired`. A new attempt is a retry in Organization Control, which creates a new request and a new plan.
 
 ### 5.3 Who Approves
@@ -107,7 +107,7 @@ Until the approval gate, the progress report and the panel are built (Phase 2, `
 
 ### Compliance Status
 
-Accepted.
+Proposed.
 
 ### Required Waivers
 

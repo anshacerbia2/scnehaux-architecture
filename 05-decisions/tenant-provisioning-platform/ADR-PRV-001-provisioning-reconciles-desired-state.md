@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-001
   title: Provisioning Reconciles Desired State Read from Organization Control
   adr_type: foundational
-  status: accepted
+  status: proposed
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -18,11 +18,11 @@ The provisioning service reconciles: it reads each outstanding provisioning requ
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                            | Approver               |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
-| 2026-11-04 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
+| Date       | Status   | ADR Type     | Reviewers                                                            | Approver                         |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :------------------------------- |
+| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority (pending) |
 
-The owner approved this decision on 4 November 2026, after the design was merged in scnehaux-architecture #146 and ratified there.
+Amended on 4 November 2026 for the cross-platform contract of `ADR-PRV-006`, before ratification, as the server agent's review asked. It returns to `proposed` until the owner approves the amended wording.
 
 ## 3. Context
 
@@ -70,7 +70,7 @@ This is how a Kubernetes controller works with state held elsewhere: it reads th
 
 ### 5.3 Each Request Is a Plan of Idempotent Steps
 
-- **One record per request.** The service keeps its own record of each request, keyed by `provisioning_request_id`, with the plan of steps for its profile (`ADR-PRV-003`) and each step's state. A unique key on `provisioning_request_id` makes a second hint for the same request find the existing record.
+- **One record per request.** The service keeps its own record of each request, keyed by `provisioning_request_id`, with the participants its profile needs and each participant's state (`ADR-PRV-006 §5.2`), and the steps of its own pooled work. A unique key on `provisioning_request_id` makes a second hint for the same request find the existing record.
 - **Each step is idempotent.** A step names the resource it creates by a deterministic name derived from `tenant_id`, reads before it writes, and treats "already exists with the desired settings" as done. Retrying a step with the same input yields the same result [R3].
 - **One worker per request.** A worker claims a request with a lease in the service's database. A second replica that sees the same request waits for the lease.
 - **A report is sent once and repeated safely.** The report to Organization Control carries the request's `correlation_id`. Organization Control answers a repeat as a replay (`TDD-organization-control-003` §API / Interface), so the service resends a report whose answer it did not receive.
@@ -80,12 +80,12 @@ This is how a Kubernetes controller works with state held elsewhere: it reads th
 - **Transient errors retry with backoff.** A step that fails with a transient error, such as a timeout, throttling or a `5xx`, retries with exponential backoff and full jitter: base 1 second, cap 60 seconds [R4].
 - **A permanent error fails the request at once.** A step that fails with a permanent error, such as an invalid profile, an exceeded quota or a refused permission, stops retrying.
 - **The service has its own deadline, ahead of `unresolved`.** For a pooled request it is 10 minutes from `requested_at`, a third of Organization Control's 30-minute timeout. A request still unfinished at its deadline stops retrying.
-- **Failing compensates, then reports.** On a permanent error or a passed deadline, the service removes what it created for that request, in reverse order, then reports `POST /v1/provisioning/failed` with a cause from a closed list: `invalid_profile`, `quota_exceeded`, `permission_denied`, `dependency_unavailable`, `deadline_exceeded`, `health_check_failed`, `approval_rejected`, `approval_expired`, `profile_not_supported`. A cause is never free text from a cloud error, which could carry an account identifier.
+- **Failing compensates, then reports.** On a permanent error or a passed deadline, the service removes its own work for that request and has every participant that did work clean up, in descending rank (`ADR-PRV-006 §5.4`), then reports `POST /v1/provisioning/failed` with a cause from a closed list: `invalid_profile`, `quota_exceeded`, `permission_denied`, `dependency_unavailable`, `deadline_exceeded`, `health_check_failed`, `approval_rejected`, `approval_expired`, `profile_not_supported`, `participant_failed`, `participant_unresolved`. A cause is never free text from a cloud error, which could carry an account identifier.
 - **Longer work tells Organization Control when to expect it.** A bridge, silo or regional request waits for approval and builds for longer than 30 minutes. From Phase 2 the service reports progress, `POST /v1/provisioning/progress` with a stage and an `expected_by`, and Organization Control ages the request against `expected_by` instead of the fixed timeout (`SAD-004 §7.5`, Phase 2). Until Phase 2 is built, the service builds pooled requests only and reports any other `failed` with `profile_not_supported` (`ADR-PRV-002 §5.5`).
 
 ### 5.5 The Service Resolves `unresolved` with What It Knows
 
-An `unresolved` request is one whose outcome Organization Control does not know. The service does know it: it holds the request's record and can inspect the resources. During resync it reports the outcome of every `unresolved` request it holds a record for. A request it holds no record for was never seen, so it starts work on it, as Organization Control already allows a dispatch against an `unresolved` request (`TDD-organization-control-003` §Resolving an `unresolved` Request).
+An `unresolved` request is one whose outcome Organization Control does not know. The service does know it: it holds the request's record and every participant's reports (`ADR-PRV-006`). During resync it reports the outcome of every `unresolved` request it holds a record for. A request it holds no record for was never seen, so it starts work on it, as Organization Control already allows a dispatch against an `unresolved` request (`TDD-organization-control-003` §Resolving an `unresolved` Request).
 
 This keeps `SAD-004 §7.5`'s rule that success is never inferred: the party that built the resources reports what it built, after its health checks (`PAD-PLT-017 §3.4`).
 
@@ -121,7 +121,7 @@ This keeps `SAD-004 §7.5`'s rule that success is never inferred: the party that
 
 ### Compliance Status
 
-Accepted. Compatible with `SAD-004` as it stands: the report routes and their meaning do not change. The additions are listed in `SAD-004 §7.5`.
+Proposed. Compatible with `SAD-004` as it stands: the report routes and their meaning do not change. The additions are listed in `SAD-004 §7.5`.
 
 ### Required Waivers
 

@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-005
   title: Scnehaux Notification Runtime
   owner: Notification Platform Team
-  version: 2.2.1
+  version: 2.2.2
   status: approved
   classification: restricted
   governed_by:
@@ -612,6 +612,10 @@ Event schema is transport-neutral. If a future public event is added for parked/
 - selected STD-GLB-004 delivery profile
 
 The runtime imports no Product internal model.
+
+### Tenant Provisioning Participation
+
+A participant for `bridge`, `silo` and `regional`, with no pooled work: pooled Tenants' deliveries stay in the shared store under Row-Level Security. For a dedicated profile it provisions its own per-Tenant store and its own key for the Tenant, runs its readiness check, and disables and destroys them on deprovisioning, with its own roles and the shared participant runner. Its rank, deadlines and readiness check are set when it registers, before the first non-pooled Tenant (`SAD-021 §13` Phase 2). (`ADR-PRV-006 §5.8`, proposed 2026-11-04.)
 
 ## 7. Security & Trust Boundary
 

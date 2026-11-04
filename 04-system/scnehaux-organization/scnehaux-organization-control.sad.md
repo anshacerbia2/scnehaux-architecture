@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.8.1
+  version: 2.8.2
   status: approved
   classification: restricted
   governed_by:
@@ -544,6 +544,10 @@ Consumers obtain:
 ### 7.8 Notification and Audit
 
 Notification requests and enterprise evidence facts are asynchronous. Local authoritative mutation does not depend on synchronous delivery, but undelivered facts remain visible and retried.
+
+### Tenant Provisioning Participation
+
+No per-Tenant infrastructure work for any profile. This system is the control plane: its database serves every Tenant, whatever the Tenant's isolation profile, and it holds the desired state Provisioning Control reads (§7.5). (`ADR-PRV-006 §5.8`, proposed 2026-11-04.)
 
 ## 8. Security & Trust Boundary
 

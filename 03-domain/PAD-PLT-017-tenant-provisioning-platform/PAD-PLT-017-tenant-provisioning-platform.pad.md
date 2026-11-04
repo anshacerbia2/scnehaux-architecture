@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-017
   title: Tenant Provisioning & Configuration Platform
   owner: Platform Engineering
-  version: 1.0.0
+  version: 1.1.0
   status: approved
   classification: public
   governed_by:
@@ -33,7 +33,7 @@ Its promise is that **no person builds a Tenant or reports a Tenant built in nor
 
 The platform owns:
 
-- realised Tenant infrastructure and configuration state, per Tenant and per request;
+- coordination of every platform that stores Tenant data, each a registered participant that provisions its own part (`ADR-PRV-006`);
 - the plan of work for each isolation profile, and its execution;
 - health checks that decide when a Tenant is realised;
 - approval of dedicated resources before they are created;
@@ -53,7 +53,7 @@ The platform does not own:
 - Product data, its export, retention or deletion inside shared stores (each Product domain, through offboarding obligations);
 - Subscription, Entitlement, plan, price or contract (Subscription & Entitlement);
 - the shared platform's own infrastructure: clusters, shared databases, networks (Platform Engineering's estate, declared under `STD-GLB-009`);
-- Product feature flags and Product configuration values.
+- Product feature flags and Product configuration values;
 
 ## 2. Enterprise Traceability
 
@@ -69,7 +69,7 @@ It depends on:
 
 - **Organization & Tenancy (`PAD-PLT-002`)** for desired Tenant state, the provisioning request and its correlation identifier, provider grants for `provider:provisioning`, and the legal-hold flag.
 - **Identity & Access (`PAD-PLT-001`)** for the workload identity it reports with, and for the people who approve and act in the panel.
-- **The shared platform** for the clusters, shared databases, key service and secret store it builds within.
+- **Every platform that stores Tenant data**, as a participant that provisions, checks, disables and destroys its own part (`ADR-PRV-006`). shared databases, key service and secret store it builds within.
 - **Audit & Evidence (`PAD-PLT-007`)** for evidence retention, when built.
 
 ### 2.3 Consumed By
@@ -82,15 +82,16 @@ It depends on:
 
 ### 3.1 Bounded Context
 
-| Bounded Context        | Owns                                                                       | Does Not Own                                     |
-| :--------------------- | :------------------------------------------------------------------------- | :----------------------------------------------- |
-| Request Reconciliation | the service's record of each request, its plan, steps, leases and outcome  | the request itself, which is Organization's      |
-| Profile Execution      | the work per profile and its health checks                                 | the choice of profile                            |
-| Approval               | plans awaiting approval, decisions, reasons, contract references           | provider grants, which are Organization's        |
-| Tenant Configuration   | configuration records and quota limits per Tenant                          | Product configuration values                     |
-| Tenant Keys            | per-Tenant keys for dedicated profiles, their state and scheduled deletion | the key service itself                           |
-| Deprovisioning         | disabling, the recoverable window, holds and destruction                   | release and retirement, which are Organization's |
-| Drift                  | comparison of built resources with the plan they came from                 | the shared platform's own drift                  |
+| Bounded Context        | Owns                                                                                            | Does Not Own                                     |
+| :--------------------- | :---------------------------------------------------------------------------------------------- | :----------------------------------------------- |
+| Request Reconciliation | the service's record of each request, its plan, steps, leases and outcome                       | the request itself, which is Organization's      |
+| Participation          | the participant registry, each participation's state, commands and reports, cleanup obligations | a participant's own resources, module and roles  |
+| Profile Execution      | the work per profile and its health checks                                                      | the choice of profile                            |
+| Approval               | plans awaiting approval, decisions, reasons, contract references                                | provider grants, which are Organization's        |
+| Tenant Configuration   | configuration records and quota limits per Tenant                                               | Product configuration values                     |
+| Tenant Keys            | per-Tenant keys for dedicated profiles, their state and scheduled deletion                      | the key service itself                           |
+| Deprovisioning         | disabling, the recoverable window, holds and destruction                                        | release and retirement, which are Organization's |
+| Drift                  | comparison of built resources with the plan they came from                                      | the shared platform's own drift                  |
 
 ### 3.2 Ubiquitous Language
 
@@ -98,6 +99,7 @@ It depends on:
 | :------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
 | Provisioning request | One row of Organization Control's `tenant.provisioning_request`: a Tenant, a desired profile, an operation and a correlation identifier |
 | Operation            | `provision` or `deprovision`                                                                                                            |
+| Participant          | A platform that stores Tenant data and does its own part of provisioning, registered with the work each profile needs from it           |
 | Isolation profile    | `pooled`, `bridge`, `silo` or `regional` (§3.4)                                                                                         |
 | Plan                 | The list of steps, and for dedicated profiles the saved infrastructure plan, the service will run for a request                         |
 | Realised             | Every step done and every health check of the profile passed (§3.4)                                                                     |
@@ -122,7 +124,7 @@ It depends on:
 
 ### 3.4 Isolation Profiles and What Realised Means
 
-These definitions follow the industry's silo, pool and bridge models [R1]. `regional` is a silo placed in a named region.
+These definitions follow the industry's silo, pool and bridge models [R1]. `regional` is a silo placed in a named region. The work and the checks below are done by each participant for its own part; pooled needs no participant work in Phase 1 (`ADR-PRV-006 §5.6`).
 
 | Profile    | Work                                                                                     | Realised when every check passes                                                                                                                                                                  | Approval |
 | :--------- | :--------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------- |

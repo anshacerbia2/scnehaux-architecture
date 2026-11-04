@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-002
   title: Scnehaux Identity Experience
   owner: Identity Experience Team
-  version: 2.2.0
+  version: 2.2.1
   status: approved
   classification: restricted
   governed_by:
@@ -347,6 +347,10 @@ Experience events are interaction signals, not authoritative identity facts. Ide
 - browser retry never replays destructive operations without explicit confirmation;
 - external IdP delays are represented without leaking provider internals;
 - long-running migration or provisioning operations use status polling/event updates through the Control Service.
+
+### Tenant Provisioning Participation
+
+No per-Tenant work for any profile. This application holds no Tenant data at rest beyond its session store, which is not partitioned per Tenant. (`ADR-PRV-006 §5.8`, proposed 2026-11-04.)
 
 ## 7. Security & Trust Boundary
 

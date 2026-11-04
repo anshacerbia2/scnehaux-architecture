@@ -14,13 +14,15 @@ doc_meta:
 
 ## 1. Title
 
-When Organization Control releases a Tenant, the provisioning service stops the Tenant's resources from being used at once, keeps them recoverable for 30 days, and then destroys them. For a silo or regional Tenant, destruction is the deletion of the Tenant's own key, which makes every copy encrypted under it unreadable, backups included.
+When Organization Control releases a Tenant, every participating platform stops its part of the Tenant from being used at once, coordinated by the provisioning service (`ADR-PRV-006 §5.5`), keeps them recoverable for 30 days, and then destroys them. For a silo or regional Tenant, destruction is the deletion of each platform's key for the Tenant, which makes every copy encrypted under it unreadable, backups included.
 
 ## 2. Status
 
 | Date       | Status   | ADR Type     | Reviewers                                                          | Approver                         |
 | :--------- | :------- | :----------- | :----------------------------------------------------------------- | :------------------------------- |
 | 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Legal | Architecture Authority (pending) |
+
+Amended on 4 November 2026 for the cross-platform contract of `ADR-PRV-006`, before ratification, as the server agent's review asked. It returns to `proposed` until the owner approves the amended wording.
 
 ## 3. Context
 
@@ -51,9 +53,11 @@ Two facts bound the choice:
 | 2. Recoverable | 30 days from stage 1      | Resources are kept, unused. Silo and regional: a final encrypted snapshot is taken and the key deletion is scheduled with the 30-day wait | Yes        |
 | 3. Destroyed   | At the end of the 30 days | Resources are deleted; the key is deleted by the cloud at the end of its wait                                                             | No         |
 
-The service reports the deprovisioning `realized` to Organization Control at the end of stage 1, after its checks (§5.3). Organization Control can then retire the Tenant, which is already its separate act. Stages 2 and 3 are the service's own record, shown in the panel and alerted (`SAD-021 §9.3`).
+The service reports the deprovisioning `realized` to Organization Control at the end of stage 1, when every participating platform has reported `disabled` and the checks of §5.3 pass. Stage 3 is complete only when every participating platform has reported `destroyed` (`ADR-PRV-006 §5.5`). Organization Control can then retire the Tenant, which is already its separate act. Stages 2 and 3 are the service's own record, shown in the panel and alerted (`SAD-021 §9.3`).
 
 ### 5.2 What Each Profile Does
+
+Each participating platform does this for its own part of the Tenant, with its own roles and its own key (`ADR-PRV-006`).
 
 | Profile    | Stage 1                                                  | Stage 2                                                                                      | Stage 3                                                                                                                 |
 | :--------- | :------------------------------------------------------- | :------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
@@ -113,7 +117,7 @@ The service keeps its request records, approvals and the audit of each stage for
 
 ### Compliance Status
 
-Proposed. The 30-day window and the treatment of shared backups for pooled and bridge Tenants need the owner's confirmation against customer contracts (`SAD-021 §15`, open question 6).
+Proposed. The owner confirmed the 30-day window on 4 November 2026. The period a pooled or bridge Tenant's data stays in shared backups is stated in customer terms (`ISMS-005` T48).
 
 ### Required Waivers
 
