@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-021
   title: Scnehaux Provisioning Control
   owner: Platform Engineering
-  version: 1.0.0
+  version: 1.1.0
   status: proposed
   classification: public
   governed_by:
@@ -182,7 +182,7 @@ Registered configuration readers (workload tokens)
 GET  /v1/tenants/{tenant_id}/configuration
 ```
 
-No route reports `realized` on a person's word.
+No route here reports `realized` on a person's word. The only manual `realized` is the emergency break-glass of §5.5, made at Organization Control.
 
 ## 5. Runtime Flows
 
@@ -255,8 +255,12 @@ A provider console shows the requests that need a person, from §4.3's routes, b
 | Recoverable window | deprovisioned Tenants and their destruction date                           | hold, release the hold          |
 
 - Every action needs the scope `provider:provisioning` in force and a reason, and writes an audit row with the person's `principal_id`.
-- **There is no "mark realized".** A person may fail a request, which never grants access, but not report one realised. If the service cannot finish a Tenant, the Tenant waits or fails; it is never declared built by hand.
-- **Break-glass.** This design keeps none for `realized` (open question 3). From Phase 2, Organization Control refuses provider authority on `POST /v1/provisioning/realized` in production; `failed` stays available to a provider (§7.1).
+- **There is no "mark realized" in the panel.** A person may fail a request, which never grants access, but not report one realised from the panel. If the service cannot finish a Tenant, the Tenant waits or fails.
+- **Break-glass, for an emergency grant only (owner's decision, 4 November 2026).** From Phase 2, in production, Organization Control accepts a person's `POST /v1/provisioning/realized` only from a provider whose authority is an emergency grant (`ADR-ORG-002`); a provider acting under an activated eligible grant is refused. `failed` stays open to any provider in force.
+  - _When._ Provisioning Control cannot finish a Tenant that must go live, and the person has run the profile's health checks of `PAD-PLT-017 §3.4` themselves.
+  - _How._ The reason names the incident, each check run and its result. The report is recorded as a privileged access with the authority `emergency`.
+  - _Review._ Every use alerts the Information Security Officer at once and is reviewed within 1 working day. When Provisioning Control is back, its resync runs the checks on that Tenant and raises a drift alert if any fails; it never reverses the report.
+  - _Development._ The same rule; the stand-in scripts no longer report `realized` after Phase 1.
 - "Start deprovisioning" in the brief is the **cleanup** action: it removes what a failed build left. Deprovisioning a live Tenant starts only from Organization Control's offboarding release.
 
 ### 5.6 Deprovisioning
@@ -324,7 +328,7 @@ Added in **Phase 2** (organization-control):
 - `POST /v1/provisioning/progress {correlation_id, stage, expected_by}`; the sweep ages a request against `expected_by` when set, capped at 8 days.
 - `requested_by` on each item of the read, for the approval check.
 - `provider:provisioning` as a registered provider scope, projected to this service.
-- In production, provider authority refused on `POST /v1/provisioning/realized`.
+- In production, `POST /v1/provisioning/realized` from a person accepted only under an emergency grant, recorded with the authority `emergency` and alerted (§5.5).
 
 ### 7.2 Products and Runtime (Published)
 
@@ -448,7 +452,7 @@ The service's CI follows `STD-GLB-009`: unit and integration tests, the `deploy/
 - A provisioning module inside Organization Control (`ADR-PRV-004` Alternative A).
 - Crossplane and a workflow engine (`ADR-PRV-003` Alternatives A, B).
 - Event payloads as desired state (`ADR-PRV-001` Alternative A).
-- A manual "mark realized" in the panel (§5.5).
+- A manual "mark realized" in the panel (§5.5); the only manual path is the emergency break-glass at Organization Control.
 - Approval in Organization Control (`ADR-PRV-002` Alternative A).
 
 ## 12. Compatibility Strategy
@@ -491,14 +495,16 @@ The alternatives are in each ADR's §8. The overall choice, a separate service r
 
 ## 15. Open Questions for the Owner
 
-| #   | Question                                                                                                                         | Recommendation                                                                                                           |
-| :-- | :------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
-| 1   | Create a new public repository `provisioning-control` for the service?                                                           | Yes; Phase 1 cannot start without it                                                                                     |
-| 2   | Which role holds `provider:provisioning` and approves dedicated plans?                                                           | Platform Engineering lead; never the requester. While one person holds most roles (`ISMS-004` R19), no non-pooled Tenant |
-| 3   | Keep any break-glass way to report `realized` by hand?                                                                           | No. A person may fail a request, never declare it built                                                                  |
-| 4   | OpenTofu as the infrastructure tool, at radar `trial`?                                                                           | Yes, over Crossplane (no Kubernetes on the development server; no plan to approve)                                       |
-| 5   | The development stand-in for KMS and databases in Phase 2: LocalStack paid plan, or open-source stand-ins?                       | Decide before Phase 2; open-source if it covers key deletion                                                             |
-| 6   | Is a 30-day recoverable window right, given customer contracts? Pooled and bridge data stays in shared backups until they expire | 30 days, and state the shared-backup period in contracts                                                                 |
-| 7   | Does activation stay a provider's act after a pooled Tenant is realised?                                                         | Yes. Activation is Organization's decision, not a build result                                                           |
-| 8   | Which console hosts the panel?                                                                                                   | Organization Experience, where providers already manage Tenants                                                          |
-| 9   | Does the Architecture Authority read `STD-GLB-009`'s Git-declared resources as satisfied by modules in Git with run-time inputs? | Yes (`ADR-PRV-003 §7`)                                                                                                   |
+Questions 1 to 4 and 9 were answered on 4 November 2026. Questions 5 to 8 stay open; this SAD stays `proposed` until they are answered.
+
+| #   | Question                                                                                                                         | Recommendation                                                  | Owner's answer                                                                                                                           |
+| :-- | :------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Create a new public repository `provisioning-control` for the service?                                                           | Yes; Phase 1 cannot start without it                            | Yes. The owner creates it                                                                                                                |
+| 2   | Which role holds `provider:provisioning` and approves dedicated plans?                                                           | Platform Engineering lead; never the requester                  | Platform Engineering lead (`ADR-PRV-002 §5.3`). While one person holds most roles (`ISMS-004` R19), no non-pooled Tenant can be approved |
+| 3   | Keep any break-glass way to report `realized` by hand?                                                                           | No                                                              | Yes, for an emergency grant only, defined in §5.5                                                                                        |
+| 4   | OpenTofu as the infrastructure tool, at radar `trial`?                                                                           | Yes, over Crossplane                                            | Yes (`ADR-PRV-003`, accepted; radar `trial`)                                                                                             |
+| 5   | The development stand-in for KMS and databases in Phase 2: LocalStack paid plan, or open-source stand-ins?                       | Decide before Phase 2; open-source if it covers key deletion    | Open                                                                                                                                     |
+| 6   | Is a 30-day recoverable window right, given customer contracts? Pooled and bridge data stays in shared backups until they expire | 30 days, and state the shared-backup period in contracts        | Open                                                                                                                                     |
+| 7   | Does activation stay a provider's act after a pooled Tenant is realised?                                                         | Yes. Activation is Organization's decision, not a build result  | Open                                                                                                                                     |
+| 8   | Which console hosts the panel?                                                                                                   | Organization Experience, where providers already manage Tenants | Open                                                                                                                                     |
+| 9   | Does the Architecture Authority read `STD-GLB-009`'s Git-declared resources as satisfied by modules in Git with run-time inputs? | Yes                                                             | Yes, by accepting `ADR-PRV-003`                                                                                                          |

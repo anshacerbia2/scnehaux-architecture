@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-002
   title: A Person Approves the Plan Before Any Dedicated Resource Is Created
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -18,9 +18,11 @@ A bridge, silo or regional Tenant is built only after a second person approves t
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                            | Approver                         |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                            | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
+| 2026-11-04 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
+
+The owner approved this decision on 4 November 2026, after the design was merged in scnehaux-architecture #146 and ratified there.
 
 ## 3. Context
 
@@ -64,7 +66,7 @@ Organization Control already requires a second person for privileged acts: an el
 
 - **A provider holding the `provider:provisioning` scope, in force.** The scope is a provider grant recorded by Organization Control, eligible and activated as `ADR-ORG-002` requires, and projected to the provisioning service as `provider:identity-control` is projected to identity-control (`ADR-ORG-002 §5.3`). The provisioning service enforces it.
 - **Not the requester.** The service refuses an approval by the principal that requested the Tenant. Organization Control adds `requested_by` to each item of the outstanding-request read for this check (`SAD-004 §7.5`, Phase 2).
-- **Named by role, never by person.** The role that holds the grant is decided by the owner (open question 2 in `SAD-021 §15`).
+- **The Platform Engineering lead holds it.** The owner decided this on 4 November 2026 (`SAD-021 §15`, question 2). The grant is recorded by role, never by a person's name in any document. A second holder may be added by the same decision path; the requester rule above still applies to every holder.
 
 ### 5.4 Where Approval Is Recorded
 
@@ -105,7 +107,7 @@ Until the approval gate, the progress report and the panel are built (Phase 2, `
 
 ### Compliance Status
 
-Proposed.
+Accepted.
 
 ### Required Waivers
 

@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-003
   title: A Go Reconciler Builds Pooled Tenants Directly and Runs OpenTofu for Dedicated Resources
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -18,9 +18,11 @@ The provisioning service is a Go application with its own PostgreSQL database. I
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                            | Approver                         |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                            | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
+| 2026-11-04 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
+
+The owner approved this decision on 4 November 2026, after the design was merged in scnehaux-architecture #146 and ratified there.
 
 ## 3. Context
 
@@ -61,7 +63,7 @@ A pooled request writes the Tenant's configuration record and quota limits to th
 - **Plan saved, then applied.** The service runs `tofu plan` with an output file in an isolated working directory and stores the saved plan and its hash. After approval it runs `tofu apply` on that saved file, which takes the actions in the saved plan and no others [R2]. If that apply fails because the infrastructure changed after planning, the service plans and asks again (`ADR-PRV-002 §5.2`).
 - **Drift.** Once a day the service runs a plan with `-detailed-exitcode` for each non-pooled Tenant. A non-empty plan is drift, and it raises an alert. Correcting drift is a new approved plan, never an automatic apply [R3].
 - **Pinned tool.** The OpenTofu binary and each provider are pinned by version and checksum in the service image, and scanned with it (`STD-GLB-009` §Container Images).
-- **Radar.** OpenTofu, an open-source tool under the Mozilla Public License v2.0 and the Linux Foundation's stewardship [R8], enters the tech radar at `trial` when this decision is accepted, owner Platform Engineering. The radar entry is added in the ratification commit, not before.
+- **Radar.** OpenTofu, an open-source tool under the Mozilla Public License v2.0 and the Linux Foundation's stewardship [R8], is on the tech radar at `trial` from 4 November 2026, owner Platform Engineering, with a trial end date of 4 May 2027.
 
 ### 5.4 Development
 
@@ -108,7 +110,7 @@ Phase 1 builds only the pooled path, so it needs no OpenTofu and has no stand-in
 
 ### Compliance Status
 
-Proposed. `STD-GLB-009` asks for resources declared in Git files "parsed by the IDP". This decision keeps the declarations in Git (the modules) and takes each Tenant's inputs from Organization Control at run time, because a Tenant is created by a customer journey, not by a team's change. The Architecture Authority confirms this reading when it accepts this ADR; if it reads the rule as one Git file per Tenant, an exception ADR is needed instead.
+Accepted. `STD-GLB-009` asks for resources declared in Git files "parsed by the IDP". This decision keeps the declarations in Git (the modules) and takes each Tenant's inputs from Organization Control at run time, because a Tenant is created by a customer journey, not by a team's change. Accepting this ADR confirms that reading. A later reading of the rule as one Git file per Tenant would need an exception ADR.
 
 ### Required Waivers
 

@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-004
   title: Provisioning Acts as Its Own Workload, with Narrow Cloud Roles Organization Control Never Holds
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -18,9 +18,11 @@ The provisioning service authenticates to Organization Control as its own regist
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                             | Approver                         |
-| :--------- | :------- | :----------- | :-------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Identity | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                             | Approver               |
+| :--------- | :------- | :----------- | :-------------------------------------------------------------------- | :--------------------- |
+| 2026-11-04 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Identity | Architecture Authority |
+
+The owner approved this decision on 4 November 2026, after the design was merged in scnehaux-architecture #146 and ratified there.
 
 ## 3. Context
 
@@ -115,7 +117,7 @@ The development service authenticates to Organization Control as a development w
 
 ### Compliance Status
 
-Proposed. Extends `ADR-ORG-001 §5.11` in a compatible way: the three existing routes keep their meaning.
+Accepted. Extends `ADR-ORG-001 §5.11` in a compatible way: the three existing routes keep their meaning.
 
 ### Required Waivers
 

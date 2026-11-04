@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-001
   title: Provisioning Reconciles Desired State Read from Organization Control
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -18,9 +18,11 @@ The provisioning service reconciles: it reads each outstanding provisioning requ
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                            | Approver                         |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                            | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
+| 2026-11-04 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
+
+The owner approved this decision on 4 November 2026, after the design was merged in scnehaux-architecture #146 and ratified there.
 
 ## 3. Context
 
@@ -119,7 +121,7 @@ This keeps `SAD-004 §7.5`'s rule that success is never inferred: the party that
 
 ### Compliance Status
 
-Proposed. Compatible with `SAD-004` as it stands: the report routes and their meaning do not change. The additions are listed in `SAD-004 §7.5`.
+Accepted. Compatible with `SAD-004` as it stands: the report routes and their meaning do not change. The additions are listed in `SAD-004 §7.5`.
 
 ### Required Waivers
 

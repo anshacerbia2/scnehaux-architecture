@@ -116,7 +116,7 @@ It depends on:
 5. The approver is not the person who requested the Tenant.
 6. A failure is reported with a cause from a closed list, never with a raw cloud error.
 7. A held or legally held Tenant is never destroyed.
-8. No person reports `realized` in normal operation.
+8. No person reports `realized` in normal operation. The only manual report is the emergency break-glass of `SAD-021 §5.5`, under an emergency grant.
 9. The platform holds no person's token and Organization Control holds none of its cloud credentials.
 10. Records of requests, approvals and destruction outlive the Tenant by 7 years.
 
