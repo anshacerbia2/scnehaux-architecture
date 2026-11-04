@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.7.0
+  version: 2.8.0
   status: approved
   classification: restricted
   governed_by:
@@ -11,7 +11,7 @@ doc_meta:
     - ADR-ORG-001
   review_cycle_days: 90
   created_date: 2026-08-06
-  last_reviewed: 2026-10-21
+  last_reviewed: 2026-11-04
   parent_pad: PAD-PLT-002
 ---
 
@@ -487,7 +487,11 @@ Consumes bounded identifiers and lifecycle signals. These systems may request Me
 
 Publishes desired lifecycle and profile references and consumes realized status. Commands use idempotency, correlation, timeout, and reconciliation. Ambiguous provisioning outcome remains pending/failed, never inferred as success.
 
-- **An `unresolved` outcome is resolved by reporting it (2.4.0).** The provisioning system, or an operator with its answer, reports realized or failed against the request's correlation identifier. Nothing retries it and nothing resolves it automatically. Detail: `TDD-organization-control-003` 1.15.0 §Resolving an `unresolved` Request.
+- **An `unresolved` outcome is resolved by reporting it (2.4.0).** The provisioning system, or an operator with its answer, reports realized or failed against the request's correlation identifier. Nothing in this system retries it or resolves it automatically. Detail: `TDD-organization-control-003` 1.15.0 §Resolving an `unresolved` Request. From 2.8.0 the provisioning system resolves it from its own record of the request, after checking the resources (`ADR-PRV-001 §5.5`).
+- **The provisioning system is designed (2.8.0).** It is Provisioning Control, `SAD-021` under `PAD-PLT-017`, a separate service that holds the infrastructure credentials this system never holds (`ADR-PRV-004`). It reads each request from this system and acts on it, with no person reporting `realized` in normal operation (`ADR-PRV-001`). The contract grows in two phases, and every existing route keeps its meaning (`SAD-021 §12`):
+  - _Phase 1._ `GET /v1/provisioning/requests?state=&operation=&after=&limit=` for the `provisioning` reporter, listing outstanding requests with `provisioning_request_id`, `correlation_id`, `tenant_id`, `operation`, `desired_profile`, `state` and `requested_at`, and for a deprovisioning also `offboarding_id` and `legal_hold`. The command event `com.scnehaux.organization.tenant.provisioning.requested`, identifiers only, written in the transaction of every `tenant.provisioning_request` row (intake, retry, release, resend), and delivered by the per-consumer dispatch of `ADR-GLB-018 §5.4` to a registered provisioning target. A provisioning target is a delivery kind of its own: it subscribes to that one type, holds no projection, takes no snapshot and adds no authority debt, and the type is not offered to projection consumers. The three provisioning transitions of `TDD-organization-control-003` stay silent as Tenant events.
+  - _Phase 2._ `POST /v1/provisioning/progress {correlation_id, stage, expected_by}` for the reporter; the sweep ages a request against `expected_by` when one is set, capped at 8 days, and against `ORGANIZATION_PROVISIONING_TIMEOUT` otherwise. `requested_by` on each read item. `provider:provisioning` as a registered provider scope, projected to Provisioning Control as `provider:identity-control` is to identity-control. In production, provider authority is refused on `POST /v1/provisioning/realized`; `failed` stays open to a provider, because failing a request never grants access.
+  - _The stand-ins below retire from the deploy steps when Phase 1 is merged and the server redeployed;_ until then the development server keeps them.
 - **On a development server an operator stands in for the provisioning system (2.4.0).** None runs there, so a requested Tenant otherwise never leaves `requested`. organization-control's `scripts/dev-provisioning.ps1` reports realized or failed through the same correlated routes, with the operator's provider authority. It refuses a Tenant not yet dispatched and a request that already has an outcome, and it never activates.
   - _Why a script._ It is one-off admin code that ships with the service and runs against the deployed release, as STD-GLB-009 [R4] asks (STD-GLB-009 rule 13, 1.9.0). organization-control's `deploy-dev` runs it on every change (STD-GLB-009 §A procedure step is a script, and CI runs it). The service gains no development-only path, so the rule above holds in every environment.
   - _Rejected._ A development flag that makes the service realize every dispatch, because it infers success. A stub provisioning service, because it needs a consumer registration, a delivery target and a workload credential, and still decides outcomes nobody chose. Detail: `TDD-organization-control-003` 1.15.0 §The Provisioning System on a Development Server; procedure: the development server runbook, step 9.
@@ -559,7 +563,7 @@ A caller's authority is read from the standard's claims and this system's own re
 | Projection consumer  | `principal_id`, `subject_type` `workload`, `workload_owner`; no `tenant_id` | an active consumer registered with the `principal_id`                                                                                  |
 | Reporter (2.6.0)     | `principal_id`, `subject_type` `workload`; no `tenant_id`                   | an active reporter registered with the `principal_id`, for `provisioning` or `obligation:<domain>`, on those report routes alone       |
 
-A reporter is the production provisioning system or an obligation-owning domain. It authenticates as its own workload, never with a person's provider token (`ADR-ORG-001 §5.11`, decided 2026-10-20, not yet built).
+A reporter is the production provisioning system or an obligation-owning domain. It authenticates as its own workload, never with a person's provider token (`ADR-ORG-001 §5.11`, decided 2026-10-20). The provisioning reporter is designed as Provisioning Control (`SAD-021`, `ADR-PRV-004`, 2.8.0) and not yet built; its reach grows to the outstanding-request read in Phase 1 and the progress report in Phase 2 (§7.5).
 
 Every actor is recorded by `principal_id`, never by `sub` (`STD-IAM-002 §3.2`).
 

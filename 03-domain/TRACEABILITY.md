@@ -77,6 +77,10 @@ graph LR
     PAD-PLT-016 -.realizes.-> EAD-003
     PAD-PLT-016 -.realizes.-> EAD-005
     PAD-PLT-016 -.realizes.-> EAD-006
+    PAD-PLT-017[PAD-PLT-017]:::pad
+    PAD-PLT-017 -.realizes.-> EAD-002
+    PAD-PLT-017 -.realizes.-> EAD-005
+    PAD-PLT-017 -.realizes.-> EAD-006
     %% SAD Layer
     SAD-001[SAD-001]:::sad
     SAD-001 --> PAD-PLT-001
@@ -118,6 +122,8 @@ graph LR
     SAD-019 --> PAD-PLT-015
     SAD-020[SAD-020]:::sad
     SAD-020 --> PAD-PLT-016
+    SAD-021[SAD-021]:::sad
+    SAD-021 --> PAD-PLT-017
     SAD-101[SAD-101]:::sad
     SAD-101 --> PAD-BIZ-001
     classDef ead fill:#059669,stroke:#047857,color:#fff

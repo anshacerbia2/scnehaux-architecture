@@ -24,4 +24,5 @@
 | [SAD-018](scnehaux-rules-decisioning-platform/scnehaux-rules-decisioning-platform.sad.md) | Rules & Decisioning Platform SAD | PAD-PLT-014 | Architecture Authority | chartered |
 | [SAD-019](scnehaux-knowledge-retrieval-platform/scnehaux-knowledge-retrieval-platform.sad.md) | Knowledge & Retrieval Platform SAD | PAD-PLT-015 | Architecture Authority | chartered |
 | [SAD-020](scnehaux-agent-runtime-platform/scnehaux-agent-runtime-platform.sad.md) | Agent Runtime Platform SAD | PAD-PLT-016 | Architecture Authority | chartered |
+| [SAD-021](scnehaux-provisioning/scnehaux-provisioning-control.sad.md) | Scnehaux Provisioning Control | PAD-PLT-017 | Platform Engineering | proposed |
 | [SAD-101](scnehaux-hcm/scnehaux-hcm.sad.md) | HCM Business System SAD | PAD-BIZ-001 | Architecture Authority | chartered |
