@@ -8,15 +8,15 @@
 | :------------------- | :-------------- | :---------------- | :--------------- | :---------------- |
 | **EAD** (Enterprise) | 7               | 7                 | 0                | 0                 |
 | **GDC** (Governance) | 13              | 13                | 0                | 0                 |
-| **PAD** (Domain)     | 19              | -                 | -                | -                 |
-| **SAD** (System)     | 22              | -                 | -                | -                 |
+| **PAD** (Domain)     | 20              | -                 | -                | -                 |
+| **SAD** (System)     | 23              | -                 | -                | -                 |
 | **STD** (Standard)   | 30              | 30                | 0                | 0                 |
-| **ADR** (Decisions)  | 67              | 0                 | 0                | 0                 |
+| **ADR** (Decisions)  | 72              | 0                 | 5                | 0                 |
 
 ## 2. Capability Coverage
 
-- **Total Systems (SADs)**: 22
-- **Total Domains (PADs)**: 19
+- **Total Systems (SADs)**: 23
+- **Total Domains (PADs)**: 20
 
 ## 3. Operations & Compliance
 

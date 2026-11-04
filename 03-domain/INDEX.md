@@ -21,3 +21,4 @@
 | [PAD-PLT-014](PAD-PLT-014-rules-decisioning-platform/PAD-PLT-014-rules-decisioning-platform.pad.md) | Rules & Decisioning Platform | Rules Platform Team | chartered | 1 |
 | [PAD-PLT-015](PAD-PLT-015-knowledge-retrieval-platform/PAD-PLT-015-knowledge-retrieval-platform.pad.md) | Knowledge & Retrieval Platform | Knowledge Platform Team | approved | 1 |
 | [PAD-PLT-016](PAD-PLT-016-agent-runtime-platform/PAD-PLT-016-agent-runtime-platform.pad.md) | Agent Runtime Platform | AI Platform Team | approved | 1 |
+| [PAD-PLT-017](PAD-PLT-017-tenant-provisioning-platform/PAD-PLT-017-tenant-provisioning-platform.pad.md) | Tenant Provisioning & Configuration Platform | Platform Engineering | approved | 1 |

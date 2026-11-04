@@ -3,7 +3,7 @@ doc_meta:
   id: PAD-PLT-002
   title: Organization & Tenancy Platform
   owner: Core Platform Team
-  version: 2.0.0
+  version: 2.0.1
   status: approved
   classification: restricted
   governed_by:
@@ -131,7 +131,7 @@ Relationship rules:
 - Subscription & Entitlement is authoritative for commercial access.
 - Client & Contract Management is authoritative for BPO customer relationships and contracts.
 - HCM and Workforce Operations remain authoritative for their respective organizational and assignment structures.
-- Tenant Provisioning & Configuration realizes infrastructure and configuration state but does not own Tenant identity.
+- Tenant Provisioning & Configuration realizes infrastructure and configuration state but does not own Tenant identity. Its capability is `PAD-PLT-017`.
 - Product domains remain authoritative for Product permissions and business resources.
 - Audit & Evidence remains authoritative for enterprise evidence retention and chain of custody.
 
