@@ -622,7 +622,7 @@ identity.migration.*
 
 ### Tenant Provisioning Participation
 
-This system is not a participant for any profile today. Tenant identity data lives in the shared realm under Tenant projection, because a Tenant is not a Realm (`ADR-ORG-001 §5.5`); federation settings for a customer are an identity administration journey, not provisioning. Whether a `regional` Tenant needs identity data in its region, making this system a participant for `regional`, is `SAD-021 §15` question 13. (`ADR-PRV-006 §5.8`, accepted 2026-11-10.)
+This system has no per-Tenant work for `pooled`, `bridge` or `silo`: Tenant identity data lives in the shared realm under Tenant projection, because a Tenant is not a Realm (`ADR-ORG-001 §5.5`), and federation settings for a customer are an identity administration journey, not provisioning. For `regional` it will be a participant, through one identity deployment per region shared by that region's Tenants; that design is a separate ADR written at the first regional customer, and `regional` is refused until it is accepted. (`ADR-PRV-006 §5.8`, accepted 2026-11-10.)
 
 ## 7. Security & Trust Boundary
 

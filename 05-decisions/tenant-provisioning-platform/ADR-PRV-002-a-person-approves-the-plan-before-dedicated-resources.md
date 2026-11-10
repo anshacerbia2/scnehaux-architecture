@@ -78,6 +78,10 @@ Organization Control records only what it owns: the request's progress stage and
 
 Until the approval gate, the progress report and the panel are built (Phase 2, `SAD-021 §13`), the service builds pooled Tenants only. It reports a bridge, silo or regional request `failed` with the cause `profile_not_supported`. No non-pooled Tenant is created before Phase 2 is complete.
 
+### 5.6 Regional Waits for Regional Identity
+
+A `regional` request is reported `failed` with the cause `profile_not_supported` until the ADR for regional identity deployments is accepted (`ADR-PRV-006 §5.8`), even after Phase 2 is complete. No plan is computed and no approval is requested for it. The gate is lifted by that ADR's acceptance, in the same change that registers identity as a participant for `regional`.
+
 ## 6. Consequences
 
 ### Positive

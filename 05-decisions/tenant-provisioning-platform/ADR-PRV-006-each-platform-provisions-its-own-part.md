@@ -96,7 +96,16 @@ A pooled Tenant needs no participant work from most platforms: their pooled data
 - Provisioning Control holds no cloud role that writes another platform's data. It holds roles only for its own configuration store.
 - Each participant keeps its own key per Tenant for dedicated profiles, so destroying a Tenant on one platform does not need a role on another (`ADR-PRV-005`).
 
-### 5.8 Every Platform Declares Its Part
+### 5.8 Identity Is a Participant for Regional Tenants, Through a Regional Deployment
+
+The owner decided the direction on 10 November 2026. A `regional` Tenant's identity data stays in its region:
+
+- **One identity deployment per region**, shared by every Tenant in that region. It is not a Realm per Tenant: `ADR-ORG-001 §5.5` still holds, and the regional deployment serves its Tenants inside its own realms the same way the main deployment does.
+- **Identity is a participant for `regional`**, with no work for `pooled`, `bridge` or `silo`. Its part for a regional Tenant is to place the Tenant's identity data in the regional deployment and to report it ready.
+- **The design is a separate ADR**, written when the first regional customer is known: how a regional deployment is created, how Principals and tokens work across regions, and how the regional deployment is registered as a participant.
+- **Until that ADR is accepted, `regional` is refused**, even after Phase 2 is complete (`ADR-PRV-002 §5.6`).
+
+### 5.9 Every Platform Declares Its Part
 
 Every SAD of a system that stores Tenant data states its participation: the profiles and operations it has work for, its readiness check, and its rank; or "no per-Tenant work", with the reason. A chartered SAD states it when it leaves `chartered`.
 

@@ -615,7 +615,7 @@ The runtime imports no Product internal model.
 
 ### Tenant Provisioning Participation
 
-A participant for `bridge`, `silo` and `regional`, with no pooled work: pooled Tenants' deliveries stay in the shared store under Row-Level Security. For a dedicated profile it provisions its own per-Tenant store and its own key for the Tenant, runs its readiness check, and disables and destroys them on deprovisioning, with its own roles and the shared participant runner. Its rank, deadlines and readiness check are set when it registers, before the first non-pooled Tenant (`SAD-021 §13` Phase 2). (`ADR-PRV-006 §5.8`, accepted 2026-11-10.)
+A participant for `bridge`, `silo` and `regional`, with no pooled work: pooled Tenants' deliveries stay in the shared store under Row-Level Security. For a dedicated profile it provisions its own per-Tenant store and its own key for the Tenant, runs its readiness check, and disables and destroys them on deprovisioning, with its own roles and the shared participant runner. Its rank, deadlines and readiness check are set when it registers, before the first non-pooled Tenant (`SAD-021 §13` Phase 2). (`ADR-PRV-006 §5.9`, accepted 2026-11-10.)
 
 ## 7. Security & Trust Boundary
 

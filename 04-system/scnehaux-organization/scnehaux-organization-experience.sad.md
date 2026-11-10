@@ -369,7 +369,7 @@ Frontend and server telemetry use common correlation identifiers with backend op
 
 ### Tenant Provisioning Participation
 
-No per-Tenant work for any profile. This application holds no Tenant data at rest beyond its session store, which is not partitioned per Tenant. (`ADR-PRV-006 §5.8`, accepted 2026-11-10.)
+No per-Tenant work for any profile. This application holds no Tenant data at rest beyond its session store, which is not partitioned per Tenant. (`ADR-PRV-006 §5.9`, accepted 2026-11-10.)
 
 ## 8. Security & Trust Boundary
 
