@@ -350,7 +350,7 @@ Experience events are interaction signals, not authoritative identity facts. Ide
 
 ### Tenant Provisioning Participation
 
-No per-Tenant work for any profile. This application holds no Tenant data at rest beyond its session store, which is not partitioned per Tenant. (`ADR-PRV-006 §5.8`, proposed 2026-11-04.)
+No per-Tenant work for any profile. This application holds no Tenant data at rest beyond its session store, which is not partitioned per Tenant. (`ADR-PRV-006 §5.8`, accepted 2026-11-10.)
 
 ## 7. Security & Trust Boundary
 

@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-003
   title: A Go Reconciler Builds Pooled Tenants Directly and Runs OpenTofu for Dedicated Resources
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -18,11 +18,11 @@ The provisioning service is a Go application with its own PostgreSQL database. I
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                            | Approver                         |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                            | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
+| 2026-11-10 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
 
-Amended on 4 November 2026 for the cross-platform contract of `ADR-PRV-006`, before ratification, as the server agent's review asked. It returns to `proposed` until the owner approves the amended wording.
+The owner approved this decision on 10 November 2026, with the cross-platform contract of `ADR-PRV-006` and the answers recorded in `SAD-021 §15`.
 
 ## 3. Context
 
@@ -110,7 +110,7 @@ Phase 1 builds only the pooled path, so it needs no OpenTofu and has no stand-in
 
 ### Compliance Status
 
-Proposed. `STD-GLB-009` asks for resources declared in Git files "parsed by the IDP". This decision keeps the declarations in Git (the modules) and takes each Tenant's inputs from Organization Control at run time, because a Tenant is created by a customer journey, not by a team's change. Accepting this ADR confirms that reading. A later reading of the rule as one Git file per Tenant would need an exception ADR.
+Accepted. `STD-GLB-009` asks for resources declared in Git files "parsed by the IDP". This decision keeps the declarations in Git (the modules) and takes each Tenant's inputs from Organization Control at run time, because a Tenant is created by a customer journey, not by a team's change. Accepting this ADR confirms that reading. A later reading of the rule as one Git file per Tenant would need an exception ADR.
 
 ### Required Waivers
 

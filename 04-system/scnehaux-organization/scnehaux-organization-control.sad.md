@@ -547,7 +547,7 @@ Notification requests and enterprise evidence facts are asynchronous. Local auth
 
 ### Tenant Provisioning Participation
 
-No per-Tenant infrastructure work for any profile. This system is the control plane: its database serves every Tenant, whatever the Tenant's isolation profile, and it holds the desired state Provisioning Control reads (§7.5). (`ADR-PRV-006 §5.8`, proposed 2026-11-04.)
+No per-Tenant infrastructure work for any profile. This system is the control plane: its database serves every Tenant, whatever the Tenant's isolation profile, and it holds the desired state Provisioning Control reads (§7.5). (`ADR-PRV-006 §5.8`, accepted 2026-11-10.)
 
 ## 8. Security & Trust Boundary
 

@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-006
   title: Each Platform Provisions Its Own Part of a Tenant; Provisioning Control Coordinates
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -18,9 +18,11 @@ Every platform that stores Tenant data provisions, checks, disables and destroys
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                             | Approver                         |
-| :--------- | :------- | :----------- | :-------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Identity, Security | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                             | Approver               |
+| :--------- | :------- | :----------- | :-------------------------------------------------------------------- | :--------------------- |
+| 2026-11-10 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Identity, Security | Architecture Authority |
+
+The owner approved this decision on 10 November 2026, with the cross-platform contract of `ADR-PRV-006` and the answers recorded in `SAD-021 §15`.
 
 ## 3. Context
 
@@ -82,7 +84,7 @@ A participant with `none` for a profile receives nothing for it. A Tenant reques
 The contract runs in reverse, in descending rank, with the stages of `ADR-PRV-005`:
 
 - **Disable.** Every participant with work for the profile disables its part and reports `disabled`. Provisioning Control reports the deprovisioning `realized` to Organization Control only when all have, so the Tenant is not retired while any platform still serves it.
-- **Destroy.** At the end of the 30-day window, unless held, every participant destroys its part, including its own key for the Tenant, and reports `destroyed`. Provisioning Control records the Tenant destroyed only when every participant has. An overdue confirmation is alerted.
+- **Destroy.** At the end of the 30-day window, unless held, every participant destroys its part, including its own key for the Tenant, and reports `destroyed` with its destruction record (`ADR-PRV-005 §5.5`). Provisioning Control records the Tenant destroyed only when every participant has. Retirement in Organization Control does not wait for this: the Tenant can no longer be reached once every participant has disabled its part. A destruction overdue by 3 days is a security incident, not only an alert.
 
 ### 5.6 Pooled
 
@@ -128,7 +130,7 @@ Every SAD of a system that stores Tenant data states its participation: the prof
 
 ### Compliance Status
 
-Proposed.
+Accepted.
 
 ### Required Waivers
 
