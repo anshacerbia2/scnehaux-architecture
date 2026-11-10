@@ -26,7 +26,7 @@ The owner approved this decision on 10 November 2026, with the cross-platform co
 
 ## 3. Context
 
-`ADR-PRV-001` and `ADR-PRV-003`, as first written, made Provisioning Control the single builder: it wrote pooled configuration and ran OpenTofu for every dedicated resource. That covers one platform's view of a Tenant. Every platform that stores Tenant data has its own per-Tenant work for bridge, silo and regional Tenants: identity its realm data and, for some customers, federation settings; notification its delivery store; billing, scheduling and later platforms their own schemas or databases and keys.
+`ADR-PRV-001` and `ADR-PRV-003`, as first written, made Provisioning Control the single builder: it wrote pooled configuration and ran OpenTofu for every dedicated resource. That covers one platform's view of a Tenant. A platform that stores Tenant data can have its own per-Tenant work for bridge, silo and regional Tenants: notification its delivery store and key; billing, scheduling and later platforms their own schemas or databases and keys; identity, for regional Tenants only, its regional deployment (§5.8). Identity has no per-Tenant work for pooled, bridge or silo: Tenant identity data stays in the shared realm, because a Tenant is not a Realm (`ADR-ORG-001 §5.5`), and a customer's federation settings are an identity administration journey, not provisioning (`SAD-001`).
 
 With one central builder:
 
@@ -88,7 +88,7 @@ The contract runs in reverse, in descending rank, with the stages of `ADR-PRV-00
 
 ### 5.6 Pooled
 
-A pooled Tenant needs no participant work from most platforms: their pooled data lives in shared stores under Row-Level Security, keyed by `tenant_id`, created on first use. The only pooled work is Provisioning Control's own configuration record and quota limits. Phase 1 registers no participant with pooled work, so the pooled path stays seconds long and fully automatic. A platform that later needs pooled work (for example identity federation set up at onboarding) registers it, with a deadline under the pooled deadline.
+A pooled Tenant needs no participant work from most platforms: their pooled data lives in shared stores under Row-Level Security, keyed by `tenant_id`, created on first use. The only pooled work is Provisioning Control's own configuration record and quota limits. Phase 1 registers no participant with pooled work, so the pooled path stays seconds long and fully automatic. A platform that later needs pooled work registers it, with a deadline under the pooled deadline. Identity federation for a customer is not such work: it is an identity administration journey (`SAD-001`).
 
 ### 5.7 Privilege
 
