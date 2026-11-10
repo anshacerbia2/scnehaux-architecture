@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-005
   title: Deprovisioning Keeps a Recoverable Window of 30 Days, Then Destroys by Key
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -14,13 +14,15 @@ doc_meta:
 
 ## 1. Title
 
-When Organization Control releases a Tenant, the provisioning service stops the Tenant's resources from being used at once, keeps them recoverable for 30 days, and then destroys them. For a silo or regional Tenant, destruction is the deletion of the Tenant's own key, which makes every copy encrypted under it unreadable, backups included.
+When Organization Control releases a Tenant, every participating platform stops its part of the Tenant from being used at once, coordinated by the provisioning service (`ADR-PRV-006 §5.5`), keeps them recoverable for 30 days, and then destroys them. For a silo or regional Tenant, destruction is the deletion of each platform's key for the Tenant, which makes every copy encrypted under it unreadable, backups included.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                          | Approver                         |
-| :--------- | :------- | :----------- | :----------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Legal | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                          | Approver               |
+| :--------- | :------- | :----------- | :----------------------------------------------------------------- | :--------------------- |
+| 2026-11-10 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Legal | Architecture Authority |
+
+The owner approved this decision on 10 November 2026, with the cross-platform contract of `ADR-PRV-006` and the answers recorded in `SAD-021 §15`.
 
 ## 3. Context
 
@@ -51,9 +53,11 @@ Two facts bound the choice:
 | 2. Recoverable | 30 days from stage 1      | Resources are kept, unused. Silo and regional: a final encrypted snapshot is taken and the key deletion is scheduled with the 30-day wait | Yes        |
 | 3. Destroyed   | At the end of the 30 days | Resources are deleted; the key is deleted by the cloud at the end of its wait                                                             | No         |
 
-The service reports the deprovisioning `realized` to Organization Control at the end of stage 1, after its checks (§5.3). Organization Control can then retire the Tenant, which is already its separate act. Stages 2 and 3 are the service's own record, shown in the panel and alerted (`SAD-021 §9.3`).
+The service reports the deprovisioning `realized` to Organization Control at the end of stage 1, when every participating platform has reported `disabled` and the checks of §5.3 pass. Stage 3 is complete only when every participating platform has reported `destroyed` (`ADR-PRV-006 §5.5`). Organization Control can then retire the Tenant, which is already its separate act. Stages 2 and 3 are the service's own record, shown in the panel and alerted (`SAD-021 §9.3`).
 
 ### 5.2 What Each Profile Does
+
+Each participating platform does this for its own part of the Tenant, with its own roles and its own key (`ADR-PRV-006`).
 
 | Profile    | Stage 1                                                  | Stage 2                                                                                      | Stage 3                                                                                                                 |
 | :--------- | :------------------------------------------------------- | :------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
@@ -79,7 +83,14 @@ Any failed check is reported `failed` with the cause `health_check_failed`. A pr
 - **Destruction needs no new approval, but it can be stopped.** At the end of the window the service destroys without asking. During the window, a provider holding `provider:provisioning` can **hold** destruction, with a reason, from the provisioning panel. A hold stops the clock until it is lifted. A legal hold recorded in Organization Control holds it too: the service checks the offboarding's legal-hold flag before stage 3.
 - **Undoing within the window.** Restoring a released Tenant is not a path Organization Control has: `retired` is terminal, and release cannot be cancelled (`ADR-ORG-006`). A mistaken release found within the window is therefore handled as an incident: the hold stops destruction, the key deletion is cancelled, and the data is recovered into a new Tenant through a provisioning request. This is a runbook (`SAD-021 §9.3`), not a button.
 
-### 5.5 Records Kept After Destruction
+### 5.5 Evidence of Destruction, and an Overdue Destruction Is an Incident
+
+The owner decided on 4 November 2026 that a retired Tenant need not wait for destruction, because it can no longer be reached, and set two conditions:
+
+- **Each platform keeps evidence of its destruction.** With `destroyed`, each participant reports a destruction record: what it destroyed (resource types and identifiers, never Tenant data), the method (key deletion, database or schema drop, row deletion), the key identifier and its scheduled and completed deletion times for dedicated profiles, the cloud audit-log event identifiers, the module version and the time. Provisioning Control keeps every record for 7 years (§5.6) and produces, on request, one destruction statement per Tenant listing each platform's record. A customer or an auditor receives that statement; nobody writes it by hand.
+- **An overdue destruction is an incident, not a quiet alert.** A participant that has not reported `destroyed` 1 day after the window ends raises a warning; at 3 days it raises a critical alert and opens a security incident, handled under the incident procedure (`ISMS-005` T27) and logged in the nonconformity log if a control failed. The incident closes only on the participant's `destroyed` report with its evidence.
+
+### 5.6 Records Kept After Destruction
 
 The service keeps its request records, approvals and the audit of each stage for 7 years, the audit-log period of `STD-GLB-007`. They hold identifiers, not Tenant data. Destroying a Tenant never deletes them.
 
@@ -113,7 +124,7 @@ The service keeps its request records, approvals and the audit of each stage for
 
 ### Compliance Status
 
-Proposed. The 30-day window and the treatment of shared backups for pooled and bridge Tenants need the owner's confirmation against customer contracts (`SAD-021 §15`, open question 6).
+Accepted. The owner confirmed the 30-day window on 4 November 2026. The period a pooled or bridge Tenant's data stays in shared backups is stated in customer terms (`ISMS-005` T48).
 
 ### Required Waivers
 

@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-004
   title: Provisioning Acts as Its Own Workload, with Narrow Cloud Roles Organization Control Never Holds
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -18,9 +18,11 @@ The provisioning service authenticates to Organization Control as its own regist
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                             | Approver                         |
-| :--------- | :------- | :----------- | :-------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Identity | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                             | Approver               |
+| :--------- | :------- | :----------- | :-------------------------------------------------------------------- | :--------------------- |
+| 2026-11-10 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Identity | Architecture Authority |
+
+The owner approved this decision on 10 November 2026, with the cross-platform contract of `ADR-PRV-006` and the answers recorded in `SAD-021 §15`.
 
 ## 3. Context
 
@@ -64,7 +66,7 @@ It also holds what no other service in the estate holds: credentials that create
 ### 5.2 Toward the Cloud: Short-Lived Roles, Split by Task
 
 - **No access keys.** The service obtains short-lived credentials from its runtime's workload identity: a Kubernetes service account bound to an AWS IAM role. `STD-GLB-009` §Security & Access Governance already forbids permanent credentials.
-- **Three roles, each assumed only for its task:**
+- **Each participating platform holds its own three roles, each assumed only for its task, limited to resources tagged with its `participant_id` (`ADR-PRV-006 §5.7`).** The provisioning service holds none of them for another platform; it holds roles only for its own configuration store. A participant authenticates to the provisioning service as its own registered workload, admitted only for its own participations.
 
 | Role                   | Used for                         | Can                                                                                                  | Cannot                                                                |
 | :--------------------- | :------------------------------- | :--------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
@@ -73,7 +75,7 @@ It also holds what no other service in the estate holds: credentials that create
 | `provisioning-destroy` | deprovisioning (`ADR-PRV-005`)   | delete tagged resources; schedule key deletion                                                       | delete untagged resources; cancel a legal hold                        |
 
 - **A permission boundary** caps all three, so no change to a role's policy can exceed it. Changing the boundary is an infrastructure change through a pull request, approved by the Information Security Officer.
-- **Per-Tenant key policies** let the Tenant's application role use the key for encryption and decryption, and let `provisioning-destroy` schedule its deletion. The provisioning roles cannot decrypt Tenant data.
+- **Per-Tenant key policies, one key per Tenant per participant,** let that platform's application role use the key for encryption and decryption, and let `provisioning-destroy` schedule its deletion. The provisioning roles cannot decrypt Tenant data.
 - **Every cloud call is logged** by the cloud's audit trail, and each apply is linked to its request and approval by a tag carrying the `provisioning_request_id`.
 
 ### 5.3 Organization Control Holds None of It
@@ -115,7 +117,7 @@ The development service authenticates to Organization Control as a development w
 
 ### Compliance Status
 
-Proposed. Extends `ADR-ORG-001 §5.11` in a compatible way: the three existing routes keep their meaning.
+Accepted. Extends `ADR-ORG-001 §5.11` in a compatible way: the three existing routes keep their meaning.
 
 ### Required Waivers
 

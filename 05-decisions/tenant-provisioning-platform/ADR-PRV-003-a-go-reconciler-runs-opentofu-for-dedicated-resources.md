@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-003
   title: A Go Reconciler Builds Pooled Tenants Directly and Runs OpenTofu for Dedicated Resources
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -14,13 +14,15 @@ doc_meta:
 
 ## 1. Title
 
-The provisioning service is a Go application with its own PostgreSQL database. It runs its own reconciliation loop and keeps each request's steps in its database. It builds a pooled Tenant with direct, idempotent writes. It builds bridge, silo and regional resources by running versioned OpenTofu modules: plan, approval, then apply of the saved plan. No workflow engine and no Kubernetes control plane are added.
+The provisioning service is a Go application with its own PostgreSQL database. It runs its own reconciliation loop and keeps each request's steps in its database. It builds a pooled Tenant with direct, idempotent writes. For bridge, silo and regional Tenants each participating platform runs its own versioned OpenTofu module through a shared participant runner: plan, approval, then apply of the saved plan (`ADR-PRV-006`). The provisioning service runs no module for another platform. No workflow engine and no Kubernetes control plane are added.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                            | Approver                         |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                            | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
+| 2026-11-10 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
+
+The owner approved this decision on 10 November 2026, with the cross-platform contract of `ADR-PRV-006` and the answers recorded in `SAD-021 §15`.
 
 ## 3. Context
 
@@ -56,12 +58,12 @@ A pooled request writes the Tenant's configuration record and quota limits to th
 
 ### 5.3 Bridge, Silo, Regional: OpenTofu, Plan Then Apply
 
-- **Modules in Git.** One OpenTofu module per profile, in the service's repository, versioned and released with the service and changed only through a pull request. The module is the declaration `STD-GLB-009` asks for; the per-Tenant inputs (`tenant_id`, profile, region) come from Organization Control's request.
-- **One state per Tenant.** Each Tenant's resources have their own OpenTofu state, in an encrypted bucket with state locking [R1]. One Tenant's failed apply cannot touch another's state.
-- **Plan saved, then applied.** The service runs `tofu plan` with an output file in an isolated working directory and stores the saved plan and its hash. After approval it runs `tofu apply` on that saved file, which takes the actions in the saved plan and no others [R2]. If that apply fails because the infrastructure changed after planning, the service plans and asks again (`ADR-PRV-002 §5.2`).
-- **Drift.** Once a day the service runs a plan with `-detailed-exitcode` for each non-pooled Tenant. A non-empty plan is drift, and it raises an alert. Correcting drift is a new approved plan, never an automatic apply [R3].
+- **Modules in Git, owned by each platform.** One OpenTofu module per participant and profile, in that participant's repository, versioned and released with it and changed only through a pull request. The provisioning service's repository publishes the participant runner, a Go library and image that runs a module under the contract of `ADR-PRV-006`. The module is the declaration `STD-GLB-009` asks for; the per-Tenant inputs (`tenant_id`, profile, region) come from Organization Control's request.
+- **One state per Tenant per participant.** Each participant's resources for a Tenant have their own OpenTofu state, in an encrypted bucket with state locking [R1]. One Tenant's failed apply cannot touch another's state.
+- **Plan saved, then applied.** The participant runs `tofu plan` with an output file in an isolated working directory and stores the saved plan and its hash. After approval it runs `tofu apply` on that saved file, which takes the actions in the saved plan and no others [R2]. If that apply fails because the infrastructure changed after planning, the participant plans again and the set is approved again (`ADR-PRV-002 §5.2`).
+- **Drift.** Once a day the service sends each participant a `check` for each non-pooled Tenant, and the participant runs a plan with `-detailed-exitcode`. A non-empty plan is drift, and it raises an alert. Correcting drift is a new approved plan, never an automatic apply [R3].
 - **Pinned tool.** The OpenTofu binary and each provider are pinned by version and checksum in the service image, and scanned with it (`STD-GLB-009` §Container Images).
-- **Radar.** OpenTofu, an open-source tool under the Mozilla Public License v2.0 and the Linux Foundation's stewardship [R8], enters the tech radar at `trial` when this decision is accepted, owner Platform Engineering. The radar entry is added in the ratification commit, not before.
+- **Radar.** OpenTofu, an open-source tool under the Mozilla Public License v2.0 and the Linux Foundation's stewardship [R8], is on the tech radar at `trial` from 4 November 2026, owner Platform Engineering, with a trial end date of 4 May 2027.
 
 ### 5.4 Development
 
@@ -89,7 +91,7 @@ Phase 1 builds only the pooled path, so it needs no OpenTofu and has no stand-in
 ### Negative
 
 - The service runs a command-line tool and must manage its working directories, its output and its exit codes. A crash during `tofu apply` leaves the state locked until the lock is released (`SAD-021 §9.1`).
-- One state per Tenant means many state files; listing and auditing them is the service's job.
+- One state per Tenant per participant means many state files; each participant lists and audits its own, and the service holds the index of participations.
 - OpenTofu is new to the estate and needs a radar decision and a supplier entry (`ISMS-005` T26).
 
 ### Operational
@@ -108,7 +110,7 @@ Phase 1 builds only the pooled path, so it needs no OpenTofu and has no stand-in
 
 ### Compliance Status
 
-Proposed. `STD-GLB-009` asks for resources declared in Git files "parsed by the IDP". This decision keeps the declarations in Git (the modules) and takes each Tenant's inputs from Organization Control at run time, because a Tenant is created by a customer journey, not by a team's change. The Architecture Authority confirms this reading when it accepts this ADR; if it reads the rule as one Git file per Tenant, an exception ADR is needed instead.
+Accepted. `STD-GLB-009` asks for resources declared in Git files "parsed by the IDP". This decision keeps the declarations in Git (the modules) and takes each Tenant's inputs from Organization Control at run time, because a Tenant is created by a customer journey, not by a team's change. Accepting this ADR confirms that reading. A later reading of the rule as one Git file per Tenant would need an exception ADR.
 
 ### Required Waivers
 

@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-012
   title: Scnehaux Organization Experience
   owner: Core Platform Team
-  version: 1.4.0
+  version: 1.4.1
   status: approved
   classification: restricted
   governed_by:
@@ -366,6 +366,10 @@ Until UI Platform ships its primitives, the application uses its own component p
 ### 7.4 Observability
 
 Frontend and server telemetry use common correlation identifiers with backend operations. Sensitive Tenant/Membership details are minimized and masked.
+
+### Tenant Provisioning Participation
+
+No per-Tenant work for any profile. This application holds no Tenant data at rest beyond its session store, which is not partitioned per Tenant. (`ADR-PRV-006 §5.9`, accepted 2026-11-10.)
 
 ## 8. Security & Trust Boundary
 

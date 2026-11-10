@@ -3,7 +3,7 @@ doc_meta:
   id: ADR-PRV-002
   title: A Person Approves the Plan Before Any Dedicated Resource Is Created
   adr_type: foundational
-  status: proposed
+  status: accepted
   created: 2026-11-04
   created_date: 2026-11-04
   created_by: Platform Engineering
@@ -14,13 +14,15 @@ doc_meta:
 
 ## 1. Title
 
-A bridge, silo or regional Tenant is built only after a second person approves the exact plan the provisioning service computed for it. The approval is recorded by the provisioning service, beside the plan it approves. A pooled Tenant needs no approval.
+A bridge, silo or regional Tenant is built only after a second person approves the exact plans the participating platforms computed for it, assembled by the provisioning service (`ADR-PRV-006`). The approval is recorded by the provisioning service, beside the plan it approves. A pooled Tenant needs no approval.
 
 ## 2. Status
 
-| Date       | Status   | ADR Type     | Reviewers                                                            | Approver                         |
-| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :------------------------------- |
-| 2026-11-04 | proposed | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority (pending) |
+| Date       | Status   | ADR Type     | Reviewers                                                            | Approver               |
+| :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
+| 2026-11-10 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
+
+The owner approved this decision on 10 November 2026, with the cross-platform contract of `ADR-PRV-006` and the answers recorded in `SAD-021 §15`.
 
 ## 3. Context
 
@@ -53,18 +55,18 @@ Organization Control already requires a second person for privileged acts: an el
 
 ### 5.2 The Approver Approves a Plan
 
-1. The service computes the plan for the request and saves it unchanged (`ADR-PRV-003 §5.3`).
-2. It records the plan's hash, the resources it creates, the region, and a monthly cost estimate.
+1. Each participant with work for the profile computes its own plan, saves it unchanged and reports it `planned` with its hash, summary and monthly cost estimate (`ADR-PRV-006 §5.3`, `ADR-PRV-003 §5.3`).
+2. The service records the set of participant plans, their hashes, the region and the total monthly cost estimate. The approval is bound to the hash of that set.
 3. It reports progress to Organization Control with the stage `awaiting_approval` and an `expected_by` 7 days ahead (`ADR-PRV-001 §5.4`).
 4. An approver opens the request in the provisioning panel (`SAD-021 §5.5`), reads the plan summary, and approves or rejects it. Both need a reason; approval also needs the contract or order reference that covers the cost.
-5. On approval the service applies the saved plan whose hash was approved, and nothing else [R1]. If that apply fails because the infrastructure changed after planning, the service plans again and asks for approval again.
+5. On approval the service sends each participant `apply` with its own approved plan hash, in ascending rank, and each applies that saved plan and nothing else [R1]. If an apply fails because the infrastructure changed after planning, that participant plans again and the set is approved again.
 6. On rejection, or when 7 days pass with no decision, the service reports `failed` with the cause `approval_rejected` or `approval_expired`. A new attempt is a retry in Organization Control, which creates a new request and a new plan.
 
 ### 5.3 Who Approves
 
 - **A provider holding the `provider:provisioning` scope, in force.** The scope is a provider grant recorded by Organization Control, eligible and activated as `ADR-ORG-002` requires, and projected to the provisioning service as `provider:identity-control` is projected to identity-control (`ADR-ORG-002 §5.3`). The provisioning service enforces it.
 - **Not the requester.** The service refuses an approval by the principal that requested the Tenant. Organization Control adds `requested_by` to each item of the outstanding-request read for this check (`SAD-004 §7.5`, Phase 2).
-- **Named by role, never by person.** The role that holds the grant is decided by the owner (open question 2 in `SAD-021 §15`).
+- **The Platform Engineering lead holds it.** The owner decided this on 4 November 2026 (`SAD-021 §15`, question 2). The grant is recorded by role, never by a person's name in any document. A second holder may be added by the same decision path; the requester rule above still applies to every holder.
 
 ### 5.4 Where Approval Is Recorded
 
@@ -75,6 +77,10 @@ Organization Control records only what it owns: the request's progress stage and
 ### 5.5 Before Phase 2
 
 Until the approval gate, the progress report and the panel are built (Phase 2, `SAD-021 §13`), the service builds pooled Tenants only. It reports a bridge, silo or regional request `failed` with the cause `profile_not_supported`. No non-pooled Tenant is created before Phase 2 is complete.
+
+### 5.6 Regional Waits for Regional Identity
+
+A `regional` request is reported `failed` with the cause `profile_not_supported` until the ADR for regional identity deployments is accepted (`ADR-PRV-006 §5.8`), even after Phase 2 is complete. No plan is computed and no approval is requested for it. The gate is lifted by that ADR's acceptance, in the same change that registers identity as a participant for `regional`.
 
 ## 6. Consequences
 
@@ -105,7 +111,7 @@ Until the approval gate, the progress report and the panel are built (Phase 2, `
 
 ### Compliance Status
 
-Proposed.
+Accepted.
 
 ### Required Waivers
 

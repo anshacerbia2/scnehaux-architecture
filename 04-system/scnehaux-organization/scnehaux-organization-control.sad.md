@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-004
   title: Scnehaux Organization Control
   owner: Core Platform Team
-  version: 2.8.0
+  version: 2.8.2
   status: approved
   classification: restricted
   governed_by:
@@ -490,7 +490,7 @@ Publishes desired lifecycle and profile references and consumes realized status.
 - **An `unresolved` outcome is resolved by reporting it (2.4.0).** The provisioning system, or an operator with its answer, reports realized or failed against the request's correlation identifier. Nothing in this system retries it or resolves it automatically. Detail: `TDD-organization-control-003` 1.15.0 §Resolving an `unresolved` Request. From 2.8.0 the provisioning system resolves it from its own record of the request, after checking the resources (`ADR-PRV-001 §5.5`).
 - **The provisioning system is designed (2.8.0).** It is Provisioning Control, `SAD-021` under `PAD-PLT-017`, a separate service that holds the infrastructure credentials this system never holds (`ADR-PRV-004`). It reads each request from this system and acts on it, with no person reporting `realized` in normal operation (`ADR-PRV-001`). The contract grows in two phases, and every existing route keeps its meaning (`SAD-021 §12`):
   - _Phase 1._ `GET /v1/provisioning/requests?state=&operation=&after=&limit=` for the `provisioning` reporter, listing outstanding requests with `provisioning_request_id`, `correlation_id`, `tenant_id`, `operation`, `desired_profile`, `state` and `requested_at`, and for a deprovisioning also `offboarding_id` and `legal_hold`. The command event `com.scnehaux.organization.tenant.provisioning.requested`, identifiers only, written in the transaction of every `tenant.provisioning_request` row (intake, retry, release, resend), and delivered by the per-consumer dispatch of `ADR-GLB-018 §5.4` to a registered provisioning target. A provisioning target is a delivery kind of its own: it subscribes to that one type, holds no projection, takes no snapshot and adds no authority debt, and the type is not offered to projection consumers. The three provisioning transitions of `TDD-organization-control-003` stay silent as Tenant events.
-  - _Phase 2._ `POST /v1/provisioning/progress {correlation_id, stage, expected_by}` for the reporter; the sweep ages a request against `expected_by` when one is set, capped at 8 days, and against `ORGANIZATION_PROVISIONING_TIMEOUT` otherwise. `requested_by` on each read item. `provider:provisioning` as a registered provider scope, projected to Provisioning Control as `provider:identity-control` is to identity-control. In production, provider authority is refused on `POST /v1/provisioning/realized`; `failed` stays open to a provider, because failing a request never grants access.
+  - _Phase 2._ `POST /v1/provisioning/progress {correlation_id, stage, expected_by}` for the reporter; the sweep ages a request against `expected_by` when one is set, capped at 8 days, and against `ORGANIZATION_PROVISIONING_TIMEOUT` otherwise. `requested_by` on each read item. `provider:provisioning` as a registered provider scope, projected to Provisioning Control as `provider:identity-control` is to identity-control. In production, a person's `POST /v1/provisioning/realized` is accepted only from a provider whose authority is an emergency grant (`ADR-ORG-002`), as break-glass: the reason names the incident and the health checks run, the access is recorded with the authority `emergency`, every use alerts the Information Security Officer and is reviewed within 1 working day (`SAD-021 §5.5`, owner's decision of 2026-11-04). A provider under an activated eligible grant is refused. `failed` stays open to a provider, because failing a request never grants access.
   - _The stand-ins below retire from the deploy steps when Phase 1 is merged and the server redeployed;_ until then the development server keeps them.
 - **On a development server an operator stands in for the provisioning system (2.4.0).** None runs there, so a requested Tenant otherwise never leaves `requested`. organization-control's `scripts/dev-provisioning.ps1` reports realized or failed through the same correlated routes, with the operator's provider authority. It refuses a Tenant not yet dispatched and a request that already has an outcome, and it never activates.
   - _Why a script._ It is one-off admin code that ships with the service and runs against the deployed release, as STD-GLB-009 [R4] asks (STD-GLB-009 rule 13, 1.9.0). organization-control's `deploy-dev` runs it on every change (STD-GLB-009 §A procedure step is a script, and CI runs it). The service gains no development-only path, so the rule above holds in every environment.
@@ -544,6 +544,10 @@ Consumers obtain:
 ### 7.8 Notification and Audit
 
 Notification requests and enterprise evidence facts are asynchronous. Local authoritative mutation does not depend on synchronous delivery, but undelivered facts remain visible and retried.
+
+### Tenant Provisioning Participation
+
+No per-Tenant infrastructure work for any profile. This system is the control plane: its database serves every Tenant, whatever the Tenant's isolation profile, and it holds the desired state Provisioning Control reads (§7.5). (`ADR-PRV-006 §5.9`, accepted 2026-11-10.)
 
 ## 8. Security & Trust Boundary
 

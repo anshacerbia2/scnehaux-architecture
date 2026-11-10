@@ -125,6 +125,17 @@ technology_radar:
       rationale_std: STD-GLB-009
       trial_end_date: "2027-01-31"
 
+    # ARB decision 2026-11-04 (the owner chose OpenTofu over Crossplane and a
+    # workflow engine, ADR-PRV-003): the infrastructure-as-code tool the
+    # provisioning service runs for bridge, silo and regional Tenants, plan
+    # then apply of the approved plan. Phase 1 (pooled) does not run it.
+    - name: opentofu
+      category: infrastructure-as-code
+      date_entered: "2026-11-04"
+      owner: Platform Engineering
+      rationale_adr: ADR-PRV-003
+      trial_end_date: "2027-05-04"
+
     - name: rust
       category: systems-language
       date_entered: "2026-03-01"

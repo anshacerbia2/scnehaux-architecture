@@ -3,7 +3,7 @@ doc_meta:
   id: SAD-001
   title: Scnehaux Identity Runtime
   owner: Identity Platform Team
-  version: 2.5.0
+  version: 2.5.1
   status: approved
   classification: restricted
   governed_by:
@@ -619,6 +619,10 @@ identity.migration.*
 - Authentication does not synchronously call Software Catalog or Organization.
 - Event publication failure retains the canonical outbox fact.
 - Revocation propagation retries preserve the same authoritative context version and cannot manufacture a newer version.
+
+### Tenant Provisioning Participation
+
+This system has no per-Tenant work for `pooled`, `bridge` or `silo`: Tenant identity data lives in the shared realm under Tenant projection, because a Tenant is not a Realm (`ADR-ORG-001 §5.5`), and federation settings for a customer are an identity administration journey, not provisioning. For `regional` it will be a participant, through one identity deployment per region shared by that region's Tenants; that design is a separate ADR written at the first regional customer, and `regional` is refused until it is accepted. (`ADR-PRV-006 §5.8`, accepted 2026-11-10.)
 
 ## 7. Security & Trust Boundary
 
