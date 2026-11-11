@@ -9,7 +9,7 @@ doc_meta:
   governed_by: [GDC-012, ISMS-001]
   review_cycle_days: 90
   created_date: 2026-11-03
-  last_reviewed: 2026-11-03
+  last_reviewed: 2026-11-10
   isms_record: nonconformity-log
   iso_clauses: ['10.1', '10.2']
   annex_a_controls: ['A.5.27']
@@ -47,11 +47,12 @@ No text of the standard is reproduced.
 
 ### The log
 
-| ID   | Found           | Summary                                                                                  | Status      | Corrective action                        | Effectiveness review by |
-| :--- | :-------------- | :--------------------------------------------------------------------------------------- | :---------- | :--------------------------------------- | :---------------------- |
-| NC-1 | 31 October 2026 | identity-kernel's daily image scan failed unread for 6 days; the remediation time passed | `corrected` | T4                                       | 31 December 2026        |
-| NC-2 | 1 November 2026 | ISMS records were merged before the guideline that governs them was ratified             | `corrected` | Explicit ratification question; T42, T19 | 30 January 2027         |
-| NC-3 | 1 November 2026 | A person's name appeared in four public repositories                                     | `corrected` | T18                                      | 31 December 2026        |
+| ID   | Found            | Summary                                                                                                           | Status      | Corrective action                        | Effectiveness review by |
+| :--- | :--------------- | :---------------------------------------------------------------------------------------------------------------- | :---------- | :--------------------------------------- | :---------------------- |
+| NC-1 | 31 October 2026  | identity-kernel's daily image scan failed unread for 6 days; the remediation time passed                          | `corrected` | T4                                       | 31 December 2026        |
+| NC-2 | 1 November 2026  | ISMS records were merged before the guideline that governs them was ratified                                      | `corrected` | Explicit ratification question; T42, T19 | 30 January 2027         |
+| NC-3 | 1 November 2026  | A person's name appeared in four public repositories                                                              | `corrected` | T18                                      | 31 December 2026        |
+| NC-4 | 10 November 2026 | The daily image scans of three repositories failed unread for 5 to 6 days, again; a 3-day remediation time passed | `open`      | T4, brought forward                      | 31 December 2026        |
 
 #### NC-1: a failed daily scan went unread
 
@@ -80,11 +81,21 @@ No text of the standard is reproduced.
 - **Corrective action.** T18, by 31 December 2026: review the public content of every repository, and extend the personal-identifier check beyond ISMS records.
 - **Effectiveness review.** By 31 December 2026: a search of every in-scope repository finds no person's name outside the account name.
 
+#### NC-4: failed daily scans went unread again
+
+- **What happened.** The scheduled image scans of identity-kernel and identity-control failed every day from 5 November 2026, and organization-control's from 6 November 2026. Nobody read them. They were found on 10 November 2026, when a pull request in organization-control showed the same failure. The findings: zlib CVE-2026-4738 (Critical) in the PostgreSQL image of all three; brotli (GO-2026-6888, Critical, in the KEV) and compress (GO-2026-6865, High) inside the Atlas binary of the two migrate images; musl CVE-2026-107891 (High) in four Alpine-based images; x/net and compress (High) in the publicly exposed proxy and in the development mail catcher.
+- **Requirement not met.** The remediation times of [STD-GLB-009 §Container Images](../02-standards/_global/STD-GLB-009-platform-engineering.md#container-images-140), rule 8. The proxy is publicly exposed, and its findings were fixed 5 days after detection, where rule 8 can give 3. Objective O1 of [ISMS-006](ISMS-006-objectives.md) is missed again.
+- **Immediate reaction.** On 10 November 2026, one branch per repository, each verified by its own scan before review: [identity-kernel](https://github.com/anshacerbia2/identity-kernel/compare/main...fix/image-scan-20261110), [identity-control](https://github.com/anshacerbia2/identity-control/compare/main...fix/image-scan-20261110) and [organization-control](https://github.com/anshacerbia2/organization-control/compare/main...fix/image-scan-20261110). The PostgreSQL and Atlas pins moved; the proxy's source build replaces x/net and compress; musl and zlib are upgraded where images are built. Two findings no release fixes yet are recorded as `affected`: brotli in Atlas until **20 November 2026**, compress in Atlas until 5 January 2027. zlib in the database image waits for PostgreSQL 17.12. The PostgreSQL rebuild also closed CVE-2026-85091, the purpose of T1.
+- **Root cause.** The same as NC-1: a failed scheduled workflow alerts nobody (R21). T4, its corrective action, is due 30 November 2026 and was not yet built, so NC-1's cause was still present.
+- **Corrective action.** T4 brought forward: the alert on a failed scheduled run is the next item of work in each repository, not the last before its due date. Until it runs, the Information Security Officer reads the scheduled runs of the three repositories each working day.
+- **Effectiveness review.** By 31 December 2026, with NC-1: each failed scheduled run from the date T4 runs reached the Information Security Officer within 1 working day (O2), and no finding passed its rule 8 time (O1).
+
 ### Lessons kept
 
 - A check that nobody reads does not operate. Every scheduled check needs someone it alerts (NC-1).
 - An approval asked for in prose is easily answered with something else. Ask one question that names the commit (NC-2).
 - A rule that only some files are checked against is followed only in those files (NC-3).
+- A corrective action that is not yet built does not stop the cause it is for. A cause that has already happened once is worked on first, not at its due date (NC-4).
 
 ## Review & Change Control
 
