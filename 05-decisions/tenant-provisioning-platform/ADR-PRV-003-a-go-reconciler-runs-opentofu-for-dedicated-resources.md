@@ -22,7 +22,7 @@ The provisioning service is a Go application with its own PostgreSQL database. I
 | :--------- | :------- | :----------- | :------------------------------------------------------------------- | :--------------------- |
 | 2026-11-10 | accepted | foundational | Architecture, Core Platform, Platform Engineering, Security, Product | Architecture Authority |
 
-The owner approved this decision on 10 November 2026, with the cross-platform contract of `ADR-PRV-006` and the answers recorded in `SAD-021 §15`.
+The owner approved this decision on 10 November 2026, with the cross-platform contract of `ADR-PRV-006` and the answers recorded in `SAD-021 §15`. The development stand-ins of §5.4 were decided on 12 November 2026 (open question 5).
 
 ## 3. Context
 
@@ -67,17 +67,23 @@ A pooled request writes the Tenant's configuration record and quota limits to th
 
 ### 5.4 Development
 
-| Concern                  | Production                       | Development                                                                              | Why it differs                                        |
-| :----------------------- | :------------------------------- | :--------------------------------------------------------------------------------------- | :---------------------------------------------------- |
-| Pooled path              | The service, direct writes       | The same service and code, in the development stack                                      | Does not differ                                       |
-| Contract and credentials | Registered workload, its own key | A development workload registered the same way, its own key                              | Does not differ (`ADR-ORG-001 §5.11`)                 |
-| Bridge, silo databases   | Managed PostgreSQL instances     | PostgreSQL containers created by the same modules through a local provider configuration | No managed database service on the development server |
-| Per-Tenant key           | AWS KMS key                      | A local KMS stand-in, chosen in Phase 2 (see below)                                      | No cloud account in development                       |
-| State bucket             | Encrypted cloud bucket, locked   | A local bucket stand-in or the local backend, locked                                     | Same reason                                           |
+| Concern                  | Production                       | Development                                                                                              | Why it differs                                                        |
+| :----------------------- | :------------------------------- | :------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
+| Pooled path              | The service, direct writes       | The same service and code, in the development stack                                                      | Does not differ                                                       |
+| Contract and credentials | Registered workload, its own key | A development workload registered the same way, its own key                                              | Does not differ (`ADR-ORG-001 §5.11`)                                 |
+| Bridge databases         | Managed PostgreSQL instances     | One shared PostgreSQL container, a database per bridge Tenant, made by the same modules                  | No managed database service on the development server                 |
+| Silo databases           | One managed instance per Tenant  | A fixed pool of 2 PostgreSQL containers; the modules create and drop a database and its roles inside one | Same reason; and the runner never holds the Docker socket (see below) |
+| Per-Tenant key           | AWS KMS key                      | An OpenBao Transit key, one per Tenant per participant (see below)                                       | No cloud account in development                                       |
+| State bucket             | Encrypted cloud bucket, locked   | A local bucket stand-in or the local backend, locked                                                     | Same reason                                                           |
 
 Phase 1 builds only the pooled path, so it needs no OpenTofu and has no stand-in.
 
-**The KMS stand-in is not chosen yet.** LocalStack is the obvious candidate, but since its 2026.03.0 release every run needs an auth token, its free plan is for non-commercial use, and its RDS service is in paid plans only [R6][R7]. A company development server would therefore need a paid plan, or an open-source KMS stand-in instead. The owner decides before Phase 2 (`SAD-021 §15`, open question 5).
+**The stand-ins are open source; LocalStack is not used.** The owner decided on 12 November 2026 (`SAD-021 §15`, open question 5). LocalStack needs an auth token for every run since its 2026.03.0 release, its free plan is for non-commercial use, and its RDS service is in paid plans only [R6][R7]. A company development server would need a paid plan and an account outside the estate's control, and its KMS emulation would prove nothing about deletion that an open-source stand-in cannot.
+
+- **Keys: OpenBao Transit**, an open-source secrets manager under the Mozilla Public License v2.0 [R9], whose Transit engine "handles cryptographic functions on data in-transit" [R10]. It runs pinned by digest and never in dev mode, where "All data is stored (encrypted) in-memory" and the server "will lose data on every restart" [R11]. It uses file storage and the `file` audit device, which "writes audit logs to a file" [R12], and it is reachable only on the stack's internal network, never through the tunnel.
+- **One mount, one policy and one AppRole per participant.** Each participant has its own Transit mount and a policy limited to that mount. It authenticates with AppRole, the method that "allows machines or apps to authenticate with OpenBao-defined roles" [R13], and receives short-lived tokens. The root token is used for setup only and revoked after it. A participant's module deletes a key through the OpenTofu Vault provider, whose key resource needs `deletion_allowed`, which "Must be set to 'true' before terraform will be able to destroy keys" [R14]; the module sets it only at stage 3 of `ADR-PRV-005`.
+- **Databases: no superuser and no Docker socket.** In each silo container the modules connect as a role with `CREATEDB` and `CREATEROLE` only. The provisioning runner never holds the Docker socket, because on the development server that is root on a host that also runs the identity stacks. That is why the silo containers are a fixed pool, defined in provisioning-control's development compose file, rather than created per Tenant; development holds at most 2 dedicated Tenants at a time.
+- **What development does not show.** OpenBao has no pending-deletion window like a KMS key's 7 to 30 days, so the 30-day window of `ADR-PRV-005` is kept by provisioning-control's schedule alone, and tests shorten it by configuration. The keys are software keys, not held in hardware security modules. The local disks are not encrypted per Tenant, so deleting a development key destroys only data a participant encrypted with that key itself (`SAD-021 §10.4`).
 
 ## 6. Consequences
 
@@ -106,7 +112,7 @@ Phase 1 builds only the pooled path, so it needs no OpenTofu and has no stand-in
 - `STD-GLB-009` §Internal Developer Platform (IDP) Interfaces and §Container Images.
 - `STD-GLB-006` — orchestration for multi-step work.
 - `ADR-GLB-008` — Go project structure.
-- Tech radar: OpenTofu to `trial`.
+- Tech radar: OpenTofu to `trial`; OpenBao to `trial`, development only.
 
 ### Compliance Status
 
@@ -160,3 +166,11 @@ None, under the reading above.
 - **[R6]** LocalStack, _Announcing the LocalStack for AWS 2026.03.0 Release_, 23 March 2026, accessed 2026-11-04. <https://blog.localstack.cloud/localstack-for-aws-release-2026-03-0/>. "As of version 2026.03.0, an auth token or CI auth token is required to start LocalStack for AWS." Supports §5.4.
 - **[R7]** LocalStack, _Key Management Service (KMS)_ and _Relational Database Service (RDS)_, accessed 2026-11-04. <https://docs.localstack.cloud/aws/services/kms/>, <https://docs.localstack.cloud/aws/services/rds/>. KMS: "Available from the Hobby plan"; RDS: "Available from the Base plan." The Hobby plan is for non-commercial use (<https://docs.localstack.cloud/aws/licensing/>). Supports §5.4.
 - **[R8]** OpenTofu, home page and repository, accessed 2026-11-04. <https://opentofu.org/>, <https://github.com/opentofu/opentofu>. "OpenTofu is a reliable, flexible, community-driven infrastructure as code tool under the Linux Foundation's stewardship"; the repository is licensed under the Mozilla Public License v2.0. Supports the radar entry.
+- **[R9]** OpenBao, repository, accessed 2026-11-12. <https://github.com/openbao/openbao>. "OpenBao is a software solution to manage, store, and distribute sensitive data including secrets, certificates, and keys"; licensed MPL-2.0. Supports §5.4 and the radar entry.
+- **[R10]** OpenBao, _Transit secrets engine_, accessed 2026-11-12. <https://openbao.org/docs/secrets/transit/>. "The transit secrets engine handles cryptographic functions on data in-transit." Supports §5.4.
+- **[R11]** OpenBao, _Dev server_, accessed 2026-11-12. <https://openbao.org/docs/concepts/dev-server/>. "All data is stored (encrypted) in-memory"; "It is insecure and will lose data on every restart (since it stores data in-memory)"; "Never, ever, ever run a "dev" mode server in production." Supports §5.4, no dev mode.
+- **[R12]** OpenBao, _File audit device_, accessed 2026-11-12. <https://openbao.org/docs/audit/file/>. "The `file` audit device writes audit logs to a file." Supports §5.4 and the destruction evidence of `SAD-021 §10.4`.
+- **[R13]** OpenBao, _AppRole auth method_, accessed 2026-11-12. <https://openbao.org/docs/auth/approle/>. "The approle auth method allows machines or apps to authenticate with OpenBao-defined roles"; "This auth method is oriented to automated workflows (machines and services)". Supports §5.4.
+- **[R14]** Vault provider, _vault_transit_secret_backend_key_, accessed 2026-11-12. <https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/transit_secret_backend_key>. `deletion_allowed`: "Specifies if the keyring is allowed to be deleted. Must be set to 'true' before terraform will be able to destroy keys." Supports §5.4.
+- **[R15]** OpenBao, _Static key seal_, accessed 2026-11-12. <https://openbao.org/docs/configuration/seal/static/>. "Static key seal configures OpenBao to use static keys provided alongside the configuration file"; "Carefully evaluate use of Static Key Auto Unseal to see if its use meets the desired security properties." Supports SAD-021 §10.4.
+- **[R16]** OpenBao, _status command_, accessed 2026-11-12. <https://openbao.org/docs/commands/status/>. "The exit code reflects the seal status": "0 - unsealed", "1 - error", "2 - sealed". Supports SAD-021 §10.4.

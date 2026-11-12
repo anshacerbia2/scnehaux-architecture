@@ -84,7 +84,7 @@ Organization Control's deployment has no cloud role that can create, change or d
 
 ### 5.4 Development
 
-The development service authenticates to Organization Control as a development workload registered the same way, with its own key, as the stand-in scripts do today (`ADR-ORG-001 §5.11`). In Phase 1 it needs no cloud role, because the pooled path writes only to its own database. From Phase 2 its local stand-ins (`ADR-PRV-003 §5.4`) accept a fixed local credential that works for nothing else; this is a stated difference.
+The development service authenticates to Organization Control as a development workload registered the same way, with its own key, as the stand-in scripts do today (`ADR-ORG-001 §5.11`). In Phase 1 it needs no cloud role, because the pooled path writes only to its own database. From Phase 2 its local stand-ins (`ADR-PRV-003 §5.4`) accept local credentials that work for nothing else; this is a stated difference. In OpenBao each participant has its own AppRole, with short-lived tokens and a policy limited to its own Transit mount, so one participant's token cannot delete another participant's key; no root token exists after setup. In the silo PostgreSQL containers the modules connect as a role with `CREATEDB` and `CREATEROLE` only, not a superuser, and the runner never holds the Docker socket.
 
 ## 6. Consequences
 
