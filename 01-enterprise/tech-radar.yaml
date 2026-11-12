@@ -136,6 +136,17 @@ technology_radar:
       rationale_adr: ADR-PRV-003
       trial_end_date: "2027-05-04"
 
+    # ARB decision 2026-11-12 (the owner's answer to SAD-021 open question 5,
+    # ADR-PRV-003 section 5.4): the key stand-in for bridge, silo and regional
+    # Tenants in the development stack only, OpenBao Transit, never in dev mode.
+    # Production keys stay AWS KMS. Source: ADR-PRV-003 [R9]-[R14].
+    - name: openbao
+      category: secrets-management
+      date_entered: "2026-11-12"
+      owner: Platform Engineering
+      rationale_adr: ADR-PRV-003
+      trial_end_date: "2027-05-04"
+
     - name: rust
       category: systems-language
       date_entered: "2026-03-01"
